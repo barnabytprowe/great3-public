@@ -1,35 +1,55 @@
-%    Code to generate Q values for power spectrum submissions to GREAT10
-%    Copyright (C) 2011 Thomas Kitching
-%
-%    This program is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    This program is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with this program.  If not, see <http://www.gnu.org/licenses/>.                                                                                                                  
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-%  Copyright T. D. Kitching 2011
-%
-%  Code to read in great10 variable shear catalogues and estimate Q
-%  Adapted from analysis_shears (written August 2010 to December 2010) to read in power spectrum submissions 
-%
-%  * Written July 2011 to August 2011 
-%  * Comments added (Sep 11)
-%  * Bugs found when commenting :
-%  - dll=l(j+1)-l(j)->log(l(j+1))-log(j) and log(dll)->dll (in sigma_sys)
-%  - sigma_sys writting bug (line 299) values were factor 5 too small on leaderboard
-%
-%  * Notes :
-%  - 2e-4 in tk talk on 26/9 used old plot should have been 5e-6
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#!/usr/bin/env python
+
+"""Script for calculating the GREAT10 Q metric (Q10) from a shear power spectrum submission.
+
+The shear power spectrum submission format takes the form of TBD.
+
+By comparing this information to tables with the true input shear, we calculate Q10.
+"""
+
+import os
+import sys
+import numpy as np
+
+
+
+# Comments copied from top of analysis_shears_power_commented.m by Tom Kitching:
+# (this code used this file as a basis for making a G10-style Q metric (Q10).
+#
+#    Code to generate Q values for power spectrum submissions to GREAT10
+#    Copyright (C) 2011 Thomas Kitching
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.                                                                                                                  
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#
+#  Copyright T. D. Kitching 2011
+#
+#  Code to read in great10 variable shear catalogues and estimate Q
+#  Adapted from analysis_shears (written August 2010 to December 2010) to read in power spectrum 
+#  submissions 
+#
+#  * Written July 2011 to August 2011 
+#  * Comments added (Sep 11)
+#  * Bugs found when commenting :
+#  - dll=l(j+1)-l(j)->log(l(j+1))-log(j) and log(dll)->dll (in sigma_sys)
+#  - sigma_sys writting bug (line 299) values were factor 5 too small on leaderboard
+#
+#  * Notes :
+#  - 2e-4 in tk talk on 26/9 used old plot should have been 5e-6
+#
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 LASTN = maxNumCompThreads('automatic'); %parallel matlab
 
