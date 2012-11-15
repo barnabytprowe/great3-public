@@ -1,17 +1,18 @@
-"""Code to generate Q values for ellipticity catalogue submissions to GREAT10.
+"""@brief Code to generate Q values for ellipticity catalogue submissions to GREAT10.
 
 Based on (and ported from) analysis_shears_commented.m by Tom Kitching.
 """
 
+import os
+
 #print Q per set files to a file
-lstr = int2str(leadernum);
-outfilename=strcat(['/Users/browe/g10_v1/qcode/results/' ...
-                    'q10.galaxy.tiers.'],lstr,'.', methodtype, '.dat');
-fout = fopen(outfilename, 'a');
+lstr = str(leadernum);
+outfilename = os.path.join('results', 'q10.galaxy.tiers.'+lstr+'.'+methodtype+'.dat')
+fout = open(outfilename, 'w')
 
-%___________________________ start _______________________________________%
+#___________________________ start _______________________________________
 
-%---------------------image dimensions -----------------------------------%
+#---------------------image dimensions -----------------------------------
 
 % harwired image numbers
 g10postage=48;     %postage stamp size (overwritten by read from truth)    
