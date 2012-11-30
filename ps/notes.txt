@@ -1,0 +1,33 @@
+We need some shear power spectra to use as inputs for the GREAT3 challenge.  There are a few things
+to do here:
+
+1) Take some power spectra from iCosmo for reasonable cosmologies and surveys.  This requires use of
+IDL scripts that will live in this directory.  To begin with, let's choose fiducial cosmology and a
+range of cosmologies within which we'll randomly sample parameters:
+
+      a) Proposal for fiducial: w_0=-1, w_a=0, sigma_8=0.8, n_s=0.96, H_0=70h km/s/Mpc,
+      Omega_m=0.25, Omega_b=something WMAP7-ish (check)
+
+      b) Range: go to +/-1 sigma in these parameters
+         sigma(w_0) = 0.2
+         sigma(sigma_8) = 0.05
+         sigma(n_s) = 0.02
+         sigma(H_0) = 2h km/s/Mpc
+         sigma(Omega_m) = something motivated by WMAP7-ish errors
+         sigma(Omega_b) = something motivated by WMAP7-ish errors
+         [ don't draw randomly for now, just make a grid ]
+
+And choose survey parameters: let's ignore tomography and just use default iCosmo N(z) with various
+z_med = 0.75, 1.00, 1.25.
+
+So for the fiducial cosmology we'll have 3 cosmic shear power spectra, and once we vary cosmology
+up and down we'll have 2 x 3 x 6 = 36.
+
+2) Examine the power spectra for the ranges of k that we will use.  Can we approximate them with a
+simple functional form? (doesn't have to be perfect, just somewhat realistic)
+
+3) Do we want to consider some variations on that functional form so that challenge won't be too
+easy?
+
+Ultimately we might want to stick some of the tabulated power spectra into GalSim.
+
