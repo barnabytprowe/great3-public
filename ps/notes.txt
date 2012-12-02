@@ -6,7 +6,7 @@ IDL scripts that will live in this directory.  To begin with, let's choose fiduc
 range of cosmologies within which we'll randomly sample parameters:
 
       a) Proposal for fiducial: w_0=-1, w_a=0, sigma_8=0.8, n_s=0.96, H_0=70h km/s/Mpc,
-      Omega_m=0.25, Omega_b=something WMAP7-ish (check)
+      Omega_m=0.25, Omega_b=iCosmo default
 
       b) Range: go to +/-1 sigma in these parameters
          sigma(w_0) = 0.2
@@ -23,11 +23,28 @@ z_med = 0.75, 1.00, 1.25.
 So for the fiducial cosmology we'll have 3 cosmic shear power spectra, and once we vary cosmology
 up and down we'll have 2 x 3 x 6 = 36.
 
+--> getpk.pro gets power spectra for fiducial cosmology, writes to files with ell, C_ell in tables/
+--> plotpk.py, which gives fiducial_cell.eps, fiducial_p.eps
+
 2) Examine the power spectra for the ranges of k that we will use.  Can we approximate them with a
 simple functional form? (doesn't have to be perfect, just somewhat realistic)
+
+Question: which ranges of ell to consider?  In GREAT10 they had a 100x100 grid of galaxies, and
+assumed that it corresponded to a 10 degree FOV.
+
+Size of grid in radians: (10*pi/180)=L=1.745e-1
+Distance between galaxies on grid in radians: (10/100)*pi/180.=dL=1.745e-3
+Largest ell ~ 2*pi/dL ~ 3600.
+Smallest ell ~ 2*pi/L ~ 36.
+
+These are marked on the plot as vertical dashed lines.  However, they are in principle arbitrary
+since they depend on the choice that the 100x100 grid corresponds to a 10x10 degree field.  Could
+just as well have any min, max ell as long as they are related by (max ell)/(min ell) = number of
+grid points in one dimension.
 
 3) Do we want to consider some variations on that functional form so that challenge won't be too
 easy?
 
 Ultimately we might want to stick some of the tabulated power spectra into GalSim.
 
+** Remember that we need sane behavior at k=0 for the current lensing engine.
