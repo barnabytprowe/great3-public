@@ -42,6 +42,10 @@ since they depend on the choice that the 100x100 grid corresponds to a 10x10 deg
 just as well have any min, max ell as long as they are related by (max ell)/(min ell) = number of
 grid points in one dimension.
 
+As a basic example, fit the power spectra to power-laws in this range of ell, show the power-laws on
+the plot, and make a plot showing the ratio of fit and real power spectra.  Obviously, power-laws
+aren't great, but that was the most basic example.  Can do something more complex.
+
 3) Do we want to consider some variations on that functional form so that challenge won't be too
 easy?
 
