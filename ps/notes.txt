@@ -56,8 +56,25 @@ where the first number in each line is the coefficient of the log(ell/ell_piv)^4
 in each line is the constant term (i.e., it's log P at ell_pivot).
 
 3) Do we want to consider some variations on that functional form so that challenge won't be too
-easy?
+easy?  Consider 1d shapelets, which are defined as:
+
+phi_n(x) = (2^n pi^(1/2) n!)^(1/2) H_n(x) exp(-x^2/2)
+but rescale to dimensionless ones using scale beta
+B_n(x, beta) = beta^(1/2) phi_n(x/beta)
+where H_0(x) = 1, H_1(x) = 2x, etc.
+
+How to get these in python?  scipy.special.hermite will do the job, e.g., if we want to evaluate H_2
+at positions x = [-2.0, 0.0, 2.0] then we do
+
+h2 = scipy.special.hermite(2)
+x = np.array((-2.0, 0.0, 2.0))
+my_h2 = h2(x)
+
+and then my_h2 will contain the values of h2 at those values of x.
+
+
 
 Ultimately we might want to stick some of the tabulated power spectra into GalSim.
 
-** Remember that we need sane behavior at k=0 for the current lensing engine.
+** Remember that we need sane behavior at k=0 for the current lensing engine.  What to do with these
+   fits?
