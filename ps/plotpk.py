@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.mlab as mlab
 import scipy.optimize as opti
 
 print "Getting Cell data from iCosmo outputs..."
@@ -43,18 +42,20 @@ sublgell = np.log10(ell[(ell >= 36) & (ell <= 3600)])
 sublgp1 = np.log10(p1[(ell >= 36) & (ell <= 3600)])
 sublgp2 = np.log10(p2[(ell >= 36) & (ell <= 3600)])
 sublgp3 = np.log10(p3[(ell >= 36) & (ell <= 3600)])
-powerlawfit = lambda p, x, y: (y - (p[0] + p[1]*x))
-pinit = [-7.0, 1.0]
-out1, success = opti.leastsq(powerlawfit, pinit, args=(sublgell, sublgp1))
-print out1[0], out1[1]
-out2, success = opti.leastsq(powerlawfit, pinit, args=(sublgell, sublgp2))
-print out2[0], out2[1]
-out3, success = opti.leastsq(powerlawfit, pinit, args=(sublgell, sublgp3))
-print out3[0], out3[1]
+A = np.vander(sublgell, 5)
+(coeffs1, residuals, rank, sing_vals) = np.linalg.lstsq(A, sublgp1)
+(coeffs2, residuals, rank, sing_vals) = np.linalg.lstsq(A, sublgp2)
+(coeffs3, residuals, rank, sing_vals) = np.linalg.lstsq(A, sublgp3)
+print coeffs1
+print coeffs2
+print coeffs3
+f1 = coeffs1[0]*(sublgell**4) + coeffs1[1]*(sublgell**3) + coeffs1[2]*(sublgell**2) + coeffs1[3]*sublgell + coeffs1[4]
+f2 = coeffs2[0]*(sublgell**4) + coeffs2[1]*(sublgell**3) + coeffs2[2]*(sublgell**2) + coeffs2[3]*sublgell + coeffs2[4]
+f3 = coeffs3[0]*(sublgell**4) + coeffs3[1]*(sublgell**3) + coeffs3[2]*(sublgell**2) + coeffs3[3]*sublgell + coeffs3[4]
 subell = 10**sublgell
-fitp1 = 10**(out1[0] + out1[1]*sublgell)
-fitp2 = 10**(out2[0] + out2[1]*sublgell)
-fitp3 = 10**(out3[0] + out3[1]*sublgell)
+fitp1 = 10**f1
+fitp2 = 10**f2
+fitp3 = 10**f3
 realp1 = 10**sublgp1
 realp2 = 10**sublgp2
 realp3 = 10**sublgp3
@@ -66,11 +67,11 @@ print "Plotting power..."
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.plot(ell,p1,color='blue',label='zmed=0.75')
-ax.plot(subell,fitp1,color='blue',linestyle='dotted',label='(best power law)')
+ax.plot(subell,fitp1,color='blue',linestyle='dotted',label='(4th order polynomial)')
 ax.plot(ell,p2,color='red',label='zmed=1.00')
-ax.plot(subell,fitp2,color='red',linestyle='dotted',label='(best power law)')
+ax.plot(subell,fitp2,color='red',linestyle='dotted',label='(4th order polynomial)')
 ax.plot(ell,p3,color='green',label='zmed=1.25')
-ax.plot(subell,fitp3,color='green',linestyle='dotted',label='(best power law)')
+ax.plot(subell,fitp3,color='green',linestyle='dotted',label='(4th order polynomial)')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_xlabel('ell')
