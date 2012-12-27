@@ -38,7 +38,7 @@ ax.plot(np.array((3600.,3600.)),np.array((1.e-13,1.e-7)),color='black')
 plt.savefig('plots/fiducial_cell.eps')
 
 print "Fitting Power to power-law functions..."
-sublgell = np.log10(ell[(ell >= 36) & (ell <= 3600)])
+sublgell = np.log10(ell[(ell >= 36) & (ell <= 3600)]) - np.log10(360.0)
 sublgp1 = np.log10(p1[(ell >= 36) & (ell <= 3600)])
 sublgp2 = np.log10(p2[(ell >= 36) & (ell <= 3600)])
 sublgp3 = np.log10(p3[(ell >= 36) & (ell <= 3600)])
@@ -52,7 +52,7 @@ print coeffs3
 f1 = coeffs1[0]*(sublgell**4) + coeffs1[1]*(sublgell**3) + coeffs1[2]*(sublgell**2) + coeffs1[3]*sublgell + coeffs1[4]
 f2 = coeffs2[0]*(sublgell**4) + coeffs2[1]*(sublgell**3) + coeffs2[2]*(sublgell**2) + coeffs2[3]*sublgell + coeffs2[4]
 f3 = coeffs3[0]*(sublgell**4) + coeffs3[1]*(sublgell**3) + coeffs3[2]*(sublgell**2) + coeffs3[3]*sublgell + coeffs3[4]
-subell = 10**sublgell
+subell = 10**(sublgell + np.log10(360.0))
 fitp1 = 10**f1
 fitp2 = 10**f2
 fitp3 = 10**f3

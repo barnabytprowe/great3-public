@@ -46,8 +46,14 @@ As a basic example, fit the power spectra to lines (log P = A + B Log(ell)) in t
 show the lines on the plot, and make a plot showing the ratio of fit and real power spectra.
 Obviously, lines aren't great, but that was the most basic example.  Can do something more complex.
 
---> New version goes to 5th order, i.e. up to (log(ell))^4, and residuals are at most a few %,
-    usually less!
+--> New version goes to 5th order, i.e. up to (log(ell/ell_pivot))^4, where ell_pivot=360.  
+    Residuals are at most a few %, usually <1%!  Results for coefficients in the 3 cases are
+[-0.22852829 -0.05631348  0.15967529  0.68583429 -4.9652076 ]
+[-0.22250272  0.0257553   0.15740659  0.63681388 -4.73536911]
+[-0.19854882  0.0820707   0.12606054  0.60097178 -4.56532733]
+
+where the first number in each line is the coefficient of the log(ell/ell_piv)^4 and the last number
+in each line is the constant term (i.e., it's log P at ell_pivot).
 
 3) Do we want to consider some variations on that functional form so that challenge won't be too
 easy?
