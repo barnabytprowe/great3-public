@@ -20,8 +20,10 @@ range of cosmologies within which we'll randomly sample parameters:
 And choose survey parameters: let's ignore tomography and just use default iCosmo N(z) with various
 z_med = 0.75, 1.00, 1.25.
 
-So for the fiducial cosmology we'll have 3 cosmic shear power spectra, and once we vary cosmology
-up and down we'll have 2 x 3 x 6 = 36.
+So for the fiducial cosmology we'll have 3 cosmic shear power spectra, and once we vary cosmology up
+and down we'll have 2 x 3 x 6 = 36.  Ultimately we might want to stick some of the tabulated power
+spectra into GalSim.  That can go with GalSIm issue #305 for tabulated power spectra.  Don't worry
+about it here!
 
 --> getpk.pro gets power spectra for fiducial cosmology, writes to files with ell, C_ell in tables/
 --> plotpk.py, which gives fiducial_cell.eps, fiducial_p.eps
@@ -78,8 +80,29 @@ value. Then we can multiply the cosmologically-motivated power spectra by (1+nui
 as the amplitude of the nuisance term is carefully chosen to be not ridiculously large.  I
 will play with these in new script, shapelets.py, to see what they look like for various n, beta.
 
+--> beta = 0.3 seems good, since at the edges of our ell ranges these functions are dying off.
+Typical max amplitudes are around 1, but we want to modify from cosmological PS by typically a few
+10s of % at most.  So let's try the following for making nuisance functions:
 
-Ultimately we might want to stick some of the tabulated power spectra into GalSim.
+Draw 5 random numbers from a uniform distribution between -0.1 and 0.1.  The nuisance function we'll
+use is 
+sum_n (random number index n) x B_n
+
+And then we'll multiply the cosmological PS by (1 + nuisance function).
+
+Try this out with a new script nuisance.py, to see what the nuisance functions typically look like:
+results in plots/shapelets_nuisance.eps.  These seem good, in the sense that they (a) trend towards
+zero at the edges of our ell range, (b) have a reasonable amplitude, (c) are decently non-trivial,
+but (d) not so crazy wiggly that it seems like they should be a problem.
+
+For GalSim we won't want to use scipy Hermite polynomials because we don't want a scipy dependency,
+but I am guessing we could pull the Hermite polynomials from SBLaguerre (and lazily not checking
+this assumption...) or code them up ourselves.  Or they must be in PSFCorr.cpp, so we could make
+them accessible from there.
 
 ** Remember that we need sane behavior at k=0 for the current lensing engine.  What to do with these
-   fits?
+   fits?  The fits are designed to work only in a limited ell range and probably go crazy outside of
+   that.
+
+** Do we want to vary cosmology, too?  Or just use these 3 cosmological PS as our starting point,
+   with nuisance functions modifying them?
