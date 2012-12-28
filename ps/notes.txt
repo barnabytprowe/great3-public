@@ -58,9 +58,9 @@ in each line is the constant term (i.e., it's log P at ell_pivot).
 3) Do we want to consider some variations on that functional form so that challenge won't be too
 easy?  Consider 1d shapelets, which are defined as:
 
-phi_n(x) = (2^n pi^(1/2) n!)^(1/2) H_n(x) exp(-x^2/2)
+phi_n(x) = (2^n pi^(1/2) n!)^(-1/2) H_n(x) exp(-x^2/2)
 but rescale to dimensionless ones using scale beta
-B_n(x, beta) = beta^(1/2) phi_n(x/beta)
+B_n(x, beta) = beta^(-1/2) phi_n(x/beta)
 where H_0(x) = 1, H_1(x) = 2x, etc.
 
 How to get these in python?  scipy.special.hermite will do the job, e.g., if we want to evaluate H_2
@@ -72,6 +72,11 @@ my_h2 = h2(x)
 
 and then my_h2 will contain the values of h2 at those values of x.
 
+In practice, we could use x=log10(ell/ell_pivot) so that the exp(-x^2/2) will be maximized at our
+pivot ell, and the effect of the nuisance functions will die off well above/below that ell
+value. Then we can multiply the cosmologically-motivated power spectra by (1+nuisance term) as long
+as the amplitude of the nuisance term is carefully chosen to be not ridiculously large.  I
+will play with these in new script, shapelets.py, to see what they look like for various n, beta.
 
 
 Ultimately we might want to stick some of the tabulated power spectra into GalSim.
