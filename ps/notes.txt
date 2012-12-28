@@ -1,3 +1,6 @@
+Below are Rachel's notes from work on this issue (#9).  If you want a summary of conclusions, see
+summary.txt instead.
+
 We need some shear power spectra to use as inputs for the GREAT3 challenge.  There are a few things
 to do here:
 
@@ -102,7 +105,16 @@ them accessible from there.
 
 ** Remember that we need sane behavior at k=0 for the current lensing engine.  What to do with these
    fits?  The fits are designed to work only in a limited ell range and probably go crazy outside of
-   that.
+   that.  This might be a reason to NOT use the fits, assuming that GalSim issue #305 gets worked
+   out okay (that would allow us to use tabulated PS directly).  In that case, we could simply make
+   the function that interpolates the tabulated PS extrapolate to k=0 in some well-defined way,
+   e.g., keep it as a constant below the lowest k value in the table.
 
 ** Do we want to vary cosmology, too?  Or just use these 3 cosmological PS as our starting point,
-   with nuisance functions modifying them?
+   with nuisance functions modifying them?  i think that once we're modifying the PS anyway, we
+   don't need to have a ton of cosmological inputs.  However, we might want to have more than just
+   these 3 amplitudes (corresponding to a few median redshifts) -- our nuisance functions modify the
+   PS significantly less than the amplitude difference between the 3 that are in here.  To get other
+   amplitudes, we could either make a denser grid in z_med, or we could do something crude like
+   construct more from geometric means of the PS that we already have.
+
