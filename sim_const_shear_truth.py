@@ -4,10 +4,10 @@ from sys import argv
 import os
 import numpy as np
 
-NIMS = 200                # Number of images per set, always 200 for G10
-SIGMA_TRUE = 0.03         # Standard deviation of true input shears
-NTRUE = 20                # Don't necessarily need to have NIMS input shears, but easiest if it's an
-                          # integral fraction...
+NIMS = 200               # Number of images per set, always 200 for G10
+SIGMA_TRUE = 0.04        # Standard deviation of true input shears
+NTRUE = 50               # Don't necessarily need to have NIMS input shears. But easiest if NTRUE an
+                         # integral fraction of NIMS...
 
 if not os.path.isdir('g3truth'):
     os.mkdir('g3truth')
