@@ -23,7 +23,6 @@ else:
     c1 = float(argv[4])
     c2 = float(argv[5])
 
-
 # Read in the truth catalog (assuming that sim_const_shear_truth.py has been run)
 truth = np.loadtxt('./g3truth/g3_const_shear_truth.dat')
 if truth.shape[0] != NIMS:
@@ -36,7 +35,7 @@ g2true = truth[:, 2]
 g1sub = np.empty(NIMS)
 g2sub = np.empty(NIMS)
 
-# Loop generating subs (doing this long; could use central limit theorem but this is super safe!)
+# Loop generating subs (doing this the long way - could use central limit theorem but this is super safe!)
 for i in range(NIMS):
     g1gals = (1. + m1) * g1true[i] + c1 + np.random.randn(NGALS_PER_IM) * NOISE_SIGMA
     g2gals = (1. + m2) * g2true[i] + c2 + np.random.randn(NGALS_PER_IM) * NOISE_SIGMA
