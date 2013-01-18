@@ -1,0 +1,8 @@
+{% block content %}
+    <h2>Teams</h2>
+    <ul>
+        {% for team in object_list %}
+            <li><A href="">{{ team.name }} </A> ({{ team.members }})</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

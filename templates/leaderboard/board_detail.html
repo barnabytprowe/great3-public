@@ -1,0 +1,23 @@
+
+
+<H3> Leaderboard:  {{ board.name }} </H3>
+<!-- Make this table better -->
+<table border="1">
+	<TR><TH> Entry Name </TH>
+		<TH> Team </TH>
+		<TH> Score </TH>
+		<TH> Date </TH>
+	</TR>
+
+	{% for entry in board.entry_set.all %}
+	<TR>
+		<TD> {{ entry.name }} </TD>
+		<TD> {{ entry.team }} </TD>
+		<TD> {{ entry.score }} </TD>
+		<TD> {{ entry.date }} </TD>
+	</TR>
+	{% endfor %}
+</table>
+<P>
+<A href="{% url leaderboard.board_views.submit board.id %}"> Submit to this leaderboard</A>
+</P>

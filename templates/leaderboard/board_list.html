@@ -1,0 +1,20 @@
+
+
+<H3> Leaderboards</H3>
+<!-- Make this table better -->
+<table border="1">
+	<TR><TH> Leaderboard </TH>
+		<TH> Space-based? </TH>
+		<TH> Varying shear? </TH>
+		<TH> Current leader </TH>
+	</TR>
+
+	{% for board in boards %}
+	<TR>
+		<TD> <A href="{% url leaderboard.board_views.detail board.id %}"> {{ board.name }} </TD>
+		<TD> {% if board.space %} Y {% else %} N {% endif %} </TD>
+		<TD> {% if board.varying %} Y {% else %} N {% endif %} </TD>
+		<TD> {{ board.winner }} </TD>
+	</TR>
+	{% endfor %}
+</table>

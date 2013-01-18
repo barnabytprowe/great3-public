@@ -1,0 +1,135 @@
+- fields: {name: Vanilla, space: false, varying: false}
+  model: leaderboard.board
+  pk: 1
+- fields: {name: Space, space: true, varying: false}
+  model: leaderboard.board
+  pk: 2
+- fields: {name: DES, space: false, varying: true}
+  model: leaderboard.board
+  pk: 3
+- fields: {name: Euclid, space: true, varying: true}
+  model: leaderboard.board
+  pk: 4
+- fields: {name: WFIRST, space: true, varying: false}
+  model: leaderboard.board
+  pk: 5
+- fields: {members: Lance et al, name: Lensfit}
+  model: leaderboard.team
+  pk: 1
+- fields: {members: Sarah et al, name: UCL-Manchester-Alliance}
+  model: leaderboard.team
+  pk: 2
+- fields: {members: Mike et al, name: RonPaul4Eva}
+  model: leaderboard.team
+  pk: 3
+- fields: {members: Jason et al, name: NASA}
+  model: leaderboard.team
+  pk: 4
+- fields:
+    date_joined: 2013-01-16 18:32:44.490407+00:00
+    email: jaz@example.com
+    first_name: ''
+    groups: []
+    is_active: true
+    is_staff: true
+    is_superuser: true
+    last_login: 2013-01-16 18:32:44.490407+00:00
+    last_name: ''
+    password: pbkdf2_sha256$10000$e9LAEvtKPWwx$OdEz8PEERumIECUMc2IaQmWV1MU2uo9FfQTtxxNTC4o=
+    user_permissions: []
+    username: jaz
+  model: auth.user
+  pk: 1
+- fields:
+    date_joined: 2013-01-16 18:32:48.838424+00:00
+    email: barney@example.com
+    first_name: ''
+    groups: []
+    is_active: true
+    is_staff: false
+    is_superuser: false
+    last_login: 2013-01-16 18:32:48.838402+00:00
+    last_name: ''
+    password: pbkdf2_sha256$10000$qRNb9FjuIPXk$XTGyBRyZqituLy1siM0jKycjyB9hAcMMBViw2kglBA4=
+    user_permissions: []
+    username: barney
+  model: auth.user
+  pk: 2
+- fields:
+    date_joined: 2013-01-16 18:32:48.838484+00:00
+    email: rachel@example.com
+    first_name: ''
+    groups: []
+    is_active: true
+    is_staff: false
+    is_superuser: false
+    last_login: 2013-01-16 18:32:48.838476+00:00
+    last_name: ''
+    password: pbkdf2_sha256$10000$lCreIoKtSjaH$VEli7D6RVf20dpx21oRT0kHdTyESLmhZDhLKE19oUto=
+    user_permissions: []
+    username: rachel
+  model: auth.user
+  pk: 3
+- fields:
+    date_joined: 2013-01-16 18:32:48.838540+00:00
+    email: mike@example.com
+    first_name: ''
+    groups: []
+    is_active: true
+    is_staff: false
+    is_superuser: false
+    last_login: 2013-01-16 18:32:48.838532+00:00
+    last_name: ''
+    password: pbkdf2_sha256$10000$oLqlzawVPlng$YGpAVUoWXorC0a+2CPqAWwxzGG7NLyyZHFbCvyz6Cw4=
+    user_permissions: []
+    username: mike
+  model: auth.user
+  pk: 4
+- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.213431+00:00', name: nbc1,
+    score: 14.5, team: 2, user: 2}
+  model: leaderboard.entry
+  pk: 1
+- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.215387+00:00', name: nbc1,
+    score: 20.4, team: 2, user: 1}
+  model: leaderboard.entry
+  pk: 2
+- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.217600+00:00', name: nbc1,
+    score: 884.4, team: 2, user: 2}
+  model: leaderboard.entry
+  pk: 3
+- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.219713+00:00', name: shapelets1,
+    score: 510.2, team: 3, user: 4}
+  model: leaderboard.entry
+  pk: 4
+- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.222388+00:00', name: shapelets2,
+    score: 456.4, team: 3, user: 4}
+  model: leaderboard.entry
+  pk: 5
+- fields: {board: 2, date: !!timestamp '2013-01-16 18:32:49.224632+00:00', name: deimos1,
+    score: 101.2, team: 4, user: 4}
+  model: leaderboard.entry
+  pk: 6
+- fields: {board: 2, date: !!timestamp '2013-01-16 18:32:49.227111+00:00', name: deimos2,
+    score: 141.4, team: 4, user: 4}
+  model: leaderboard.entry
+  pk: 7
+- fields:
+    teams: [2]
+    user: 1
+  model: leaderboard.userprofile
+  pk: 1
+- fields:
+    teams: [1, 2]
+    user: 2
+  model: leaderboard.userprofile
+  pk: 2
+- fields:
+    teams: [4]
+    user: 3
+  model: leaderboard.userprofile
+  pk: 3
+- fields:
+    teams: [3, 4]
+    user: 4
+  model: leaderboard.userprofile
+  pk: 4
