@@ -1,5 +1,3 @@
-
-
 <H3> Leaderboard:  {{ board.name }} </H3>
 <!-- Make this table better -->
 <table border="1">
@@ -13,7 +11,7 @@
 	<TR>
 		<TD> {{ entry.name }} </TD>
 		<TD> {{ entry.team }} </TD>
-		<TD> {{ entry.score }} </TD>
+		<TD> {{ entry.get_score }} </TD>
 		<TD> {{ entry.date }} </TD>
 	</TR>
 	{% endfor %}

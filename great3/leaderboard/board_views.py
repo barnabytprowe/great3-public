@@ -1,7 +1,8 @@
-from leaderboard.models import Board, Entry
+from leaderboard.models import Board, Entry, save_submission_file
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django import forms
+from django.contrib.auth.decorators import login_required
 
 
 
@@ -31,21 +32,8 @@ def detail(request, board_id):
 	return render(request,'leaderboard/board_detail.html',data)
 
 
-def save_submission(submission, name, user, team, board):
-	print "Sanity check the file size here"
-	entry = Entry(team=team, name=name, user=user, board=board)
-	entry.save()
-	try:
-		with open(entry.get_filename(), 'wb+') as destination:
-			for chunk in submission.chunks():
-				destination.write(chunk)
-	except IOError:
-		entry.delete()
-		return False
-	return True
 
-
-
+@login_required
 def submit(request, board_id):
 	teams = request.user.get_profile().teams.all()
 	board = Board.objects.get(id=board_id)
@@ -57,10 +45,12 @@ def submit(request, board_id):
 		else:
 			team=None
 			form = SubmissionForm(request.POST, request.FILES, teams=teams)
+
 		if form.is_valid():
+			print "Submitting Valid Entry"
 			if team is None: team = form.cleaned_data['team']
-			save_submission(request.FILES['file_upload'], form.cleaned_data['title'], request.user, team, board)
-			return HttpResponseRedirect('/leaderboard/board/submitted/')
+			save_submission_file(request.FILES['file_upload'], form.cleaned_data['title'], request.user, team, board)
+			return HttpResponseRedirect('/leaderboard/board/%s/submitted/'%board_id)
 		else: 
 			print "Errors ", form.errors
 			data= dict(form=form, board=board)
@@ -73,10 +63,7 @@ def submit(request, board_id):
 		data = dict(form=form, board=board)
 		return render(request, 'leaderboard/submit.html', data)
 
-def submitted(request):
-	return render(request, 'leaderboard/submitted.html')
+def submitted(request, board_id):
+	data = dict(board_id=board_id)
+	return render(request, 'leaderboard/submitted.html', data)
 
-
-def test(request):
-	""" Make a new submission to a leaderboard """
-	return HttpResponse('<BR>Submit page</BR>')
