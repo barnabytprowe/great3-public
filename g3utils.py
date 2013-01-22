@@ -45,5 +45,37 @@ def fitline(xarr, yarr):
     var_a  = sigma2 * Sxx / Del
     cov_ab = - sigma2 * Sx / Del
     var_b  = sigma2 * S / Del
-
     return (a, b, var_a, cov_ab, var_b)
+
+def metricQ08_const_shear(g1est, g2est, g1true, g2true):
+    """Calculate a GREAT08-style Q value for constant shear branch results.
+
+    Each element of the input arrays g1est, g2est is assumed to be the average of the shear
+    estimates in a large image, of which there will be some decent-sized number (~200).   The
+    arrays g1true, g2true are the corresponding truth values.
+    """
+    return 1.e-4 / np.sqrt(np.sum((g1est - g1true)**2 + (g2est - g2true)**2))
+
+def metricQZ1_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
+    """Calculate a metric along the lines suggested by Joe Zuntz in Pittsburgh (option 1).
+    """
+    c1, m1, var_c1, cov_c1m1, var_m2 = fitline(g1true, g1est - g1true)
+    c2, m2, var_c2, cov_c2m2, var_m2 = fitline(g2true, g2est - g2true)
+    sig_c1 = np.sqrt(var_c1)
+    sig_m1 = np.sqrt(var_m1)
+    sig_c2 = np.sqrt(var_c2)
+    sig_m2 = np.sqrt(var_m2)
+    Q = 2000. / np.sqrt((c1 / cfid)**2 + (c2 / cfid)**2 + (m1 / mfid)**2 + (m2 / mfid)**2)
+    return (Q, c1, m1, c2, m2, sig_c1, sig_m1, sig_c2, sig_m2)
+
+def metricQZ2_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
+    """Calculate a metric along the lines suggested by Joe Zuntz in Pittsburgh (option 2).
+    """
+    c1, m1, var_c1, cov_c1m1, var_m2 = fitline(g1true, g1est - g1true)
+    c2, m2, var_c2, cov_c2m2, var_m2 = fitline(g2true, g2est - g2true)
+    sig_c1 = np.sqrt(var_c1)
+    sig_m1 = np.sqrt(var_m1)
+    sig_c2 = np.sqrt(var_c2)
+    sig_m2 = np.sqrt(var_m2)
+    Q = 500. * np.sqrt((c1fid / c1)**2 + (cfid / c2)**2 + (mfid / m1)**2 + (mfid / m2)**2)
+    return (Q, c1, m1, c2, m2, sig_c1, sig_m1, sig_c2, sig_m2)
