@@ -1,19 +1,16 @@
 from leaderboard.models import Team
 from django.http import HttpResponse
-from django.views.generic import DetailView, ListView
+from django.shortcuts import render
 
-def team_view_index(request):
+
+def index(request):
 	teams = Team.objects.all().order_by('name')
-	output = ""
-	for team in teams:
-		users = ", ".join(user.user.username for user in team.users.all())
-		output += '<BR> %s  [%s]' % (team.name,users)
-	return HttpResponse(output)
+	data = dict(team=team)
+	return render(request, 'leaderboard/team_list.html', data)
 
 
-class TeamListView(ListView):
-	model=Team
+def detail(request, team_id):
+	team = Team.objects.get(id=team_id)
+	data = dict(team=team)
+	return render(request, 'leaderboard/team_detail.html', data)
 
-
-class TeamDetailView(DetailView):
-	model=Team

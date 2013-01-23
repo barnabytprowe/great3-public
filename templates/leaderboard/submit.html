@@ -1,11 +1,22 @@
-<HEAD>
-</HEAD>
-<BODY>
-<H2>Submission</H2>
+{% extends "leaderboard/base.html" %}
 
-<form action="submit" enctype="multipart/form-data" method="post">{% csrf_token %}
-{{ form.as_p }}
-<input type="submit" value="Submit" />
-</form>
+{% block subtitle %}Submission {% endblock %}
 
-</BODY>
+{% block content %}
+	{% if teams|length > 1 %}
+
+	{% else %}
+		You are submitting as a member of team {{ teams|first }}
+	{% endif %}
+
+	<form action="submit" 
+	      enctype="multipart/form-data"
+	      method="post">
+	    {% csrf_token %}
+		{{ form.as_p }}
+		<input type="submit" 
+		       value="Submit" />
+	</form>
+
+
+{% endblock %}

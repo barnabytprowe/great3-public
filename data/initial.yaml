@@ -85,31 +85,31 @@
     username: mike
   model: auth.user
   pk: 4
-- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.213431+00:00', name: nbc1,
+- fields: {board: 1, date: !!timestamp '2013-01-16 18:10:49.213431+00:00', name: nbc1,
     score: 14.5, team: 2, user: 2}
   model: leaderboard.entry
   pk: 1
-- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.215387+00:00', name: nbc1,
+- fields: {board: 1, date: !!timestamp '2013-01-13 18:24:49.215387+00:00', name: nbc2,
     score: 20.4, team: 2, user: 1}
   model: leaderboard.entry
   pk: 2
-- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.217600+00:00', name: nbc1,
+- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.217600+00:00', name: nbc3,
     score: 884.4, team: 2, user: 2}
   model: leaderboard.entry
   pk: 3
-- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.219713+00:00', name: shapelets1,
+- fields: {board: 1, date: !!timestamp '2013-01-15 01:01:49.219713+00:00', name: shapelets1,
     score: 510.2, team: 3, user: 4}
   model: leaderboard.entry
   pk: 4
-- fields: {board: 1, date: !!timestamp '2013-01-16 18:32:49.222388+00:00', name: shapelets2,
+- fields: {board: 1, date: !!timestamp '2013-01-16 02:02:49.222388+00:00', name: shapelets2,
     score: 456.4, team: 3, user: 4}
   model: leaderboard.entry
   pk: 5
-- fields: {board: 2, date: !!timestamp '2013-01-16 18:32:49.224632+00:00', name: deimos1,
+- fields: {board: 2, date: !!timestamp '2013-01-12 09:09:49.224632+00:00', name: deimos1,
     score: 101.2, team: 4, user: 4}
   model: leaderboard.entry
   pk: 6
-- fields: {board: 2, date: !!timestamp '2013-01-16 18:32:49.227111+00:00', name: deimos2,
+- fields: {board: 2, date: !!timestamp '2013-01-19 14:14:49.227111+00:00', name: deimos2,
     score: 141.4, team: 4, user: 4}
   model: leaderboard.entry
   pk: 7

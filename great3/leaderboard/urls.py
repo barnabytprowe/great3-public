@@ -1,5 +1,4 @@
 from django.conf.urls import patterns, include, url
-from team_views import TeamListView, TeamDetailView
 import models
 
 
@@ -13,8 +12,8 @@ urlpatterns = patterns('leaderboard.board_views',
 )
 
 urlpatterns += patterns('leaderboard.team_views',
-    url(r'^team$', TeamListView.as_view()),
-    url(r'^team/?$', 'team_view_index'),
+    url(r'^team/(\d+)/?$', 'detail'),
+    url(r'^team/?$', 'index'),
 )
 
 urlpatterns += patterns('leaderboard.entry_views',

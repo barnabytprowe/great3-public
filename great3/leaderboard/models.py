@@ -28,14 +28,28 @@ class Team(models.Model):
 	def __unicode__(self):
 		return self.name
 
+	@staticmethod
+	def winning_teams():
+		scores = Board.total_scores()
+		winners = []
+		best_score = -1
+		for (team,score) in scores.items():
+			if score>best_score:
+				winners = [team]
+				best_score = score
+			elif score==best_score:
+				winners.append(team)
+		return winners, best_score
+
+
 
 def score_for_rank(rank):
 	""" The score that a team gets if their top-ranked ]
 		entry into a board is at the given rank.
 	"""
-	if   rank==0: score+=5
-	elif rank==1: score+=3
-	elif rank==2: score+=1
+	if   rank==1: return 5
+	elif rank==2: return 3
+	elif rank==3: return 1
 	else: return 0
 
 
@@ -67,7 +81,7 @@ class Board(models.Model):
 
 	def get_entry_at_rank(self, rank):
 		try:
-			self.entry_set.order_by('-score')[rank]
+			return self.entry_set.all().order_by('-score')[rank]
 		except IndexError:
 			return None
 
@@ -87,20 +101,17 @@ class Entry(models.Model):
 	def __unicode__(self):
 		return self.name
 
-	@property
 	def score_text(self):
+		print "Getting score text - ", self.score
 		if self.score == PLACEHOLDER_SCORE:
-			return "<...>"
+			return "...Calculating..."
 		else:
 			return "%.1f" % self.score
 
 	@property
 	def current_rank(self):
 		entries = self.board.entry_set.all()
-		return list(entries).index(self)
-
-
-
+		return list(entries).index(self)+1
 
 	def get_filename(self):
 		return os.path.join(SUBMISSION_SAVE_PATH, str(self.id)) + '.g3_result'

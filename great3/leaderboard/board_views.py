@@ -27,8 +27,7 @@ def index(request):
 def detail(request, board_id):
 	""" Detail view of a single leaderboard """
 	board = Board.objects.get(id=board_id)
-	entries = board.entry_set.all()
-	data = dict(board=board, entries=entries)
+	data = dict(board=board)
 	return render(request,'leaderboard/board_detail.html',data)
 
 
@@ -53,14 +52,14 @@ def submit(request, board_id):
 			return HttpResponseRedirect('/leaderboard/board/%s/submitted/'%board_id)
 		else: 
 			print "Errors ", form.errors
-			data= dict(form=form, board=board)
+			data= dict(form=form, board=board, teams=teams)
 			return render(request, 'leaderboard/submit.html', data)
 	else:
 		if len(teams)==1:
 			form = SubmissionForm()
 		else:
 			form = SubmissionForm(teams=teams)
-		data = dict(form=form, board=board)
+		data = dict(form=form, board=board, teams=teams)
 		return render(request, 'leaderboard/submit.html', data)
 
 def submitted(request, board_id):
