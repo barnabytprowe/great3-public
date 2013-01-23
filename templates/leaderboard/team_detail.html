@@ -1,0 +1,39 @@
+{% extends "leaderboard/base.html" %}
+{% block subtitle %} {{ team.name }} {% endblock %}
+
+{% block header_script %}
+	<script>
+		$(document).ready(function() {$("#teamTable").tablesorter({widgets:['zebra']}); } ); 
+	</script>
+{% endblock %}
+
+{% block content %}
+	<H3> Team:  {{ team.name }} </H3>
+	<P> Members of this team:  {{ team.members }} </P>
+	<H4> Leaderboard entries </H4>
+
+	<table id="teamTable" class="tablesorter"> <!-- Add sortable table thing here if desired -->
+		<THEAD>
+			<TH> Entry </TH>
+			<TH> Board </TH>
+			<TH> Rank </TH>
+			<TH> Score </TH>
+			<TH> Date </TH>
+			<TH> Submitter </TH>
+
+		</THEAD>
+		<TBODY>
+			{% for entry in team.entry_set.all %}
+				<TR>
+					<TD> <A href="{% url leaderboard.entry_views.detail entry.id %}"> {{ entry.name }} </A> </TD>
+					<TD> <A href="{% url leaderboard.board_views.detail entry.board.id %}"> {{ entry.board }} </A> </TD>
+					<TD> {% with entry.current_rank as rank %} {% if rank < 4 %} <B> {% endif %} {{ rank }} {% if rank < 4 %} </B> {% endif %} {% endwith %}</TD>
+					<TD> {{ entry.score_text }} </TD>
+					<TD> {{ entry.date }} </TD>
+					<TD> {{ entry.user }} </TD>
+
+				</TR>
+			{% endfor %}
+		</TBODY>
+	</table>
+{% endblock %}

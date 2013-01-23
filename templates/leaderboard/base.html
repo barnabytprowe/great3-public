@@ -1,0 +1,26 @@
+<HTML>
+	<HEAD>
+		<TITLE> Great3 {% block subtitle %} {% endblock %}</TITLE>
+
+		<link rel="stylesheet" href="{{ STATIC_URL }}js/tablesorter/themes/great3/style.css" type="text/css" media="print, projection, screen" />
+
+		<script src="{{ STATIC_URL }}js/tablesorter/jquery-latest.js"
+				type="text/javascript"
+				charset="utf-8">
+		</script>
+		<script type="text/javascript" 
+				src="{{ STATIC_URL }}js/tablesorter/jquery.tablesorter.js">
+		</script> 
+
+		{% block header_script %}
+		{% endblock %}
+
+	</HEAD>
+	<BODY>
+		<DIV align="left" ><IMG src="{{ STATIC_URL }}img/Home.png"></DIV>
+
+		 {% block content %} 
+		 {% endblock %}
+
+	</BODY>
+</HTML>
