@@ -109,6 +109,8 @@ class Board(models.Model):
 		for board in cls.objects.all():
 			board.assign_ranks()
 
+	def number_entries(self):
+		return len(self.entry_set.all())
 
 	def __unicode__(self):
 		return self.name
