@@ -5,16 +5,21 @@
 
 {% block header_script %}
 	<script>
-		$(document).ready(function() {$("#boardTable").tablesorter({widgets:['zebra']}); } ); 
+		$(document).ready(function() {$("#boardTable").tablesorter({
+			headers: {3: {sorter:'rank'}},
+			widgets:['zebra']}); } ); 
 	</script>
 {% endblock %}
 
 {% block content %}
+<H2> Entries to {{ board.name }} leaderboard</H2>
 <table class="tablesorter" id="boardTable">
 	<THEAD>
 		<TH> Entry Name </TH>
 		<TH> Team </TH>
 		<TH> Score </TH>
+		<TH> Rank </TH>
+		<TH> Points </TH>
 		<TH> Date </TH>
 	</THEAD>
 	<TBODY>
@@ -23,6 +28,8 @@
 			<TD> <A href="{% url leaderboard.entry_views.detail entry.id %}"> {{ entry.name }}</A> </TD>
 			<TD> <A href="{% url leaderboard.team_views.detail entry.team.id %}"> {{ entry.team }}</A> </TD>
 			<TD> {{ entry.score_text }} </TD>
+			<TD> {{ entry.rank_text }} </TD>
+			<TD> {{ entry.points_text }} </TD>
 			<TD> {{ entry.date }} </TD>
 		</TR>
 	{% endfor %}

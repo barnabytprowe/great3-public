@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from leaderboard.models import Entry, PLACEHOLDER_SCORE
+from leaderboard.models import Entry, PLACEHOLDER_SCORE, recompute_scoring
 import numpy as np
 
 class Command(BaseCommand):
@@ -15,3 +15,4 @@ class Command(BaseCommand):
 			print "Instead using random number from 1-1000"
 			entry.score = np.random.uniform(1, 1000)
 			entry.save()
+		recompute_scoring()

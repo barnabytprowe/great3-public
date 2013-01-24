@@ -3,7 +3,9 @@
 
 {% block header_script %}
 	<script>
-		$(document).ready(function() {$("#teamTable").tablesorter({widgets:['zebra']}); } ); 
+		$(document).ready(function() {$("#teamTable").tablesorter({
+			headers: {3: {sorter:'rank'}},
+			widgets:['zebra']}); } ); 
 	</script>
 {% endblock %}
 
@@ -16,8 +18,9 @@
 		<THEAD>
 			<TH> Entry </TH>
 			<TH> Board </TH>
-			<TH> Rank </TH>
 			<TH> Score </TH>
+			<TH> Rank </TH>
+			<TH> Points </TH>
 			<TH> Date </TH>
 			<TH> Submitter </TH>
 
@@ -27,8 +30,9 @@
 				<TR>
 					<TD> <A href="{% url leaderboard.entry_views.detail entry.id %}"> {{ entry.name }} </A> </TD>
 					<TD> <A href="{% url leaderboard.board_views.detail entry.board.id %}"> {{ entry.board }} </A> </TD>
-					<TD> {% with entry.current_rank as rank %} {% if rank < 4 %} <B> {% endif %} {{ rank }} {% if rank < 4 %} </B> {% endif %} {% endwith %}</TD>
 					<TD> {{ entry.score_text }} </TD>
+					<TD> {{ entry.rank_text }} </TD>
+					<TD> {{ entry.points_text }} </TD>
 					<TD> {{ entry.date }} </TD>
 					<TD> {{ entry.user }} </TD>
 

@@ -1,8 +1,32 @@
+{% extends "leaderboard/base.html" %}
+
+{% block subtitle %}Teams{% endblock %}
+
+{% block header_script %}
+	<script>
+		$(document).ready(function() {$("#teamTable").tablesorter({widgets:['zebra']}); } ); 
+	</script>
+{% endblock %}
+
 {% block content %}
     <h2>Teams</h2>
-    <ul>
-        {% for team in object_list %}
-            <li><A href="">{{ team.name }} </A> ({{ team.members }})</li>
+    <TABLE id="teamTable" class="tablesorter" >
+    	<THEAD>
+    		<TH>Name</TH>
+    		<TH>Members</TH>
+            <TH>Score</TH>
+            <TH>Number of entries</TH>
+    	</THEAD>
+    	<TBODY>
+    		<TR>
+		        {% for team in teams %}
+    			<TD><A href="{% url leaderboard.team_views.detail team.id %}">{{ team.name }} </A></TD>
+    			<TD> {{ team.members }} </TD>
+                <TD> {{ team.score }} </TD>
+                <TD> {{ team.number_entries }} </TD>
+    		</TR>
         {% endfor %}
-    </ul>
+    </TBODY>
+    </TABLE>
 {% endblock %}
+

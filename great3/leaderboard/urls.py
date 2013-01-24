@@ -23,3 +23,8 @@ urlpatterns += patterns('leaderboard.entry_views',
 urlpatterns += patterns('leaderboard.views',
 	url(r'^$', 'front_page'),
 	)
+
+
+urlpatterns += patterns('leaderboard.data_views',
+	url(r'^data/?$', 'index'),
+	)

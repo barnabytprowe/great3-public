@@ -4,6 +4,7 @@ from models import Team, Board, create_data
 
 
 def front_page(request):
+	# print "CREATING DATA ... "
 	# create_data()
 	# print "CREATED DATA"
 	winners, score = Team.winning_teams()

@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 def index(request):
 	teams = Team.objects.all().order_by('name')
-	data = dict(team=team)
+	data = dict(teams=teams)
 	return render(request, 'leaderboard/team_list.html', data)
 
 

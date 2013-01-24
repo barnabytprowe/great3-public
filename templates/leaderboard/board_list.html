@@ -15,6 +15,7 @@
 		<TH> Space-based? </TH>
 		<TH> Varying shear? </TH>
 		<TH> Current leader </TH>
+		<TH> Winning entry </TH>
 	</THEAD>
 	<TBODY>
 	{% for board in boards %}
@@ -22,7 +23,19 @@
 		<TD> <A href="{% url leaderboard.board_views.detail board.id %}"> {{ board.name }} </TD>
 		<TD> {% if board.space %} Y {% else %} N {% endif %} </TD>
 		<TD> {% if board.varying %} Y {% else %} N {% endif %} </TD>
-		<TD> {% if board.winner %} <A href="{% url leaderboard.entry_views.detail board.winner.id %}"> {{ board.winner }} </A> by  <A href="{% url leaderboard.team_views.detail board.winner.team.id %}"> {{ board.winner.team }} {% endif %} </A> </TD>
+		{% with board.winner as winner %}
+			{% if winner %} 
+				<TD> 
+					<A href="{% url leaderboard.team_views.detail winner.team.id %}"> {{ winner.team }} </A> 
+				</TD>
+				<TD> 
+					<A href="{% url leaderboard.entry_views.detail winner.id %}"> {{ winner }} </A> 
+				</TD>
+			{% else %}
+				<TD> </TD>
+				<TD> </TD>
+			{% endif %}
+		{% endwith %}
 	</TR>
 	{% endfor %}
 	</TBODY>
