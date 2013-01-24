@@ -3,7 +3,6 @@
 
 import numpy as np
 
-
 def _calculateSvalues(xarr, yarr, sigma2=1.):
     """Calculates the intermediate S values required for basic linear regression.
 
@@ -54,12 +53,12 @@ def metricQ08_const_shear(g1est, g2est, g1true, g2true):
     estimates in a large image, of which there will be some decent-sized number (~200).   The
     arrays g1true, g2true are the corresponding truth values.
     """
-    return 1.e-4 / np.sqrt(np.sum((g1est - g1true)**2 + (g2est - g2true)**2))
+    return 1.4 / np.sqrt(np.mean((g1est - g1true)**2 + (g2est - g2true)**2))
 
 def metricQZ1_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
     """Calculate a metric along the lines suggested by Joe Zuntz in Pittsburgh (option 1).
     """
-    c1, m1, var_c1, cov_c1m1, var_m2 = fitline(g1true, g1est - g1true)
+    c1, m1, var_c1, cov_c1m1, var_m1 = fitline(g1true, g1est - g1true)
     c2, m2, var_c2, cov_c2m2, var_m2 = fitline(g2true, g2est - g2true)
     sig_c1 = np.sqrt(var_c1)
     sig_m1 = np.sqrt(var_m1)
@@ -71,11 +70,11 @@ def metricQZ1_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
 def metricQZ2_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
     """Calculate a metric along the lines suggested by Joe Zuntz in Pittsburgh (option 2).
     """
-    c1, m1, var_c1, cov_c1m1, var_m2 = fitline(g1true, g1est - g1true)
+    c1, m1, var_c1, cov_c1m1, var_m1 = fitline(g1true, g1est - g1true)
     c2, m2, var_c2, cov_c2m2, var_m2 = fitline(g2true, g2est - g2true)
     sig_c1 = np.sqrt(var_c1)
     sig_m1 = np.sqrt(var_m1)
     sig_c2 = np.sqrt(var_c2)
     sig_m2 = np.sqrt(var_m2)
-    Q = 500. * np.sqrt((c1fid / c1)**2 + (cfid / c2)**2 + (mfid / m1)**2 + (mfid / m2)**2)
+    Q = 500. * np.sqrt((cfid / c1)**2 + (cfid / c2)**2 + (mfid / m1)**2 + (mfid / m2)**2)
     return (Q, c1, m1, c2, m2, sig_c1, sig_m1, sig_c2, sig_m2)

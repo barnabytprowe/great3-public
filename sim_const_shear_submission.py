@@ -7,10 +7,10 @@ NIMS = 200                # Number of images per set, was 200 for G10
 NGALS_PER_IM = 1e4        # Number of galaxies per image, was 100x100 for G10
 NOISE_SIGMA = 0.05        # The effective standard deviation on a single shear due to pixel noise
 
-def make_submission(label, c1, c2, m1, m2, noise_sigma=0.05):
+def make_submission(c1, c2, m1, m2, noise_sigma=0.05, label=None):
     """Make a submission using the provided label and c, m values.
 
-    Saves output to ./g3subs/g3_const_shear_sub.<label>.dat
+    Saves output to ./g3subs/g3_const_shear_sub.<label>.dat if label is not `None`
     """
     # Read in the truth catalog (assuming that sim_const_shear_truth.py has been run)
     truth = np.loadtxt('./g3truth/g3_const_shear_truth.dat')
@@ -26,16 +26,18 @@ def make_submission(label, c1, c2, m1, m2, noise_sigma=0.05):
     # Loop generating subs (doing this the long way - could use central limit theorem but this is
     # super safe!)
     for i in range(NIMS):
-        g1gals = (1. + m1) * g1true[i] + c1 + np.random.randn(NGALS_PER_IM) * NOISE_SIGMA
-        g2gals = (1. + m2) * g2true[i] + c2 + np.random.randn(NGALS_PER_IM) * NOISE_SIGMA
+        g1gals = (1. + m1) * g1true[i] + c1 + np.random.randn(NGALS_PER_IM) * noise_sigma
+        g2gals = (1. + m2) * g2true[i] + c2 + np.random.randn(NGALS_PER_IM) * noise_sigma
         g1sub[i] = np.mean(g1gals)
         g2sub[i] = np.mean(g2gals)
-    # Save output
-    if not os.path.isdir('g3subs'):
-        os.mkdir('g3subs')
-    np.savetxt(
-        './g3subs/g3_const_shear_sub.'+label+'.dat', np.array((truth[:, 0], g1sub, g2sub)).T,
-        fmt=('%d', '%14.7f', '%14.7f'))
+    # Save output if requested
+    if label is not None:
+        if not os.path.isdir('g3subs'):
+            os.mkdir('g3subs')
+        np.savetxt(
+            './g3subs/g3_const_shear_sub.'+label+'.dat', np.array((truth[:, 0], g1sub, g2sub)).T,
+            fmt=('%d', '%14.7f', '%14.7f'))
+    return g1sub, g2sub
 
 
 if __name__ is "__main__":
@@ -56,4 +58,5 @@ if __name__ is "__main__":
         c2 = float(argv[3])
         m1 = float(argv[4])
         m2 = float(argv[5])
-    make_submission(label, c1, c2, m1, m2, noise_sigma=NOISE_SIGMA)     
+    make_submission(c1, c2, m1, m2, noise_sigma=NOISE_SIGMA, label=label)
+

@@ -22,7 +22,7 @@ def make_truth_normal_dist():
     np.savetxt(
         './g3truth/g3_const_shear_truth.dat', np.array((imagen, g1true, g2true)).T, 
         fmt=('%d', '%14.7f', '%14.7f'))
-    return
+    return g1true, g2true
 
 def make_truth_uniform_dist():
     """Generate truth catalogues with a U(-RANGE_TRUE, RANGE_TRUE) distribution of input truth
@@ -37,7 +37,8 @@ def make_truth_uniform_dist():
     np.savetxt(
         './g3truth/g3_const_shear_truth.dat', np.array((imagen, g1true, g2true)).T, 
         fmt=('%d', '%14.7f', '%14.7f'))
-    return
+    return g1true, g2true
+
 
 if __name__ is "__main__":
     make_truth_normal_dist()
