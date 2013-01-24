@@ -18,12 +18,13 @@
 			<TH>Winning team</TH>
 			<TH>Winning score</TH>
 			<TH>Winning entry</TH>
+			<TH>Number entries</TH>
 		</TR>
 	</THEAD>
 	<TBODY>
 	{% for board in boards %}
 	<TR>
-		<TD> <A href="{% url leaderboard.board_views.detail board.id %}"> {{ board.name }}</A> </TD>
+		<TD> <A href="{% url leaderboard.board_views.detail board.id %}"> {{ board.name }}   </A> </TD>
 		<TD>{% if board.space %} Y {% else %} N {% endif %} </TD>
 		<TD>{% if board.varying %} Y {% else %} N {% endif %} </TD>
 		{% with board.winner as winner %}
@@ -37,6 +38,8 @@
 				<TD></TD>
 			{% endif %}
 		{% endwith %}
+		<TD>{{board.number_entries}}</TD>
+
 	</TR>
 	{% endfor %}
 	</TBODY>
