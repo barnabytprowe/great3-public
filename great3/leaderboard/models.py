@@ -66,7 +66,6 @@ class Team(models.Model):
 		winners = [top_team]
 		best_score = top_team.score
 		for team in teams[1:]:
-			print "next = ", team, team.score
 			if team.score==best_score:
 				winners.append(team)
 			else:
@@ -74,7 +73,6 @@ class Team(models.Model):
 		return winners, best_score
 
 
-TOP_RANKS = 3
 def score_for_rank(rank):
 	""" The score that a team gets if their top-ranked ]
 		entry into a board is at the given rank.

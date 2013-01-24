@@ -1,5 +1,5 @@
 {% extends "leaderboard/front_page.html" %}
-{% block login_note %} You are logged in as {{user}}.
+{% block login_note %}
 <P>Check entries from your teams:
 	<UL>
 		{% for team in user.get_profile.teams.all %}

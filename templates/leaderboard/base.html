@@ -40,6 +40,10 @@
 
 		 {% block content %} 
 		 {% endblock %}
-
+		 {% if user.is_authenticated %}
+		 <P> Logged in as {{ user }}. <A href="{% url django.contrib.auth.views.logout %}">Log out</A>  </P>
+		 {% else %}
+		 <P> <A href="{% url django.contrib.auth.views.login %}"> Log in</A><P>
+		 {% endif %}
 	</BODY>
 </HTML>

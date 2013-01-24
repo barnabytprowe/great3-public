@@ -1,21 +1,20 @@
 from django.conf.urls import patterns, include, url
 from  django.contrib.auth.views import login
+from django.views.generic.simple import redirect_to
 
-# Uncomment the next two lines to enable the admin:
+# This enables the admin site to find
+# all the models it controls
 from django.contrib import admin
 admin.autodiscover()
 
+# These are the main URLs provided by the system.
+# Most of them delegate to the leaderboard/urls.py
+# patterns
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'great3.views.home', name='home'),
-    # url(r'^great3/', include('great3.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^/?$', redirect_to, {'url': 'leaderboard/'}),    
     url(r'^leaderboard/', include('leaderboard.urls')),
     url(r'^login$','django.contrib.auth.views.login'),
+    url(r'^logout$','django.contrib.auth.views.logout', {'next_page': '/'}),
 )
 
