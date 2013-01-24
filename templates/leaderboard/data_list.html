@@ -1,0 +1,11 @@
+{% extends "leaderboard/base.html" %}
+{% block subtitle %} Data Access {% endblock %}
+
+{% block content %}
+<P> This is where we would provide links to the data for all of the leaderboards.</P>
+<UL>
+{% for board in boards %}
+<LI> Placeholder - link to data from board {{board}} </LI>
+{% endfor %}
+</UL>
+{% endblock %}
