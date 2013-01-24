@@ -6,7 +6,7 @@ import numpy as np
 NIMS = 200               # Number of images per set, always 200 for G10
 SIGMA_TRUE = 0.04        # Standard deviation of true input shears for normal distribution
 RANGE_TRUE = 0.08        # Range of true input shears for a uniform distribution
-NTRUE = 50               # Don't necessarily need to have NIMS input shears. But easiest if NTRUE an
+NTRUE = 20               # Don't necessarily need to have NIMS input shears. But easiest if NTRUE an
                          # integral fraction of NIMS...
 
 def make_truth_normal_dist():
