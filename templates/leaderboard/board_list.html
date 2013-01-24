@@ -1,38 +1,40 @@
 {% extends "leaderboard/base.html" %}
 {% block subtitle %} Leaderbords {% endblock %}
 {% block header_script %}
-	<script>
-		$(document).ready(function() {$("#boardTable").tablesorter({widgets:['zebra']}); } ); 
-	</script>
-{% endblock %}
+<script>
+		$(document).ready(function() {$("#boardTable").tablesorter({widgets:['zebra']}); } );
+</script>
+ {% endblock %}
 
 
 {% block content %} 
 <H3> Leaderboards</H3>
 <table id="boardTable" class="tablesorter" >
 	<THEAD>
-		<TH> Leaderboard </TH>
-		<TH> Space-based? </TH>
-		<TH> Varying shear? </TH>
-		<TH> Winning team </TH>
-		<TH> Winning score </TH>
-		<TH> Winning entry </TH>
+		<TR>
+			<TH>Leaderboard </TH>
+			<TH>Space-based</TH>
+			<TH>Varying shear</TH>
+			<TH>Winning team</TH>
+			<TH>Winning score</TH>
+			<TH>Winning entry</TH>
+		</TR>
 	</THEAD>
 	<TBODY>
 	{% for board in boards %}
 	<TR>
-		<TD> <A href="{% url leaderboard.board_views.detail board.id %}"> {{ board.name }} </TD>
-		<TD> {% if board.space %} Y {% else %} N {% endif %} </TD>
-		<TD> {% if board.varying %} Y {% else %} N {% endif %} </TD>
+		<TD> <A href="{% url leaderboard.board_views.detail board.id %}"> {{ board.name }}</A> </TD>
+		<TD>{% if board.space %} Y {% else %} N {% endif %} </TD>
+		<TD>{% if board.varying %} Y {% else %} N {% endif %} </TD>
 		{% with board.winner as winner %}
 			{% if winner %} 
-				<TD> <A href="{% url leaderboard.team_views.detail winner.team.id %}">{{ winner.team }}</A></TD>
-				<TD> {{ winner.score_text }} </A> </TD>
-				<TD> <A href="{% url leaderboard.entry_views.detail winner.id %}"> {{ winner }} </A> </TD>
+				<TD><A href="{% url leaderboard.team_views.detail winner.team.id %}">{{ winner.team }}</A></TD>
+				<TD>{{ winner.score_text }}</TD>
+				<TD><A href="{% url leaderboard.entry_views.detail winner.id %}"> {{ winner }}</A></TD>
 			{% else %}
-				<TD> </TD>
-				<TD> </TD>
-				<TD> </TD>
+				<TD></TD>
+				<TD></TD>
+				<TD></TD>
 			{% endif %}
 		{% endwith %}
 	</TR>
