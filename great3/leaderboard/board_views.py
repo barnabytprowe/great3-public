@@ -27,7 +27,8 @@ def index(request):
 def detail(request, board_id):
 	""" Detail view of a single leaderboard """
 	board = Board.objects.get(id=board_id)
-	data = dict(board=board)
+	entries = board.entry_set.order_by('-score')
+	data = dict(board=board, entries=entries)
 	return render(request,'leaderboard/board_detail.html',data)
 
 

@@ -23,7 +23,7 @@
 		<TH> Date </TH>
 	</THEAD>
 	<TBODY>
-		{% for entry in board.entry_set.all %}
+		{% for entry in entries %}
 		<TR>
 			<TD> <A href="{% url leaderboard.entry_views.detail entry.id %}"> {{ entry.name }}</A> </TD>
 			<TD> <A href="{% url leaderboard.team_views.detail entry.team.id %}"> {{ entry.team }}</A> </TD>
