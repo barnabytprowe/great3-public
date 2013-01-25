@@ -8,6 +8,10 @@ installation_base  = os.path.join(os.path.split(__file__)[0], '..', '..')
 # Make this unique, and don't share it with anybody.
 # JAZ - need to change this on the server!
 SECRET_KEY = '4_q-o#r6d=64gm285hh_!dqk)g%2$=&amp;@c1=6g@e%wzj@wfl16c'
+ACCOUNT_ACTIVATION_DAYS = 7
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = os.path.join(installation_base, "emails") # change this to a proper location
 
 
 ADMINS = (
@@ -128,11 +132,12 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'leaderboard',
+    'registration',
 )
 
 AUTH_PROFILE_MODULE='leaderboard.UserProfile'
 LOGIN_REDIRECT_URL='/leaderboard'
-LOGIN_URL='/login'
+LOGIN_URL='/accounts/login'
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 # A sample logging configuration. The only tangible logging

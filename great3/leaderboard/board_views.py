@@ -47,12 +47,10 @@ def submit(request, board_id):
 			form = SubmissionForm(request.POST, request.FILES, teams=teams)
 
 		if form.is_valid():
-			print "Submitting Valid Entry"
 			if team is None: team = form.cleaned_data['team']
 			save_submission_file(request.FILES['file_upload'], form.cleaned_data['title'], request.user, team, board)
 			return HttpResponseRedirect('/leaderboard/board/%s/submitted/'%board_id)
 		else: 
-			print "Errors ", form.errors
 			data= dict(form=form, board=board, teams=teams)
 			return render(request, 'leaderboard/submit.html', data)
 	else:

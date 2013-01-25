@@ -1,0 +1,4 @@
+Pre-requisites
+
+Django >= 1.4 (available in pip) 
+Numpy, probably, for scoring

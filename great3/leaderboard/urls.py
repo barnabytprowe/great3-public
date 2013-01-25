@@ -14,6 +14,7 @@ urlpatterns = patterns('leaderboard.board_views',
 urlpatterns += patterns('leaderboard.team_views',
     url(r'^team/(\d+)/?$', 'detail'),
     url(r'^team/?$', 'index'),
+    url(r'^team/setup?$', 'setup'),
 )
 
 urlpatterns += patterns('leaderboard.entry_views',
