@@ -1,0 +1,3 @@
+Clicky linky to complete activation:
+<A href="{{site}}/accounts/activate/{{activation_key}}"/>LINKY</A>
+Link will expire in {{expiration_days}} days.
