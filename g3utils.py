@@ -162,6 +162,18 @@ def metricQZ2_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
     sig_m1 = np.sqrt(var_m1)
     sig_c2 = np.sqrt(var_c2)
     sig_m2 = np.sqrt(var_m2)
+    Q = 4000. / (np.abs(c1 / cfid) + np.abs(c2 / cfid) + np.abs(m1 / mfid) + np.abs(m2 / mfid))
+    return (Q, c1, m1, c2, m2, sig_c1, sig_m1, sig_c2, sig_m2)
+
+def metricQZ3_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
+    """Calculate a metric along the lines suggested by Joe Zuntz in Pittsburgh (option 3).
+    """
+    c1, m1, var_c1, cov_c1m1, var_m1 = fitline(g1true, g1est - g1true)
+    c2, m2, var_c2, cov_c2m2, var_m2 = fitline(g2true, g2est - g2true)
+    sig_c1 = np.sqrt(var_c1)
+    sig_m1 = np.sqrt(var_m1)
+    sig_c2 = np.sqrt(var_c2)
+    sig_m2 = np.sqrt(var_m2)
     Q = 500. * np.sqrt((cfid / c1)**2 + (cfid / c2)**2 + (mfid / m1)**2 + (mfid / m2)**2)
     return (Q, c1, m1, c2, m2, sig_c1, sig_m1, sig_c2, sig_m2)
 
