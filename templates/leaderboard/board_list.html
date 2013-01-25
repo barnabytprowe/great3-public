@@ -1,6 +1,7 @@
-{% extends "leaderboard/base.html" %}
+{% extends "leaderboard/table_page.html" %}
 {% block subtitle %} Leaderbords {% endblock %}
 {% block header_script %}
+{{block.super}}
 <script>
 		$(document).ready(function() {$("#boardTable").tablesorter({widgets:['zebra']}); } );
 </script>

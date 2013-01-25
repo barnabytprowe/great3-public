@@ -1,9 +1,10 @@
-{% extends "leaderboard/base.html" %}
+{% extends "leaderboard/table_page.html" %}
 {% block subtitle %} {{board.name}} {% endblock %}
 <H3> Leaderboard:  {{ board.name }} </H3>
 
 
 {% block header_script %}
+{{block.super}}
 	<script>
 		$(document).ready(function() {$("#boardTable").tablesorter({
 			headers: {3: {sorter:'rank'}},

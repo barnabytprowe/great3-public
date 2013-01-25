@@ -1,0 +1,26 @@
+{% extends "leaderboard/base.html" %}
+{% block subtitle %}Team Setup{% endblock %}
+{% block content %}
+{% if teams %}
+{% if teams|length == 1 %}
+	{% with teams|first as team %}
+	<P>You are currently a member of the team <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A></P>
+	{% endwith %}
+{% else %}
+	<P>You are currently a member of the teams: 
+		<UL>
+			{% for team in teams %}
+				<LI> <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A> </LI>
+			{% endfor %}
+		</UL>
+	</P>
+{% endif %}
+{% else %}
+<P>You are not a member of any teams<P>
+{% endif %}
+
+<P><A href="/"> Create a new team</A><P>
+<P> <A href="/"> Join an existing team</A>. Only if you are already working with a team, not to ask to form new partnerships. <P>
+
+
+{% endblock %}

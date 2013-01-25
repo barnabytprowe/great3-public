@@ -1,8 +1,9 @@
-{% extends "leaderboard/base.html" %}
+{% extends "leaderboard/table_page.html" %}
 
 {% block subtitle %}Teams{% endblock %}
 
 {% block header_script %}
+{{ block.super }}
 	<script>
 		$(document).ready(function() {$("#teamTable").tablesorter({widgets:['zebra']}); } ); 
 	</script>
