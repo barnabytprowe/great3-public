@@ -73,7 +73,6 @@ plt.legend()
 outfile = 'Q_vs_m_const_shear_nims'+str(NIMS)+'_nsig'+str(NOISE_SIGMA)+'_truesig'+str(TRUE_SIGMA)+\
     '.png'
 plt.savefig(outfile)
-plt.show()
 
 plt.figure()
 for j in range(NMONTE):
@@ -108,5 +107,3 @@ plt.legend()
 outfile = 'Q_vs_c_const_shear_nims'+str(NIMS)+'_nsig'+str(NOISE_SIGMA)+'_truesig'+str(TRUE_SIGMA)+\
     '.png'
 plt.savefig(outfile)
-plt.show()
-
