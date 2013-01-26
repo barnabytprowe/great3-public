@@ -2,8 +2,8 @@
 import numpy as np
 import g3utils
 
-NIMS = 300               # Number of images per set, always 200 for G10
-NGALS_PER_IM = 10000     # In GREAT08/GREAT10 there were 10000 galaxies per image
+NIMS = 200               # Number of images per set, always 200 for G10
+NGALS_PER_IM = 1     # In GREAT08/GREAT10 there were 10000 galaxies, but here there's no noise
 TRUE_SIGMA = 0.04        # Standard deviation of true input shears for normal distribution
 TRUE_RANGE = 0.08        # Range of true input shears for a uniform distribution
 NTRUESETS = 50           # Don't necessarily need to have NIMS input shears. But easiest if
@@ -20,7 +20,7 @@ MMAX = 1.e0
 
 NBINS = 7 # Number of bins to plot in the ranges above
 NMONTE = 30  # Number of montecarlo samples
-NOISE_SIGMA = 0.10  # Noise due to pixel shot noist on a shear estimate, per galaxy
+NOISE_SIGMA = 0.  # Noise due to pixel shot noist on a shear estimate, per galaxy: noise free now!
 
 # Generate arrays of values
 cvals = CMIN * (CMAX / CMIN)**(np.arange(NBINS) / float(NBINS - 1.)) # geometric series
@@ -31,79 +31,151 @@ cgrid, mgrid = np.meshgrid(cvals, mvals) # 2D arrays covering full space
 # Generate the truth tables
 g1true, g2true = g3utils.make_truth_normal_dist(NTRUESETS, NIMS, true_sigma=TRUE_SIGMA)
 
-# Create empty storage arrays
-Q08_vs_m = np.empty(NBINS)
-QZ1_vs_m = np.empty(NBINS)
-QZ2_vs_m = np.empty(NBINS)
-Q08_vs_c = np.empty(NBINS)
-QZ1_vs_c = np.empty(NBINS)
-QZ2_vs_c = np.empty(NBINS)
+# Create empty storage arrays in which to put
+QZ1_mcboth = np.empty((NBINS, NBINS))
+QZ2_mcboth = np.empty((NBINS, NBINS))
 
+# Loop over mvalues making independent submissions at each c, m combination
+for i in range(NBINS):
+
+    for j in range(NBINS):
+        
+        g1sub, g2sub = g3utils.make_submission_const_shear(cgrid[i, j], cgrid[i, j],
+                                                           mgrid[i, j], mgrid[i, j],
+                                                           g1true, g2true,
+                                                           ngals_per_im=NGALS_PER_IM,
+                                                           noise_sigma=NOISE_SIGMA)
+        QZ1_mcboth[i, j] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
+                                                         cfid=CFID, mfid=MFID)[0]
+        QZ2_mcboth[i, j] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
+                                                         cfid=CFID, mfid=MFID)[0]
+
+from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 
-for j in range(NMONTE):
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(np.log10(mgrid), np.log10(cgrid), np.log10(QZ1_mcboth), rstride=1, cstride=1,
+                alpha=0.3, color='r')
+ax.view_init(25, 60)
+plt.xlabel(r'log$_{10}$(m = m1 = m2)')
+plt.ylabel(r'log$_{10}$(c = c1 = c2)')
+plt.title('QZ1 metric')
+ax.set_zlabel(r'log$_{10}$(Q)')
+ax.set_zlim(0, 3)
+outfile = 'QZ1_2D_mcboth.png'
+plt.savefig(outfile)
 
-    # Loop over mvalues making indepented submissions at each c, m combination
-    for i in range(NBINS):
-        g1sub, g2sub = g3utils.make_submission_const_shear(CFID, CFID, mvals[i], mvals[i],
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(np.log10(mgrid), np.log10(cgrid), np.log10(QZ2_mcboth), rstride=1, cstride=1,
+                alpha=0.3, color='g')
+ax.view_init(25, 60)
+plt.xlabel(r'log$_{10}$(m = m$_1$ = m$_2$)')
+plt.ylabel(r'log$_{10}$(c = c$_1$ = c$_2$)')
+plt.title('QZ2 metric')
+ax.set_zlabel(r'log$_{10}$(Q)')
+ax.set_zlim(0, 3)
+outfile = 'QZ2_2D_mcboth.png'
+plt.savefig(outfile)
+
+
+# Create empty storage arrays in which to put
+QZ1_m1c1 = np.empty((NBINS, NBINS))
+QZ2_m1c1 = np.empty((NBINS, NBINS))
+
+# Loop over mvalues making independent submissions at each c, m combination
+for i in range(NBINS):
+
+    for j in range(NBINS):
+        
+        g1sub, g2sub = g3utils.make_submission_const_shear(cgrid[i, j], CFID,
+                                                           mgrid[i, j], MFID,
                                                            g1true, g2true,
                                                            ngals_per_im=NGALS_PER_IM,
                                                            noise_sigma=NOISE_SIGMA)
-        Q08_vs_m[i] = g3utils.metricQ08_const_shear(g1sub, g2sub, g1true, g2true,
-                                                    ntruesets=NTRUESETS)
-        QZ1_vs_m[i] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
-                                                    cfid=CFID, mfid=MFID)[0]
-        QZ2_vs_m[i] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
-                                                    cfid=CFID, mfid=MFID)[0]
+        QZ1_m1c1[i, j] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
+                                                       cfid=CFID, mfid=MFID)[0]
+        QZ2_m1c1[i, j] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
+                                                       cfid=CFID, mfid=MFID)[0]
 
-    if j == 0:
-        plt.loglog(mvals, QZ1_vs_m, 'r', label='QZ1')
-        plt.loglog(mvals, QZ2_vs_m, 'g', label='QZ2')
-        plt.loglog(mvals, Q08_vs_m, 'b', label='Q08')
-    else:
-        plt.loglog(mvals, QZ1_vs_m, 'r')
-        plt.loglog(mvals, QZ2_vs_m, 'g')
-        plt.loglog(mvals, Q08_vs_m, 'b')
+from mpl_toolkits.mplot3d import axes3d
+import matplotlib.pyplot as plt
 
-plt.title('Q vs m: all c = '+str(CFID)+'\n '+
-          'NIMS = '+str(NIMS)+', NOISE_SIGMA = '+str(NOISE_SIGMA)+', TRUE_SIGMA = '+str(TRUE_SIGMA))
-plt.xlabel('m = m1 = m2')
-plt.ylabel('Q')
-plt.legend()
-outfile = 'Q_vs_m_const_shear_nims'+str(NIMS)+'_nsig'+str(NOISE_SIGMA)+'_truesig'+str(TRUE_SIGMA)+\
-    '.png'
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(np.log10(mgrid), np.log10(cgrid), np.log10(QZ1_m1c1), rstride=1, cstride=1,
+                alpha=0.3, color='r')
+ax.view_init(25, 60)
+plt.xlabel(r'log$_{10}$(m$_1$)')
+plt.ylabel(r'log$_{10}$(c$_1$)')
+plt.title('QZ1 metric [m$_2$ = '+str(MFID)+', c$_2$ = '+str(CFID)+']')
+ax.set_zlabel(r'log$_{10}$(Q)')
+ax.set_zlim(0, 3)
+outfile = 'QZ1_2D_m1c1.png'
 plt.savefig(outfile)
 
-plt.figure()
-for j in range(NMONTE):
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(np.log10(mgrid), np.log10(cgrid), np.log10(QZ2_m1c1), rstride=1, cstride=1,
+                alpha=0.3, color='g')
+ax.view_init(25, 60)
+plt.xlabel(r'log$_{10}$(m$_1$)')
+plt.ylabel(r'log$_{10}$(c$_1$)')
+plt.title('QZ2 metric [m$_2$ = '+str(MFID)+', c$_2$ = '+str(CFID)+']')
+ax.set_zlabel(r'log$_{10}$(Q)')
+ax.set_zlim(0, 3)
+outfile = 'QZ2_2D_m1c1.png'
+plt.savefig(outfile)
 
-    # Loop over mvalues making indepented submissions at each c, m combination
-    for i in range(NBINS):
-        g1sub, g2sub = g3utils.make_submission_const_shear(cvals[i], cvals[i], MFID, MFID,
+
+m1grid, m2grid = np.meshgrid(mvals, mvals) # 2D arrays covering full space for m1 m2 case
+
+# Create empty storage arrays in which to put
+QZ1_m1m2 = np.empty((NBINS, NBINS))
+QZ2_m1m2 = np.empty((NBINS, NBINS))
+
+# Loop over mvalues making independent submissions at each c, m combination
+for i in range(NBINS):
+
+    for j in range(NBINS):
+        
+        g1sub, g2sub = g3utils.make_submission_const_shear(CFID, CFID,
+                                                           m1grid[i, j], m2grid[i, j],
                                                            g1true, g2true,
                                                            ngals_per_im=NGALS_PER_IM,
                                                            noise_sigma=NOISE_SIGMA)
-        Q08_vs_c[i] = g3utils.metricQ08_const_shear(g1sub, g2sub, g1true, g2true,
-                                                    ntruesets=NTRUESETS)
-        QZ1_vs_c[i] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
-                                                    cfid=CFID, mfid=MFID)[0]
-        QZ2_vs_c[i] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
-                                                    cfid=CFID, mfid=MFID)[0]
+        QZ1_m1m2[i, j] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
+                                                       cfid=CFID, mfid=MFID)[0]
+        QZ2_m1m2[i, j] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
+                                                       cfid=CFID, mfid=MFID)[0]
 
-    if j == 0:
-        plt.loglog(cvals, QZ1_vs_c, 'r', label='QZ1')
-        plt.loglog(cvals, QZ2_vs_c, 'g', label='QZ2')
-        plt.loglog(cvals, Q08_vs_c, 'b', label='Q08')
-    else:
-        plt.loglog(cvals, QZ1_vs_c, 'r')
-        plt.loglog(cvals, QZ2_vs_c, 'g')
-        plt.loglog(cvals, Q08_vs_c, 'b')
+from mpl_toolkits.mplot3d import axes3d
+import matplotlib.pyplot as plt
 
-plt.title('Q vs c: all m = '+str(MFID)+'\n '+
-          'NIMS = '+str(NIMS)+', NOISE_SIGMA = '+str(NOISE_SIGMA)+', TRUE_SIGMA = '+str(TRUE_SIGMA))
-plt.xlabel('c = c1 = c2')
-plt.ylabel('Q')
-plt.legend()
-outfile = 'Q_vs_c_const_shear_nims'+str(NIMS)+'_nsig'+str(NOISE_SIGMA)+'_truesig'+str(TRUE_SIGMA)+\
-    '.png'
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(np.log10(m1grid), np.log10(m2grid), np.log10(QZ1_m1m2), rstride=1, cstride=1,
+                alpha=0.3, color='r')
+ax.view_init(25, 60)
+plt.xlabel(r'log$_{10}$(m$_1$)')
+plt.ylabel(r'log$_{10}$(m$_2$)')
+plt.title('QZ1 metric [c$_1$ = c$_2$ = '+str(CFID)+']')
+ax.set_zlabel(r'log$_{10}$(Q)')
+ax.set_zlim(0, 3)
+outfile = 'QZ1_2D_m1m2.png'
 plt.savefig(outfile)
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(np.log10(m1grid), np.log10(m2grid), np.log10(QZ2_m1m2), rstride=1, cstride=1,
+                alpha=0.3, color='g')
+ax.view_init(25, 60)
+plt.xlabel(r'log$_{10}$(m$_1$)')
+plt.ylabel(r'log$_{10}$(m$_2$)')
+plt.title('QZ2 metric [c$_1$ = c$_2$ = '+str(CFID)+']')
+ax.set_zlabel(r'log$_{10}$(Q)')
+ax.set_zlim(0, 3)
+outfile = 'QZ2_2D_m1m2.png'
+plt.savefig(outfile)
+
