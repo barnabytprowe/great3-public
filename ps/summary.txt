@@ -1,0 +1,48 @@
+Summary of conclusions from the work described in notes.txt for Issue #9:
+
+* We want to make the power spectrum amplitudes and scaling with k roughly cosmological, but not
+  purely cosmological.
+
+* For the cosmological part: I had proposed a few z_med values (which largely changes the amplitude)
+  and a grid in cosmology, which can change amplitude and/or scaling with k depending on which
+  parameters are being changed.  However, once we are using a nuisance function to make the PS look
+  slightly non-cosmological, I don't believe we need to trouble ourselves to make a grid in
+  cosmology - we can just have a few choices of amplitude plus reasonably cosmological scaling with
+  k (i.e., a few z_med values at a fiducial cosmology).  Currently the grid has just 3 values, but I
+  can trivially make more if people think it's worthwhile.  These PS from iCosmo are shown in
+  plots/fiducial_p.eps, with the effective ell range from GREAT10 indicated using vertical lines.
+
+* We had talked about making fitting functions for the PS instead of using the cosmological ones
+  directly.  I did some work on that in this branch and found that it was easy to make polynomial
+  fitting functions for log P vs. log k that describe the cosmological PS to a few % in the range of
+  k we might use (which spans a factor of 100 in k).  However, currently our PS code in GalSim
+  requires well-defined behavior as k goes to zero, and as a rule these fitting formulae can explode
+  outside of the chosen k range.  So I propose instead that, once GalSim Issue #305 is done, we
+  simply use the cosmological PS directly, and have GalSim extrapolate them to k=0 using
+  some well-defined rule.  For example, the cosmological C_ell (plots/fiducial_cell.eps) could be
+  taken to be constant on smaller ell than are in the table, which would give P ~ ell^2 (and
+  therefore P(ell=k=0)=0).
+
+* For the nuisance function, Barney suggested 1d shapelets, and this seems to work well.  The scheme
+  that I tested involves shapelets that are a function of x=log10[k/k_pivot] (where
+  k_pivot=geometric mean of k_min and k_max), with beta=0.3 so that when we get to the edge of our k
+  range, the exp[-(x/beta)^2/2] factor in the basis functions is down by 3-sigma.  I suggest that we
+  randomly generate 6 coefficients, each from a uniform distribution in the range [-0.1, 0.1], for
+  the first 6 shapelets orders (n=0...5), and then add up the resulting functions to get our
+  nuisance factor.  The PS we use for GREAT3 would then be:
+  PS = (cosmological PS) x (1 + nuisance factor)
+
+  The behavior of the resulting nuisance factor is as follows:
+  (a) typical maximum amplitude is around 0.2 (can be + or -).
+  (b) tapers off towards zero at the edges of our k range.
+  (c) non-trivially interesting in shape - somewhat wiggly.
+  (d) but not so crazy wiggly that it seems utterly unrealistic.
+
+  Nuisance factor calculation is demonstrated in nuisance.py, and an example of 6 randomly generated
+  nuisance factors is plotted in plots/shapelets_nuisance.eps.
+
+* A minor detail is that I made these nuisance factors using Hermite polynomials from scipy.  If we
+  want to use GalSim without any other dependencies to make the GREAT3 sims, then we need to either
+  implement them ourselves in python, or make some python access to functions in SBLaguerre or
+  qho_wf_1d in PSFCorr.cpp.  Might make sense to open a GalSim issue for this, unless we are okay
+  with having a scipy dependency for generation of the GREAT3 sims.

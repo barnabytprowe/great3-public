@@ -1,0 +1,120 @@
+Below are Rachel's notes from work on this issue (#9).  If you want a summary of conclusions, see
+summary.txt instead.
+
+We need some shear power spectra to use as inputs for the GREAT3 challenge.  There are a few things
+to do here:
+
+1) Take some power spectra from iCosmo for reasonable cosmologies and surveys.  This requires use of
+IDL scripts that will live in this directory.  To begin with, let's choose fiducial cosmology and a
+range of cosmologies within which we'll randomly sample parameters:
+
+      a) Proposal for fiducial: w_0=-1, w_a=0, sigma_8=0.8, n_s=0.96, H_0=70h km/s/Mpc,
+      Omega_m=0.25, Omega_b=iCosmo default
+
+      b) Range: go to +/-1 sigma in these parameters
+         sigma(w_0) = 0.2
+         sigma(sigma_8) = 0.05
+         sigma(n_s) = 0.02
+         sigma(H_0) = 2h km/s/Mpc
+         sigma(Omega_m) = something motivated by WMAP7-ish errors
+         sigma(Omega_b) = something motivated by WMAP7-ish errors
+         [ don't draw randomly for now, just make a grid ]
+
+And choose survey parameters: let's ignore tomography and just use default iCosmo N(z) with various
+z_med = 0.75, 1.00, 1.25.
+
+So for the fiducial cosmology we'll have 3 cosmic shear power spectra, and once we vary cosmology up
+and down we'll have 2 x 3 x 6 = 36.  Ultimately we might want to stick some of the tabulated power
+spectra into GalSim.  That can go with GalSIm issue #305 for tabulated power spectra.  Don't worry
+about it here!
+
+--> getpk.pro gets power spectra for fiducial cosmology, writes to files with ell, C_ell in tables/
+--> plotpk.py, which gives fiducial_cell.eps, fiducial_p.eps
+
+2) Examine the power spectra for the ranges of k that we will use.  Can we approximate them with a
+simple functional form? (doesn't have to be perfect, just somewhat realistic)
+
+Question: which ranges of ell to consider?  In GREAT10 they had a 100x100 grid of galaxies, and
+assumed that it corresponded to a 10 degree FOV.
+
+Size of grid in radians: (10*pi/180)=L=1.745e-1
+Distance between galaxies on grid in radians: (10/100)*pi/180.=dL=1.745e-3
+Largest ell ~ 2*pi/dL ~ 3600.
+Smallest ell ~ 2*pi/L ~ 36.
+
+These are marked on the plot as vertical dashed lines.  However, they are in principle arbitrary
+since they depend on the choice that the 100x100 grid corresponds to a 10x10 degree field.  Could
+just as well have any min, max ell as long as they are related by (max ell)/(min ell) = number of
+grid points in one dimension.
+
+As a basic example, fit the power spectra to lines (log P = A + B Log(ell)) in this range of ell,
+show the lines on the plot, and make a plot showing the ratio of fit and real power spectra.
+Obviously, lines aren't great, but that was the most basic example.  Can do something more complex.
+
+--> New version goes to 5th order, i.e. up to (log(ell/ell_pivot))^4, where ell_pivot=360.  
+    Residuals are at most a few %, usually <1%!  Results for coefficients in the 3 cases are
+[-0.22852829 -0.05631348  0.15967529  0.68583429 -4.9652076 ]
+[-0.22250272  0.0257553   0.15740659  0.63681388 -4.73536911]
+[-0.19854882  0.0820707   0.12606054  0.60097178 -4.56532733]
+
+where the first number in each line is the coefficient of the log(ell/ell_piv)^4 and the last number
+in each line is the constant term (i.e., it's log P at ell_pivot).
+
+3) Do we want to consider some variations on that functional form so that challenge won't be too
+easy?  Consider 1d shapelets, which are defined as:
+
+phi_n(x) = (2^n pi^(1/2) n!)^(-1/2) H_n(x) exp(-x^2/2)
+but rescale to dimensionless ones using scale beta
+B_n(x, beta) = beta^(-1/2) phi_n(x/beta)
+where H_0(x) = 1, H_1(x) = 2x, etc.
+
+How to get these in python?  scipy.special.hermite will do the job, e.g., if we want to evaluate H_2
+at positions x = [-2.0, 0.0, 2.0] then we do
+
+h2 = scipy.special.hermite(2)
+x = np.array((-2.0, 0.0, 2.0))
+my_h2 = h2(x)
+
+and then my_h2 will contain the values of h2 at those values of x.
+
+In practice, we could use x=log10(ell/ell_pivot) so that the exp(-x^2/2) will be maximized at our
+pivot ell, and the effect of the nuisance functions will die off well above/below that ell
+value. Then we can multiply the cosmologically-motivated power spectra by (1+nuisance term) as long
+as the amplitude of the nuisance term is carefully chosen to be not ridiculously large.  I
+will play with these in new script, shapelets.py, to see what they look like for various n, beta.
+
+--> beta = 0.3 seems good, since at the edges of our ell ranges these functions are dying off.
+Typical max amplitudes are around 1, but we want to modify from cosmological PS by typically a few
+10s of % at most.  So let's try the following for making nuisance functions:
+
+Draw 5 random numbers from a uniform distribution between -0.1 and 0.1.  The nuisance function we'll
+use is 
+sum_n (random number index n) x B_n
+
+And then we'll multiply the cosmological PS by (1 + nuisance function).
+
+Try this out with a new script nuisance.py, to see what the nuisance functions typically look like:
+results in plots/shapelets_nuisance.eps.  These seem good, in the sense that they (a) trend towards
+zero at the edges of our ell range, (b) have a reasonable amplitude, (c) are decently non-trivial,
+but (d) not so crazy wiggly that it seems like they should be a problem.
+
+For GalSim we won't want to use scipy Hermite polynomials because we don't want a scipy dependency,
+but I am guessing we could pull the Hermite polynomials from SBLaguerre (and lazily not checking
+this assumption...) or code them up ourselves.  Or they must be in PSFCorr.cpp, so we could make
+them accessible from there.
+
+** Remember that we need sane behavior at k=0 for the current lensing engine.  What to do with these
+   fits?  The fits are designed to work only in a limited ell range and probably go crazy outside of
+   that.  This might be a reason to NOT use the fits, assuming that GalSim issue #305 gets worked
+   out okay (that would allow us to use tabulated PS directly).  In that case, we could simply make
+   the function that interpolates the tabulated PS extrapolate to k=0 in some well-defined way,
+   e.g., keep it as a constant below the lowest k value in the table.
+
+** Do we want to vary cosmology, too?  Or just use these 3 cosmological PS as our starting point,
+   with nuisance functions modifying them?  i think that once we're modifying the PS anyway, we
+   don't need to have a ton of cosmological inputs.  However, we might want to have more than just
+   these 3 amplitudes (corresponding to a few median redshifts) -- our nuisance functions modify the
+   PS significantly less than the amplitude difference between the 3 that are in here.  To get other
+   amplitudes, we could either make a denser grid in z_med, or we could do something crude like
+   construct more from geometric means of the PS that we already have.
+
