@@ -34,18 +34,18 @@ component.
 I used a version of Chris's code with 6144 pixelization as input to
 the SHT because our grid is lower resolution than GREAT3's, and the
 following commands:
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 11 grid_positions_5_wide.dat gridshear.pe.1.out 2500 ps.e.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 12 grid_positions_5_wide.dat gridshear.pe.2.out 2500 ps.e.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 13 grid_positions_5_wide.dat gridshear.pe.3.out 2500 ps.e.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 14 grid_positions_5_wide.dat gridshear.pe.4.out 2500 ps.e.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 15 grid_positions_5_wide.dat gridshear.pe.5.out 2500 ps.e.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 11 grid_positions_5_wide.dat gridshear.pb.1.out 2500 ps.b.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 12 grid_positions_5_wide.dat gridshear.pb.2.out 2500 ps.b.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 13 grid_positions_5_wide.dat gridshear.pb.3.out 2500 ps.b.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 14 grid_positions_5_wide.dat gridshear.pb.4.out 2500 ps.b.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 15 grid_positions_5_wide.dat gridshear.pb.5.out 2500 ps.b.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 11 grid_positions_5_wide.dat gridshear.peb.1.out 2500 ps.eb.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 12 grid_positions_5_wide.dat gridshear.peb.2.out 2500 ps.eb.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 13 grid_positions_5_wide.dat gridshear.peb.3.out 2500 ps.eb.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 14 grid_positions_5_wide.dat gridshear.peb.4.out 2500 ps.eb.dat
-/Users/rmandelb/great3/chris-shears/run_new_lowell.x 15 grid_positions_5_wide.dat gridshear.peb.5.out 2500 ps.eb.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -11 grid_positions_5_wide.dat gridshear.pe.1.out 2500 ps.e.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -12 grid_positions_5_wide.dat gridshear.pe.2.out 2500 ps.e.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -13 grid_positions_5_wide.dat gridshear.pe.3.out 2500 ps.e.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -14 grid_positions_5_wide.dat gridshear.pe.4.out 2500 ps.e.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -15 grid_positions_5_wide.dat gridshear.pe.5.out 2500 ps.e.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -21 grid_positions_5_wide.dat gridshear.pb.1.out 2500 ps.b.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -22 grid_positions_5_wide.dat gridshear.pb.2.out 2500 ps.b.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -23 grid_positions_5_wide.dat gridshear.pb.3.out 2500 ps.b.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -24 grid_positions_5_wide.dat gridshear.pb.4.out 2500 ps.b.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -25 grid_positions_5_wide.dat gridshear.pb.5.out 2500 ps.b.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -31 grid_positions_5_wide.dat gridshear.peb.1.out 2500 ps.eb.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -32 grid_positions_5_wide.dat gridshear.peb.2.out 2500 ps.eb.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -33 grid_positions_5_wide.dat gridshear.peb.3.out 2500 ps.eb.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -34 grid_positions_5_wide.dat gridshear.peb.4.out 2500 ps.eb.dat
+/Users/rmandelb/great3/chris-shears/run_new_lowell.x -35 grid_positions_5_wide.dat gridshear.peb.5.out 2500 ps.eb.dat
