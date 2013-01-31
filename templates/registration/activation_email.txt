@@ -1,3 +1,6 @@
-Clicky linky to complete activation:
+This email address was just used to register for the Great 3 weak lensing challenge.
+
+To complete your registration, go to the following link:
 <A href="{{site}}/accounts/activate/{{activation_key}}"/>LINKY</A>
-Link will expire in {{expiration_days}} days.
+
+The link will expire in {{expiration_days}} days.
