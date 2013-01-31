@@ -38,7 +38,7 @@
 - fields: {app_label: leaderboard, model: userprofile, name: user profile}
   model: contenttypes.contenttype
   pk: 8
-- fields: {domain: example.com, name: example.com}
+- fields: {domain: "127.0.0.1:8000", name: "127.0.0.1:8000"}
   model: sites.site
   pk: 1
 - fields: {notes: Lance et al, name: Lensfit, rank: 4, score: 0}
