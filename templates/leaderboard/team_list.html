@@ -3,7 +3,6 @@
 {% block subtitle %}Teams{% endblock %}
 
 {% block header_script %}
-{{ block.super }}
 	<script>
 		$(document).ready(function() {$("#teamTable").tablesorter({widgets:['zebra']}); } ); 
 	</script>
@@ -14,7 +13,7 @@
     <TABLE id="teamTable" class="tablesorter" >
     	<THEAD>
     		<TH>Name</TH>
-    		<TH>Members</TH>
+    		<TH>Notes</TH>
             <TH>Score</TH>
             <TH>Number of entries</TH>
     	</THEAD>
@@ -22,7 +21,7 @@
     		<TR>
 		        {% for team in teams %}
     			<TD><A href="{% url leaderboard.team_views.detail team.id %}">{{ team.name }} </A></TD>
-    			<TD> {{ team.members }} </TD>
+    			<TD> {{ team.notes }} </TD>
                 <TD> {{ team.score }} </TD>
                 <TD> {{ team.number_entries }} </TD>
     		</TR>

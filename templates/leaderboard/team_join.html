@@ -1,0 +1,24 @@
+{% extends "leaderboard/base.html" %}
+{% block subtitle%}Join Team{% endblock %}
+
+{%block content %}
+<P>To ask to join a team, select one from the list below.  This is intended as a way to 
+	join people you are already working with on the challenge - please do not try to set up new collaborations with this</P>
+	<TABLE border="1">
+		<THEAD><TR>
+			<TH>Team</TH>
+			<TH>Notes</TH>
+			<TH></TH>
+		</TR></THEAD>
+		<TBODY>
+			{% for team in teams %}
+				<TR>
+					<TD>{{team}}</TD>
+					<TD>{{team.notes}}</TD>
+					<TD><A href="{%url leaderboard.team_views.request_join team.id %}">Request</A></TD>
+				</TR>
+			{% endfor %}
+		</TBODY>
+	</TABLE>
+
+{% endblock %}

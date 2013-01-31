@@ -2,7 +2,6 @@
 {% block subtitle %} {{ team.name }} {% endblock %}
 
 {% block header_script %}
-{{block.super}}
 	<script>
 		$(document).ready(function() {$("#teamTable").tablesorter({
 			headers: {3: {sorter:'rank'}},
@@ -12,12 +11,12 @@
 
 {% block content %}
 	<H3> Team:  {{ team.name }} </H3>
-	<P> Members of this team:  {{ team.members }} </P>
+	<P> Notes:  {{ team.notes }} </P>
 	<P> Total score: {{ team.score }} </P>
-	<P> Overall rank: {{ team.rank }} </P>
+	<P> Overall rank: {{ team.rank_text }} </P>
 	<H4> Leaderboard entries </H4>
 
-	<table id="teamTable" class="tablesorter"> <!-- Add sortable table thing here if desired -->
+	<table id="teamTable" class="tablesorter">
 		<THEAD>
 			<TH> Entry </TH>
 			<TH> Board </TH>

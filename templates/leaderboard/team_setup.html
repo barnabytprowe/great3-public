@@ -1,26 +1,46 @@
 {% extends "leaderboard/base.html" %}
 {% block subtitle %}Team Setup{% endblock %}
+
+
 {% block content %}
+
 {% if teams %}
-{% if teams|length == 1 %}
-	{% with teams|first as team %}
-	<P>You are currently a member of the team <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A></P>
-	{% endwith %}
-{% else %}
-	<P>You are currently a member of the teams: 
-		<UL>
-			{% for team in teams %}
-				<LI> <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A> </LI>
-			{% endfor %}
-		</UL>
-	</P>
+<H3>Entries</H3>
 {% endif %}
-{% else %}
-<P>You are not a member of any teams<P>
+{% if entries %}
+<P> Recent entries for your teams: </P>
+	<UL>
+	{% for entry in entries %}
+		<LI>{{entry.name}} {{entry.date}} Score:{{entry.score}}</LI>
+	{% endfor %}
+	</UL>
 {% endif %}
 
-<P><A href="/"> Create a new team</A><P>
-<P> <A href="/"> Join an existing team</A>. Only if you are already working with a team, not to ask to form new partnerships. <P>
+
+{% if teams %}
+<P><A href="{% url leaderboard.board_views.index %}">Select a leaderboard</A> to make a new submission</P>
+	<H3>Teams</H3>
+
+	{% if teams|length == 1 %}
+		{% with teams|first as team %}
+		<P>You are currently a member of the team <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A></P>
+		{% endwith %}
+	{% else %}
+		<P>You are currently a member of the teams: 
+			<UL>
+				{% for team in teams %}
+					<LI> <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A> </LI>
+				{% endfor %}
+			</UL>
+		</P>
+	{% endif %}
+
+{% else %}
+	<P>You are not a member of any teams<P>
+{% endif %}
+
+<P><A href="{% url leaderboard.team_views.create %}"> Create a new team</A><P>
+<P> <A href="{% url leaderboard.team_views.join %}"> Join an existing team</A>. Only if you are already working with a team, not to ask to form new partnerships. <P>
 
 
 {% endblock %}

@@ -14,7 +14,13 @@ urlpatterns = patterns('leaderboard.board_views',
 urlpatterns += patterns('leaderboard.team_views',
     url(r'^team/(\d+)/?$', 'detail'),
     url(r'^team/?$', 'index'),
-    url(r'^team/setup?$', 'setup'),
+    url(r'^team/setup/?$', 'setup'),
+    url(r'^team/create/?$', 'create'),
+    url(r'^team/join/?$', 'join'),
+    url(r'^team/request_join/(\d+)/?$', 'request_join'),
+    url(r'^team/accept/(?P<token>\w+)/$', 'accept'),
+    url(r'^team/reject/(?P<token>\w+)/$', 'reject'),
+
 )
 
 urlpatterns += patterns('leaderboard.entry_views',

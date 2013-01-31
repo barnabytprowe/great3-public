@@ -1,4 +1,4 @@
-from leaderboard.models import Team, Board, Entry, UserProfile
+from leaderboard.models import Team, Board, Entry, UserProfile, MembershipRequest
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 admin.site.register(Team)
 admin.site.register(Board)
 admin.site.register(Entry)
+admin.site.register(MembershipRequest)
 
 
 class UserProfileInline(admin.StackedInline):

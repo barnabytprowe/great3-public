@@ -5,10 +5,7 @@
 		
 		<link rel="stylesheet" href="{{ STATIC_URL }}css/nav.css" type="text/css" media="print, projection, screen" />
 		<style type="text/css">body {border: 50px solid WHITE;}</style>
-
-
-
-		{% block header_script %}
+		{% block header_includes %}
 		{% endblock %}
 
 	</HEAD>
@@ -20,7 +17,8 @@
 		<li><a href="{% url leaderboard.board_views.index %}">Leaderboards</a></li>
 		<li><a href="{% url leaderboard.team_views.index %}">Teams</a></li>
 		{% if user.is_authenticated %}
-		<li><a href="{% url django.contrib.auth.views.logout %}">Logout {{ user }}</a></li>
+		<li><a href="{% url leaderboard.team_views.setup %}">My Great3</a></li>
+		<li><a href="{% url django.contrib.auth.views.logout %}">Logout {{user}}</a></li>
 		{% else %}
 		<li><A href="{% url django.contrib.auth.views.login %}">Login</A></li>
 		{% endif %}
@@ -29,10 +27,5 @@
 
 		 {% block content %} 
 		 {% endblock %}
- 		{% if user.is_authenticated %}
-		 <P> Logged in as {{ user }}. <A href="{% url django.contrib.auth.views.logout %}">Log out</A>  </P>
-		 {% else %}
-		 <P> <P>
-		 {% endif %}
 	</BODY>
 </HTML>

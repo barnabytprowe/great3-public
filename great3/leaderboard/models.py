@@ -1,9 +1,10 @@
-
 from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from collections import defaultdict
 import os
+import hashlib
+import random
 
 # Create your models here.
 SUBMISSION_SAVE_PATH=os.path.join(os.path.split(__file__)[0], '..','..','results')
@@ -24,8 +25,8 @@ post_save.connect(create_user_profile, sender=User)
 
 
 class Team(models.Model):
-	name = models.CharField(max_length=128)
-	members = models.CharField(max_length=512)
+	name = models.CharField(max_length=128, unique=True)
+	notes = models.CharField(max_length=512)
 	score = models.IntegerField(default=0)
 	rank = models.IntegerField(default=PLACEHOLDER_RANK)
 
@@ -50,6 +51,12 @@ class Team(models.Model):
 
 	def number_entries(self):
 		return len(self.entry_set.all())
+
+	def rank_text(self):
+		if self.rank==PLACEHOLDER_RANK:
+			return "-"
+		else:
+			return str(self.rank)
 
 	@classmethod
 	def update_scores_and_ranks(cls):
@@ -85,7 +92,7 @@ def score_for_rank(rank):
 
 
 class Board(models.Model):
-	name = models.CharField(max_length=128)
+	name = models.CharField(max_length=128, unique=True)
 	space = models.BooleanField()
 	varying = models.BooleanField()
 
@@ -128,7 +135,7 @@ class Board(models.Model):
 
 class Entry(models.Model):
 	team = models.ForeignKey('Team')
-	name = models.CharField(max_length=128)
+	name = models.CharField(max_length=128, unique=True)
 	user = models.ForeignKey(User)
 	board = models.ForeignKey('Board')
 	score = models.FloatField(default=PLACEHOLDER_SCORE)
@@ -254,3 +261,22 @@ def save_submission_file(submission, name, user, team, board):
 	return True
 
 
+
+
+class MembershipRequest(models.Model):
+	user = models.ForeignKey(User)
+	team = models.ForeignKey(Team)
+	token = models.CharField(max_length=40, unique=True)
+
+	def generate_token(self):
+		salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
+		username = unicode(self.user.username).encode('utf-8')
+		teamname = unicode(self.team)
+		self.token = hashlib.sha1(salt+username+teamname).hexdigest()
+		return self.token
+
+
+
+def user_is_member_of_team(user, team):
+	teams = user.get_profile().teams.all()
+	return team in teams

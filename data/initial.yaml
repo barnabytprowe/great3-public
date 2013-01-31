@@ -13,9 +13,16 @@
 - fields: {app_label: admin, model: logentry, name: log entry}
   model: contenttypes.contenttype
   pk: 7
+- fields: {app_label: leaderboard, model: membershiprequest, name: noteship request}
+  model: contenttypes.contenttype
+  pk: 12
 - fields: {app_label: auth, model: permission, name: permission}
   model: contenttypes.contenttype
   pk: 1
+- fields: {app_label: registration, model: registrationprofile, name: registration
+      profile}
+  model: contenttypes.contenttype
+  pk: 13
 - fields: {app_label: sessions, model: session, name: session}
   model: contenttypes.contenttype
   pk: 5
@@ -34,16 +41,16 @@
 - fields: {domain: example.com, name: example.com}
   model: sites.site
   pk: 1
-- fields: {members: Lance et al, name: Lensfit, rank: -1, score: 0}
+- fields: {notes: Lance et al, name: Lensfit, rank: 4, score: 0}
   model: leaderboard.team
   pk: 1
-- fields: {members: Sarah et al, name: UCL-Manchester-Alliance, rank: -1, score: 0}
+- fields: {notes: Sarah et al, name: UCL-Manchester-Alliance, rank: 1, score: 5}
   model: leaderboard.team
   pk: 2
-- fields: {members: Mike et al, name: RonPaul4Eva, rank: -1, score: 0}
+- fields: {notes: Mike et al, name: RonPaul4Eva, rank: 3, score: 3}
   model: leaderboard.team
   pk: 3
-- fields: {members: Jason et al, name: NASA, rank: -1, score: 0}
+- fields: {notes: Jason et al, name: NASA, rank: 2, score: 5}
   model: leaderboard.team
   pk: 4
 - fields: {name: Vanilla, space: false, varying: false}
@@ -113,37 +120,61 @@
   pk: 22
 - fields: {codename: change_board, content_type: 10, name: Can change board}
   model: auth.permission
-  pk: 26
+  pk: 27
 - fields: {codename: delete_board, content_type: 10, name: Can delete board}
   model: auth.permission
-  pk: 30
+  pk: 32
 - fields: {codename: add_entry, content_type: 11, name: Can add entry}
   model: auth.permission
   pk: 23
 - fields: {codename: change_entry, content_type: 11, name: Can change entry}
   model: auth.permission
-  pk: 27
+  pk: 28
 - fields: {codename: delete_entry, content_type: 11, name: Can delete entry}
   model: auth.permission
-  pk: 31
-- fields: {codename: add_team, content_type: 9, name: Can add team}
+  pk: 33
+- fields: {codename: add_membershiprequest, content_type: 12, name: Can add noteship
+      request}
   model: auth.permission
   pk: 24
-- fields: {codename: change_team, content_type: 9, name: Can change team}
-  model: auth.permission
-  pk: 28
-- fields: {codename: delete_team, content_type: 9, name: Can delete team}
-  model: auth.permission
-  pk: 32
-- fields: {codename: add_userprofile, content_type: 8, name: Can add user profile}
-  model: auth.permission
-  pk: 25
-- fields: {codename: change_userprofile, content_type: 8, name: Can change user profile}
+- fields: {codename: change_membershiprequest, content_type: 12, name: Can change
+      noteship request}
   model: auth.permission
   pk: 29
+- fields: {codename: delete_membershiprequest, content_type: 12, name: Can delete
+      noteship request}
+  model: auth.permission
+  pk: 34
+- fields: {codename: add_team, content_type: 9, name: Can add team}
+  model: auth.permission
+  pk: 25
+- fields: {codename: change_team, content_type: 9, name: Can change team}
+  model: auth.permission
+  pk: 30
+- fields: {codename: delete_team, content_type: 9, name: Can delete team}
+  model: auth.permission
+  pk: 35
+- fields: {codename: add_userprofile, content_type: 8, name: Can add user profile}
+  model: auth.permission
+  pk: 26
+- fields: {codename: change_userprofile, content_type: 8, name: Can change user profile}
+  model: auth.permission
+  pk: 31
 - fields: {codename: delete_userprofile, content_type: 8, name: Can delete user profile}
   model: auth.permission
-  pk: 33
+  pk: 36
+- fields: {codename: add_registrationprofile, content_type: 13, name: Can add registration
+      profile}
+  model: auth.permission
+  pk: 37
+- fields: {codename: change_registrationprofile, content_type: 13, name: Can change
+      registration profile}
+  model: auth.permission
+  pk: 38
+- fields: {codename: delete_registrationprofile, content_type: 13, name: Can delete
+      registration profile}
+  model: auth.permission
+  pk: 39
 - fields: {codename: add_session, content_type: 5, name: Can add session}
   model: auth.permission
   pk: 13
@@ -163,61 +194,61 @@
   model: auth.permission
   pk: 18
 - fields:
-    date_joined: 2013-01-24 09:43:56.194584+00:00
+    date_joined: 2013-01-25 18:12:31.153833+00:00
     email: jaz@example.com
     first_name: ''
     groups: []
     is_active: true
     is_staff: true
     is_superuser: true
-    last_login: 2013-01-24 09:43:56.194584+00:00
+    last_login: 2013-01-25 18:12:31.153833+00:00
     last_name: ''
-    password: pbkdf2_sha256$10000$PN9KVCUr4RhI$R/eL9CsuwP0Rdxvxons/AqceR33YkANPk8p7dXmekuk=
+    password: pbkdf2_sha256$10000$e5pBordRZu0G$hJgUNy6UIFw8XZjQXiSERab9M1J6KV+akudsDIQiwA8=
     user_permissions: []
     username: jaz
   model: auth.user
   pk: 1
 - fields:
-    date_joined: 2013-01-24 09:44:08.609208+00:00
+    date_joined: 2013-01-25 18:12:33.445279+00:00
     email: barney@example.com
     first_name: ''
     groups: []
     is_active: true
     is_staff: false
     is_superuser: false
-    last_login: 2013-01-24 09:44:08.609186+00:00
+    last_login: 2013-01-25 18:12:33.445257+00:00
     last_name: ''
-    password: pbkdf2_sha256$10000$UqzjfHpdz3VG$Yt7bybHCQn3T+M+tnIoU3H1GtzDM/qV6rIHexXNzXXQ=
+    password: pbkdf2_sha256$10000$LX0dV9KdlMQE$3YhUpiNa1uA85PBvARogeiLheZHEj9mWduHO9leOFn0=
     user_permissions: []
     username: barney
   model: auth.user
   pk: 2
 - fields:
-    date_joined: 2013-01-24 09:44:08.609274+00:00
+    date_joined: 2013-01-25 18:12:33.445340+00:00
     email: rachel@example.com
     first_name: ''
     groups: []
     is_active: true
     is_staff: false
     is_superuser: false
-    last_login: 2013-01-24 09:44:08.609265+00:00
+    last_login: 2013-01-25 18:12:33.445332+00:00
     last_name: ''
-    password: pbkdf2_sha256$10000$ZKxZ9VfY6s0J$sVkRw0Yed3ppnuhxJ2vLoHAeBROJAvN4j8rS1E74umE=
+    password: pbkdf2_sha256$10000$DQZ0WSduoUyw$HTtFm1Ilu1GYy0gR7rW/oXtCvZF9GQKxxTYLj0sYk7Y=
     user_permissions: []
     username: rachel
   model: auth.user
   pk: 3
 - fields:
-    date_joined: 2013-01-24 09:44:08.609336+00:00
+    date_joined: 2013-01-25 18:12:33.445396+00:00
     email: mike@example.com
     first_name: ''
     groups: []
     is_active: true
     is_staff: false
     is_superuser: false
-    last_login: 2013-01-24 09:44:08.609327+00:00
+    last_login: 2013-01-25 18:12:33.445388+00:00
     last_name: ''
-    password: pbkdf2_sha256$10000$59njsysJS2o5$W5n1jCQAZi9RBATYFnY4oTWNHU+U+QQNp6UEyX9ZcSw=
+    password: pbkdf2_sha256$10000$1HurmIoKoEhy$jQ41ncVICZZsfwVJXSxtcxxUvmwY0qMXPjBjhamQq3c=
     user_permissions: []
     username: mike
   model: auth.user
@@ -242,31 +273,31 @@
     user: 4
   model: leaderboard.userprofile
   pk: 4
-- fields: {board: 1, date: !!timestamp '2013-01-24 09:44:09.014144+00:00', name: nbc1,
-    rank: 5, score: 14.5, team: 2, user: 2}
+- fields: {board: 1, date: !!timestamp '2013-01-25 18:12:33.847083+00:00', name: nbc1,
+    rank: 1000, score: 14.5, team: 2, user: 2}
   model: leaderboard.entry
   pk: 1
-- fields: {board: 1, date: !!timestamp '2013-01-24 09:44:09.016270+00:00', name: nbc2,
-    rank: 4, score: 20.4, team: 2, user: 1}
+- fields: {board: 1, date: !!timestamp '2013-01-25 18:12:33.849233+00:00', name: nbc2,
+    rank: 1000, score: 20.4, team: 2, user: 1}
   model: leaderboard.entry
   pk: 2
-- fields: {board: 1, date: !!timestamp '2013-01-24 09:44:09.018307+00:00', name: nbc3,
+- fields: {board: 1, date: !!timestamp '2013-01-25 18:12:33.850951+00:00', name: nbc3,
     rank: 1, score: 884.4, team: 2, user: 2}
   model: leaderboard.entry
   pk: 3
-- fields: {board: 1, date: !!timestamp '2013-01-24 09:44:09.020754+00:00', name: shapelets1,
+- fields: {board: 1, date: !!timestamp '2013-01-25 18:12:33.853250+00:00', name: shapelets1,
     rank: 2, score: 510.2, team: 3, user: 4}
   model: leaderboard.entry
   pk: 4
-- fields: {board: 1, date: !!timestamp '2013-01-24 09:44:09.022542+00:00', name: shapelets2,
-    rank: 3, score: 456.4, team: 3, user: 4}
+- fields: {board: 1, date: !!timestamp '2013-01-25 18:12:33.855387+00:00', name: shapelets2,
+    rank: 1000, score: 456.4, team: 3, user: 4}
   model: leaderboard.entry
   pk: 5
-- fields: {board: 2, date: !!timestamp '2013-01-24 09:44:09.024154+00:00', name: deimos1,
-    rank: 2, score: 101.2, team: 4, user: 4}
+- fields: {board: 2, date: !!timestamp '2013-01-25 18:12:33.857512+00:00', name: deimos1,
+    rank: 1000, score: 101.2, team: 4, user: 4}
   model: leaderboard.entry
   pk: 6
-- fields: {board: 2, date: !!timestamp '2013-01-24 09:44:09.028425+00:00', name: deimos2,
+- fields: {board: 2, date: !!timestamp '2013-01-25 18:12:33.860133+00:00', name: deimos2,
     rank: 1, score: 141.4, team: 4, user: 4}
   model: leaderboard.entry
   pk: 7

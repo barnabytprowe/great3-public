@@ -1,5 +1,5 @@
 {% extends "leaderboard/base.html" %}
-{% block header_script %}
+{% block header_includes %}
 
 		<link rel="stylesheet" href="{{ STATIC_URL }}js/tablesorter/themes/great3/style.css" type="text/css" media="print, projection, screen" />
 		<script src="{{ STATIC_URL }}js/tablesorter/jquery-latest.js"
@@ -26,4 +26,7 @@
 				type: 'numeric'
 			});
 		</script>
+
+		{% block header_script %}
+		{% endblock %}
 {% endblock %}
