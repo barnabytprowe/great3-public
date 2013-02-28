@@ -7,7 +7,7 @@ class PowerSpectrumEstimator(object):
 	This class stores all the data used in power spectrum estimation that 
 	is fixed with the geometry of the problem - the binning and spin weighting factors.
 
-	The only public method is estimate, which you call with 2D g1 and g2 arrays.
+	The only public method is estimate, which you call with 2D g1 and g2 arrays on a square grid.
 
 	Some important notes:
 	1) Power spectrum estimation requires a weight function which decides how the averaging
@@ -29,15 +29,14 @@ class PowerSpectrumEstimator(object):
 		the total sky width in degrees, and the number of evenly-log-spaced ell bins to use."""
 
 		#Set up the scales of the sky and pixels
-		self.nx=N
-		self.ny=N
+		self.N=N
 		self.sky_size = np.radians(sky_size_deg)
-		self.dx = self.sky_size / nx
+		self.dx = self.sky_size / N
 		
 		#Set the possible ell range and the bin edges and centers
 		#This is for binning the power spectrum in ell.
-		lmin = 2*pi / sky_size
-		lmax = 2*pi / dx
+		lmin = 2*pi / self.sky_size
+		lmax = 2*pi / self.dx
 		self.bin_edges = np.logspace(np.log10(lmin), np.log10(lmax), nbin+1)
 		self.ell = 0.5*(self.bin_edges[1:] + self.bin_edges[:-1])
 
@@ -58,7 +57,7 @@ class PowerSpectrumEstimator(object):
 		l_abs = (lx**2 + ly**2)**0.5
 		l_ang = np.arctan2(ly, lx)
 
-		#and the spin-2 weights.  An return both.
+		#and the spin-2 weights.  And return both.
 		rot = np.exp(-2j*l_ang)
 		return l_abs, rot
 
@@ -70,7 +69,7 @@ class PowerSpectrumEstimator(object):
 		# sum_{|ell| in bin } C_{ell_x,ell_y}
 		#and the second 
 		# sum_{|ell| in bin } 1
-		#so the ration us just the mean bin value.
+		#so the ratio is just the mean bin value.
 		P,_ = np.histogram(self.l_abs, self.bin_edges, weights=C)
 		count,_ = np.histogram(self.l_abs, self.bin_edges)
 		return P/count
@@ -87,14 +86,10 @@ class PowerSpectrumEstimator(object):
 
 		#Use the internal function above to bin,
 		#and account for the normalization of the FFT
-		C_EE = bin_power(E**2) / (nx*ny)
-		C_BB = bin_power(B**2) / (nx*ny)
-		C_EB = bin_power(E*B ) / (nx*ny)
+		C_EE = self._bin_power(E**2) / (self.N**2)
+		C_BB = self._bin_power(B**2) / (self.N**2)
+		C_EB = self._bin_power(E*B ) / (self.N**2)
 
 		#For convenience return ell (copied in case the user messes with it)
 		#and the three power spectra.
 		return self.ell.copy(), C_EE, C_BB, C_EB
-
-
-
-
