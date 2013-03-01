@@ -57,6 +57,10 @@ class PowerSpectrumEstimator(object):
 		l_abs = (lx**2 + ly**2)**0.5
 		l_ang = np.arctan2(ly, lx)
 
+		self.lx=lx
+		self.ly=ly
+		self.l_ang=l_ang
+
 		#and the spin-2 weights.  And return both.
 		rot = np.exp(-2j*l_ang)
 		return l_abs, rot
@@ -81,14 +85,15 @@ class PowerSpectrumEstimator(object):
 
 		#Transform g1+j*g2 into Fourier and rotate into E-B
 		#then separate into E and B
-		EB = self.eb_rot * np.fft.fft2(g1 + 1j*g2)
-		(E,B)  = (EB.real, EB.imag)
+		EB = np.fft.ifft2(self.eb_rot * np.fft.fft2(g1 + 1j*g2))
+		E = np.fft.fft2(EB.real)
+		B = np.fft.fft2(EB.imag)
 
 		#Use the internal function above to bin,
 		#and account for the normalization of the FFT
-		C_EE = self._bin_power(E**2) / (self.N**2)
-		C_BB = self._bin_power(B**2) / (self.N**2)
-		C_EB = self._bin_power(E*B ) / (self.N**2)
+		C_EE = self._bin_power(E*np.conjugate(E)) / (self.N**2)
+		C_BB = self._bin_power(B*np.conjugate(B)) / (self.N**2)
+		C_EB = self._bin_power(E*np.conjugate(B) ) / (self.N**2)
 
 		#For convenience return ell (copied in case the user messes with it)
 		#and the three power spectra.
