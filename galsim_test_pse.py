@@ -39,19 +39,19 @@ print "Averaging measured power spectra over realizations: ",n_realization
 for ireal in range(n_realization):
     print "Getting shears on a grid with E power only"
     g1, g2 = test_ps_e.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
-    #g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
+    g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
     pse_e = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     ell, cee_e, cbb_e, ceb_e = pse_e.estimate(g1, g2)
 
     print "Getting shears on a grid with B power only"
     g1, g2 = test_ps_b.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
-    #g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
+    g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
     pse_b = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     ell, cee_b, cbb_b, ceb_b = pse_b.estimate(g1, g2)
 
     print "Getting shears on a grid with E and B power"
     g1, g2 = test_ps_eb.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
-    #g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
+    g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
     pse_eb = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     ell, cee_eb, cbb_eb, ceb_eb = pse_eb.estimate(g1, g2)
 
