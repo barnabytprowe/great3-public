@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 
 ### set up basic parameters ###
 # how many times to do this (to beat down noise)
-n_realization = 5
+n_realization = 20
 # file containing theoretical P(k), with fake values added above ell=2000
 pkfile = 'test_pse/ps.wmap7lcdm.2000.dat'
-theory_tab = galsim.LookupTable(file=pkfile)
+theory_tab = galsim.LookupTable(file=pkfile, interpolant='linear')
 # name of text file to store results
 outfile = 'test_pse/galsim_test_pse.out'
 # prefix for figures
@@ -98,7 +98,7 @@ ax.set_yscale('log')
 ax.set_xlabel('ell')
 ax.set_ylabel('ell*(ell+1)*C_ell/2pi')
 ax.set_title('Input P_E only')
-plt.legend()
+plt.legend(loc=4)
 ax.plot(np.array((36.,36.)),np.array((1.e-13,1.e-7)),color='black')
 ax.plot(np.array((3600.,3600.)),np.array((1.e-13,1.e-7)),color='black')
 figfile = figpref+'input_pe.eps'
@@ -118,7 +118,7 @@ ax.set_yscale('log')
 ax.set_xlabel('ell')
 ax.set_ylabel('ell*(ell+1)*C_ell/2pi')
 ax.set_title('Input P_B only')
-plt.legend()
+plt.legend(loc=4)
 ax.plot(np.array((36.,36.)),np.array((1.e-13,1.e-7)),color='black')
 ax.plot(np.array((3600.,3600.)),np.array((1.e-13,1.e-7)),color='black')
 figfile = figpref+'input_pb.eps'
@@ -135,7 +135,7 @@ ax.set_yscale('log')
 ax.set_xlabel('ell')
 ax.set_ylabel('ell*(ell+1)*C_ell/2pi')
 ax.set_title('Input P_E and P_B')
-plt.legend()
+plt.legend(loc=4)
 ax.plot(np.array((36.,36.)),np.array((1.e-13,1.e-7)),color='black')
 ax.plot(np.array((3600.,3600.)),np.array((1.e-13,1.e-7)),color='black')
 figfile = figpref+'input_peb.eps'

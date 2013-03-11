@@ -91,9 +91,9 @@ class PowerSpectrumEstimator(object):
 
 		#Use the internal function above to bin,
 		#and account for the normalization of the FFT
-		C_EE = self._bin_power(E*np.conjugate(E)) / (self.N**2)
-		C_BB = self._bin_power(B*np.conjugate(B)) / (self.N**2)
-		C_EB = self._bin_power(E*np.conjugate(B) ) / (self.N**2)
+		C_EE = self._bin_power(E*np.conjugate(E)) * (self.dx/self.N)**2
+		C_BB = self._bin_power(B*np.conjugate(B)) * (self.dx/self.N)**2
+		C_EB = self._bin_power(E*np.conjugate(B) ) * (self.dx/self.N)**2
 
 		#For convenience return ell (copied in case the user messes with it)
 		#and the three power spectra.
