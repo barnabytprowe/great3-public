@@ -1,13 +1,14 @@
 import numpy as np
 from numpy import pi
-
+import galsim
 
 class PowerSpectrumEstimator(object):
 	"""
 	This class stores all the data used in power spectrum estimation that 
 	is fixed with the geometry of the problem - the binning and spin weighting factors.
 
-	The only public method is estimate, which you call with 2D g1 and g2 arrays on a square grid.
+	The only public method is estimate, which you call with 2D g1 and g2 arrays on a square
+	grid.  It assumes the flat sky approximation.
 
 	Some important notes:
 	1) Power spectrum estimation requires a weight function which decides how the averaging
@@ -36,9 +37,13 @@ class PowerSpectrumEstimator(object):
 		#Set the possible ell range and the bin edges and centers
 		#This is for binning the power spectrum in ell.
 		lmin = 2*pi / self.sky_size
-		lmax = 2*pi / self.dx
+		lmax = np.sqrt(2.)*pi / self.dx # in 2 dimensions
 		self.bin_edges = np.logspace(np.log10(lmin), np.log10(lmax), nbin+1)
-		self.ell = 0.5*(self.bin_edges[1:] + self.bin_edges[:-1])
+                # By default, report an area-averaged value of ell, which should be fine if there is
+		# no weighting (in which case it's recomputed) and if there are many ell modes in
+		# each bin.  The latter assumption is most likely to break down at low ell.
+		self.ell = (2./3.)*(self.bin_edges[1:]**3-self.bin_edges[:-1]**3) \
+                                   / (self.bin_edges[1:]**2-self.bin_edges[:-1]**2)
 
 		#Compute two useful factors, both in the form of 2D grids in Fourier space.
 		#These are the lengths of the wavevector |ell| for each point in the space,
@@ -65,7 +70,7 @@ class PowerSpectrumEstimator(object):
 		rot = np.exp(-2j*l_ang)
 		return l_abs, rot
 
-	def _bin_power(self, C):
+	def _bin_power(self, C, ell_weight=None):
 		#This little utility function bins a 2D C^{E/B, E/B}_{ell}
 		#based on |ell|.  The use of histogram is a little hack,
 		#but is quite convenient since it means everything is done in C
@@ -74,11 +79,15 @@ class PowerSpectrumEstimator(object):
 		#and the second 
 		# sum_{|ell| in bin } 1
 		#so the ratio is just the mean bin value.
-		P,_ = np.histogram(self.l_abs, self.bin_edges, weights=C)
-		count,_ = np.histogram(self.l_abs, self.bin_edges)
-		return P/count
+                if ell_weight is not None:
+                    P,_ = np.histogram(self.l_abs, self.bin_edges, weights=C*ell_weight)
+                    count,_ = np.histogram(self.l_abs, self.bin_edges, weights=ell_weight)
+                else:
+                    P,_ = np.histogram(self.l_abs, self.bin_edges, weights=C)
+                    count,_ = np.histogram(self.l_abs, self.bin_edges)
+		return P*(self.dx/self.N)**2/count
 
-	def estimate(self, g1, g2):
+	def estimate(self, g1, g2, weight_EE=False, weight_BB=False, weight_EB=False):
 		""" Compute the EE,BB, and EB power spectra of two 2D arrays g1 and g2."""
 		#Check geometry is what we expect.
 		assert g1.shape == g2.shape == (self.N, self.N)
@@ -91,10 +100,38 @@ class PowerSpectrumEstimator(object):
 
 		#Use the internal function above to bin,
 		#and account for the normalization of the FFT
-		C_EE = self._bin_power(E*np.conjugate(E)) * (self.dx/self.N)**2
-		C_BB = self._bin_power(B*np.conjugate(B)) * (self.dx/self.N)**2
-		C_EB = self._bin_power(E*np.conjugate(B) ) * (self.dx/self.N)**2
+		C_EE = self._bin_power(E*np.conjugate(E)) 
+		C_BB = self._bin_power(B*np.conjugate(B))
+		C_EB = self._bin_power(E*np.conjugate(B))
+
+                if weight_EE or weight_BB or weight_EB:
+                    # need to interpolate C_EE to values of self.l_abs
+                    new_ell = np.zeros(len(self.ell)+2)
+                    new_ell[1:len(self.ell)+1] = self.ell
+                    new_ell[len(self.ell)+1] = 10.*max(self.ell)
+
+                if weight_EE:
+                    new_CEE = np.zeros_like(new_ell)
+                    new_CEE[1:len(self.ell)+1] = np.real(C_EE)
+                    new_CEE[len(self.ell)+1] = max(np.real(C_EE))
+                    EE_table = galsim.LookupTable(new_ell, new_CEE)
+                    ell_weight = EE_table(self.l_abs)
+                    C_EE = self._bin_power(E*np.conjugate(E), ell_weight=ell_weight)
+                if weight_BB:
+                    new_CBB = np.zeros_like(new_ell)
+                    new_CBB[1:len(self.ell)+1] = np.real(C_BB)
+                    new_CBB[len(self.ell)+1] = max(np.real(C_BB))
+                    BB_table = galsim.LookupTable(new_ell, new_CBB)
+                    ell_weight = BB_table(self.l_abs)
+                    C_BB = self._bin_power(E*np.conjugate(E), ell_weight=ell_weight)
+                if weight_BB:
+                    new_CBB = np.zeros_like(new_ell)
+                    new_CBB[1:len(self.ell)+1] = np.real(C_BB)
+                    new_CBB[len(self.ell)+1] = max(np.real(C_BB))
+                    BB_table = galsim.LookupTable(new_ell, new_CBB)
+                    ell_weight = BB_table(self.l_abs)
+                    C_BB = self._bin_power(E*np.conjugate(E), ell_weight=ell_weight)
 
 		#For convenience return ell (copied in case the user messes with it)
 		#and the three power spectra.
-		return self.ell.copy(), C_EE, C_BB, C_EB
+		return self.ell.copy(), np.real(C_EE), np.real(C_BB), np.real(C_EB)
