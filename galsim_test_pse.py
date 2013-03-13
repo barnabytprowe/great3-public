@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 ### set up basic parameters ###
 # how many times to do this (to beat down noise)
-n_realization = 300
+n_realization = 3
 # file containing theoretical P(k), with fake values added above ell=2000
 pkfile = 'test_pse/ps.wmap7lcdm.2000.dat'
 theory_tab = galsim.LookupTable(file=pkfile, interpolant='linear')
@@ -20,10 +20,13 @@ theta = 10. # degrees
 dtheta = theta/grid_nx
 
 
-def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4)):
+def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4),
+           bin_theory=None):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(ell, t, label='theory')
+    if bin_theory is not None:
+        ax.plot(ell, bin_theory, label='binned theory')
     ax.plot(ell, e, label='Observed EE power')
     ax.plot(ell, b, label='Observed BB power')
     ax.plot(ell, eb, label='Observed EB power')
@@ -46,12 +49,16 @@ def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4)):
         ratio = rat/t
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(ell, ratio)
+        ax.plot(ell, ratio, label='vs. theory')
+        if bin_theory is not None:
+            bin_ratio = rat/bin_theory
+            ax.plot(ell, bin_ratio, label='vs. binned theory')
         plt.ylim(0.5,1.5)
         ax.set_xscale('log')
         ax.set_xlabel('ell')
         ax.set_ylabel('Observed / theory')
         ax.set_title(title)
+        plt.legend(loc=4)
         ax.plot(np.array((min_ell,min_ell)), np.array((0.5,1.5)), color='black')
         ax.plot(np.array((max_ell,max_ell)), np.array((0.5,1.5)), color='black')
         ax.plot(np.array((0.5*min_ell,1.5*max_ell)),np.array((1.,1.)),color='black')
@@ -80,7 +87,11 @@ for ireal in range(n_realization):
     g1, g2 = test_ps_e.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
     pse_e = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
-    ell, cee_e, cbb_e, ceb_e = pse_e.estimate(g1, g2, weight_EE=True)
+    if ireal == 0:
+        ell, cee_e, cbb_e, ceb_e, c_binned_theory = pse_e.estimate(g1, g2, weight_EE=True,
+                                                                   theory_func = theory_tab)
+    else:
+        ell, cee_e, cbb_e, ceb_e, = pse_e.estimate(g1, g2, weight_EE=True)
 
     print "Getting shears on a grid with B power only"
     g1, g2 = test_ps_b.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
@@ -120,6 +131,9 @@ for i in range(n_ell):
     theory_p[i] = theory_tab(ell[i])*ell[i]*(ell[i]+1)/(2.*np.pi)
 
 print "Making figures of dimensionless power, and writing to files"
-doplot(ell, theory_p, e_avgp_e, e_avgp_b, e_avgp_eb, figpref, 'input_pe', 'Input P_E only', rat=e_avgp_e)
-doplot(ell, theory_p, b_avgp_e, b_avgp_b, b_avgp_eb, figpref, 'input_pb', 'Input P_B only', rat=b_avgp_b)
-doplot(ell, theory_p, eb_avgp_e, eb_avgp_b, eb_avgp_eb, figpref, 'input_peb', 'Input P_EB only')
+doplot(ell, theory_p, e_avgp_e, e_avgp_b, e_avgp_eb, figpref, 'input_pe',
+       'Input P_E only', rat=e_avgp_e, bin_theory=c_binned_theory)
+doplot(ell, theory_p, b_avgp_e, b_avgp_b, b_avgp_eb, figpref, 'input_pb',
+       'Input P_B only', rat=b_avgp_b, bin_theory=c_binned_theory)
+doplot(ell, theory_p, eb_avgp_e, eb_avgp_b, eb_avgp_eb, figpref, 'input_peb'
+       'Input P_EB only', bin_theory=c_binned_theory)

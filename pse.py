@@ -1,6 +1,5 @@
 import numpy as np
 from numpy import pi
-import galsim
 
 class PowerSpectrumEstimator(object):
 	"""
@@ -85,9 +84,9 @@ class PowerSpectrumEstimator(object):
                 else:
                     P,_ = np.histogram(self.l_abs, self.bin_edges, weights=C)
                     count,_ = np.histogram(self.l_abs, self.bin_edges)
-		return P*(self.dx/self.N)**2/count
+		return P/count
 
-	def estimate(self, g1, g2, weight_EE=False, weight_BB=False, weight_EB=False):
+	def estimate(self, g1, g2, weight_EE=False, weight_BB=False, theory_func=None):
 		""" Compute the EE,BB, and EB power spectra of two 2D arrays g1 and g2."""
 		#Check geometry is what we expect.
 		assert g1.shape == g2.shape == (self.N, self.N)
@@ -100,11 +99,19 @@ class PowerSpectrumEstimator(object):
 
 		#Use the internal function above to bin,
 		#and account for the normalization of the FFT
-		C_EE = self._bin_power(E*np.conjugate(E)) 
-		C_BB = self._bin_power(B*np.conjugate(B))
-		C_EB = self._bin_power(E*np.conjugate(B))
+		C_EE = self._bin_power(E*np.conjugate(E))*(self.dx/self.N)**2
+		C_BB = self._bin_power(B*np.conjugate(B))*(self.dx/self.N)**2
+		C_EB = self._bin_power(E*np.conjugate(B))*(self.dx/self.N)**2
 
-                if weight_EE or weight_BB or weight_EB:
+                if theory_func or weight_EE or weight_BB:
+                    import galsim
+
+                if theory_func is not None:
+                    # theory_func needs to be a callable function
+                    # need to carefully sanity check this later, but for now just assume
+                    C_theory = self._bin_power(theory_func(self.l_abs))
+
+                if weight_EE or weight_BB:
                     # need to interpolate C_EE to values of self.l_abs
                     new_ell = np.zeros(len(self.ell)+2)
                     new_ell[1:len(self.ell)+1] = self.ell
@@ -124,14 +131,10 @@ class PowerSpectrumEstimator(object):
                     BB_table = galsim.LookupTable(new_ell, new_CBB)
                     ell_weight = BB_table(self.l_abs)
                     C_BB = self._bin_power(E*np.conjugate(E), ell_weight=ell_weight)
-                if weight_BB:
-                    new_CBB = np.zeros_like(new_ell)
-                    new_CBB[1:len(self.ell)+1] = np.real(C_BB)
-                    new_CBB[len(self.ell)+1] = max(np.real(C_BB))
-                    BB_table = galsim.LookupTable(new_ell, new_CBB)
-                    ell_weight = BB_table(self.l_abs)
-                    C_BB = self._bin_power(E*np.conjugate(E), ell_weight=ell_weight)
 
 		#For convenience return ell (copied in case the user messes with it)
 		#and the three power spectra.
-		return self.ell.copy(), np.real(C_EE), np.real(C_BB), np.real(C_EB)
+                if not theory_func:
+		    return self.ell.copy(), np.real(C_EE), np.real(C_BB), np.real(C_EB)
+                else:
+		    return self.ell.copy(), np.real(C_EE), np.real(C_BB), np.real(C_EB), np.real(C_theory)
