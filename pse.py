@@ -42,7 +42,6 @@ class PowerSpectrumEstimator(object):
 
         Each parameter has a reasonable default value.
         """
-
         # Set up the scales of the sky and pixels
         self.N = N
         self.sky_size = np.radians(sky_size_deg)
@@ -110,9 +109,20 @@ class PowerSpectrumEstimator(object):
           weighting by the power within the bin.
         * theory_func is some callable function that can be used to get an idealized value of power
           at each point on the grid, and then see what results it gives for our chosen ell binning.
+
+        All optional arguments make use of the GalSim software, unlike the rest of the code in this
+        file.
         """
-        # Check for square geometry is what we expect.
-        assert g1.shape == g2.shape == (self.N, self.N)
+        # Check for the expected square geometry consistent with the previously-defined grid size.
+        if g1.shape != g2.shape:
+            raise ValueError("g1 and g2 grids do not have the same shape!")
+        if g1.shape[0] != g1.shape[1]:
+            raise ValueError("Input shear arrays are not square!")
+        if g1.shape[0] != self.N:
+            raise ValueError("Input shear array size is not correct!")
+
+        if not isinstance(weight_EE, bool) or not isinstance(weight_BB, bool):
+            raise ValueError("Input weight flags must be bools!")
 
         # Transform g1+j*g2 into Fourier space and rotate into E-B, then separate into E and B.
         EB = np.fft.ifft2(self.eb_rot * np.fft.fft2(g1 + 1j*g2))
@@ -130,8 +140,7 @@ class PowerSpectrumEstimator(object):
             import galsim
 
         if theory_func is not None:
-            # theory_func needs to be a callable function; need to carefully sanity check this
-            # later, but for now just assume.
+            # theory_func needs to be a callable function
             C_theory_ell = np.zeros_like(self.l_abs)
             C_theory_ell[self.l_abs>0] = theory_func(self.l_abs[self.l_abs>0])
             C_theory = self._bin_power(C_theory_ell)
