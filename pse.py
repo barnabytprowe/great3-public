@@ -109,7 +109,9 @@ class PowerSpectrumEstimator(object):
                 if theory_func is not None:
                     # theory_func needs to be a callable function
                     # need to carefully sanity check this later, but for now just assume
-                    C_theory = self._bin_power(theory_func(self.l_abs))
+                    C_theory_ell = np.zeros_like(self.l_abs)
+		    C_theory_ell[self.l_abs>0] = theory_func(self.l_abs[self.l_abs>0])
+                    C_theory = self._bin_power(C_theory_ell)
 
                 if weight_EE or weight_BB:
                     # need to interpolate C_EE to values of self.l_abs
