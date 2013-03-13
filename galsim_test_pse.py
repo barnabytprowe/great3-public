@@ -43,7 +43,7 @@ def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4),
     max_ell = np.sqrt(2.)*grid_nx*min_ell/2.
     ax.plot(np.array((min_ell,min_ell)), np.array(lim), color='black')
     ax.plot(np.array((max_ell,max_ell)), np.array(lim), color='black')
-    figfile = pref + string + '.eps'
+    figfile = pref + string + '.jpg'
     plt.savefig(figfile)
     print 'Wrote to file ',figfile
 
@@ -64,7 +64,7 @@ def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4),
         ax.plot(np.array((min_ell,min_ell)), np.array((0.5,1.5)), color='black')
         ax.plot(np.array((max_ell,max_ell)), np.array((0.5,1.5)), color='black')
         ax.plot(np.array((0.5*min_ell,1.5*max_ell)),np.array((1.,1.)),color='black')
-        figfile = pref + string + '.ratio.eps'
+        figfile = pref + string + '.ratio.jpg'
         plt.savefig(figfile)
         print 'Wrote to file ',figfile
 
