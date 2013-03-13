@@ -110,7 +110,7 @@ class PowerSpectrumEstimator(object):
                     # theory_func needs to be a callable function
                     # need to carefully sanity check this later, but for now just assume
                     C_theory_ell = np.zeros_like(self.l_abs)
-		    C_theory_ell[self.l_abs>0] = theory_func(self.l_abs[self.l_abs>0])
+                    C_theory_ell[self.l_abs>0] = theory_func(self.l_abs[self.l_abs>0])
                     C_theory = self._bin_power(C_theory_ell)
 
                 if weight_EE or weight_BB:
@@ -125,18 +125,18 @@ class PowerSpectrumEstimator(object):
                     new_CEE[len(self.ell)+1] = max(np.real(C_EE))
                     EE_table = galsim.LookupTable(new_ell, new_CEE)
                     ell_weight = EE_table(self.l_abs)
-                    C_EE = self._bin_power(E*np.conjugate(E), ell_weight=ell_weight)
+                    C_EE = self._bin_power(E*np.conjugate(E), ell_weight=ell_weight)*(self.dx/self.N)**2
                 if weight_BB:
                     new_CBB = np.zeros_like(new_ell)
                     new_CBB[1:len(self.ell)+1] = np.real(C_BB)
                     new_CBB[len(self.ell)+1] = max(np.real(C_BB))
                     BB_table = galsim.LookupTable(new_ell, new_CBB)
                     ell_weight = BB_table(self.l_abs)
-                    C_BB = self._bin_power(E*np.conjugate(E), ell_weight=ell_weight)
+                    C_BB = self._bin_power(B*np.conjugate(B), ell_weight=ell_weight)*(self.dx/self.N)**2
 
 		#For convenience return ell (copied in case the user messes with it)
 		#and the three power spectra.
-                if not theory_func:
+                if theory_func is None:
 		    return self.ell.copy(), np.real(C_EE), np.real(C_BB), np.real(C_EB)
                 else:
 		    return self.ell.copy(), np.real(C_EE), np.real(C_BB), np.real(C_EB), np.real(C_theory)
