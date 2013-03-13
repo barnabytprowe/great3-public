@@ -142,7 +142,8 @@ class PowerSpectrumEstimator(object):
             new_ell = np.zeros(len(self.ell)+2)
             new_ell[1:len(self.ell)+1] = self.ell
             new_ell[len(self.ell)+1] = 10.*max(self.ell)
-            C_theory = self._bin_power(C_theory_ell, ell_weight=C_theory_ell)
+            if theory_func is not None:
+                C_theory = self._bin_power(C_theory_ell, ell_weight=C_theory_ell)
 
         if weight_EE:
             new_CEE = np.zeros_like(new_ell)
