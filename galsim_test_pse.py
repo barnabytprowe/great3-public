@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 ### set up basic parameters ###
 # how many times to do this (to beat down noise)
-n_realization = 3
+n_realization = 100
 # file containing theoretical P(k), with fake values added above ell=2000
 pkfile = 'test_pse/ps.wmap7lcdm.2000.dat'
 theory_tab = galsim.LookupTable(file=pkfile, interpolant='linear')
@@ -18,6 +18,8 @@ grid_nx = 100
 # length of grid in one dimension (degrees)
 theta = 10. # degrees
 dtheta = theta/grid_nx
+# set verbosity
+verbose = False
 
 
 def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4),
@@ -83,23 +85,27 @@ eb_p_eb = np.zeros((n_ell, n_realization))
 
 print "Averaging measured power spectra over realizations: ",n_realization
 for ireal in range(n_realization):
-    print "Getting shears on a grid with E power only"
+    if verbose:
+        print "Getting shears on a grid with E power only"
     g1, g2 = test_ps_e.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
     pse_e = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     if ireal == 0:
+        ell, cee_e, cbb_e, ceb_e, c_binned_theory_nowt = pse_e.estimate(g1, g2, theory_func = theory_tab)
         ell, cee_e, cbb_e, ceb_e, c_binned_theory = pse_e.estimate(g1, g2, weight_EE=True,
                                                                    theory_func = theory_tab)
     else:
-        ell, cee_e, cbb_e, ceb_e, = pse_e.estimate(g1, g2, weight_EE=True)
+        ell, cee_e, cbb_e, ceb_e = pse_e.estimate(g1, g2, weight_EE=True)
 
-    print "Getting shears on a grid with B power only"
+    if verbose:
+        print "Getting shears on a grid with B power only"
     g1, g2 = test_ps_b.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
     pse_b = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     ell, cee_b, cbb_b, ceb_b = pse_b.estimate(g1, g2)
 
-    print "Getting shears on a grid with E and B power"
+    if verbose:
+        print "Getting shears on a grid with E and B power"
     g1, g2 = test_ps_eb.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     g2 = -1.*g2 # this might not be necessary, though it was for the GREAT10 PS estimation code
     pse_eb = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
@@ -127,13 +133,15 @@ eb_avgp_b = np.mean(eb_p_b,1)*ell*(ell+1)/(2.*np.pi)
 eb_avgp_eb = np.mean(eb_p_eb,1)*ell*(ell+1)/(2.*np.pi)
 
 theory_p = np.zeros_like(ell)
+theory_p_binned = c_binned_theory*ell*(ell+1.)/(2.*np.pi)
+theory_p_binned_nowt = c_binned_theory_nowt*ell*(ell+1.)/(2.*np.pi)
 for i in range(n_ell):
     theory_p[i] = theory_tab(ell[i])*ell[i]*(ell[i]+1)/(2.*np.pi)
 
 print "Making figures of dimensionless power, and writing to files"
 doplot(ell, theory_p, e_avgp_e, e_avgp_b, e_avgp_eb, figpref, 'input_pe',
-       'Input P_E only', rat=e_avgp_e, bin_theory=c_binned_theory)
+       'Input P_E only', rat=e_avgp_e, bin_theory=theory_p_binned)
 doplot(ell, theory_p, b_avgp_e, b_avgp_b, b_avgp_eb, figpref, 'input_pb',
-       'Input P_B only', rat=b_avgp_b, bin_theory=c_binned_theory)
-doplot(ell, theory_p, eb_avgp_e, eb_avgp_b, eb_avgp_eb, figpref, 'input_peb'
-       'Input P_EB only', bin_theory=c_binned_theory)
+       'Input P_B only', rat=b_avgp_b, bin_theory=theory_p_binned_nowt)
+doplot(ell, theory_p, eb_avgp_e, eb_avgp_b, eb_avgp_eb, figpref, 'input_peb',
+       'Input P_EB')
