@@ -21,7 +21,7 @@ dtheta = theta/grid_nx
 # set verbosity
 verbose = False
 
-
+# Utility for plotting results
 def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4),
            bin_theory=None):
     fig = plt.figure()
@@ -68,11 +68,13 @@ def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4),
         plt.savefig(figfile)
         print 'Wrote to file ',figfile
 
+# define the galsim PowerSpectrum objects for the case of only E power, only B, and E+B
 test_ps_e=galsim.PowerSpectrum(e_power_function = theory_tab, units='radians')
 test_ps_b=galsim.PowerSpectrum(b_power_function = theory_tab, units='radians')
 test_ps_eb=galsim.PowerSpectrum(e_power_function = theory_tab,
                                 b_power_function = theory_tab, units='radians')
 
+# Set up arrays to store results.
 e_p_e = np.zeros((n_ell, n_realization))
 e_p_b = np.zeros((n_ell, n_realization))
 e_p_eb = np.zeros((n_ell, n_realization))
