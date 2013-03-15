@@ -3,6 +3,14 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import os, sys
+
+# First, get access to the power spectrum estimator.  It's not yet in GalSim or installed on my
+# system, so have to add its dir to path.  This should work on other people's machines if they are
+# sitting in the directory containing this file (process_imsim.py) in the great3-private repo.
+pse_path = os.path.abspath('../../metrics')
+sys.path.append(pse_path)
+import pse
 
 # Helper function: read in a single file
 def process_file(filename, verbose):
@@ -16,8 +24,15 @@ def process_file(filename, verbose):
     e2 = data[4]
     fwhm = 3600.*data[6] # to get arcsec
 
-    # Process FWHM to get fluctuations around mean
+    # Process FWHM to get fluctuations around mean.
     dfwhm = fwhm/np.mean(fwhm)-1.0
+    # Remove the large-scale correlations due to atmospheric dispersion, which are roughly like a
+    # constant non-zero mean ellipticity.  For the PS, that will look like something peaked at k=0,
+    # which we do not represent with our lensing engine.  Hence we remove it here, and when
+    # simulating atmospheric PSFs, we can simply draw a random value of e (from within a range given
+    # by the sims) to add after the fact.
+    de1 = e1-np.mean(e1)
+    de2 = e2-np.mean(e2)
 
     # Get some basic statistics:
     if verbose:
@@ -29,15 +44,15 @@ def process_file(filename, verbose):
         print "Mean e1, std dev of e1:",np.mean(e1), np.std(e1)
         print "Mean e2, std dev of e2:",np.mean(e2), np.std(e2) 
         print "Showing grid:"
-        #fig = plt.figure()
-        #ax = fig.add_subplot(111)
-        #ax.plot(x, y, marker='+')
-        #ax.set_xlabel('x (arcsec)')
-        #ax.set_ylabel('y (arcsec)')
-        #plt.xlim((0,1000))
-        #plt.ylim((0,1000))
-        #ax.set_title('Locations of stars')
-        #plt.show()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(x, y, marker='+')
+        ax.set_xlabel('x (arcsec)')
+        ax.set_ylabel('y (arcsec)')
+        plt.xlim((0,1000))
+        plt.ylim((0,1000))
+        ax.set_title('Locations of stars')
+        plt.show()
 
     # Now define expected grid locations
     x_grid_min = 200.
@@ -50,8 +65,8 @@ def process_file(filename, verbose):
     round_y_grid_index = np.round(y_grid_index)
     x_use = round_x_grid_index[(np.abs(round_x_grid_index-x_grid_index)<0.05) & (np.abs(round_y_grid_index-y_grid_index)<0.05)].astype(np.int)
     y_use = round_y_grid_index[(np.abs(round_x_grid_index-x_grid_index)<0.05) & (np.abs(round_y_grid_index-y_grid_index)<0.05)].astype(np.int)
-    e1_use = e1[(np.abs(round_x_grid_index-x_grid_index)<0.05) & (np.abs(round_y_grid_index-y_grid_index)<0.05)].astype(np.int)
-    e2_use = e2[(np.abs(round_x_grid_index-x_grid_index)<0.05) & (np.abs(round_y_grid_index-y_grid_index)<0.05)].astype(np.int)
+    de1_use = de1[(np.abs(round_x_grid_index-x_grid_index)<0.05) & (np.abs(round_y_grid_index-y_grid_index)<0.05)].astype(np.int)
+    de2_use = de2[(np.abs(round_x_grid_index-x_grid_index)<0.05) & (np.abs(round_y_grid_index-y_grid_index)<0.05)].astype(np.int)
     dfwhm_use = dfwhm[(np.abs(round_x_grid_index-x_grid_index)<0.05) & (np.abs(round_y_grid_index-y_grid_index)<0.05)].astype(np.int)
     if verbose:
         print "After grid selection:"
@@ -65,11 +80,11 @@ def process_file(filename, verbose):
         #plt.show()
 
     # Make grids of the interesting parameters.
-    e1_grid = np.zeros((ngrid, ngrid))
-    e2_grid = np.zeros((ngrid, ngrid))
+    de1_grid = np.zeros((ngrid, ngrid))
+    de2_grid = np.zeros((ngrid, ngrid))
     dfwhm_grid = np.zeros((ngrid, ngrid))
-    e1_grid[x_use, y_use] = e1_use
-    e2_grid[x_use, y_use] = e2_use
+    de1_grid[x_use, y_use] = de1_use
+    de2_grid[x_use, y_use] = de2_use
     dfwhm_grid[x_use, y_use] = dfwhm_use
 
 # Main function: for now, just specify a single file directly.
