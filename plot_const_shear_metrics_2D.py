@@ -1,6 +1,6 @@
 
 import numpy as np
-import g3utils
+import g3metrics
 
 NIMS = 200               # Number of images per set, always 200 for G10
 NGALS_PER_IM = 1     # In GREAT08/GREAT10 there were 10000 galaxies, but here there's no noise
@@ -29,7 +29,7 @@ mvals = MMIN * (MMAX / MMIN)**(np.arange(NBINS) / float(NBINS - 1.))
 cgrid, mgrid = np.meshgrid(cvals, mvals) # 2D arrays covering full space
 
 # Generate the truth tables
-g1true, g2true = g3utils.make_truth_normal_dist(NTRUESETS, NIMS, true_sigma=TRUE_SIGMA)
+g1true, g2true = g3metrics.make_const_truth_normal_dist(NTRUESETS, NIMS, true_sigma=TRUE_SIGMA)
 
 # Create empty storage arrays in which to put
 QZ1_mcboth = np.empty((NBINS, NBINS))
@@ -40,14 +40,14 @@ for i in range(NBINS):
 
     for j in range(NBINS):
         
-        g1sub, g2sub = g3utils.make_submission_const_shear(cgrid[i, j], cgrid[i, j],
+        g1sub, g2sub = g3metrics.make_submission_const_shear(cgrid[i, j], cgrid[i, j],
                                                            mgrid[i, j], mgrid[i, j],
                                                            g1true, g2true,
                                                            ngals_per_im=NGALS_PER_IM,
                                                            noise_sigma=NOISE_SIGMA)
-        QZ1_mcboth[i, j] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
+        QZ1_mcboth[i, j] = g3metrics.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
                                                          cfid=CFID, mfid=MFID)[0]
-        QZ2_mcboth[i, j] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
+        QZ2_mcboth[i, j] = g3metrics.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
                                                          cfid=CFID, mfid=MFID)[0]
 
 from mpl_toolkits.mplot3d import axes3d
@@ -89,15 +89,15 @@ for i in range(NBINS):
 
     for j in range(NBINS):
         
-        g1sub, g2sub = g3utils.make_submission_const_shear(cgrid[i, j], CFID,
-                                                           mgrid[i, j], MFID,
-                                                           g1true, g2true,
-                                                           ngals_per_im=NGALS_PER_IM,
-                                                           noise_sigma=NOISE_SIGMA)
-        QZ1_m1c1[i, j] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
-                                                       cfid=CFID, mfid=MFID)[0]
-        QZ2_m1c1[i, j] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
-                                                       cfid=CFID, mfid=MFID)[0]
+        g1sub, g2sub = g3metrics.make_submission_const_shear(cgrid[i, j], CFID,
+                                                             mgrid[i, j], MFID,
+                                                             g1true, g2true,
+                                                             ngals_per_im=NGALS_PER_IM,
+                                                             noise_sigma=NOISE_SIGMA)
+        QZ1_m1c1[i, j] = g3metrics.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
+                                                         cfid=CFID, mfid=MFID)[0]
+        QZ2_m1c1[i, j] = g3metrics.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
+                                                         cfid=CFID, mfid=MFID)[0]
 
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
@@ -140,15 +140,15 @@ for i in range(NBINS):
 
     for j in range(NBINS):
         
-        g1sub, g2sub = g3utils.make_submission_const_shear(CFID, CFID,
-                                                           m1grid[i, j], m2grid[i, j],
-                                                           g1true, g2true,
-                                                           ngals_per_im=NGALS_PER_IM,
-                                                           noise_sigma=NOISE_SIGMA)
-        QZ1_m1m2[i, j] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
-                                                       cfid=CFID, mfid=MFID)[0]
-        QZ2_m1m2[i, j] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
-                                                       cfid=CFID, mfid=MFID)[0]
+        g1sub, g2sub = g3metrics.make_submission_const_shear(CFID, CFID,
+                                                             m1grid[i, j], m2grid[i, j],
+                                                             g1true, g2true,
+                                                             ngals_per_im=NGALS_PER_IM,
+                                                             noise_sigma=NOISE_SIGMA)
+        QZ1_m1m2[i, j] = g3metrics.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
+                                                         cfid=CFID, mfid=MFID)[0]
+        QZ2_m1m2[i, j] = g3metrics.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
+                                                         cfid=CFID, mfid=MFID)[0]
 
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt

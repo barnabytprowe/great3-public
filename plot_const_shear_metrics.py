@@ -1,6 +1,6 @@
 
 import numpy as np
-import g3utils
+import g3metrics
 
 NIMS = 300               # Number of images per set, always 200 for G10
 NGALS_PER_IM = 10000     # In GREAT08/GREAT10 there were 10000 galaxies per image
@@ -29,7 +29,7 @@ mvals = MMIN * (MMAX / MMIN)**(np.arange(NBINS) / float(NBINS - 1.))
 cgrid, mgrid = np.meshgrid(cvals, mvals) # 2D arrays covering full space
 
 # Generate the truth tables
-g1true, g2true = g3utils.make_truth_normal_dist(NTRUESETS, NIMS, true_sigma=TRUE_SIGMA)
+g1true, g2true = g3metrics.make_truth_normal_dist(NTRUESETS, NIMS, true_sigma=TRUE_SIGMA)
 
 # Create empty storage arrays
 Q08_vs_m = np.empty(NBINS)
@@ -45,15 +45,15 @@ for j in range(NMONTE):
 
     # Loop over mvalues making indepented submissions at each c, m combination
     for i in range(NBINS):
-        g1sub, g2sub = g3utils.make_submission_const_shear(CFID, CFID, mvals[i], mvals[i],
+        g1sub, g2sub = g3metrics.make_submission_const_shear(CFID, CFID, mvals[i], mvals[i],
                                                            g1true, g2true,
                                                            ngals_per_im=NGALS_PER_IM,
                                                            noise_sigma=NOISE_SIGMA)
-        Q08_vs_m[i] = g3utils.metricQ08_const_shear(g1sub, g2sub, g1true, g2true,
+        Q08_vs_m[i] = g3metrics.metricQ08_const_shear(g1sub, g2sub, g1true, g2true,
                                                     ntruesets=NTRUESETS)
-        QZ1_vs_m[i] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
+        QZ1_vs_m[i] = g3metrics.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
                                                     cfid=CFID, mfid=MFID)[0]
-        QZ2_vs_m[i] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
+        QZ2_vs_m[i] = g3metrics.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
                                                     cfid=CFID, mfid=MFID)[0]
 
     if j == 0:
@@ -79,15 +79,15 @@ for j in range(NMONTE):
 
     # Loop over mvalues making indepented submissions at each c, m combination
     for i in range(NBINS):
-        g1sub, g2sub = g3utils.make_submission_const_shear(cvals[i], cvals[i], MFID, MFID,
+        g1sub, g2sub = g3metrics.make_submission_const_shear(cvals[i], cvals[i], MFID, MFID,
                                                            g1true, g2true,
                                                            ngals_per_im=NGALS_PER_IM,
                                                            noise_sigma=NOISE_SIGMA)
-        Q08_vs_c[i] = g3utils.metricQ08_const_shear(g1sub, g2sub, g1true, g2true,
+        Q08_vs_c[i] = g3metrics.metricQ08_const_shear(g1sub, g2sub, g1true, g2true,
                                                     ntruesets=NTRUESETS)
-        QZ1_vs_c[i] = g3utils.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
+        QZ1_vs_c[i] = g3metrics.metricQZ1_const_shear(g1sub, g2sub, g1true, g2true,
                                                     cfid=CFID, mfid=MFID)[0]
-        QZ2_vs_c[i] = g3utils.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
+        QZ2_vs_c[i] = g3metrics.metricQZ2_const_shear(g1sub, g2sub, g1true, g2true,
                                                     cfid=CFID, mfid=MFID)[0]
 
     if j == 0:
