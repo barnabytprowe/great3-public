@@ -23,13 +23,15 @@
 
 	{% if teams|length == 1 %}
 		{% with teams|first as team %}
-		<P>You are currently a member of the team <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A></P>
+		<P>You are currently a member of the team <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A> 
+			({{ team.users.all|join:", "}})</P>
 		{% endwith %}
 	{% else %}
 		<P>You are currently a member of the teams: 
 			<UL>
 				{% for team in teams %}
-					<LI> <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A> </LI>
+					<LI> <A href="{% url leaderboard.team_views.detail team.id %}">{{ team }}</A>
+						({{ team.users.all|join:", "}})</LI>
 				{% endfor %}
 			</UL>
 		</P>
