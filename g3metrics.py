@@ -11,6 +11,8 @@ def make_const_truth_normal_dist(ntrue, nims, true_sigma=0.03,
 
     Set saveto=None to disable hardcopy output.  nims should be an integer multiple of ntrue.
     """
+    if (nims % ntrue) != 0:
+        raise ValueError("nims must be divisible by ntrue.")
     imagen = np.arange(nims, dtype=int) + 1
     g1true = np.repeat(np.random.randn(ntrue) * true_sigma, nims/ntrue)  # these should have NIMS
     g2true = np.repeat(np.random.randn(ntrue) * true_sigma, nims/ntrue)  # elements, with repetition
@@ -28,9 +30,10 @@ def make_const_truth_uniform_dist(ntrue, nims, true_range=0.03,
 
     Set saveto=None to disable hardcopy output. nims should be an integer multiple of ntrue.
     """
+    if (nims % ntrue) != 0:
+        raise ValueError("nims must be divisible by ntrue.")
     if not os.path.isdir('g3truth'):
         os.mkdir('g3truth')
-
     imagen = np.arange(nims, dtype=int) + 1
     g1true = np.repeat((2. * np.random.rand(ntrue) - 1.) * true_range, nims/ntrue)
     g2true = np.repeat((2. * np.random.rand(ntrue) - 1.) * true_range, nims/ntrue)
@@ -42,7 +45,7 @@ def make_const_truth_uniform_dist(ntrue, nims, true_range=0.03,
     return g1true, g2true
 
 def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1,
-                            grid_units=galsim.degrees):
+                            grid_units=galsim.degrees, rng=None):
     """Generate truth catalogues of g1, g2 in a grid of galaxy locations for each of nims images.
 
     Inputs
@@ -56,10 +59,36 @@ def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1,
                power spectra for use in the realizations of g1, g2.
     ngrid      Number of galaxies along a side of the (assumed square) image grid
     dx_grid    Image grid spacing in units of `grid_units`.
-    grid_unit  Units of grid spacing, must be a galsim.Angle instance.s
-    """
-    
+    grid_unit  Units of grid spacing, must be a galsim.Angle instance.
+    rng        A galsim.BaseDeviate instance used to generate random numbers, if None one will be
+               initialized internally.
 
+    Returns the tuple `(g1_list, g2_list)`, each element of which is a list of `nims` 2D NumPy
+    arrays of dimensions ngrid x ngrid, containg the realizations of the shear field g1 and g2
+    components at the grid points specified.
+    """
+    if (nims % ntrue) != 0:
+        raise ValueError("nims must be divisible by ntrue.")
+    if len(ps_list) != ntrue:
+        raise ValueError("Input ps_list does not have ntrue elements.")
+    if rng is None:
+        rng = galsim.BaseDeviate()
+    if not isinstance(rng, galsim.BaseDeviate):
+        raise TypeError("Input rng not a galsimBaseDeviate or derived class instance.") 
+   # Number of sets of ntrue images
+    nsets = nims / ntrue
+    # Setup empty lists for storing the g1, g2 NumPy arrays
+    g1_list = []
+    g2_list = []
+    # Loop through the power spectra and build the gridded shear realizations for each image
+    for ps in ps_list:
+        for i in range(nsets):
+            g1, g2 = ps.buildGriddedShears(grid_spacing=dx_grid, ngrid=ngrid, units=grid_units,
+                                           rng=rng)
+            g1_list.append(g1)
+            g2_list.append(g2)
+
+    return g1_list, g2_list
 
 def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
                                 label=None):
