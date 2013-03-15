@@ -1,4 +1,4 @@
-
+import os
 import numpy as np
 import g3metrics
 
@@ -53,6 +53,9 @@ for i in range(NBINS):
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 
+if not os.path.isdir('./plots'):
+    os.mkdir('./plots')
+
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot_surface(np.log10(mgrid), np.log10(cgrid), np.log10(QZ1_mcboth), rstride=1, cstride=1,
@@ -63,7 +66,7 @@ plt.ylabel(r'log$_{10}$(c = c1 = c2)')
 plt.title('QZ1 metric')
 ax.set_zlabel(r'log$_{10}$(Q)')
 ax.set_zlim(0, 3)
-outfile = 'QZ1_2D_mcboth.png'
+outfile = './plots/QZ1_2D_mcboth.png'
 plt.savefig(outfile)
 
 fig = plt.figure()
@@ -76,7 +79,7 @@ plt.ylabel(r'log$_{10}$(c = c$_1$ = c$_2$)')
 plt.title('QZ2 metric')
 ax.set_zlabel(r'log$_{10}$(Q)')
 ax.set_zlim(0, 3)
-outfile = 'QZ2_2D_mcboth.png'
+outfile = './plots/QZ2_2D_mcboth.png'
 plt.savefig(outfile)
 
 
@@ -112,7 +115,7 @@ plt.ylabel(r'log$_{10}$(c$_1$)')
 plt.title('QZ1 metric [m$_2$ = '+str(MFID)+', c$_2$ = '+str(CFID)+']')
 ax.set_zlabel(r'log$_{10}$(Q)')
 ax.set_zlim(0, 3)
-outfile = 'QZ1_2D_m1c1.png'
+outfile = './plots/QZ1_2D_m1c1.png'
 plt.savefig(outfile)
 
 fig = plt.figure()
@@ -125,7 +128,7 @@ plt.ylabel(r'log$_{10}$(c$_1$)')
 plt.title('QZ2 metric [m$_2$ = '+str(MFID)+', c$_2$ = '+str(CFID)+']')
 ax.set_zlabel(r'log$_{10}$(Q)')
 ax.set_zlim(0, 3)
-outfile = 'QZ2_2D_m1c1.png'
+outfile = './plots/QZ2_2D_m1c1.png'
 plt.savefig(outfile)
 
 
@@ -163,7 +166,7 @@ plt.ylabel(r'log$_{10}$(m$_2$)')
 plt.title('QZ1 metric [c$_1$ = c$_2$ = '+str(CFID)+']')
 ax.set_zlabel(r'log$_{10}$(Q)')
 ax.set_zlim(0, 3)
-outfile = 'QZ1_2D_m1m2.png'
+outfile = './plots/QZ1_2D_m1m2.png'
 plt.savefig(outfile)
 
 fig = plt.figure()
@@ -176,6 +179,5 @@ plt.ylabel(r'log$_{10}$(m$_2$)')
 plt.title('QZ2 metric [c$_1$ = c$_2$ = '+str(CFID)+']')
 ax.set_zlabel(r'log$_{10}$(Q)')
 ax.set_zlim(0, 3)
-outfile = 'QZ2_2D_m1m2.png'
+outfile = './plots/QZ2_2D_m1m2.png'
 plt.savefig(outfile)
-

@@ -1,4 +1,4 @@
-
+import os
 import numpy as np
 import g3metrics
 
@@ -13,7 +13,7 @@ CFID = 2.e-4 # Fiducial, "target" m and c values
 MFID = 2.e-3 #
 
 # Plotting ranges of interest
-CMIN = CFID 
+CMIN = CFID
 CMAX = 1.e-1
 MMIN = MFID
 MMAX = 1.e0
@@ -70,8 +70,10 @@ plt.title('Q vs m: all c = '+str(CFID)+'\n '+
 plt.xlabel('m = m1 = m2')
 plt.ylabel('Q')
 plt.legend()
-outfile = 'Q_vs_m_const_shear_nims'+str(NIMS)+'_nsig'+str(NOISE_SIGMA)+'_truesig'+str(TRUE_SIGMA)+\
-    '.png'
+if not os.path.isdir('./plots'):
+    os.mkdir('./plots')
+outfile = './plots/Q_vs_m_const_shear_nims'+str(NIMS)+'_nsig'+str(NOISE_SIGMA)+\
+    '_truesig'+str(TRUE_SIGMA)+'.png'
 plt.savefig(outfile)
 
 plt.figure()
@@ -104,6 +106,6 @@ plt.title('Q vs c: all m = '+str(MFID)+'\n '+
 plt.xlabel('c = c1 = c2')
 plt.ylabel('Q')
 plt.legend()
-outfile = 'Q_vs_c_const_shear_nims'+str(NIMS)+'_nsig'+str(NOISE_SIGMA)+'_truesig'+str(TRUE_SIGMA)+\
-    '.png'
+outfile = './plots/Q_vs_c_const_shear_nims'+str(NIMS)+'_nsig'+str(NOISE_SIGMA)+'_truesig'+\
+    str(TRUE_SIGMA)+'.png'
 plt.savefig(outfile)
