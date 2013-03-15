@@ -2,13 +2,14 @@
 """
 
 import numpy as np
+import galsim
 
-def make_truth_normal_dist(ntrue, nims, true_sigma=0.03,
-                           saveto='./g3truth/g3_const_shear_truth.dat'):
+def make_const_truth_normal_dist(ntrue, nims, true_sigma=0.03,
+                                 saveto='./g3truth/g3_const_shear_truth.dat'):
     """Generate truth catalogues with a N(0, TRUE_SIGMA) distribution of input truth values in
     g1 and g2.
 
-    Set saveto=None to disable hardcopy output.
+    Set saveto=None to disable hardcopy output.  nims should be an integer multiple of ntrue.
     """
     imagen = np.arange(nims, dtype=int) + 1
     g1true = np.repeat(np.random.randn(ntrue) * true_sigma, nims/ntrue)  # these should have NIMS
@@ -20,12 +21,12 @@ def make_truth_normal_dist(ntrue, nims, true_sigma=0.03,
         np.savetxt(saveto, np.array((imagen, g1true, g2true)).T, fmt=('%d', '%14.7f', '%14.7f'))
     return g1true, g2true
 
-def make_truth_uniform_dist(ntrue, nims, true_range=0.03,
-                           saveto='./g3truth/g3_const_shear_truth.dat'):
+def make_const_truth_uniform_dist(ntrue, nims, true_range=0.03,
+                                  saveto='./g3truth/g3_const_shear_truth.dat'):
     """Generate truth catalogues with a U(-TRUE_RANGE, TRUE_RANGE) distribution of input truth
     values in g1 and g2.
 
-    Set saveto=None to disable hardcopy output.
+    Set saveto=None to disable hardcopy output. nims should be an integer multiple of ntrue.
     """
     if not os.path.isdir('g3truth'):
         os.mkdir('g3truth')
@@ -39,6 +40,26 @@ def make_truth_uniform_dist(ntrue, nims, true_range=0.03,
             os.mkdir(os.path.split(saveto)[0])
         np.savetxt(saveto, np.array((imagen, g1true, g2true)).T, fmt=('%d', '%14.7f', '%14.7f'))
     return g1true, g2true
+
+def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1,
+                            grid_units=galsim.degrees):
+    """Generate truth catalogues of g1, g2 in a grid of galaxy locations for each of nims images.
+
+    Inputs
+    ------
+    ntrue      Number of underlying true power spectra to realize, must be the same as
+               `len(ps_list)`.  Note this parameter is mostly retained for syntactical similarity
+               with const truth table generation scripts, aiding checking.
+    nims       The number of images across which to make realizations of the power spectra in
+               `ps_list`. nims should be an integer multiple of ntrue.
+    ps_list    List of galsim.PowerSpectrum objects of length `ntrue`, used to select the
+               power spectra for use in the realizations of g1, g2.
+    ngrid      Number of galaxies along a side of the (assumed square) image grid
+    dx_grid    Image grid spacing in units of `grid_units`.
+    grid_unit  Units of grid spacing, must be a galsim.Angle instance.s
+    """
+    
+
 
 def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
                                 label=None):
