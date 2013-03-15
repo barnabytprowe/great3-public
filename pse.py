@@ -98,6 +98,8 @@ class PowerSpectrumEstimator(object):
         else:
             P,_ = np.histogram(self.l_abs, self.bin_edges, weights=C)
             count,_ = np.histogram(self.l_abs, self.bin_edges)
+        if (count == 0).any():
+            raise RuntimeError("Logarithmic bin definition resulted in >=1 empty bin!")
         return P/count
 
     def estimate(self, g1, g2, weight_EE=False, weight_BB=False, theory_func=None):
