@@ -94,6 +94,9 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
                                 label=None):
     """Make a fake const shear submission.
 
+    BARNEY NOTE: In the real data we should do this in the (x, y) coordinate frame determined
+    by the primary direction of the PSF ellipticity.
+
     Arguments
     ---------
     * Provided c1, c2, m1, m2 shear estimation bias values
@@ -128,6 +131,10 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
             './g3subs/g3_const_shear_sub.'+label+'.dat', np.array((truth[:, 0], g1sub, g2sub)).T,
             fmt=('%d', '%14.7f', '%14.7f'))
     return g1sub, g2sub
+
+def make_submission_var_shear(A, M, g1true_list, g2true_list, nellbins, noise_sigma, label=None):
+    """Make a fake variable shear submission.
+    """
 
 def _calculateSvalues(xarr, yarr, sigma2=1.):
     """Calculates the intermediate S values required for basic linear regression.
