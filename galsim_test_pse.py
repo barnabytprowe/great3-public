@@ -85,16 +85,17 @@ eb_p_e = np.zeros((n_ell, n_realization))
 eb_p_b = np.zeros((n_ell, n_realization))
 eb_p_eb = np.zeros((n_ell, n_realization))
 
-print "Averaging measured power spectra over realizations: ",n_realization
+print "Averaging measured power spectra over realizations: ", n_realization
 for ireal in range(n_realization):
     if verbose:
         print "Getting shears on a grid with E power only"
     g1, g2 = test_ps_e.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     pse_e = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     if ireal == 0:
-        ell, cee_e, cbb_e, ceb_e, c_binned_theory_nowt = pse_e.estimate(g1, g2, theory_func = theory_tab)
+        ell, cee_e, cbb_e, ceb_e, c_binned_theory_nowt = pse_e.estimate(g1, g2, 
+                                                                        theory_func=theory_tab)
         ell, cee_e, cbb_e, ceb_e, c_binned_theory = pse_e.estimate(g1, g2, weight_EE=True,
-                                                                   theory_func = theory_tab)
+                                                                   theory_func=theory_tab)
     else:
         ell, cee_e, cbb_e, ceb_e = pse_e.estimate(g1, g2, weight_EE=True)
 
