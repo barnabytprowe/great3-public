@@ -66,13 +66,13 @@ def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4),
         ax.plot(np.array((0.5*min_ell,1.5*max_ell)),np.array((1.,1.)),color='black')
         figfile = pref + string + '.ratio.jpg'
         plt.savefig(figfile)
-        print 'Wrote to file ',figfile
+        print 'Wrote to file ', figfile
 
 # define the galsim PowerSpectrum objects for the case of only E power, only B, and E+B
-test_ps_e=galsim.PowerSpectrum(e_power_function = theory_tab, units='radians')
-test_ps_b=galsim.PowerSpectrum(b_power_function = theory_tab, units='radians')
-test_ps_eb=galsim.PowerSpectrum(e_power_function = theory_tab,
-                                b_power_function = theory_tab, units='radians')
+test_ps_e = galsim.PowerSpectrum(e_power_function = theory_tab, units='radians')
+test_ps_b = galsim.PowerSpectrum(b_power_function = theory_tab, units='radians')
+test_ps_eb = galsim.PowerSpectrum(e_power_function = theory_tab,
+                                  b_power_function = theory_tab, units='radians')
 
 # Set up arrays to store results.
 e_p_e = np.zeros((n_ell, n_realization))
