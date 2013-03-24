@@ -43,7 +43,9 @@ class PowerSpectrumEstimator(object):
         sky_size_deg: the total grid width (in one dimension) in degrees; and
         nbin: the number of evenly-spaced logarithmic ell bins to use.
 
-        Each parameter has a reasonable default value.
+        N and sky_size_deg have default values equivalent to the ones in the GREAT10 and GREAT3
+        challenges.  The default value for nbin is intended to make a reasonable number of bins
+        given the default grid size.
         """
         # Set up the scales of the sky and pixels
         self.N = N
