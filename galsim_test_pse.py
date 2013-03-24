@@ -89,7 +89,7 @@ print "Averaging measured power spectra over realizations: ",n_realization
 for ireal in range(n_realization):
     if verbose:
         print "Getting shears on a grid with E power only"
-    g1, g2 = test_ps_e.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
+    g1, g2 = test_ps_e.buildGrid(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     pse_e = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     if ireal == 0:
         ell, cee_e, cbb_e, ceb_e, c_binned_theory_nowt = pse_e.estimate(g1, g2, theory_func = theory_tab)
@@ -100,13 +100,13 @@ for ireal in range(n_realization):
 
     if verbose:
         print "Getting shears on a grid with B power only"
-    g1, g2 = test_ps_b.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
+    g1, g2 = test_ps_b.buildGrid(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     pse_b = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     ell, cee_b, cbb_b, ceb_b = pse_b.estimate(g1, g2)
 
     if verbose:
         print "Getting shears on a grid with E and B power"
-    g1, g2 = test_ps_eb.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
+    g1, g2 = test_ps_eb.buildGrid(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     pse_eb = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     ell, cee_eb, cbb_eb, ceb_eb = pse_eb.estimate(g1, g2, weight_EE=True)
 
