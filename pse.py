@@ -27,7 +27,7 @@ class PowerSpectrumEstimator(object):
 
     2) This is the power spectrum of the gridded *data*, not the underlying field - we do not
     account for the effects of the finite grid (basically, ignoring all the reasons why power
-    spectrum estimation of the hard).  Users must account for the contribution of noise in g1, g2
+    spectrum estimation is hard).  Users must account for the contribution of noise in g1, g2
     and the masking.
 
     3) The binning is currently fixed as uniform in log(ell).
