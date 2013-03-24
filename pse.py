@@ -5,6 +5,9 @@ class PowerSpectrumEstimator(object):
     """
     Class for estimating the shear power spectrum from gridded shears.
 
+    The PowerSpectrumEstimator class can be used even on systems where GalSim is not installed.  It
+    just requires Python v2.6 or 2.7 and Numpy.
+
     This class stores all the data used in power spectrum estimation that is fixed with the geometry
     of the problem - the binning and spin weighting factors.
 
@@ -24,7 +27,7 @@ class PowerSpectrumEstimator(object):
 
     2) This is the power spectrum of the gridded *data*, not the underlying field - we do not
     account for the effects of the finite grid (basically, ignoring all the reasons why power
-    spectrum estimation of the hard).  Users must account for the contribution of noise in g1, g2
+    spectrum estimation is hard).  Users must account for the contribution of noise in g1, g2
     and the masking.
 
     3) The binning is currently fixed as uniform in log(ell).
@@ -40,7 +43,9 @@ class PowerSpectrumEstimator(object):
         sky_size_deg: the total grid width (in one dimension) in degrees; and
         nbin: the number of evenly-spaced logarithmic ell bins to use.
 
-        Each parameter has a reasonable default value.
+        N and sky_size_deg have default values equivalent to the ones in the GREAT10 and GREAT3
+        challenges.  The default value for nbin is intended to make a reasonable number of bins
+        given the default grid size.
         """
         # Set up the scales of the sky and pixels
         self.N = N
@@ -67,6 +72,7 @@ class PowerSpectrumEstimator(object):
         # Set up the Fourier space grid lx, ly.
         ell = 2*pi*np.fft.fftfreq(self.N, self.dx)
         lx = np.vstack([ell for i in xrange(self.N)])
+        # Define ly as the transposition of lx
         ly = lx.T
 
         # Now compute the lengths and angles of the ell vectors.
