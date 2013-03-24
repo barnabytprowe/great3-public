@@ -66,13 +66,13 @@ def doplot(ell, t, e, b, eb, pref, string, title, rat=None, lim=(1e-7,1e-4),
         ax.plot(np.array((0.5*min_ell,1.5*max_ell)),np.array((1.,1.)),color='black')
         figfile = pref + string + '.ratio.jpg'
         plt.savefig(figfile)
-        print 'Wrote to file ',figfile
+        print 'Wrote to file ', figfile
 
 # define the galsim PowerSpectrum objects for the case of only E power, only B, and E+B
-test_ps_e=galsim.PowerSpectrum(e_power_function = theory_tab, units='radians')
-test_ps_b=galsim.PowerSpectrum(b_power_function = theory_tab, units='radians')
-test_ps_eb=galsim.PowerSpectrum(e_power_function = theory_tab,
-                                b_power_function = theory_tab, units='radians')
+test_ps_e = galsim.PowerSpectrum(e_power_function = theory_tab, units='radians')
+test_ps_b = galsim.PowerSpectrum(b_power_function = theory_tab, units='radians')
+test_ps_eb = galsim.PowerSpectrum(e_power_function = theory_tab,
+                                  b_power_function = theory_tab, units='radians')
 
 # Set up arrays to store results.
 e_p_e = np.zeros((n_ell, n_realization))
@@ -85,16 +85,17 @@ eb_p_e = np.zeros((n_ell, n_realization))
 eb_p_b = np.zeros((n_ell, n_realization))
 eb_p_eb = np.zeros((n_ell, n_realization))
 
-print "Averaging measured power spectra over realizations: ",n_realization
+print "Averaging measured power spectra over realizations: ", n_realization
 for ireal in range(n_realization):
     if verbose:
         print "Getting shears on a grid with E power only"
     g1, g2 = test_ps_e.buildGrid(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     pse_e = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
     if ireal == 0:
-        ell, cee_e, cbb_e, ceb_e, c_binned_theory_nowt = pse_e.estimate(g1, g2, theory_func = theory_tab)
+        ell, cee_e, cbb_e, ceb_e, c_binned_theory_nowt = pse_e.estimate(g1, g2, 
+                                                                        theory_func=theory_tab)
         ell, cee_e, cbb_e, ceb_e, c_binned_theory = pse_e.estimate(g1, g2, weight_EE=True,
-                                                                   theory_func = theory_tab)
+                                                                   theory_func=theory_tab)
     else:
         ell, cee_e, cbb_e, ceb_e = pse_e.estimate(g1, g2, weight_EE=True)
 
