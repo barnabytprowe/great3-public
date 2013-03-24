@@ -72,6 +72,7 @@ class PowerSpectrumEstimator(object):
         # Set up the Fourier space grid lx, ly.
         ell = 2*pi*np.fft.fftfreq(self.N, self.dx)
         lx = np.vstack([ell for i in xrange(self.N)])
+        # Define ly as the transposition of lx
         ly = lx.T
 
         # Now compute the lengths and angles of the ell vectors.
