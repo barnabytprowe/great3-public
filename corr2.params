@@ -1,0 +1,18 @@
+
+file_name = temp.cat
+e2_file_name = temp.e2
+
+x_col = 1
+y_col = 2
+g1_col = 3
+g2_col = 4
+x_units = degrees
+y_units = degrees
+
+verbose = 0
+
+# These currently get changed in the python script
+min_sep = 0.01
+max_sep = 10.
+nbins = 50
+sep_units = deg
