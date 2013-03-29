@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 ### set up basic parameters ###
 # how many times to do this (to beat down noise)
-n_realization = 100
+n_realization = 300
 # file containing theoretical P(k), with fake values added above ell=2000
 pkfile = 'test_pse/ps.wmap7lcdm.2000.dat'
 theory_tab = galsim.LookupTable(file=pkfile, interpolant='linear')
