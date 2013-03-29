@@ -71,22 +71,21 @@ class PowerSpectrumEstimator(object):
     def _generate_eb_rotation(self):
         # Set up the Fourier space grid lx, ly.
         ell = 2*pi*np.fft.fftfreq(self.N, self.dx)
-        lx = np.vstack([ell for i in xrange(self.N)])
-        # Define ly as the transposition of lx
-        ly = lx.T
+        lx, ly = np.meshgrid(ell,ell)
 
         # Now compute the lengths and angles of the ell vectors.
-        l_abs = (lx**2 + ly**2)**0.5
-        l_ang = np.arctan2(ly, lx)
+        l_sq = lx**2 + ly**2
+
+        # Compute exp(-2i psi) where psi = atan2(ly,ly)
+        l_sq[0,0] = 1  # Avoid division by 0
+        expm2ipsi = (lx - 1j * ly)**2 / l_sq
+        l_abs = np.sqrt(l_sq)
+        l_abs[0,0] = 0  # Go back to correct value at 0,0.
 
         self.lx = lx
         self.ly = ly
-        self.l_ang = l_ang
 
-        # Compute the spin-2 weights.
-        rot = np.exp(-2j*l_ang)
-
-        return l_abs, rot
+        return l_abs, expm2ipsi
 
     def _bin_power(self, C, ell_weight=None):
         # This little utility function bins a 2D C^{E/B, E/B}_{ell} based on |ell|.  The use of
