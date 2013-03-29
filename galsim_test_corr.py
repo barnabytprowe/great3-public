@@ -37,6 +37,12 @@ fair_grid = False   # Set to True if you don't want to keep the shear grid the s
                     # However, they don't hurt -- they help beat down the noise, so if this 
                     # is False, you can get away with far fewer realizations.
 
+# On the repo, we store a version of the plots with the following:
+#extra_res - 10
+#n_realization = 10
+#figpref = 'test_corr_extra_res/galsim_test_corr2_'
+
+
 # parameters for corr2:
 min_sep = dtheta
 max_sep = grid_nx * np.sqrt(2) * dtheta
