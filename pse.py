@@ -76,7 +76,7 @@ class PowerSpectrumEstimator(object):
         # Now compute the lengths and angles of the ell vectors.
         l_sq = lx**2 + ly**2
 
-        # Compute exp(-2i psi) where psi = atan2(ly,ly)
+        # Compute exp(-2i psi) where psi = atan2(ly,lx)
         l_sq[0,0] = 1  # Avoid division by 0
         expm2ipsi = (lx - 1j * ly)**2 / l_sq
         l_abs = np.sqrt(l_sq)
