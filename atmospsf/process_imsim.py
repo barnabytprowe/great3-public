@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import os, sys
 import scipy.optimize as opti
 import galsim
+import pylab
 
 # First, get access to the power spectrum estimator.  It's not yet in GalSim or installed on my
 # system, so have to add its dir to path.  This should work on other people's machines if they are
@@ -149,6 +150,22 @@ def process_file(filename, cubename, n_ell, verbose=True, do_plot=False, use_hsm
         ax.set_xlabel('dfwhm')
         ax.set_title('histogram of dfwhm values from grid')
         plt.savefig('diagnostics/histdfwhm.jpg')
+        pylab.figure()
+        pylab.pcolor(dfwhm_grid)
+        pylab.colorbar()
+        pylab.savefig('diagnostics/dfwhm_grid_color.jpg')
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        if use_hsm:
+            ax.scatter(x, y, marker='o', c=fwhm_hsm, s=50*(30*(fwhm_hsm/np.mean(fwhm_hsm)-1)+1))
+        else:
+            ax.scatter(x, y, marker='o', c=fwhm, s=50*(30*(fwhm/np.mean(fwhm)-1)+1))
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        plt.xlim((0,1000))
+        plt.ylim((0,1000))
+        ax.set_title('marker color and size reflects FWHM')
+        plt.savefig('diagnostics/fwhm_all.jpg')
 
     # PS estimation based on ellipticities
     theta = ngrid*dgrid/3600. # total size of grid in degrees, required for PSE
