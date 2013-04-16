@@ -256,7 +256,7 @@ def save_submission_file(submission, name, user, team, board):
 		with open(entry.get_filename(), 'wb+') as destination:
 			for chunk in submission.chunks():
 				destination.write(chunk)
-	except error as E:
+	except Exception as E:
 		print "Could not save: %r!" % E
 		entry.delete()
 		return False
