@@ -1,18 +1,34 @@
 # Django settings for great3 project.
 import os
 
+installation_base  = os.path.join(os.path.split(__file__)[0], '..', '..')
+
+try:
+    from secret_settings import SECRET_KEY #, EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+except ImportError:
+    SECRET_KEY = '4_q-o#r6d=64gm285hh_!dqk)g%2$=&amp;@c1=6g@e%wzj@wfl16c'                                                                                                                                                
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = os.path.join(installation_base, "emails")
+
+
+
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-installation_base  = os.path.join(os.path.split(__file__)[0], '..', '..')
 # Make this unique, and don't share it with anybody.
 # JAZ - need to change this on the server!
-SECRET_KEY = '4_q-o#r6d=64gm285hh_!dqk)g%2$=&amp;@c1=6g@e%wzj@wfl16c'
+#SECRET_KEY = '4_q-o#r6d=64gm285hh_!dqk)g%2$=&amp;@c1=6g@e%wzj@wfl16c'
 ACCOUNT_ACTIVATION_DAYS = 7
 
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = os.path.join(installation_base, "emails") # change this to a proper location
-
+#EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+#EMAIL_FILE_PATH = os.path.join(installation_base, "emails") # change this to a proper location
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_HOST = 
+#EMAIL_PORT = 
+#EMAIL_HOST_USER = 
+#EMAIL_HOST_PASSWORD = 
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
