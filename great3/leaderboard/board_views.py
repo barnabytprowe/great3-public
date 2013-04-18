@@ -5,17 +5,18 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 
 
-
+def check_unique_submission_name(name):
+	if Entry.objects.filter(name=name).exists():
+		raise forms.ValidationError("This name has already been used for a submission.")
 
 class SubmissionForm(forms.Form):
-	title = forms.CharField(max_length=128)
+	title = forms.CharField(max_length=128, validators=[check_unique_submission_name])
 	file_upload = forms.FileField()
 	def __init__(self, *args, **kwargs):
 		teams = kwargs.pop("teams",None)
 		super(SubmissionForm, self).__init__(*args, **kwargs)
 		if teams is not None:
 			self.fields['team'] = forms.ModelChoiceField(teams, empty_label="--Select Team--")
-
 
 def index(request):
 	""" List of all leaderboards """
