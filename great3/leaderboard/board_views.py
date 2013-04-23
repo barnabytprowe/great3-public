@@ -12,6 +12,7 @@ def check_unique_submission_name(name):
 class SubmissionForm(forms.Form):
 	title = forms.CharField(max_length=128, validators=[check_unique_submission_name])
 	file_upload = forms.FileField()
+	notes = forms.CharField(max_length=512, required=False, widget = forms.Textarea)
 	def __init__(self, *args, **kwargs):
 		teams = kwargs.pop("teams",None)
 		super(SubmissionForm, self).__init__(*args, **kwargs)
@@ -49,7 +50,7 @@ def submit(request, board_id):
 
 		if form.is_valid():
 			if team is None: team = form.cleaned_data['team']
-			ok = save_submission_file(request.FILES['file_upload'], form.cleaned_data['title'], request.user, team, board)
+			ok = save_submission_file(request.FILES['file_upload'], form.cleaned_data['title'], form.cleaned_data['notes'], request.user, team, board)
 			if ok:
 				return HttpResponseRedirect('/leaderboard/board/%s/submitted/'%board_id)
 			else:

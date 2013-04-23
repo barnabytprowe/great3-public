@@ -95,6 +95,7 @@ def score_for_rank(rank):
 
 class Board(models.Model):
 	name = models.CharField(max_length=128, unique=True)
+	notes = models.CharField(max_length=512)
 	space = models.BooleanField()
 	varying = models.BooleanField()
 
@@ -138,6 +139,7 @@ class Board(models.Model):
 class Entry(models.Model):
 	team = models.ForeignKey('Team')
 	name = models.CharField(max_length=128, unique=True)
+	notes = models.CharField(max_length=512)
 	user = models.ForeignKey(User)
 	board = models.ForeignKey('Board')
 	score = models.FloatField(default=PLACEHOLDER_SCORE)
@@ -248,9 +250,9 @@ def create_data():
 	recompute_scoring()
 
 
-def save_submission_file(submission, name, user, team, board):
+def save_submission_file(submission, name, notes, user, team, board):
 	print "Sanity check the file size here"
-	entry = Entry(team=team, name=name, user=user, board=board)
+	entry = Entry(team=team, name=name, notes=notes, user=user, board=board)
 	entry.save()
 	try:
 		with open(entry.get_filename(), 'wb+') as destination:
