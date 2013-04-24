@@ -3,4 +3,6 @@ This email address was just used to register for the Great 3 weak lensing challe
 To complete your registration, go to the following link:
 <A href="{{site}}/accounts/activate/{{activation_key}}">{{site}}/accounts/activate/{{activation_key}}</A>
 
+http://{{site}}/accounts/activate/{{activation_key}}
+
 The link will expire in {{expiration_days}} days.
