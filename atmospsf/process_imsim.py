@@ -16,7 +16,7 @@ sys.path.append(pse_path)
 import pse
 
 # Helper function: read in a single file (`filename') and the corresponding FITS cube ('cubename').
-# `verbose' determines how much information gets outputted to stdout, 'do_plot' determines whether
+# `verbose' determines how much information gets output to stdout, 'do_plot' determines whether
 # or not to display plots, 'n_ell' determines how many logarithmic ell bins to use for the PS
 # estimation, and 'use_hsm' determines whether we use HSM moments or sextractor ones.
 def process_file(filename, cubename, n_ell, verbose=True, do_plot=False, use_hsm=False):
@@ -38,10 +38,21 @@ def process_file(filename, cubename, n_ell, verbose=True, do_plot=False, use_hsm
     e2_hsm = np.zeros_like(e2)
     fwhm_hsm = np.zeros_like(fwhm)
     for imindex in range(len(imlist)):
-        res = imlist[imindex].FindAdaptiveMom()
-        e1_hsm[imindex] = res.observed_shape.e1
-        e2_hsm[imindex] = res.observed_shape.e2
-        fwhm_hsm[imindex] = 2.35482*res.moments_sigma*0.2 # arcsec
+        res = imlist[imindex].FindAdaptiveMom(strict=False)
+        if res.error_message != "":
+            print "Faking it for",imindex,"in",filename
+            if imindex>0:
+                e1_hsm[imindex] = e1_hsm[imindex-1]
+                e2_hsm[imindex] = e2_hsm[imindex-1]
+                fwhm_hsm[imindex] = fwhm_hsm[imindex-1]
+            else:
+                e1_hsm[imindex] = e1[imindex]
+                e2_hsm[imindex] = e2[imindex]
+                fwhm_hsm[imindex] = fwhm[imindex]
+        else:
+            e1_hsm[imindex] = res.observed_shape.e1
+            e2_hsm[imindex] = res.observed_shape.e2
+            fwhm_hsm[imindex] = 2.35482*res.moments_sigma*0.2 # arcsec
     if verbose:
         print "Comparing my shapes with those from files from Chihway"
     if do_plot:
@@ -218,19 +229,128 @@ def process_file(filename, cubename, n_ell, verbose=True, do_plot=False, use_hsm
     # properties, etc.
 
     # Save / output / return information, incl. mean ellipticities
+    results = np.zeros(12)
+    results[0] = np.mean(fwhm)
+    results[1] = np.std(fwhm)
+    results[2] = np.mean(fwhm_hsm)
+    results[3] = np.std(fwhm_hsm)
+    results[4] = np.mean(e1)
+    results[5] = np.mean(e2)
+    results[6] = np.std(e1)
+    results[7] = np.std(e2)
+    results[8] = np.mean(e1_hsm)
+    results[9] = np.mean(e2_hsm)
+    results[10] = np.std(e1_hsm)
+    results[11] = np.std(e2_hsm)
+    return results
+
     # Average over all the many sub-grids?
 
-# Main function: for now, just specify a single file directly.
-expstring = '3min'
-imnumstring = '92'
-infile = '/Users/rmandelb/great3/chihway-sims/catalogs/'+expstring+'/focalplane_'+imnumstring+'.txt'
-incube = '/Users/rmandelb/great3/chihway-sims/images/'+expstring+'/cube_'+imnumstring+'.fits.gz'
+# Main function, looping over files
 n_ell = 6
-do_plot = True # make plots
-verbose = True # Spew loads of diagnostics
+do_plot = False # make plots
+verbose = False # Spew loads of diagnostics
 use_hsm = True # use HSM moments instead of sextractor ones
-process_file(infile, incube, n_ell, verbose=verbose, do_plot=do_plot, use_hsm=use_hsm)
+expstring = ['1min','2min','3min']
+nsim = 100
+simnum = np.arange(1,nsim+1)
 
-# Later, will need to write code that crawls through all directories and processes everything,
-# stores and postprocesses results.
+mean_fwhm = np.zeros((len(expstring), nsim))
+std_fwhm = np.zeros((len(expstring), nsim))
+mean_fwhm_hsm = np.zeros((len(expstring), nsim))
+std_fwhm_hsm = np.zeros((len(expstring), nsim))
+mean_e1 = np.zeros((len(expstring), nsim))
+std_e1 = np.zeros((len(expstring), nsim))
+mean_e1_hsm = np.zeros((len(expstring), nsim))
+std_e1_hsm = np.zeros((len(expstring), nsim))
+mean_e2 = np.zeros((len(expstring), nsim))
+std_e2 = np.zeros((len(expstring), nsim))
+mean_e2_hsm = np.zeros((len(expstring), nsim))
+std_e2_hsm = np.zeros((len(expstring), nsim))
+for i_exp in range(len(expstring)):
+    for i_num in range(nsim):
+        imnumstring = str(simnum[i_num])
+        infile = '/Users/rmandelb/great3/chihway-sims/catalogs/'+expstring[i_exp]+'/focalplane_'+imnumstring+'.txt'
+        incube = '/Users/rmandelb/great3/chihway-sims/images/'+expstring[i_exp]+'/cube_'+imnumstring+'.fits.gz'
+        results = process_file(infile, incube, n_ell, verbose=verbose, do_plot=do_plot, use_hsm=use_hsm)
+        mean_fwhm[i_exp, i_num] = results[0]
+        std_fwhm[i_exp, i_num] = results[1]
+        mean_fwhm_hsm[i_exp, i_num] = results[2]
+        std_fwhm_hsm[i_exp, i_num] = results[3]
+        mean_e1[i_exp, i_num] = results[4]
+        std_e1[i_exp, i_num] = results[6]
+        mean_e1_hsm[i_exp, i_num] = results[8]
+        std_e1_hsm[i_exp, i_num] = results[10]
+        mean_e2[i_exp, i_num] = results[5]
+        std_e2[i_exp, i_num] = results[7]
+        mean_e2_hsm[i_exp, i_num] = results[9]
+        std_e2_hsm[i_exp, i_num] = results[11]
 
+# Plot: total ellipticity variance histogram for 3 exp times, unweighted vs. HSM
+fig = plt.figure()
+ax = fig.add_subplot(111)
+for i_exp in range(len(expstring)):
+    tot_var = std_e1[i_exp,:]**2 + std_e2[i_exp,:]**2
+    tot_var_hsm = std_e1_hsm[i_exp,:]**2 + std_e2_hsm[i_exp,:]**2
+    legend_str = expstring[i_exp]+' unweighted'
+    plt.hist(tot_var, bins=10, histtype='step', normed=True, label=legend_str)
+    legend_str = expstring[i_exp]+' HSM'
+    plt.hist(tot_var_hsm, bins=10, histtype='step', normed=True, label=legend_str)
+    print "Typical variance of unweighted ellipticities for",expstring[i_exp],":",np.mean(tot_var),np.median(tot_var)
+    print "Typical variance of weighted ellipticities for",expstring[i_exp],":",np.mean(tot_var_hsm),np.median(tot_var_hsm)
+plt.ylim((0,0.001))
+ax.set_xlabel('total ellipticity variance')
+ax.set_title('histogram of ellipticity variances for different exposure times')
+plt.legend()
+plt.savefig('diagnostics/many_sims_ellip_var.jpg')
+
+# Plot: mean ellip histogram for 3 exp times, unweighted vs. HSM, e1. vs e2
+fig = plt.figure()
+ax = fig.add_subplot(111)
+for i_exp in range(len(expstring)):
+    legend_str = expstring[i_exp]+' unweighted e1'
+    plt.hist(mean_e1[i_exp,:], bins=10, histtype='step', normed=True, label=legend_str)
+    legend_str = expstring[i_exp]+' unweighted e2'
+    plt.hist(mean_e2[i_exp,:], bins=10, histtype='step', normed=True, label=legend_str)
+    legend_str = expstring[i_exp]+' HSM e1'
+    plt.hist(mean_e1_hsm[i_exp,:], bins=10, histtype='step', normed=True, label=legend_str)
+    legend_str = expstring[i_exp]+' HSM e2'
+    plt.hist(mean_e2_hsm[i_exp,:], bins=10, histtype='step', normed=True, label=legend_str)
+    print "Typical mean of unweighted ellipticities1 for",expstring[i_exp],":",np.mean(mean_e1[i_exp,:]),np.median(mean_e1[i_exp,:])
+    print "Typical mean of weighted ellipticities1 for",expstring[i_exp],":",np.mean(mean_e1_hsm[i_exp,:]),np.median(mean_e1_hsm[i_exp,:])
+    print "Typical mean of unweighted ellipticities2 for",expstring[i_exp],":",np.mean(mean_e2[i_exp,:]),np.median(mean_e2[i_exp,:])
+    print "Typical mean of weighted ellipticities2 for",expstring[i_exp],":",np.mean(mean_e2_hsm[i_exp,:]),np.median(mean_e2_hsm[i_exp,:])
+ax.set_xlabel('mean ellipticity')
+ax.set_title('histogram of mean ellipticity for different exposure times')
+plt.legend()
+plt.savefig('diagnostics/many_sims_ellip_mean.jpg')
+
+# Plot: seeing distribution for 3 exp times, unweighted vs. HSM
+fig = plt.figure()
+ax = fig.add_subplot(111)
+for i_exp in range(len(expstring)):
+    legend_str = expstring[i_exp]+' unweighted FWHM'
+    plt.hist(mean_fwhm[i_exp,:], bins=20, histtype='step', normed=True, label=legend_str)
+    legend_str = expstring[i_exp]+' HSM FWHM'
+    plt.hist(mean_fwhm_hsm[i_exp,:], bins=20, histtype='step', normed=True, label=legend_str)
+    print "Typical mean of unweighted FWHM for",expstring[i_exp],":",np.mean(mean_fwhm[i_exp,:]),np.median(mean_fwhm[i_exp,:])
+    print "Typical mean of weighted FWHM for",expstring[i_exp],":",np.mean(mean_fwhm_hsm[i_exp,:]),np.median(mean_fwhm_hsm[i_exp,:])
+ax.set_xlabel('mean FWHM [arcsec]')
+ax.set_title('histogram of mean FWHM for different exposure times')
+plt.legend()
+plt.savefig('diagnostics/many_sims_fwhm_mean.jpg')
+ 
+# Plot: seeing fluctuations for 3 exp times, unweighted vs. HSM
+fig = plt.figure()
+ax = fig.add_subplot(111)
+for i_exp in range(len(expstring)):
+    legend_str = expstring[i_exp]+' unweighted FWHM'
+    plt.hist(std_fwhm[i_exp,:]/mean_fwhm[i_exp,:], bins=20, histtype='step', normed=True, label=legend_str)
+    legend_str = expstring[i_exp]+' HSM FWHM'
+    plt.hist(std_fwhm_hsm[i_exp,:]/mean_fwhm_hsm[i_exp,:], bins=20, histtype='step', normed=True, label=legend_str)
+    print "Typical fluctuation of unweighted FWHM for",expstring[i_exp],":",np.mean(std_fwhm[i_exp,:]/mean_fwhm[i_exp,:]),np.median(std_fwhm[i_exp,:]/mean_fwhm[i_exp,:])
+    print "Typical fluctuation of weighted FWHM for",expstring[i_exp],":",np.mean(std_fwhm_hsm[i_exp,:]/mean_fwhm_hsm[i_exp,:]),np.median(std_fwhm_hsm[i_exp,:]/mean_fwhm_hsm[i_exp,:])
+ax.set_xlabel('fractional fluctuation in FWHM')
+ax.set_title('histogram of FWHM fluctuations for different exposure times')
+plt.legend()
+plt.savefig('diagnostics/many_sims_fwhm_fluct.jpg')
