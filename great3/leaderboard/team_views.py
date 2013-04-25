@@ -86,10 +86,10 @@ Dear %s,
 A user called %s (email %s) has requested membership of your Great-3 team %s.
 
 If you know them and want to ACCEPT their request, please go to this address:
-%s
+http://%s
 
 If you do want to REJECT them from your team, go to this address:
-%s
+http://%s
 
 You can also look at requests on the Great-3 main site:
 http://%s

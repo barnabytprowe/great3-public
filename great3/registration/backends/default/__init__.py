@@ -146,7 +146,7 @@ def request_user_admin_approval(new_user, site):
     username = new_user.username
     print "REQUESTING USER ADMIN APPROVAL"
     link = "admin/registration/registrationprofile/"
-    url = "%s/%s" % (site, link)
+    url = "http://%s/%s" % (site, link)
     subject = "[Great10-Site] User asked to register"
     message = """Dear admins,
 A user with email address %s just registered on the Great10 challenge website.
