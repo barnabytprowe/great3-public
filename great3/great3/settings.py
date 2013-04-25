@@ -31,6 +31,7 @@ ACCOUNT_ACTIVATION_DAYS = 7
 #EMAIL_HOST_PASSWORD = 
 
 ADMINS = (
+    ('Joe Zuntz', 'joezuntz@googlemail.com'),
     # ('Your Name', 'your_email@example.com'),
 )
 

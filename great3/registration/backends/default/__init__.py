@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.contrib.sites.models import RequestSite
 from django.contrib.sites.models import Site
+from django.core.mail import mail_admins
+from django.dispatch import receiver
 
 from registration import signals
 from registration.forms import RegistrationForm
@@ -76,7 +78,8 @@ class DefaultBackend(object):
         else:
             site = RequestSite(request)
         new_user = RegistrationProfile.objects.create_inactive_user(username, email,
-                                                                    password, site)
+                                                                    password, site, send_email=False)
+        request_user_admin_approval(new_user, site)
         signals.user_registered.send(sender=self.__class__,
                                      user=new_user,
                                      request=request)
@@ -137,3 +140,19 @@ class DefaultBackend(object):
         
         """
         return ('registration_activation_complete', (), {})
+
+def request_user_admin_approval(new_user, site):
+    email = new_user.email
+    username = new_user.username
+    print "REQUESTING USER ADMIN APPROVAL"
+    link = "admin/registration/registrationprofile/"
+    url = "%s/%s" % (site, link)
+    subject = "[Great10-Site] User asked to register"
+    message = """Dear admins,
+A user with email address %s just registered on the Great10 challenge website.
+They used the user name %s.
+
+To approve or reject them, please visit:
+%s
+""" % (email, username, url)
+    mail_admins(subject, message)
