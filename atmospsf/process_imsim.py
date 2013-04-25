@@ -249,10 +249,11 @@ def process_file(filename, cubename, n_ell, verbose=True, do_plot=False, use_hsm
 # Main function, looping over files
 n_ell = 6
 do_plot = False # make plots
-verbose = False # Spew loads of diagnostics
+verbose = True # Spew loads of diagnostics
 use_hsm = True # use HSM moments instead of sextractor ones
+summary_plots = False # make summary plots
 expstring = ['1min','2min','3min']
-nsim = 100
+nsim = 5
 simnum = np.arange(1,nsim+1)
 
 mean_fwhm = np.zeros((len(expstring), nsim))
@@ -302,7 +303,8 @@ plt.ylim((0,0.001))
 ax.set_xlabel('total ellipticity variance')
 ax.set_title('histogram of ellipticity variances for different exposure times')
 plt.legend()
-plt.savefig('diagnostics/many_sims_ellip_var.jpg')
+if summary_plots:
+    plt.savefig('diagnostics/many_sims_ellip_var.jpg')
 
 # Plot: mean ellip histogram for 3 exp times, unweighted vs. HSM, e1. vs e2
 fig = plt.figure()
@@ -323,7 +325,8 @@ for i_exp in range(len(expstring)):
 ax.set_xlabel('mean ellipticity')
 ax.set_title('histogram of mean ellipticity for different exposure times')
 plt.legend()
-plt.savefig('diagnostics/many_sims_ellip_mean.jpg')
+if summary_plots:
+    plt.savefig('diagnostics/many_sims_ellip_mean.jpg')
 
 # Plot: seeing distribution for 3 exp times, unweighted vs. HSM
 fig = plt.figure()
@@ -338,7 +341,8 @@ for i_exp in range(len(expstring)):
 ax.set_xlabel('mean FWHM [arcsec]')
 ax.set_title('histogram of mean FWHM for different exposure times')
 plt.legend()
-plt.savefig('diagnostics/many_sims_fwhm_mean.jpg')
+if summary_plots:
+    plt.savefig('diagnostics/many_sims_fwhm_mean.jpg')
  
 # Plot: seeing fluctuations for 3 exp times, unweighted vs. HSM
 fig = plt.figure()
@@ -353,4 +357,5 @@ for i_exp in range(len(expstring)):
 ax.set_xlabel('fractional fluctuation in FWHM')
 ax.set_title('histogram of FWHM fluctuations for different exposure times')
 plt.legend()
-plt.savefig('diagnostics/many_sims_fwhm_fluct.jpg')
+if summary_plots:
+    plt.savefig('diagnostics/many_sims_fwhm_fluct.jpg')
