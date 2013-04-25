@@ -3,8 +3,11 @@ from django.contrib.sites.models import Site
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.forms import ModelForm
+from django import forms
 from django.conf import settings
+
+class TeamDetailsChangeForm(forms.Form):
+    notes = forms.CharField(max_length=512)
 
 
 def index(request):
@@ -13,9 +16,18 @@ def index(request):
 	return render(request, 'leaderboard/team_list.html', data)
 
 
+
 def detail(request, team_id):
-	team = Team.objects.get(id=team_id)
-	data = dict(team=team)
+	team = Team.objects.get(id=team_id)	
+	data = dict(team=team)	
+	if request.user.is_authenticated() and user_is_member_of_team(request.user,team):	
+		if request.method=="POST":
+			form = TeamDetailsChangeForm(request.POST)
+			if form.is_valid():
+				team.notes = form.cleaned_data['notes']
+				team.save()
+		data['form']=TeamDetailsChangeForm()
+		return render(request, 'leaderboard/team_detail_edit.html', data)
 	return render(request, 'leaderboard/team_detail.html', data)
 
 @login_required
@@ -27,7 +39,7 @@ def setup(request):
 	return render(request, 'leaderboard/team_setup.html', data)
 
 
-class TeamCreationForm(ModelForm):
+class TeamCreationForm(forms.ModelForm):
 	class Meta:
 		model = Team
 		fields = ("name","notes")

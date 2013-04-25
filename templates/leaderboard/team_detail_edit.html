@@ -1,0 +1,17 @@
+
+{% extends "leaderboard/team_detail.html" %}
+
+{% block content %}
+<P>You are a member of this team. </P>
+
+<P>To withdraw a submission, eject a user from your team, or change the name of the team, contact the Great3 admins.</P>
+
+<P>Edit team notes:</P>
+<form action="{% url leaderboard.team_views.detail team.id %}" method="post">{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Submit" />
+</form>
+
+
+{{ block.super }}
+{% endblock %}
