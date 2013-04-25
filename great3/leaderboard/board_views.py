@@ -1,5 +1,5 @@
 from leaderboard.models import Board, Entry, save_submission_file
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django import forms
 from django.contrib.auth.decorators import login_required
@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 def check_unique_submission_name(name):
 	if Entry.objects.filter(name=name).exists():
 		raise forms.ValidationError("This name has already been used for a submission.")
-
+		
 class SubmissionForm(forms.Form):
 	title = forms.CharField(max_length=128, validators=[check_unique_submission_name])
 	file_upload = forms.FileField()
@@ -28,7 +28,10 @@ def index(request):
 
 def detail(request, board_id):
 	""" Detail view of a single leaderboard """
-	board = Board.objects.get(id=board_id)
+	try:
+		board = Board.objects.get(id=board_id)
+	except Board.DoesNotExist:
+		raise Http404
 	entries = board.entry_set.order_by('-score')
 	data = dict(board=board, entries=entries)
 	return render(request,'leaderboard/board_detail.html',data)
@@ -38,7 +41,10 @@ def detail(request, board_id):
 @login_required
 def submit(request, board_id):
 	teams = request.user.get_profile().teams.all()
-	board = Board.objects.get(id=board_id)
+	try:
+		board = Board.objects.get(id=board_id)
+	except Board.DoesNotExist:
+		raise Http404
 
 	if request.method == 'POST':
 		if len(teams)==1:

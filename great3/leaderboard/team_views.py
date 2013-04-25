@@ -1,6 +1,6 @@
 from leaderboard.models import Team, Entry, MembershipRequest, user_is_member_of_team
 from django.contrib.sites.models import Site
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django import forms
@@ -18,7 +18,10 @@ def index(request):
 
 
 def detail(request, team_id):
-	team = Team.objects.get(id=team_id)	
+	try:
+		team = Team.objects.get(id=team_id)	
+	except Team.DoesNotExist:
+		raise Http404
 	data = dict(team=team)	
 	if request.user.is_authenticated() and user_is_member_of_team(request.user,team):	
 		if request.method=="POST":
@@ -99,7 +102,10 @@ The Great-3 Team
 
 @login_required
 def request_join(request, team_id):
-	team = Team.objects.get(id=team_id)
+	try:
+		team = Team.objects.get(id=team_id)
+	except Team.DoesNotExist:
+		raise Http404
 
 	if user_is_member_of_team(request.user, team):
 		data = dict(team=team)
