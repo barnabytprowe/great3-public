@@ -8,9 +8,13 @@ from django.contrib.auth.decorators import login_required
 def check_unique_submission_name(name):
 	if Entry.objects.filter(name=name).exists():
 		raise forms.ValidationError("This name has already been used for a submission.")
+
+def check_non_empty_name(name):
+	if not name.strip():
+		raise forms.ValidationError("You cannot use a whitespace-only submission name")
 		
 class SubmissionForm(forms.Form):
-	title = forms.CharField(max_length=128, validators=[check_unique_submission_name])
+	title = forms.CharField(max_length=128, validators=[check_unique_submission_name, check_non_empty_name], required=True)
 	file_upload = forms.FileField()
 	notes = forms.CharField(max_length=512, required=False, widget = forms.Textarea)
 	def __init__(self, *args, **kwargs):
