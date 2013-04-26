@@ -5,6 +5,7 @@ import numpy as np
 import os
 import datetime
 import pytz
+import codecs
 
 SCORE_LOG_FILE = os.path.join(installation_base, "results", "results.log")
 
@@ -13,7 +14,7 @@ class Command(BaseCommand):
 	help = 'Checks for entries that do not have a score yet and processes them'
 
 	def handle(self, *args, **options):
-		outfile = open(SCORE_LOG_FILE,'a')
+		outfile = codecs.open(SCORE_LOG_FILE,mode='a',encoding='utf-8')
 		entries = Entry.objects.filter(score=PLACEHOLDER_SCORE)
 		for entry in entries:
 			print "Processing entry %s" % entry.name
