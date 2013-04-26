@@ -46,6 +46,11 @@ class TeamCreationForm(forms.ModelForm):
 	class Meta:
 		model = Team
 		fields = ("name","notes")
+	def clean_name(self):
+		name=self.cleaned_data["name"].strip()
+		if not name:
+			raise forms.ValidationError("Team name cannot be whitespace only.")
+		return name
 
 @login_required
 def create(request):
