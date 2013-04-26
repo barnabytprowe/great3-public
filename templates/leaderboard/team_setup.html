@@ -11,7 +11,7 @@
 <P> Recent entries for your teams: </P>
 	<UL>
 	{% for entry in entries %}
-		<LI>{{entry.name}} {{entry.date}} Score:{{entry.score}}</LI>
+		<LI>{{entry.name}} {{entry.date}} Score:{{entry.score_text}}</LI>
 	{% endfor %}
 	</UL>
 {% endif %}
