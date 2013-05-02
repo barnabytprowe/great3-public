@@ -140,7 +140,7 @@ def getAtmosPSFGrid(k, Pk, ngrid = 20, dtheta_arcsec = 360., oversample = 15,
     Note that the input power spectra are for the ellipticity (distortion) fluctuations.  The
     lensing engine works in terms of shear, and for nearly round objects, shear~distortion/2.  Thus
     the return values from the lensing engine can be used for ellipticity since we gave it the power
-    spectrum of distortion fluctuations, but the kappa values are too high by a factor of 4.
+    spectrum of distortion fluctuations, but the kappa values are too high by a factor of 2.
 
     The routine requires k and Pk, and has a number of optional parameters that default to what will
     be used for GREAT3:
@@ -171,7 +171,7 @@ def getAtmosPSFGrid(k, Pk, ngrid = 20, dtheta_arcsec = 360., oversample = 15,
                                  get_convergence = True,
                                  rng = rng)
     # redefine the kappa's
-    kappa /= 4.
+    kappa /= 2.
 
     # Take subgrids appropriately.  Since they are periodic, can just take one corner, don't have to
     # try to be in the middle.
