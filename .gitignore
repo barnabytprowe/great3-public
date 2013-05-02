@@ -2,3 +2,5 @@ g3truth/*
 g3subs/*
 *.pyc
 *.png
+temp*
+.DS_Store
