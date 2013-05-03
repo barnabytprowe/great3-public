@@ -175,7 +175,7 @@ class RegistrationProfile(models.Model):
     
     user = models.ForeignKey(User, unique=True, verbose_name=_('user'))
     activation_key = models.CharField(_('activation key'), max_length=40)
-    
+    have_sent_activation_email = models.BooleanField(default=False)
     objects = RegistrationManager()
     
     class Meta:
@@ -260,6 +260,7 @@ class RegistrationProfile(models.Model):
         
         message = render_to_string('registration/activation_email.txt',
                                    ctx_dict)
-        
+        self.have_sent_activation_email = True
+        self.save()
         self.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
     

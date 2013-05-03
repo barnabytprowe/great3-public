@@ -8,7 +8,7 @@ from registration.models import RegistrationProfile
 
 class RegistrationAdmin(admin.ModelAdmin):
     actions = ['activate_users', 'resend_activation_email']
-    list_display = ('user', 'activation_key_expired')
+    list_display = ('user', 'have_sent_activation_email')
     raw_id_fields = ['user']
     search_fields = ('user__username', 'user__first_name', 'user__last_name')
 
@@ -40,7 +40,7 @@ class RegistrationAdmin(admin.ModelAdmin):
         for profile in queryset:
             if not profile.activation_key_expired():
                 profile.send_activation_email(site)
-    resend_activation_email.short_description = _("Re-send activation emails")
+    resend_activation_email.short_description = _("(Re-)send activation emails")
 
 
 admin.site.register(RegistrationProfile, RegistrationAdmin)
