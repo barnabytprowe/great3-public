@@ -4,7 +4,7 @@
 {% block content %}
 <P>You are a member of this team. </P>
 
-<P>To withdraw a submission, eject a user from your team, or change the name of the team, contact the Great3 admins.</P>
+<P>To withdraw a submission, eject a user from your team, or change the name of the team, please <A href="mailto:great3@great3.com">contact Great-3 support<A>.</P>
 
 <P>Edit team notes:</P>
 <form action="{% url leaderboard.team_views.detail team.id %}" method="post">{% csrf_token %}
