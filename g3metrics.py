@@ -59,12 +59,12 @@ def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1,
                power spectra for use in the realizations of g1, g2.
     ngrid      Number of galaxies along a side of the (assumed square) image grid
     dx_grid    Image grid spacing in units of `grid_units`.
-    grid_unit  Units of grid spacing, must be a galsim.Angle instance.
+    grid_units Units of grid spacing, must be a galsim.Angle instance.
     rng        A galsim.BaseDeviate instance used to generate random numbers, if None one will be
                initialized internally.
 
-    Returns the tuple `(g1_list, g2_list)`, each element of which is a list of `nims` 2D NumPy
-    arrays of dimensions ngrid x ngrid, containg the realizations of the shear field g1 and g2
+    Returns the tuple `(g1true_list, g2true_list)`, each element of which is a list of `nims` 2D
+    NumPy arrays of dimensions ngrid x ngrid, containg the realizations of the shear field g1 and g2
     components at the grid points specified.
     """
     if (nims % ntrue) != 0:
@@ -78,17 +78,69 @@ def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1,
    # Number of sets of ntrue images
     nsets = nims / ntrue
     # Setup empty lists for storing the g1, g2 NumPy arrays
-    g1_list = []
-    g2_list = []
+    g1true_list = []
+    g2true_list = []
     # Loop through the power spectra and build the gridded shear realizations for each image
     for ps in ps_list:
         for i in range(nsets):
-            g1, g2 = ps.buildGriddedShears(grid_spacing=dx_grid, ngrid=ngrid, units=grid_units,
-                                           rng=rng)
-            g1_list.append(g1)
-            g2_list.append(g2)
+            g1, g2 = ps.buildGrid(grid_spacing=dx_grid, ngrid=ngrid, units=grid_units, rng=rng)
+            g1true_list.append(g1)
+            g2true_list.append(g2)
 
-    return g1_list, g2_list
+    return g1true_list, g2true_list
+
+def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_sigma, dx_grid=0.1,
+                              nbins=15, label=None, calculate_truth=True):
+    """Make a fake var shear submission.
+
+    BARNEY NOTE: In the real data we should do this in the (x, y) coordinate frame determined
+    by the primary direction of the PSF ellipticity.
+
+    Arguments
+    ---------
+    * Provided c1, c2, m1, m2 shear estimation bias values
+    * Two lists of truth tables g1true_grid_list, g2true_grid_list, list of 2D NumPy arrays
+      containing the variable shears at each grid point
+    * Image grid dx_grid spacing in units of degrees.
+
+    Outputs to a table of k, P_E(k) to ./g3subs/g3_var_shear_sub.<label>.dat if label is not `None`
+    """
+    # Get the number of images from the truth table
+    nims = len(g1true_list)
+    if len(g2true_list) != nims:
+        raise ValueError("Supplied g1true, g2true not matching length.")
+
+    # Then ready an empty list (will store arrays) for the output submission
+    if calculate_truth:
+        pEtrue = []
+        pBtrue = []
+    pEsub = []
+    pBsub = []
+
+    for i in range(nims):
+        g1gals = (1. + m1) * g1true_list[i] + c1 + noise_sigma * np.random.randn(
+            *g1true_list[i].shape) # pleasantly magic asterisk *args functionality
+        g2gals = (1. + m2) * g2true_list[i] + c2 + noise_sigma * np.random.randn(
+            *g2true_list[i].shape)
+        # Setup the power spectrum estimator
+        py_pse = galsim.pse.PowerSpectrumEstimator(
+            g1gals.shape[0], dx_grid * g1gals.shape[0], nbin)
+        # Then estimate the true signals if asked, and the noisy submission ones
+        if calculate_truth:
+            ell, pEtrue_tmp, pBtrue_tmp, pEBtrue_tmp = my_pse.estimate(
+                g1true_list[i], g2true_list[i])
+            pEtrue.append(pEtrue_tmp)
+            pBtrue.append(pBtrue_tmp)
+
+        ell, pEsub_tmp, pBsub_tmp, pEBsub_tmp = my_pse.estimate(g1gals, g2gals)
+        pEsub.append(pEsub_tmp)
+        pBsub.append(pBsub_tmp)
+
+    if calculate_truth:
+        ret = pEsub, pBsub, pEtrue, pBtrue
+    else:
+        ret = pEsub, pBsub
+    return ret
 
 def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
                                 label=None):
