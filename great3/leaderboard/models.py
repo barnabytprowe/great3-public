@@ -14,7 +14,7 @@ PLACEHOLDER_RANK = 1000
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
-    teams = models.ManyToManyField('Team', related_name='users')
+    teams = models.ManyToManyField('Team', related_name='users', null=True, blank=True)
     def __unicode__(self):
     	return self.user.username
 
