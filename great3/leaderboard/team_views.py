@@ -77,6 +77,22 @@ def join(request):
 	data = dict(teams=teams)
 	return render(request, 'leaderboard/team_join.html', data)
 
+def send_request_accepted_email(user, team):
+	subject = 'Great3 Membership request accepted'
+	main_site = Site.objects.get_current()
+	message = """
+Dear %s,
+
+Your request to join the Great-3 team "%s" has been accepted.
+You can now submit entries and view your team details.
+%s
+
+Many thanks,
+The Great-3 Team
+""" % (user.username, team, main_site)
+	user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+
+
 
 def send_request_email(user, team, token):
 	team_leader = team.users.order_by('user__date_joined')[0]
@@ -150,9 +166,10 @@ def accept(request, token):
 	new_member_profile.save()
 	membership_request.delete()
 
-	#maybe we should email the user to tell them they have been accepted here?
+	send_request_accepted_email(membership_request.user, membership_request.team)
 
-	return render(request, "leaderboard/team_request_accept.html")
+	data=dict(user=membership_request.user,team=membership_request.team)
+	return render(request, "leaderboard/team_request_accept.html", data)
 
 @login_required
 def reject(request, token):
