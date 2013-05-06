@@ -3,7 +3,7 @@ import numpy as np
 import pylab
 
 # A subroutine to generate random parameters for the atmospheric PSF
-def atmosPSFParams(t_exp = 20, diam = 6.7, rng = None, N = 1):
+def atmosPSFParams(t_exp=20, diam=6.7, rng=None, N=1):
     """A subroutine to generate random parameters for the atmospheric PSF.
 
     This routine generates a random value of seeing from some distribution, and random values for
@@ -11,8 +11,8 @@ def atmosPSFParams(t_exp = 20, diam = 6.7, rng = None, N = 1):
 
         xi_+(theta) = A / (1 + theta/theta_0)
 
-    These values are then rescaled from the fiducial values of exposure time t_exp= 20s and
-    telescope diameter diam = 6.7m to the input values of t_exp and diam, where xi is proportional
+    These values are then rescaled from the fiducial values of exposure time t_exp=20s and
+    telescope diameter diam=6.7m to the input values of t_exp and diam, where xi is proportional
     to 1/t_exp and 1/diam.
 
     The inputs are exposure time in seconds and telescope diameter in meters.  Optionally, the user
@@ -129,8 +129,8 @@ def makeAtmosPSFPk(A, theta0, interpolate=False):
     pk = A*np.pi*pk_dat[1]
     return k, pk
 
-def getAtmosPSFGrid(k, Pk, ngrid = 20, dtheta_arcsec = 360., oversample = 15,
-                    subsample = 10, rng = None, return_oversample = False):
+def getAtmosPSFGrid(k, Pk, ngrid=20, dtheta_arcsec=360., oversample=15,
+                    subsample=10, rng=None, return_oversample=False):
     """A routine to build an anisotropy and size fluctuation grid for the atmospheric PSF P(k).
 
     This routine takes NumPy arrays of k and P(k) values to be used for the E and B power for the
@@ -190,7 +190,7 @@ def drawWhiskerShear(g1, g2, title=None):
     gx = g*np.cos(theta)
     gy = g*np.sin(theta)
     pylab.figure()
-    magnify=50.
+    magnify = 50.
     pylab.quiver(magnify*gx, magnify*gy, scale=16, headwidth=0, pivot='middle')
     tmpstr = str(np.median(g))
     if title is not None:
@@ -233,8 +233,8 @@ if __name__ == "__main__":
 
     # Make the gridded e1, e2.
     print "Getting the gridded PSF parameters"
-    # Will want in general to subsample by 10 so we can have multiple grids sampling the same PSF.  But
-    # for the sake of easy viewing, use subsample=3.
+    # Will want in general to subsample by 10 so we can have multiple grids sampling the same PSF.
+    # But for the sake of easy viewing, use subsample=3.
     e1, e2, kappa = getAtmosPSFGrid(k, Pk, subsample=3)
 
     print "Plotting the PSF shear as a whisker plot"
