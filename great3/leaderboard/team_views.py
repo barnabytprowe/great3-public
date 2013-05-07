@@ -7,7 +7,7 @@ from django import forms
 from django.conf import settings
 
 class TeamDetailsChangeForm(forms.Form):
-    notes = forms.CharField(max_length=512)
+    notes = forms.CharField(max_length=512,widget = forms.Textarea)
 
 
 def index(request):
@@ -46,6 +46,7 @@ class TeamCreationForm(forms.ModelForm):
 	class Meta:
 		model = Team
 		fields = ("name","notes")
+		widgets = {"notes":forms.Textarea}
 	def clean_name(self):
 		name=self.cleaned_data["name"].strip()
 		if not name:
