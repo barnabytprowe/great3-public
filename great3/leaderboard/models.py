@@ -156,7 +156,6 @@ class Entry(models.Model):
 		return str(r)
 
 	def score_text(self):
-		print "Getting score text - ", self.score
 		if self.score == PLACEHOLDER_SCORE:
 			return "...Calculating..."
 		else:
