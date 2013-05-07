@@ -2,15 +2,18 @@ from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from collections import defaultdict
+import datetime
 import os
 import hashlib
 import random
+import pytz
+
 
 # Create your models here.
 SUBMISSION_SAVE_PATH=os.path.join(os.path.split(__file__)[0], '..','..','results')
 PLACEHOLDER_SCORE = -1.0
 PLACEHOLDER_RANK = 1000
-
+MAXIMUM_ENTRIES_PER_DAY = 100
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
@@ -283,3 +286,13 @@ class MembershipRequest(models.Model):
 def user_is_member_of_team(user, team):
 	teams = user.get_profile().teams.all()
 	return team in teams
+
+
+def too_many_entries_in_last_day(team):
+	try:
+		test_entry = Entry.objects.filter(team=team).order_by('-date')[MAXIMUM_ENTRIES_PER_DAY+1]
+	except IndexError:
+		return False
+	one_day_ago = datetime.datetime.utcnow().replace(tzinfo=pytz.utc) - datetime.timedelta(days=1.0)
+	#I know this looks odd - it does not mean "more than one day ago."
+	return test_entry.date > one_day_ago
