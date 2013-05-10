@@ -6,7 +6,15 @@
 	{% if teams|length > 1 %}
 
 	{% else %}
-		You are submitting as a member of team {{ teams|first }}
+		<P>You are submitting as a member of team {{ teams|first }}</P>
+	{% endif %}
+	{% if excluded_teams|length > 1 %}
+		<P>(Your other teams, {{excluded_teams}}, cannot submit right now 
+			because they have submitted {{entry_limit}} entries in the last 24 hours already)</P>
+	{% elif excluded_teams|length == 1 %}
+		<P>(Your other team, {{excluded_teams|first}}, cannot submit right now 
+			because it has submitted {{entry_limit}} entries in the last 24 hours already)</P>
+
 	{% endif %}
 
 	<form action="submit" 

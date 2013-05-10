@@ -1,4 +1,4 @@
-from leaderboard.models import Board, Entry, save_submission_file
+from leaderboard.models import Board, Entry, save_submission_file, too_many_entries_in_last_day, MAXIMUM_ENTRIES_PER_DAY
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django import forms
@@ -44,11 +44,22 @@ def detail(request, board_id):
 
 @login_required
 def submit(request, board_id):
-	teams = request.user.get_profile().teams.all()
 	try:
 		board = Board.objects.get(id=board_id)
 	except Board.DoesNotExist:
 		raise Http404
+
+	all_teams = request.user.get_profile().teams.all()
+
+	if not all_teams:
+		data = dict(user=request.user, limit=MAXIMUM_ENTRIES_PER_DAY)
+		return render(request, 'leaderboard/noteam.html', data)
+
+	valid_teams = [team for team in all_teams if not too_many_entries_in_last_day(team)]
+	excluded_teams = [team for team in all_teams if team not in valid_teams]
+	if not valid_teams:
+		data=dict(excluded_teams=excluded_teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)
+		return render(request, 'leaderboard/toosoon.html',data)
 
 	if request.method == 'POST':
 		if len(teams)==1:
@@ -66,14 +77,14 @@ def submit(request, board_id):
 			else:
 				raise ValueError("Submission Failed")
 		else: 
-			data= dict(form=form, board=board, teams=teams)
+			data= dict(form=form, board=board, teams=teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)
 			return render(request, 'leaderboard/submit.html', data)
 	else:
 		if len(teams)==1:
 			form = SubmissionForm()
 		else:
 			form = SubmissionForm(teams=teams)
-		data = dict(form=form, board=board, teams=teams)
+		data = dict(form=form, board=board, teams=teams, excluded_teams=excluded_teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)
 		return render(request, 'leaderboard/submit.html', data)
 
 def submitted(request, board_id):
