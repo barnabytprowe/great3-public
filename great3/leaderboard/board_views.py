@@ -55,7 +55,7 @@ def submit(request, board_id):
 		data = dict(user=request.user, limit=MAXIMUM_ENTRIES_PER_DAY)
 		return render(request, 'leaderboard/noteam.html', data)
 
-	valid_teams = [team for team in all_teams if not too_many_entries_in_last_day(team)]
+	valid_teams = [team for team in all_teams if not too_many_entries_in_last_day(team, board)]
 	excluded_teams = [team for team in all_teams if team not in valid_teams]
 	if not valid_teams:
 		data=dict(excluded_teams=excluded_teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)

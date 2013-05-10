@@ -288,10 +288,10 @@ def user_is_member_of_team(user, team):
 	return team in teams
 
 
-def too_many_entries_in_last_day(team):
+def too_many_entries_in_last_day(team, board):
 	print "Checking"
 	try:
-		test_entry = Entry.objects.filter(team=team).order_by('-date')[MAXIMUM_ENTRIES_PER_DAY-1]
+		test_entry = Entry.objects.filter(team=team, board=board).order_by('-date')[MAXIMUM_ENTRIES_PER_DAY-1]
 		print Entry.objects.filter(team=team).order_by('-date')
 	except IndexError:
 		return False
