@@ -62,12 +62,12 @@ def submit(request, board_id):
 		return render(request, 'leaderboard/toosoon.html',data)
 
 	if request.method == 'POST':
-		if len(teams)==1:
-			team = teams[0]
+		if len(valid_teams)==1:
+			team = valid_teams[0]
 			form = SubmissionForm(request.POST, request.FILES)
 		else:
 			team=None
-			form = SubmissionForm(request.POST, request.FILES, teams=teams)
+			form = SubmissionForm(request.POST, request.FILES, teams=valid_teams)
 
 		if form.is_valid():
 			if team is None: team = form.cleaned_data['team']
@@ -77,14 +77,14 @@ def submit(request, board_id):
 			else:
 				raise ValueError("Submission Failed")
 		else: 
-			data= dict(form=form, board=board, teams=teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)
+			data= dict(form=form, board=board, teams=valid_teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)
 			return render(request, 'leaderboard/submit.html', data)
 	else:
-		if len(teams)==1:
+		if len(valid_teams)==1:
 			form = SubmissionForm()
 		else:
-			form = SubmissionForm(teams=teams)
-		data = dict(form=form, board=board, teams=teams, excluded_teams=excluded_teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)
+			form = SubmissionForm(teams=valid_teams)
+		data = dict(form=form, board=board, teams=valid_teams, excluded_teams=excluded_teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)
 		return render(request, 'leaderboard/submit.html', data)
 
 def submitted(request, board_id):

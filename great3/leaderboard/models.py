@@ -13,7 +13,7 @@ import pytz
 SUBMISSION_SAVE_PATH=os.path.join(os.path.split(__file__)[0], '..','..','results')
 PLACEHOLDER_SCORE = -1.0
 PLACEHOLDER_RANK = 1000
-MAXIMUM_ENTRIES_PER_DAY = 100
+MAXIMUM_ENTRIES_PER_DAY = 3
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
@@ -289,10 +289,13 @@ def user_is_member_of_team(user, team):
 
 
 def too_many_entries_in_last_day(team):
+	print "Checking"
 	try:
-		test_entry = Entry.objects.filter(team=team).order_by('-date')[MAXIMUM_ENTRIES_PER_DAY+1]
+		test_entry = Entry.objects.filter(team=team).order_by('-date')[MAXIMUM_ENTRIES_PER_DAY-1]
+		print Entry.objects.filter(team=team).order_by('-date')
 	except IndexError:
 		return False
 	one_day_ago = datetime.datetime.utcnow().replace(tzinfo=pytz.utc) - datetime.timedelta(days=1.0)
+	print "here", test_entry, test_entry.date, one_day_ago
 	#I know this looks odd - it does not mean "more than one day ago."
 	return test_entry.date > one_day_ago
