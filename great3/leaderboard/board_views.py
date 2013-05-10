@@ -1,4 +1,4 @@
-from leaderboard.models import Board, Entry, save_submission_file, too_many_entries_in_last_day, MAXIMUM_ENTRIES_PER_DAY
+from leaderboard.models import Board, Entry, Team, save_submission_file, too_many_entries_in_last_day, MAXIMUM_ENTRIES_PER_DAY
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django import forms
@@ -21,7 +21,17 @@ class SubmissionForm(forms.Form):
 		teams = kwargs.pop("teams",None)
 		super(SubmissionForm, self).__init__(*args, **kwargs)
 		if teams is not None:
-			self.fields['team'] = forms.ModelChoiceField(teams, empty_label="--Select Team--")
+			teams = [('None','- Select team -')] + [(team.id,team.name) for team in teams]
+			self.fields['team'] = forms.ChoiceField(choices=teams)
+	def clean_team(self):
+		team_id = self.cleaned_data.get('team')
+		if team_id == 'None':
+			raise forms.ValidationError("Please select a team.")
+		try:
+			team = Team.objects.get(id=team_id)
+		except Team.DoesNotExist:
+			raise forms.ValidationError("Please select a valid team.")
+		return team
 
 def index(request):
 	""" List of all leaderboards """
@@ -77,7 +87,7 @@ def submit(request, board_id):
 			else:
 				raise ValueError("Submission Failed")
 		else: 
-			data= dict(form=form, board=board, teams=valid_teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)
+			data= dict(form=form, board=board, teams=valid_teams, excluded_teams=excluded_teams, entry_limit=MAXIMUM_ENTRIES_PER_DAY)
 			return render(request, 'leaderboard/submit.html', data)
 	else:
 		if len(valid_teams)==1:
