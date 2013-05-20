@@ -21,7 +21,7 @@ def atmosPSFParams(t_exp=20, diam=6.7, rng=None, N=1):
     the return values are NumPy arrays instead of floats).
 
     The numbers that are returned are A (dimensionless), theta_0 (arcsec), and seeing FWHM (arcsec),
-    either as floats (if N=1) or NumPy arrays.
+    either as three individual floats (if N=1) or as three NumPy arrays of length N (if N>1).
     """
     # Check for sane ranges of exposure time and diameter.
     if t_exp < 0:
@@ -138,9 +138,9 @@ def getAtmosPSFGrid(k, Pk, ngrid=20, dtheta_arcsec=360., oversample=15,
     fluctuations in size.
 
     Note that the input power spectra are for the ellipticity (distortion) fluctuations.  The
-    lensing engine works in terms of shear, and for nearly round objects, shear~distortion/2.  Thus
-    the return values from the lensing engine can be used for ellipticity since we gave it the power
-    spectrum of distortion fluctuations, but the kappa values are too high by a factor of 2.
+    lensing engine works in terms of shear, and for nearly round objects, shear~distortion/2.  Since
+    we gave the lensing engine the PS of distortion fluctuations, the return values can be used
+    directly for PSF ellipticity (distortion), but the kappa values are too high by a factor of 2.
 
     The routine requires k and Pk, and has a number of optional parameters that default to what will
     be used for GREAT3:
