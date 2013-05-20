@@ -129,8 +129,8 @@ def makeAtmosPSFPk(A, theta0, interpolate=False):
     pk = A*np.pi*pk_dat[1]
     return k, pk
 
-def getAtmosPSFGrid(k, Pk, ngrid=20, dtheta_arcsec=360., oversample=15,
-                    subsample=10, rng=None, return_oversample=False):
+def getAtmosPSFGrid(k, Pk, ngrid=20, dtheta_arcsec=360., kmin_factor=15,
+                    subsample=10, rng=None, return_basic=True):
     """A routine to build an anisotropy and size fluctuation grid for the atmospheric PSF P(k).
 
     This routine takes NumPy arrays of k and P(k) values to be used for the E and B power for the
@@ -149,14 +149,19 @@ def getAtmosPSFGrid(k, Pk, ngrid=20, dtheta_arcsec=360., oversample=15,
                        degree subfields used for PSF estimation).
        dtheta_arcsec   Spacing between grid points for the galaxies in arcsec (default 360, i.e.,
                        0.1 degree).
-       oversample      Factor by which to oversample the grids, growing them larger by this factor
-                       in each dimension so as to properly represent the large-scale shear
-                       correlations (default 20).
+       kmin_factor     Factor by which to spatially extend the grids to get a smaller kmin value,
+                       growing them larger by this factor in each dimension so as to properly
+                       represent the large-scale shear correlations (default 20).
        subsample          Factor by which to subsample the grid, so as to get several offset
-                          realizations of the same atmosphere (default 10).
+                          realizations of the same atmosphere (default 10).  [Note, this is like
+                          kmax_factor for the lensing engine work on GalSim issue #377, but there,
+                          the idea is to represent smaller kmax without actually getting back a more
+                          densely packed grid.  Here, we actually do want a more densely packed
+                          grid, so I'm calling it subsample to suggest the explicit subsampling of
+                          the grid.
        rng                RNG to use for the generation of these fields.
-       return_oversample  Return the huge oversampled grid, or just the default one with size set by
-                          ngrid?  (Default = False)
+       return_basic       Return the basic grid that is not enlarged by kmin_factor (if True), or
+                          actually return the huge grid (if False).  [Default = True]
 
     The results are returned as three NumPy arrays for the PSF e1, PSF e2, and fractional change in
     size of the PSF.
@@ -165,17 +170,20 @@ def getAtmosPSFGrid(k, Pk, ngrid=20, dtheta_arcsec=360., oversample=15,
     tab_pk = galsim.LookupTable(k, Pk, x_log=True, f_log=True)
     ps = galsim.PowerSpectrum(tab_pk, tab_pk, units=galsim.arcsec)
 
-    # use buildGrid to get the grid.
+    # use buildGrid to get the grid.  Note that with the code in GalSim issue #377, this code could
+    # be simplified.  It automatically takes care of the kmin_factor expansion of the grid.  This
+    # would also lead to simplification of the code below where the return values are selected based
+    # on return_basic.
     e1, e2, kappa = ps.buildGrid(grid_spacing = dtheta_arcsec/subsample,
-                                 ngrid = ngrid*oversample*subsample,
+                                 ngrid = ngrid*kmin_factor*subsample,
                                  get_convergence = True,
                                  rng = rng)
     # redefine the kappa's
     kappa /= 2.
 
-    # Take subgrids appropriately.  Since they are periodic, can just take one corner, don't have to
-    # try to be in the middle.
-    if return_oversample:
+    # Take subset of the overly huge grid.  Since the grid is periodic, can just take one corner, don't
+    # have to try to be in the middle.
+    if return_basic is False:
         return e1, e2, kappa
     else:
         n_use = ngrid*subsample
