@@ -86,7 +86,6 @@ def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1,
             g1, g2 = ps.buildGrid(grid_spacing=dx_grid, ngrid=ngrid, units=grid_units, rng=rng)
             g1true_list.append(g1)
             g2true_list.append(g2)
-
     return g1true_list, g2true_list
 
 def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_sigma, dx_grid=0.1,
@@ -98,9 +97,9 @@ def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_si
 
     Arguments
     ---------
-    * Provided c1, c2, m1, m2 shear estimation bias values
+    * Provided c1, c2, m1, m2 shear estimation bias values.
     * Two lists of truth tables g1true_grid_list, g2true_grid_list, list of 2D NumPy arrays
-      containing the variable shears at each grid point
+      containing the variable shears at each grid point.
     * Image grid dx_grid spacing in units of degrees.
 
     Outputs to a table of k, P_E(k) to ./g3subs/g3_var_shear_sub.<label>.dat if label is not `None`
@@ -109,14 +108,12 @@ def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_si
     nims = len(g1true_list)
     if len(g2true_list) != nims:
         raise ValueError("Supplied g1true, g2true not matching length.")
-
     # Then ready an empty list (will store arrays) for the output submission
     if calculate_truth:
         pEtrue = []
         pBtrue = []
     pEsub = []
     pBsub = []
-
     for i in range(nims):
         g1gals = (1. + m1) * g1true_list[i] + c1 + noise_sigma * np.random.randn(
             *g1true_list[i].shape) # pleasantly magic asterisk *args functionality
@@ -131,11 +128,9 @@ def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_si
                 g1true_list[i], g2true_list[i])
             pEtrue.append(pEtrue_tmp)
             pBtrue.append(pBtrue_tmp)
-
         ell, pEsub_tmp, pBsub_tmp, pEBsub_tmp = my_pse.estimate(g1gals, g2gals)
         pEsub.append(pEsub_tmp)
         pBsub.append(pBsub_tmp)
-
     if calculate_truth:
         ret = pEsub, pBsub, pEtrue, pBtrue
     else:
@@ -183,10 +178,6 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
             './g3subs/g3_const_shear_sub.'+label+'.dat', np.array((truth[:, 0], g1sub, g2sub)).T,
             fmt=('%d', '%14.7f', '%14.7f'))
     return g1sub, g2sub
-
-def make_submission_var_shear(A, M, g1true_list, g2true_list, nellbins, noise_sigma, label=None):
-    """Make a fake variable shear submission.
-    """
 
 def _calculateSvalues(xarr, yarr, sigma2=1.):
     """Calculates the intermediate S values required for basic linear regression.
