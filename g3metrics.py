@@ -102,7 +102,9 @@ def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_si
       containing the variable shears at each grid point.
     * Image grid dx_grid spacing in units of degrees.
 
-    Outputs to a table of k, P_E(k) to ./g3subs/g3_var_shear_sub.<label>.dat if label is not `None`
+    Outputs a set of tables of k, P_E(k) for each grid of shears to
+    ./g3subs/g3_var_shear_sub.<label>.<i>.dat, for i=1,...,len(g1_true_list), if label is not
+    `None`.
     """
     # Get the number of images from the truth table
     nims = len(g1true_list)
