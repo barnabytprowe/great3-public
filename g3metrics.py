@@ -127,10 +127,10 @@ def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_si
         raise ValueError("Supplied g1true, g2true not matching length.")
     # Then ready an empty list (will store arrays) for the output submission
     if calculate_truth:
-        pEtrue = []
-        pBtrue = []
-    pEsub = []
-    pBsub = []
+        pEtrue_list = []
+        pBtrue_list = []
+    pEsub_list = []
+    pBsub_list = []
     for i in range(nims):
         g1gals = (1. + m1) * g1true_list[i] + c1 + noise_sigma * np.random.randn(
             *g1true_list[i].shape) # pleasantly magic asterisk *args functionality
@@ -143,15 +143,15 @@ def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_si
         if calculate_truth:
             k, pEtrue_tmp, pBtrue_tmp, pEBtrue_tmp = pse.estimate(
                 g1true_list[i], g2true_list[i])
-            pEtrue.append(pEtrue_tmp)
-            pBtrue.append(pBtrue_tmp)
+            pEtrue_list.append(pEtrue_tmp)
+            pBtrue_list.append(pBtrue_tmp)
         ell, pEsub_tmp, pBsub_tmp, pEBsub_tmp = pse.estimate(g1gals, g2gals)
-        pEsub.append(pEsub_tmp)
-        pBsub.append(pBsub_tmp)
+        pEsub_list.append(pEsub_tmp)
+        pBsub_list.append(pBsub_tmp)
     if calculate_truth:
-        ret = k, pEsub, pBsub, pEtrue, pBtrue
+        ret = k, pEsub_list, pBsub_list, pEtrue_list, pBtrue_list
     else:
-        ret = k, pEsub, pBsub
+        ret = k, pEsub_list, pBsub_list
     return ret
 
 def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
@@ -294,19 +294,20 @@ def metricQZ3_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
     Q = 500. * np.sqrt((cfid / c1)**2 + (cfid / c2)**2 + (mfid / m1)**2 + (mfid / m2)**2)
     return (Q, c1, m1, c2, m2, sig_c1, sig_m1, sig_c2, sig_m2)
 
-def metricG10_var_shear(k, pEest_list, varest_list, pEtrue_list, scaling=0.005):
+def metricG10_var_shear(k, pEsub_list, varest_list, pEtrue_list, scaling=0.005, dx_grid=0.1):
     """Crude attempt at coding up the G10 metric, with variance subtraction.
     """
-    mean_pEest = pEest_list[0] - varest_list[0]
+    mean_pEest = pEest_list[0] - (varest_list[0] * (dx_grid * np.pi / 180.)**2) # See below...
     mean_diff = mean_pEest - pEtrue_list[0]
     for pEest, varest, pEtrue in zip(pEest_list[1:], varest_list[1:], pEtrue_list[1:]):
+        varest *= (dx_grid * np.pi / 180.)**2 # Convert the variance per grid point into radian^2
         mean_pEest += (pEest - varest)
         mean_diff += (pEest - varest - pEtrue)
     mean_pEest /= len(pEest_list)
     mean_diff /= len(pEest_list)
     I_tilde_over_k = np.abs(mean_diff) * k # comes from C11
     Q = scaling / np.sum(I_tilde_over_k)
-    return Q, scaling 
+    return Q, scaling, mean_pEest, mean_diff
     
 
 
