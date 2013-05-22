@@ -1,6 +1,5 @@
 """Module containing GREAT3 metric calculation utilities.
 """
-
 import numpy as np
 import galsim
 
@@ -44,8 +43,24 @@ def make_const_truth_uniform_dist(ntrue, nims, true_range=0.03,
         np.savetxt(saveto, np.array((imagen, g1true, g2true)).T, fmt=('%d', '%14.7f', '%14.7f'))
     return g1true, g2true
 
-def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1,
-                            grid_units=galsim.degrees, rng=None):
+def read_ps(galsim_dir=None):
+    """Read in a Power Spectrum stored in the GalSim repository.
+
+    Returns a galsim.PowerSpectrum object.
+    """
+    import os
+    if galsim_dir is None:
+        raise ValueError(
+            "You must supply a directory for your GalSim install via the `galsim_dir` kwarg.")
+    tab_ps = galsim.LookupTable(
+        file=os.path.join(galsim_dir, 'examples', 'data', 'cosmo-fid.zmed1.00_smoothed.out'),
+        interpolant='linear')
+    # Put this table into an E-mode power spectrum and return
+    ret = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
+    return ret
+
+def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1, grid_units=galsim.degrees,
+                            rng=None):
     """Generate truth catalogues of g1, g2 in a grid of galaxy locations for each of nims images.
 
     Inputs
@@ -122,21 +137,21 @@ def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_si
         g2gals = (1. + m2) * g2true_list[i] + c2 + noise_sigma * np.random.randn(
             *g2true_list[i].shape)
         # Setup the power spectrum estimator
-        py_pse = galsim.pse.PowerSpectrumEstimator(
-            g1gals.shape[0], dx_grid * g1gals.shape[0], nbin)
+        pse = galsim.pse.PowerSpectrumEstimator(
+            g1gals.shape[0], dx_grid * g1gals.shape[0], nbins)
         # Then estimate the true signals if asked, and the noisy submission ones
         if calculate_truth:
-            ell, pEtrue_tmp, pBtrue_tmp, pEBtrue_tmp = my_pse.estimate(
+            k, pEtrue_tmp, pBtrue_tmp, pEBtrue_tmp = pse.estimate(
                 g1true_list[i], g2true_list[i])
             pEtrue.append(pEtrue_tmp)
             pBtrue.append(pBtrue_tmp)
-        ell, pEsub_tmp, pBsub_tmp, pEBsub_tmp = my_pse.estimate(g1gals, g2gals)
+        ell, pEsub_tmp, pBsub_tmp, pEBsub_tmp = pse.estimate(g1gals, g2gals)
         pEsub.append(pEsub_tmp)
         pBsub.append(pBsub_tmp)
     if calculate_truth:
-        ret = pEsub, pBsub, pEtrue, pBtrue
+        ret = k, pEsub, pBsub, pEtrue, pBtrue
     else:
-        ret = pEsub, pBsub
+        ret = k, pEsub, pBsub
     return ret
 
 def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
@@ -279,5 +294,20 @@ def metricQZ3_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
     Q = 500. * np.sqrt((cfid / c1)**2 + (cfid / c2)**2 + (mfid / m1)**2 + (mfid / m2)**2)
     return (Q, c1, m1, c2, m2, sig_c1, sig_m1, sig_c2, sig_m2)
 
+def metricG10_var_shear(k, pEest_list, varest_list, pEtrue_list, scaling=0.005):
+    """Crude attempt at coding up the G10 metric, with variance subtraction.
+    """
+    mean_pEest = pEest_list[0] - varest_list[0]
+    mean_diff = mean_pEest - pEtrue_list[0]
+    for pEest, varest, pEtrue in zip(pEest_list[1:], varest_list[1:], pEtrue_list[1:]):
+        mean_pEest += (pEest - varest)
+        mean_diff += (pEest - varest - pEtrue)
+    mean_pEest /= len(pEest_list)
+    mean_diff /= len(pEest_list)
+    I_tilde_over_k = np.abs(mean_diff) * k # comes from C11
+    Q = scaling / np.sum(I_tilde_over_k)
+    return Q, scaling 
+    
 
 
+ 
