@@ -1,3 +1,4 @@
+import sys
 import os
 import cPickle
 import matplotlib.pyplot as plt
@@ -12,12 +13,15 @@ NOISE_SIGMA = 0.05 # Expected noise on each shear after shape noise pushed large
 NBINS=8            # Number of bins of PS for metric
 Q10_SCALING = 1
 
-CTEST = [1.e-4, 3.e-4, 1.e-3, 3.e-3, 1.e-2, 3.e-2]
-MTEST = [1.e-3, 3.e-3, 1.e-2, 3.e-2, 1.e-1, 3.e-1]
-NREPEAT = 1
+CTEST = [1.e-4,]# 3.e-4, 1.e-3, 3.e-3, 1.e-2, 3.e-2]
+MTEST = [1.e-3,]# 3.e-3, 1.e-2, 3.e-2, 1.e-1, 3.e-1]
+NREPEAT = 1000
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
 GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
+
+OUTFILE = os.path.join(
+    'results', 'normalization_G10_QuadPS_N'+str(NREPEAT)+'_noise_sigma'+str(NOISE_SIGMA)+'.pkl')
 
 reference_ps = g3metrics.read_ps(galsim_dir=GALSIM_DIR)
 
@@ -28,16 +32,15 @@ g1true_list, g2true_list = g3metrics.make_var_truth_catalogs(
 
 # Define some empty storage arrays
 qG10unnorm = np.empty((len(CTEST), len(MTEST), NREPEAT))
-qG10norm = np.empty((len(CTEST), len(MTEST), NREPEAT))
 qQuadPSunnorm = np.empty((len(CTEST), len(MTEST), NREPEAT))
-qQuadPSnorm = np.empty((len(CTEST), len(MTEST), NREPEAT))
 
-plt.clf()
 # Then generate submissions, and truth submissions
 for c, i in zip(CTEST, range(len(CTEST))):
 
+    print "Calculating PS metrics with c_i = "+str(c)
     for m, j in zip(MTEST, range(len(MTEST))):
 
+        print "Calculating PS metrics with m_i = "+str(m)
         for krepeat in range(NREPEAT):
 
             # Make a fake submission
@@ -56,17 +59,11 @@ for c, i in zip(CTEST, range(len(CTEST))):
             # Save the results
             qG10unnorm[i, j, krepeat] = qG10
             qQuadPSunnorm[i, j, krepeat] = qQuadPS
-            # Plot the first run, just to see what this looks like...
-            if i == 0 and krepeat == 0:
-                plt.loglog(ksub, mean_pEtrueG10 * ksub**2)
-                plt.loglog(
-                    ksub, mean_pEestG10 * ksub**2,
-                    label=r"m$_i$="+str(m)+", c$_i$="+str(c)+"    Q10 = "+str(qG10))
-            print c, m, krepeat, qG10, qQuadPS
+            # Plot something to stdout so the user knows progress is being made
+            sys.stdout.write('.')
+            sys.stdout.flush()
 
-plt.ylabel(r'k$^2$P(k)')
-plt.xlabel(r'k')
-plt.ylim(1.e-5, 1.e-1)
-plt.legend()
-plt.savefig('plots/example_k2PkQG10_'+str(NREPEAT)+'.png')
-plt.show()
+        sys.stdout.write('\n')
+
+print "Writing results to "+OUTFILE
+cPickle.dump((qG10unnorm, qQuadPSunnorm), open(OUTFILE, 'wb'))
