@@ -1,4 +1,5 @@
 import os
+import cPickle
 import matplotlib.pyplot as plt
 import numpy as np
 import galsim
@@ -13,7 +14,7 @@ Q10_SCALING = 1
 
 CTEST = [1.e-4, 3.e-4, 1.e-3, 3.e-3, 1.e-2, 3.e-2]
 MTEST = [1.e-3, 3.e-3, 1.e-2, 3.e-2, 1.e-1, 3.e-1]
-NREPEAT = 3
+NREPEAT = 1
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
 GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
@@ -65,6 +66,7 @@ for c, i in zip(CTEST, range(len(CTEST))):
 
 plt.ylabel(r'k$^2$P(k)')
 plt.xlabel(r'k')
-plt.ylim(1.e-5, 3.e-2)
+plt.ylim(1.e-5, 1.e-1)
 plt.legend()
+plt.savefig('plots/example_k2PkQG10_'+str(NREPEAT)+'.png')
 plt.show()
