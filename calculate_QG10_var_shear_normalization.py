@@ -15,7 +15,7 @@ Q10_SCALING = 1
 
 CTEST = [1.e-4,]# 3.e-4, 1.e-3, 3.e-3, 1.e-2, 3.e-2]
 MTEST = [1.e-3,]# 3.e-3, 1.e-2, 3.e-2, 1.e-1, 3.e-1]
-NREPEAT = 1000
+NREPEAT = 3000
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
 GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
