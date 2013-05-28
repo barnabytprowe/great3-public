@@ -294,21 +294,39 @@ def metricQZ3_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
     Q = 500. * np.sqrt((cfid / c1)**2 + (cfid / c2)**2 + (mfid / m1)**2 + (mfid / m2)**2)
     return (Q, c1, m1, c2, m2, sig_c1, sig_m1, sig_c2, sig_m2)
 
-def metricG10_var_shear(k, pEsub_list, varest_list, pEtrue_list, scaling=0.005, dx_grid=0.1):
+def metricG10_var_shear(k, pEsub_list, varsub_list, pEtrue_list, scaling=0.001, dx_grid=0.1):
     """Crude attempt at coding up the G10 metric, with variance subtraction.
     """
-    mean_pEest = pEest_list[0] - (varest_list[0] * (dx_grid * np.pi / 180.)**2) # See below...
-    mean_diff = mean_pEest - pEtrue_list[0]
-    for pEest, varest, pEtrue in zip(pEest_list[1:], varest_list[1:], pEtrue_list[1:]):
-        varest *= (dx_grid * np.pi / 180.)**2 # Convert the variance per grid point into radian^2
-        mean_pEest += (pEest - varest)
-        mean_diff += (pEest - varest - pEtrue)
-    mean_pEest /= len(pEest_list)
-    mean_diff /= len(pEest_list)
+    mean_pEsub = pEsub_list[0] - (varsub_list[0] * (dx_grid * np.pi / 180.)**2) # See below...
+    mean_pEtrue = pEtrue_list[0]
+    mean_diff = mean_pEsub - pEtrue_list[0]
+    for pEsub, varsub, pEtrue in zip(pEsub_list[1:], varsub_list[1:], pEtrue_list[1:]):
+        varsub *= (dx_grid * np.pi / 180.)**2 # Convert the variance per grid point into radian^2
+        mean_pEsub += (pEsub - varsub)
+        mean_pEtrue += pEtrue 
+        mean_diff += (pEsub - varsub - pEtrue)
+    mean_pEsub /= len(pEsub_list)
+    mean_pEtrue /= len(pEtrue_list)
+    mean_diff /= len(pEsub_list)
     I_tilde_over_k = np.abs(mean_diff) * k # comes from C11
     Q = scaling / np.sum(I_tilde_over_k)
-    return Q, scaling, mean_pEest, mean_diff
-    
+    return Q, mean_pEsub, mean_pEtrue, mean_diff
 
-
- 
+def metricQuadPS_var_shear(k, pEsub_list, varsub_list, pEtrue_list, scaling=0.001, dx_grid=0.1):
+    """Crude attempt at coding up a similar-to-G10 metric, but using a sum in quadrature, with
+    variance subtraction.
+    """
+    mean_pEsub = pEsub_list[0] - (varsub_list[0] * (dx_grid * np.pi / 180.)**2) # See below...
+    mean_pEtrue = pEtrue_list[0]
+    mean_diff = mean_pEsub - pEtrue_list[0]
+    for pEsub, varsub, pEtrue in zip(pEsub_list[1:], varsub_list[1:], pEtrue_list[1:]):
+        varsub *= (dx_grid * np.pi / 180.)**2 # Convert the variance per grid point into radian^2
+        mean_pEsub += (pEsub - varsub)
+        mean_pEtrue += pEtrue 
+        mean_diff += (pEsub - varsub - pEtrue)
+    mean_pEsub /= len(pEsub_list)
+    mean_pEtrue /= len(pEtrue_list)
+    mean_diff /= len(pEsub_list)
+    I_tilde_over_k = (mean_diff) * k # comes from C11
+    Q = scaling / np.sqrt(np.sum(I_tilde_over_k**2))
+    return Q, mean_pEsub, mean_pEtrue, mean_diff
