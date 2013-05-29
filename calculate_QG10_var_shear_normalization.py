@@ -13,15 +13,15 @@ NOISE_SIGMA = 0.05 # Expected noise on each shear after shape noise pushed large
 NBINS=8            # Number of bins of PS for metric
 Q10_SCALING = 1
 
-CTEST = [1.e-4,]# 3.e-4, 1.e-3, 3.e-3, 1.e-2, 3.e-2]
-MTEST = [1.e-3,]# 3.e-3, 1.e-2, 3.e-2, 1.e-1, 3.e-1]
+CTEST = [1.e-4, 3.e-4, 1.e-3, 3.e-3, 1.e-2]
+MTEST = [1.e-3, 3.e-3, 1.e-2, 3.e-2, 1.e-1]
 NREPEAT = 3000
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
 GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
 
 OUTFILE = os.path.join(
-    'results', 'normalization_G10_QuadPS_N'+str(NREPEAT)+'_noise_sigma'+str(NOISE_SIGMA)+'.pkl')
+    'results', 'normalizationv2_G10_QuadPS_N'+str(NREPEAT)+'_noise_sigma'+str(NOISE_SIGMA)+'.pkl')
 
 reference_ps = g3metrics.read_ps(galsim_dir=GALSIM_DIR)
 
@@ -48,7 +48,7 @@ for c, i in zip(CTEST, range(len(CTEST))):
                 c1=c, c2=c, m1=m, m2=m, g1true_list=g1true_list, g2true_list=g2true_list,
                 noise_sigma=NOISE_SIGMA, dx_grid=DX_GRID, nbins=NBINS)
             # Calculate the G10 metric for this realization
-            qG10, mean_pEestG10, mean_pEtrueG10, mean_diffG10 = g3metrics.metricQuadPS_var_shear(
+            qG10, mean_pEestG10, mean_pEtrueG10, mean_diffG10 = g3metrics.metricG10_var_shear(
                 ksub, pEsubs, [NOISE_SIGMA**2] * NIMS, pEtrues, scaling=Q10_SCALING,
                 dx_grid=DX_GRID)
             # Calculate the QuadPS metric for this realization
@@ -65,5 +65,7 @@ for c, i in zip(CTEST, range(len(CTEST))):
 
         sys.stdout.write('\n')
 
+print ""
 print "Writing results to "+OUTFILE
 cPickle.dump((qG10unnorm, qQuadPSunnorm), open(OUTFILE, 'wb'))
+print ""
