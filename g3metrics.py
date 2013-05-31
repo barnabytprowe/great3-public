@@ -213,6 +213,24 @@ def _calculateSvalues(xarr, yarr, sigma2=1.):
     Sxy = np.sum(xarr * yarr / sigma2)
     return (S, Sx, Sy, Sxx, Sxy)
 
+def run_corr2_ascii(x, y, e1, e2, min_sep, max_sep, nbins, temp_cat='temp.cat',
+                    params_file='corr2.params', e2_file_name='temp.e2'):
+    import os
+    f = open(temp_cat, 'wb')
+    for (i,j), value in np.ndenumerate(x):
+        xij = value
+        yij = y[i,j]
+        g1ij = e1[i,j]
+        g2ij = e2[i,j]
+        f.write('%e  %e  %e  %e\n'%(xij, yij, g1ij, g2ij))
+    f.close()
+    subprocess.Popen([
+        'corr2', params_file, 'min_sep=%f'%min_sep,'max_sep=%f'%max_sep,'nbins=%f'%nbins]).wait()
+    results = np.loadtxt('temp.e2')
+    os.remove(e2_file_name)
+    os.remove(e2_file_name)
+    return results
+
 def fitline(xarr, yarr):
     """Fit a line y = a + b * x to input x and y arrays by least squares.
 
