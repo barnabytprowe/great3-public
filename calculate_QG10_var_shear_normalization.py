@@ -21,7 +21,7 @@ NREPEAT = 1000
 GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
 
 OUTFILE = os.path.join(
-    'results', 'normalizationv2_G10_QuadPS_N'+str(NREPEAT)+'_noise_sigma'+str(NOISE_SIGMA)+'.pkl')
+    'results', 'normalizationv3_G10_QuadPS_N'+str(NREPEAT)+'_noise_sigma'+str(NOISE_SIGMA)+'.pkl')
 
 if __name__ == "__main__":
 
@@ -35,6 +35,10 @@ if __name__ == "__main__":
     qG10unnorm = np.empty((len(CTEST), len(MTEST), NREPEAT))
     qQuadPSunnorm = np.empty((len(CTEST), len(MTEST), NREPEAT))
 
+    # TEMP: Make all the PS realizations (of the truth) the same to see if this alters noise props
+    g1true_list = [g1true_list[0],] * len(g1true_list)
+    g2true_list = [g2true_list[0],] * len(g2true_list)
+    
     # Then generate submissions, and truth submissions
     for c, i in zip(CTEST, range(len(CTEST))):
 
