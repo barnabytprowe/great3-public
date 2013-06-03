@@ -1,0 +1,61 @@
+logkmin = -5.
+logkmax = -0.7
+nk = 100
+dlogk = (logkmax-logkmin)/nk
+logk = Table[logkmin + dlogk x, {x,0,nk}]
+k = 10^logk
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/360.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk360.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/486.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk486.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/655.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk655.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/884.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk884.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/1193.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk1193.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/1610.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk1610.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/2172.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk2172.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/2931.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk2931.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/3955.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk3955.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/5336.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk5336.dat",data]
+
+Pka[k_?ArrayQ] := Quiet[NIntegrate[ BesselJ[0, k r] r / (1 + r/7200.), {r, 0, Infinity}]];
+Pk = Pka[k]
+data = Transpose[{k, Pk}]
+Export["Pk7200.dat",data]
