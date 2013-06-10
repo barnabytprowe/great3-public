@@ -67,8 +67,8 @@ g2_col = 4
 # are specified.  So for x_col and y_col, we also have x_units and y_units.
 # Options for units are radians, hours, degrees, arcmin, arcsec.
 # If omitted, arcsec is assumed.
-x_units = arcsec
-y_units = arcsec
+x_units = degrees
+y_units = degrees
 
 # Instead of x_col and y_col, you may instead specify columns for RA and Declination.
 #ra_col = 1
@@ -93,7 +93,6 @@ flip_g1 = false
 flip_g2 = false
 
 
-
 ####
 #### Parameters about the binned correlation function to be calculated
 ####
@@ -104,13 +103,13 @@ flip_g2 = false
 #     max_sep  = the right edge of the last bin
 #     nbins    = the number of bins
 #     bin_size = the width of the bins in log(sep)
-min_sep = 72.
-max_sep = 10000.
-nbins = 30
+min_sep = .1
+max_sep = 10.
+nbins = 8
 
 # sep_units specifies the units to use for min_sep and max_sep.
 # It is also the units of R in the output file.
-sep_units = arcsec
+sep_units = degrees
 
 
 ####
