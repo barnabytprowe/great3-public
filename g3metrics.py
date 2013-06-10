@@ -103,11 +103,11 @@ def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1, grid_u
             g2true_list.append(g2)
     return g1true_list, g2true_list
 
-def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_sigma, dx_grid=0.1,
-                              nbins=15, label=None, calculate_truth=True):
-    """Make a fake var shear submission.
+def make_submission_var_shear_PS(c1, c2, m1, m2, g1true_list, g2true_list, noise_sigma, dx_grid=0.1,
+                                 nbins=8, label=None, calculate_truth=True):
+    """Make a fake var shear submission in the form of a Power Spectrum.
 
-    BARNEY NOTE: In the real data we should do this in the (x, y) coordinate frame determined
+    BARNEY NOTE: In the real data we should maybe do this in the (x, y) coordinate frame determined
     by the primary direction of the PSF ellipticity.
 
     Arguments
@@ -152,6 +152,55 @@ def make_submission_var_shear(c1, c2, m1, m2, g1true_list, g2true_list, noise_si
         ret = k, pEsub_list, pBsub_list, pEtrue_list, pBtrue_list
     else:
         ret = k, pEsub_list, pBsub_list
+    return ret
+
+def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise_sigma, dx_grid=0.1,
+                                 nbins=8, label=None, calculate_truth=True, min_sep=0.1,
+                                 max_sep=10.):
+    """Make a fake var shear submission in a Correlation Function.
+
+    BARNEY NOTE: In the real data we should maybe do this in the (x, y) coordinate frame determined
+    by the primary direction of the PSF ellipticity.
+
+    Arguments
+    ---------
+    * Provided c1, c2, m1, m2 shear estimation bias values.
+    * Two lists of truth tables g1true_grid_list, g2true_grid_list, list of 2D NumPy arrays
+      containing the variable shears at each grid point.
+    * Image grid dx_grid spacing in units of degrees.
+
+    Outputs a set of tables of k, Aperture_Mass_E(k) for each grid of shears to
+    ./g3subs/g3_var_shear_sub.<label>.<i>.dat, for i=1,...,len(g1_true_list), if label is not
+    `None`.
+    """
+    # Get the number of images from the truth table
+    nims = len(g1true_list)
+    if len(g2true_list) != nims:
+        raise ValueError("Supplied g1true, g2true not matching length.")
+    # Then ready an empty list (will store arrays) for the output submission
+    if calculate_truth:
+        mEtrue_list = []
+        mBtrue_list = []
+    mEsub_list = []
+    mBsub_list = []
+    for i in range(nims):
+        # Build the x, y grid
+        x, y = np.meshgrid(np.arange(g1true_list[i].shape[1]) * dx_grid,
+                           np.arange(g1true_list[i].shape[0]) * dx_grid)
+        g1gals = (1. + m1) * g1true_list[i] + c1 + noise_sigma * np.random.randn(
+            *g1true_list[i].shape) # pleasantly magic asterisk *args functionality
+        g2gals = (1. + m2) * g2true_list[i] + c2 + noise_sigma * np.random.randn(
+            *g2true_list[i].shape)
+        # Then estimate the true signals if asked, and the noisy submission ones
+        if calculate_truth:
+            results = run_corr2_ascii(
+                x, y, g1gals, g2gals, min_sep=min_sep, max_sep=max_sep, nbins=nbins,
+                temp_cat='temp.cat', params_file='corr2.params', m2_file_name='temp.m2',
+                xy_units='degrees', sep_units='degrees')
+            import matplotlib.pyplot as plt
+            #plt.plot(results[
+            import pdb; pdb.set_trace()
+    
     return ret
 
 def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
@@ -213,9 +262,11 @@ def _calculateSvalues(xarr, yarr, sigma2=1.):
     Sxy = np.sum(xarr * yarr / sigma2)
     return (S, Sx, Sy, Sxx, Sxy)
 
-def run_corr2_ascii(x, y, e1, e2, min_sep, max_sep, nbins, temp_cat='temp.cat',
-                    params_file='corr2.params', e2_file_name='temp.e2'):
+def run_corr2_ascii(x, y, e1, e2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='temp.cat',
+                    params_file='corr2.params', m2_file_name='temp.m2', xy_units='degrees',
+                    sep_units='degrees'):
     import os
+    import subprocess
     f = open(temp_cat, 'wb')
     for (i, j), value in np.ndenumerate(x):
         xij = value
@@ -225,10 +276,12 @@ def run_corr2_ascii(x, y, e1, e2, min_sep, max_sep, nbins, temp_cat='temp.cat',
         f.write('%e  %e  %e  %e\n'%(xij, yij, g1ij, g2ij))
     f.close()
     subprocess.Popen([
-        'corr2', params_file, 'min_sep=%f'%min_sep, 'max_sep=%f'%max_sep, 'nbins=%f'%nbins]).wait()
-    results = np.loadtxt(e2_file_name)
+        'corr2', params_file, 'file_name='+str(temp_cat), 'm2_file_name='+str(m2_file_name),
+        'min_sep=%f'%min_sep, 'max_sep=%f'%max_sep, 'nbins=%f'%nbins,
+        'x_units='+str(xy_units), 'y_units='+str(xy_units), 'sep_units='+str(sep_units)]).wait()
+    results = np.loadtxt(m2_file_name)
     os.remove(temp_cat)
-    os.remove(e2_file_name)
+    os.remove(m2_file_name)
     return results
 
 def fitline(xarr, yarr):

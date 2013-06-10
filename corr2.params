@@ -121,11 +121,11 @@ sep_units = degrees
 # output file you set.
 
 # For shear-shear correlations, the output file name is given by ee_file_name.
-e2_file_name = temp.e2
+#e2_file_name = temp.e2
 
 # The code can compute the mass aperture statistic from the two-point shear correlation 
 # function if you specify mm_file_name.
-#m2_file_name = m2.out
+m2_file_name = m2.out
 
 # For count-shear correlations, the output file name is given by ne_file_name.
 #ne_file_name = ne.out
