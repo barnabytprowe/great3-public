@@ -117,9 +117,7 @@ def make_submission_var_shear_PS(c1, c2, m1, m2, g1true_list, g2true_list, noise
       containing the variable shears at each grid point.
     * Image grid dx_grid spacing in units of degrees.
 
-    Outputs a set of tables of k, P_E(k) for each grid of shears to
-    ./g3subs/g3_var_shear_sub.<label>.<i>.dat, for i=1,...,len(g1_true_list), if label is not
-    `None`.
+    Outputs a set of tables of k, P_E(k),... etc.
     """
     # Get the number of images from the truth table
     nims = len(g1true_list)
@@ -169,9 +167,8 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
       containing the variable shears at each grid point.
     * Image grid dx_grid spacing in units of degrees.
 
-    Outputs a set of tables of k, Aperture_Mass_E(k) for each grid of shears to
-    ./g3subs/g3_var_shear_sub.<label>.<i>.dat, for i=1,...,len(g1_true_list), if label is not
-    `None`.
+    Outputs a set of tables of
+        theta, ApMass_E(theta), Ap_Mass_B(theta), Ap_Mass_err(theta), ...
     """
     # Get the number of images from the truth table
     nims = len(g1true_list)
@@ -183,6 +180,7 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
         mBtrue_list = []
     mEsub_list = []
     mBsub_list = []
+    merrsub_list = []
     for i in range(nims):
         # Build the x, y grid
         x, y = np.meshgrid(np.arange(g1true_list[i].shape[1]) * dx_grid,
@@ -193,14 +191,29 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
             *g2true_list[i].shape)
         # Then estimate the true signals if asked, and the noisy submission ones
         if calculate_truth:
-            results = run_corr2_ascii(
+            results_truth = run_corr2_ascii(
+                x, y, g1true_list[i], g2true_list[i], min_sep=min_sep, max_sep=max_sep, nbins=nbins,
+                temp_cat='temp.cat', params_file='corr2.params', m2_file_name='temp.m2',
+                xy_units='degrees', sep_units='degrees')
+            mEtrue_list.append(results_truth[:, 1])
+            mBtrue_list.append(results_truth[:, 2])
+        results = run_corr2_ascii(
                 x, y, g1gals, g2gals, min_sep=min_sep, max_sep=max_sep, nbins=nbins,
                 temp_cat='temp.cat', params_file='corr2.params', m2_file_name='temp.m2',
                 xy_units='degrees', sep_units='degrees')
-            import matplotlib.pyplot as plt
-            #plt.plot(results[
-            import pdb; pdb.set_trace()
-    
+        mEsub_list.append(results[:, 1])
+        mBsub_list.append(results[:, 2])
+        merrsub_list.append(results[:, 4])
+        theta = results[:, 0]
+        import matplotlib.pyplot as plt
+        plt.errorbar(theta, mEsub_list[-1], yerr=merrsub_list[-1]); plt.show()
+        print np.mean(mEsub_list[-1] - mEtrue_list[-1])
+        import pdb; pdb.set_trace()
+        
+    if calculate_truth:
+        ret = theta, mEsub_list, mBsub_list, merrsub_list, mEtrue_list, mBtrue_list
+    else:
+        ret = theta, mEsub_list, mBsub_list, merrsub_list
     return ret
 
 def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
