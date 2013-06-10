@@ -97,8 +97,8 @@ def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1, grid_u
     g2true_list = []
     # Loop through the power spectra and build the gridded shear realizations for each image
     for ps in ps_list:
+        g1, g2 = ps.buildGrid(grid_spacing=dx_grid, ngrid=ngrid, units=grid_units, rng=rng)
         for i in range(nsets):
-            g1, g2 = ps.buildGrid(grid_spacing=dx_grid, ngrid=ngrid, units=grid_units, rng=rng)
             g1true_list.append(g1)
             g2true_list.append(g2)
     return g1true_list, g2true_list
@@ -217,7 +217,7 @@ def run_corr2_ascii(x, y, e1, e2, min_sep, max_sep, nbins, temp_cat='temp.cat',
                     params_file='corr2.params', e2_file_name='temp.e2'):
     import os
     f = open(temp_cat, 'wb')
-    for (i,j), value in np.ndenumerate(x):
+    for (i, j), value in np.ndenumerate(x):
         xij = value
         yij = y[i,j]
         g1ij = e1[i,j]
@@ -225,9 +225,9 @@ def run_corr2_ascii(x, y, e1, e2, min_sep, max_sep, nbins, temp_cat='temp.cat',
         f.write('%e  %e  %e  %e\n'%(xij, yij, g1ij, g2ij))
     f.close()
     subprocess.Popen([
-        'corr2', params_file, 'min_sep=%f'%min_sep,'max_sep=%f'%max_sep,'nbins=%f'%nbins]).wait()
-    results = np.loadtxt('temp.e2')
-    os.remove(e2_file_name)
+        'corr2', params_file, 'min_sep=%f'%min_sep, 'max_sep=%f'%max_sep, 'nbins=%f'%nbins]).wait()
+    results = np.loadtxt(e2_file_name)
+    os.remove(temp_cat)
     os.remove(e2_file_name)
     return results
 
