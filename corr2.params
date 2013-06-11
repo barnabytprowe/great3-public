@@ -141,7 +141,7 @@ m2_file_name = m2.out
 # 0 = no output
 # 1 = normal output
 # 2 = extra output
-verbose = 1
+verbose = 0
 
 # num_threads = the number of threads to use.
 # The default is to let OpenMP determine an appropriate number of threads automatically.
