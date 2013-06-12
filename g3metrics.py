@@ -154,7 +154,7 @@ def make_submission_var_shear_PS(c1, c2, m1, m2, g1true_list, g2true_list, noise
 
 def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise_sigma,
                                  dx_grid=0.1, nbins=8, label=None, calculate_truth=True,
-                                 min_sep=0.1, max_sep=10.):
+                                 min_sep=0.1, max_sep=10., verbose=False):
     """Make a fake var shear submission in a Correlation Function.
 
     BARNEY NOTE: In the real data we should maybe do this in the (x, y) coordinate frame determined
@@ -187,7 +187,7 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
     mBsub_list = []
     merrsub_list = []
     for i in range(nims):
-        print "Generating aperture mass submission for image "+str(i + 1)+"/"+str(nims)
+        if verbose: print "Generating aperture mass submission for image "+str(i + 1)+"/"+str(nims)
         # Build the x, y grid
         x, y = np.meshgrid(np.arange(ngrid) * dx_grid, np.arange(ngrid) * dx_grid)
         g1gals = (1. + m1) * g1true_list[i] + c1 + noise_sigma * np.random.randn(
@@ -415,7 +415,7 @@ def metricQuadPS_var_shear(k, pEsub_list, varsub_list, pEtrue_list, scaling=0.00
     Q = scaling / np.sqrt(np.sum(I_tilde_over_k**2))
     return Q, mean_pEsub, mean_pEtrue, mean_diff
 
-def calculate_mapE_unitc(ngrid=100, dx_grid=0.1, nbins=8):
+def calculate_mapE_unitc(ngrid=100, dx_grid=0.1, nbins=8, min_sep=0.1, max_sep=10.):
     """Calculate the aperture mass statistic for this geometry due a constant input ellipticity
     c1=c2=1.
     """
@@ -424,21 +424,26 @@ def calculate_mapE_unitc(ngrid=100, dx_grid=0.1, nbins=8):
     e1unitc = np.ones_like(x)
     e2unitc = np.ones_like(x)
     results_unitc = run_corr2_ascii(
-        x, y, e1unitc, e2unitc, min_sep=dx_grid, max_sep=ngrid * dx_grid, nbins=nbins)
+        x, y, e1unitc, e2unitc, min_sep=min_sep, max_sep=max_sep, nbins=nbins)
     return results_unitc[:, 0], results_unitc[:, 1]
  
-def map_squared_diff_func(c2m_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
+def map_squared_diff_func(cm_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
     """Squared difference of an m-c model of the aperture mass statistic and the submission.
     """
-    return (mapEsub - mapEunitc * c2m_array[0] + mapEtrue * (1. + 2. * c2m_array[1]) / maperrsub)**2
+    retval = ((
+        mapEsub - (mapEunitc * cm_array[0]**2 + mapEtrue * (1. + cm_array[1])**2)
+        ) / maperrsub)**2
+    return retval
 
 def metricMapCF_var_shear(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets, ngrid=100,
-                          dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3):
+                          dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3, min_sep=0.1, max_sep=10.,
+                          plot=False):
     """The ntruesets must be an integer divisor of len(mapEsub_list)
     """
     import scipy.optimize
     # First calculate what an input unit c1=c2=1 looks like
-    theta, mapE_unitc = calculate_mapE_unitc(ngrid=ngrid, dx_grid=dx_grid, nbins=nbins) 
+    theta, mapE_unitc = calculate_mapE_unitc(
+        ngrid=ngrid, dx_grid=dx_grid, nbins=nbins, min_sep=min_sep, max_sep=max_sep) 
     # Calculate the number of images per set of realizations (trueset)
     nperset = len(mapEsub_list) / ntruesets
     cs = []
@@ -455,20 +460,25 @@ def metricMapCF_var_shear(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets
         mapEsub_mean /= float(nperset)
         maperrsub_mean /= (float(nperset) * np.sqrt(ntruesets))
         mapEtrue_mean /= float(nperset)
-        import matplotlib.pyplot as plt
-        plt.errorbar(theta, mapEsub_mean, yerr=maperrsub_mean, label='Map submission')
-        plt.plot(theta, mapEtrue_mean, label='Map true realizations')
+        # Use scipy.optimize to fit m and c (note should change this to numpy.leastsq since the
+        # model can be made approximately linear 
         results = scipy.optimize.leastsq(
             map_squared_diff_func, np.array([0., 0.]),
             args=(mapEsub_mean, maperrsub_mean, mapEtrue_mean, mapE_unitc))
-        print str(iset)+"/"+str(ntruesets), results
-        c2 = results[0][0]
+        c = results[0][0]
         m = results[0][1]
-        plt.plot(
-            theta, mapEtrue_mean * (1. + 2. * m) + mapE_unitc * c2,
-            label='Best fitting linear model')
-        plt.legend()
-        plt.show()
+        if plot:
+            import matplotlib.pyplot as plt
+            plt.errorbar(
+                theta, mapEsub_mean, yerr=maperrsub_mean, label='Map submission', color='r')
+            plt.plot(theta, mapEtrue_mean, 'g--', label='Map true realizations')
+            plt.plot(
+                theta, mapEtrue_mean * (1. + m)**2 + mapE_unitc * c**2, 'b',
+                label='Best fitting linear model: m='+str(m)+' c='+str(c))
+            plt.legend()
+            plt.title('Set '+str(iset+1)+'/'+str(ntruesets)+' ('+str(nperset)+' images)')
+            plt.savefig('aperture_mass_metric_set'+str(iset+1)+'.png')
+            plt.show()
         cs.append(results[0][0])
         ms.append(results[0][1])
     c = np.mean(np.array(cs))
