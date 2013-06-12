@@ -152,9 +152,9 @@ def make_submission_var_shear_PS(c1, c2, m1, m2, g1true_list, g2true_list, noise
         ret = k, pEsub_list, pBsub_list
     return ret
 
-def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise_sigma, dx_grid=0.1,
-                                 nbins=8, label=None, calculate_truth=True, min_sep=0.1,
-                                 max_sep=10.):
+def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise_sigma,
+                                 dx_grid=0.1, nbins=8, label=None, calculate_truth=True,
+                                 min_sep=0.1, max_sep=10.):
     """Make a fake var shear submission in a Correlation Function.
 
     BARNEY NOTE: In the real data we should maybe do this in the (x, y) coordinate frame determined
@@ -174,6 +174,11 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
     nims = len(g1true_list)
     if len(g2true_list) != nims:
         raise ValueError("Supplied g1true, g2true not matching length.")
+    # Test for the size of a (square assumed) grid
+    ngrid = g1true_list[0].shape[0]
+    if (g1true_list[0].shape[1] != ngrid or g2true_list[0].shape[0] != ngrid or
+        g2true_list[1].shape[1] != ngrid):
+        raise ValueError("Input g1 and g2 true should be square and the same shape!")
     # Then ready an empty list (will store arrays) for the output submission
     if calculate_truth:
         mEtrue_list = []
@@ -182,9 +187,9 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
     mBsub_list = []
     merrsub_list = []
     for i in range(nims):
+        print "Generating aperture mass submission for image "+str(i + 1)+"/"+str(nims)
         # Build the x, y grid
-        x, y = np.meshgrid(np.arange(g1true_list[i].shape[1]) * dx_grid,
-                           np.arange(g1true_list[i].shape[0]) * dx_grid)
+        x, y = np.meshgrid(np.arange(ngrid) * dx_grid, np.arange(ngrid) * dx_grid)
         g1gals = (1. + m1) * g1true_list[i] + c1 + noise_sigma * np.random.randn(
             *g1true_list[i].shape) # pleasantly magic asterisk *args functionality
         g2gals = (1. + m2) * g2true_list[i] + c2 + noise_sigma * np.random.randn(
@@ -201,15 +206,10 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
                 x, y, g1gals, g2gals, min_sep=min_sep, max_sep=max_sep, nbins=nbins,
                 temp_cat='temp.cat', params_file='corr2.params', m2_file_name='temp.m2',
                 xy_units='degrees', sep_units='degrees')
+        theta = results[:, 0]
         mEsub_list.append(results[:, 1])
         mBsub_list.append(results[:, 2])
         merrsub_list.append(results[:, 4])
-        theta = results[:, 0]
-        import matplotlib.pyplot as plt
-        plt.errorbar(theta, mEsub_list[-1], yerr=merrsub_list[-1]); plt.show()
-        print np.mean(mEsub_list[-1] - mEtrue_list[-1])
-        import pdb; pdb.set_trace()
-        
     if calculate_truth:
         ret = theta, mEsub_list, mBsub_list, merrsub_list, mEtrue_list, mBtrue_list
     else:
@@ -414,3 +414,64 @@ def metricQuadPS_var_shear(k, pEsub_list, varsub_list, pEtrue_list, scaling=0.00
     I_tilde_over_k = (mean_diff) * k # comes from C11
     Q = scaling / np.sqrt(np.sum(I_tilde_over_k**2))
     return Q, mean_pEsub, mean_pEtrue, mean_diff
+
+def calculate_mapE_unitc(ngrid=100, dx_grid=0.1, nbins=8):
+    """Calculate the aperture mass statistic for this geometry due a constant input ellipticity
+    c1=c2=1.
+    """
+    xygrid = np.arange(ngrid) * dx_grid
+    x, y = np.meshgrid(xygrid, xygrid)
+    e1unitc = np.ones_like(x)
+    e2unitc = np.ones_like(x)
+    results_unitc = run_corr2_ascii(
+        x, y, e1unitc, e2unitc, min_sep=dx_grid, max_sep=ngrid * dx_grid, nbins=nbins)
+    return results_unitc[:, 0], results_unitc[:, 1]
+ 
+def map_squared_diff_func(c2m_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
+    """Squared difference of an m-c model of the aperture mass statistic and the submission.
+    """
+    return (mapEsub - mapEunitc * c2m_array[0] + mapEtrue * (1. + 2. * c2m_array[1]) / maperrsub)**2
+
+def metricMapCF_var_shear(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets, ngrid=100,
+                          dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3):
+    """The ntruesets must be an integer divisor of len(mapEsub_list)
+    """
+    import scipy.optimize
+    # First calculate what an input unit c1=c2=1 looks like
+    theta, mapE_unitc = calculate_mapE_unitc(ngrid=ngrid, dx_grid=dx_grid, nbins=nbins) 
+    # Calculate the number of images per set of realizations (trueset)
+    nperset = len(mapEsub_list) / ntruesets
+    cs = []
+    ms = []
+    for iset in range(ntruesets):
+        mapEsub_mean = mapEsub_list[iset * nperset]
+        maperrsub_mean = maperrsub_list[iset * nperset]
+        mapEtrue_mean = mapEtrue_list[iset * nperset]
+        for jimage in range(nperset)[1:]:
+            mapEsub_mean += mapEsub_list[iset * nperset + jimage]
+            maperrsub_mean += maperrsub_list[iset * nperset + jimage]
+            mapEtrue_mean += mapEtrue_list[iset * nperset + jimage]
+        # Divide by nperset to get the mean mapE
+        mapEsub_mean /= float(nperset)
+        maperrsub_mean /= (float(nperset) * np.sqrt(ntruesets))
+        mapEtrue_mean /= float(nperset)
+        import matplotlib.pyplot as plt
+        plt.errorbar(theta, mapEsub_mean, yerr=maperrsub_mean, label='Map submission')
+        plt.plot(theta, mapEtrue_mean, label='Map true realizations')
+        results = scipy.optimize.leastsq(
+            map_squared_diff_func, np.array([0., 0.]),
+            args=(mapEsub_mean, maperrsub_mean, mapEtrue_mean, mapE_unitc))
+        print str(iset)+"/"+str(ntruesets), results
+        c2 = results[0][0]
+        m = results[0][1]
+        plt.plot(
+            theta, mapEtrue_mean * (1. + 2. * m) + mapE_unitc * c2,
+            label='Best fitting linear model')
+        plt.legend()
+        plt.show()
+        cs.append(results[0][0])
+        ms.append(results[0][1])
+    c = np.mean(np.array(cs))
+    m = np.mean(np.array(ms))
+    Q = np.sqrt(2.) * 1000. / np.sqrt((c / cfid)**2 + (m / mfid)**2)
+    return Q, c, m
