@@ -479,7 +479,7 @@ def metricMapCF_var_shear(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets
                 label='Best fitting linear model')
             plt.legend()
             plt.title(
-                r'Best fit m='+str(m)+' c$^2$='+str(c2)+' \n'+
+                r'Best fitting m = '+str(m)+' c$^2$ = '+str(c2)+' \n'+
                 'Set '+str(iset + 1)+'/'+str(ntruesets)+' ('+str(nperset)+' images)')
             plt.xlabel('theta [degrees]')
             plt.ylabel('E-mode Map')
