@@ -478,8 +478,11 @@ def metricMapCF_var_shear(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets
                 theta, mapEtrue_mean * (1. + 2. * m) + mapE_unitc * c2, 'b',
                 label='Best fitting linear model')
             plt.legend()
-            plt.title(r'Set '+str(iset+1)+'/'+str(ntruesets)+' ('+str(nperset)+' images) \n'+
-                      'Best fit m='+str(m)+' c$^2$='+str(c2))
+            plt.title(
+                r'Best fit m='+str(m)+' c$^2$='+str(c2)+' \n'+
+                'Set '+str(iset + 1)+'/'+str(ntruesets)+' ('+str(nperset)+' images)')
+            plt.xlabel('theta [degrees]')
+            plt.ylabel('E-mode Map')
             plt.savefig(os.path.join('plots', 'aperture_mass_metric_set'+str(iset+1)+'.png'))
             plt.show()
         c2s.append(c2)
