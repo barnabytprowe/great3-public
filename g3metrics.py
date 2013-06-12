@@ -431,7 +431,7 @@ def map_squared_diff_func(cm_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
     """Squared difference of an m-c model of the aperture mass statistic and the submission.
     """
     retval = ((
-        mapEsub - (mapEunitc * cm_array[0]**2 + mapEtrue * (1. + cm_array[1])**2)
+        mapEsub - (mapEunitc * cm_array[0] + mapEtrue * (1. + 2. * cm_array[1]))
         ) / maperrsub)**2
     return retval
 
@@ -446,7 +446,7 @@ def metricMapCF_var_shear(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets
         ngrid=ngrid, dx_grid=dx_grid, nbins=nbins, min_sep=min_sep, max_sep=max_sep) 
     # Calculate the number of images per set of realizations (trueset)
     nperset = len(mapEsub_list) / ntruesets
-    cs = []
+    c2s = []
     ms = []
     for iset in range(ntruesets):
         mapEsub_mean = mapEsub_list[iset * nperset]
@@ -465,23 +465,26 @@ def metricMapCF_var_shear(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets
         results = scipy.optimize.leastsq(
             map_squared_diff_func, np.array([0., 0.]),
             args=(mapEsub_mean, maperrsub_mean, mapEtrue_mean, mapE_unitc))
-        c = results[0][0]
+        c2 = results[0][0]
         m = results[0][1]
         if plot:
+            import os
             import matplotlib.pyplot as plt
+            if not os.path.isdir('plots'): os.mkdir('plots')
             plt.errorbar(
                 theta, mapEsub_mean, yerr=maperrsub_mean, label='Map submission', color='r')
             plt.plot(theta, mapEtrue_mean, 'g--', label='Map true realizations')
             plt.plot(
-                theta, mapEtrue_mean * (1. + m)**2 + mapE_unitc * c**2, 'b',
-                label='Best fitting linear model: m='+str(m)+' c='+str(c))
+                theta, mapEtrue_mean * (1. + 2. * m) + mapE_unitc * c2, 'b',
+                label='Best fitting linear model')
             plt.legend()
-            plt.title('Set '+str(iset+1)+'/'+str(ntruesets)+' ('+str(nperset)+' images)')
-            plt.savefig('aperture_mass_metric_set'+str(iset+1)+'.png')
+            plt.title(r'Set '+str(iset+1)+'/'+str(ntruesets)+' ('+str(nperset)+' images) \n'+
+                      'Best fit m='+str(m)+' c$^2$='+str(c2))
+            plt.savefig(os.path.join('plots', 'aperture_mass_metric_set'+str(iset+1)+'.png'))
             plt.show()
-        cs.append(results[0][0])
-        ms.append(results[0][1])
-    c = np.mean(np.array(cs))
+        c2s.append(c2)
+        ms.append(m)
+    c2 = np.mean(np.array(c2s))
     m = np.mean(np.array(ms))
-    Q = np.sqrt(2.) * 1000. / np.sqrt((c / cfid)**2 + (m / mfid)**2)
-    return Q, c, m
+    Q = np.sqrt(2.) * 1000. / np.sqrt(np.abs(c2 / cfid**2) + (m / mfid)**2)
+    return Q, c2, m
