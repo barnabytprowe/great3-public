@@ -18,7 +18,7 @@ NTRUESETS = 20      # Don't necessarily need to have NIMS input shears. But easi
 CFID = 1.e-4 # Fiducial, "target" m and c values
 MFID = 1.e-3 #
 
-PLOT = True # Plot?
+PLOT = False # Plot?
 # Plotting ranges of interest
 CMIN = CFID
 CMAX = 1.e-2
