@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import galsim
 import g3metrics
 
-NIMS = 40
+NIMS = 200
 NGRID = 100        # Each image contains a grid of NGRID x NGRID galaxies
 DX_GRID = 0.1      # Grid spacing (must be in degrees)
 NOISE_SIGMA = 0.05 # Expected noise on each shear after shape noise pushed largely into B-mode
@@ -12,12 +12,13 @@ NBINS_ANGULAR = 3  # Number of angular bins for correlation function metric
 MIN_SEP = 0.5
 MAX_SEP = 10.
 
-NTRUESETS = 4      # Don't necessarily need to have NIMS input shears. But easiest if
+NTRUESETS = 20      # Don't necessarily need to have NIMS input shears. But easiest if
                     # NTRUESETS is an integral fraction of NIMS..
 
 CFID = 1.e-4 # Fiducial, "target" m and c values
 MFID = 1.e-3 #
 
+PLOT = True # Plot?
 # Plotting ranges of interest
 CMIN = CFID
 CMAX = 1.e-2
@@ -49,7 +50,6 @@ if __name__ == "__main__":
     qCF1 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
     mCF1 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
     cCF1 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
-    #qCF2 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
 
     # Then generate submissions, and truth submissions
     for c, i in zip(cvals, range(NBINS_TEST)):
@@ -68,9 +68,15 @@ if __name__ == "__main__":
                         min_sep=MIN_SEP, max_sep=MAX_SEP)
                 qCF1_tmp, c_tmp, m_tmp = g3metrics.metricMapCF_var_shear(
                     mapEsubs, maperrsubs, mapEtrues, NTRUESETS, nbins=NBINS_ANGULAR,
-                    min_sep=MIN_SEP, max_sep=MAX_SEP, plot=True)
+                    min_sep=MIN_SEP, max_sep=MAX_SEP, plot=PLOT)
                 qCF1[i, j, krepeat] = qCF1_tmp
                 mCF1[i, j, krepeat] = m_tmp
                 cCF1[i, j, krepeat] = c_tmp
-                
+                print "Completed "+str(krepeat + 1)+"/"+str(NMONTE)+" Monte Carlo realizations"
+
+    print "Saving output"
+    np.save('qCF1.npy', qCF1)
+    np.save('mCF1.npy', mCF1)
+    np.save('cCF1.npy', cCF1)
+    
 
