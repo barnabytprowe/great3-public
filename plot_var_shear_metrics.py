@@ -29,7 +29,7 @@ NMONTE = 30         # Number of montecarlo samples
 NOISE_SIGMA = 0.05  # Noise due to pixel shot noist on a shear estimate, per galaxy
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
-GALSIM_DIR=os.path.join("/Users", "barnabyrowe", "great3", "galsim")
+GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
 
 if __name__ == "__main__":
 
