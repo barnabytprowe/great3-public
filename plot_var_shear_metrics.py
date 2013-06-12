@@ -25,7 +25,7 @@ CMAX = 1.e-2
 MMIN = MFID
 MMAX = 1.e-1
 NBINS_TEST = 5      # Number of bins to plot in the ranges above
-NMONTE = 30         # Number of montecarlo samples
+NMONTE = 15         # Number of montecarlo samples
 NOISE_SIGMA = 0.05  # Noise due to pixel shot noist on a shear estimate, per galaxy
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
