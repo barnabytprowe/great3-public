@@ -133,7 +133,7 @@ if __name__ == "__main__":
     plt.axhline(ls='--', color='k')
     for i in range(len(mvals)):
         plt.errorbar(
-            cvals**2 * (1. + 0.03 * i), cmean[i, :], yerr=cstds[i, :], fmt='+',
+            cvals**2 * (1. + 0.03 * i), cmean[:, i], yerr=cstds[:, i], fmt='+',
             label='m = %.2e'%mvals[i])
     plt.plot(cvals**2, cvals**2, 'k')
     plt.xscale('log')
@@ -149,14 +149,44 @@ if __name__ == "__main__":
     plt.axhline(ls='--', color='k')
     for i in range(len(mvals)):
         plt.errorbar(
-            cvals**2 * (1. + 0.03 * i), cmean[i, :], yerr=cerrs[i, :], fmt='+',
+            cvals**2 * (1. + 0.03 * i), cmean[:, i], yerr=cerrs[:, i], fmt='+',
             label='m = %.2e'%mvals[i])
     plt.plot(cvals**2, cvals**2, 'k')
     plt.xscale('log')
+    plt.yscale('log')
     plt.xlim(3.e-9, 1.e-1)
     plt.legend()
     plt.title(r'Best fitting c$^2$ values and standard error on mean')
     plt.ylabel(r'Best fitting c$^2$')
     plt.xlabel(r'Input c$^2$')
     plt.savefig(os.path.join('plots', 'cvals_errs_CF1.png'))
+
+    # Plot the Q metric values and the standard deviation of the NMONTE results
+    plt.clf()
+    plt.axhline(ls='--', color='k')
+    for i in range(len(mvals)):
+        plt.errorbar(
+            cvals**2 * (1. + 0.03 * i), qmean[:, i], yerr=qstds[:, i], fmt='+',
+            label='m = %.2e'%mvals[i])
+    plt.xscale('log')
+    plt.xlim(1.e-3, 1.e-10)
+    plt.legend()
+    plt.title('Mean Q metric and standard deviation of test popn.')
+    plt.ylabel('QCF1')
+    plt.xlabel(r'Input c$^2$')
+    plt.savefig(os.path.join('plots', 'Qs_stds_CF1.png'))
+    # Plot Q values and the standard errors of the NMONTE results
+    plt.clf()
+    plt.axhline(ls='--', color='k')
+    for i in range(len(mvals)):
+        plt.errorbar(
+            cvals**2 * (1. + 0.03 * i), qmean[:, i], yerr=qerrs[:, i], fmt='+',
+            label='m = %.2e'%mvals[i])
+    plt.xscale('log')
+    plt.xlim(1.e-3, 1.e-10)
+    plt.legend()
+    plt.title('Mean Q metric and standard error on mean')
+    plt.ylabel('QCF1')
+    plt.xlabel(r'Input c$^2$')
+    plt.savefig(os.path.join('plots', 'Qs_errs_CF1.png'))
 
