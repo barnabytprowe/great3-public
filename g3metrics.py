@@ -415,7 +415,7 @@ def metricQuadPS_var_shear(k, pEsub_list, varsub_list, pEtrue_list, scaling=0.00
     Q = scaling / np.sqrt(np.sum(I_tilde_over_k**2))
     return Q, mean_pEsub, mean_pEtrue, mean_diff
 
-def calculate_mapE_unitc(ngrid=100, dx_grid=0.1, nbins=8, min_sep=0.1, max_sep=10.):
+def calculate_mapE_unitc(ngrid=100, dx_grid=0.1, nbins=8, min_sep=0.1, max_sep=10., plotfile=None):
     """Calculate the aperture mass statistic for this geometry due a constant input ellipticity
     c1=c2=1.
     """
@@ -425,8 +425,15 @@ def calculate_mapE_unitc(ngrid=100, dx_grid=0.1, nbins=8, min_sep=0.1, max_sep=1
     e2unitc = np.ones_like(x)
     results_unitc = run_corr2_ascii(
         x, y, e1unitc, e2unitc, min_sep=min_sep, max_sep=max_sep, nbins=nbins)
+    if plotfile is not None:
+        import matplotlib.pyplot as plt
+        plt.plot(results_unitc[:, 0], results_unitc[:, 1])
+        plt.xlabel('theta [degrees]')
+        plt.ylabel(r'E mode <M$_{ap}$$^2$> for unit c$_1$=c$_2$=1')
+        print "Saving plot of unit c1=c2=1 <Map^2> to "+plotfile
+        plt.savefig(plotfile)
     return results_unitc[:, 0], results_unitc[:, 1]
- 
+
 def map_squared_diff_func(cm_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
     """Squared difference of an m-c model of the aperture mass statistic and the submission.
     """
@@ -443,7 +450,7 @@ def metricMapCF_var_shear(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets
     import scipy.optimize
     # First calculate what an input unit c1=c2=1 looks like
     theta, mapE_unitc = calculate_mapE_unitc(
-        ngrid=ngrid, dx_grid=dx_grid, nbins=nbins, min_sep=min_sep, max_sep=max_sep) 
+        ngrid=ngrid, dx_grid=dx_grid, nbins=nbins, min_sep=min_sep, max_sep=max_sep)
     # Calculate the number of images per set of realizations (trueset)
     nperset = len(mapEsub_list) / ntruesets
     c2s = []
