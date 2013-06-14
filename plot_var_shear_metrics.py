@@ -18,7 +18,7 @@ NTRUESETS = 20      # Don't necessarily need to have NIMS input shears. But easi
 CFID = 1.e-4 # Fiducial, "target" m and c values
 MFID = 1.e-3 #
 
-PLOT = False # Plot?
+PLOT = False # Plot while calculating?
 # Plotting ranges of interest
 CMIN = CFID
 CMAX = 1.e-2
@@ -29,54 +29,134 @@ NMONTE = 15         # Number of montecarlo samples
 NOISE_SIGMA = 0.05  # Noise due to pixel shot noist on a shear estimate, per galaxy
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
-GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
+GALSIM_DIR=os.path.join("/Users", "barnabyrowe", "great3", "galsim")
+
+QFILE = os.path.join('results', 'qCF1.npy')
+MFILE = os.path.join('results', 'mCF1.npy')
+CFILE = os.path.join('results', 'cCF1.npy')
 
 if __name__ == "__main__":
 
-    reference_ps = g3metrics.read_ps(galsim_dir=GALSIM_DIR)
+    if os.path.isfile(QFILE) and os.path.isfile(MFILE) and os.path.isfile(CFILE):
+        qCF1 = np.load(QFILE)
+        mCF1 = np.load(MFILE)
+        cCF1 = np.load(CFILE)
+        # Generate arrays of values for test values of c and m
+        cvals = CMIN * (CMAX / CMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.)) # geo series
+        mvals = MMIN * (MMAX / MMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.))
+        cgrid, mgrid = np.meshgrid(cvals, mvals) # 2D arrays covering full space
+ 
+    else:
+        reference_ps = g3metrics.read_ps(galsim_dir=GALSIM_DIR)
+        # Make the truth catalogues (a list of 2D, NGRIDxNGRID numpy arrays), reusing the
+        # reference_ps each time for simplicity
+        g1true_list, g2true_list = g3metrics.make_var_truth_catalogs(
+            NTRUESETS, NIMS, [reference_ps] * NTRUESETS, ngrid=NGRID, dx_grid=DX_GRID,
+            grid_units=galsim.degrees)
+        # Generate arrays of values for test values of c and m
+        cvals = CMIN * (CMAX / CMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.)) # geo series
+        mvals = MMIN * (MMAX / MMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.))
+        cgrid, mgrid = np.meshgrid(cvals, mvals) # 2D arrays covering full space
+        # Create empty storage arrays
+        qCF1 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
+        mCF1 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
+        cCF1 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
+        # Then generate submissions, and truth submissions
+        for c, i in zip(cvals, range(NBINS_TEST)):
+            print "Calculating CF metrics with c_i = "+str(c)
+            for m, j in zip(mvals, range(NBINS_TEST)):
+                print "Calculating CF metrics with m_i = "+str(m)
+                for krepeat in range(NMONTE):
+                    # Make a fake submission
+                    theta, mapEsubs, mapBsubs, maperrsubs, mapEtrues, mapBtrues = \
+                        g3metrics.make_submission_var_shear_CF(
+                            c1=c, c2=c, m1=m, m2=m, g1true_list=g1true_list,
+                            g2true_list=g2true_list, noise_sigma=NOISE_SIGMA, dx_grid=DX_GRID,
+                            nbins=NBINS_ANGULAR, min_sep=MIN_SEP, max_sep=MAX_SEP)
+                    qCF1_tmp, c_tmp, m_tmp = g3metrics.metricMapCF_var_shear(
+                        mapEsubs, maperrsubs, mapEtrues, NTRUESETS, nbins=NBINS_ANGULAR,
+                        min_sep=MIN_SEP, max_sep=MAX_SEP, plot=PLOT)
+                    qCF1[i, j, krepeat] = qCF1_tmp
+                    mCF1[i, j, krepeat] = m_tmp
+                    cCF1[i, j, krepeat] = c_tmp
+                    print "Completed "+str(krepeat + 1)+"/"+str(NMONTE)+" Monte Carlo realizations"
+        print "Saving output"
+        np.save(QFILE, qCF1)
+        np.save(MFILE, mCF1)
+        np.save(CFILE, cCF1)
 
-    # Make the truth catalogues (a list of 2D, NGRIDxNGRID numpy arrays), reusing the reference_ps
-    # each time for simplicity
-    g1true_list, g2true_list = g3metrics.make_var_truth_catalogs(
-        NTRUESETS, NIMS, [reference_ps] * NTRUESETS, ngrid=NGRID, dx_grid=DX_GRID,
-        grid_units=galsim.degrees)
+    # Get basic statistics
+    qmean = np.mean(qCF1, axis=2)
+    mmean = np.mean(mCF1, axis=2)
+    cmean = np.mean(cCF1, axis=2)
+    qstds = np.std(qCF1, axis=2)
+    mstds = np.std(mCF1, axis=2)
+    cstds = np.std(cCF1, axis=2)
+    qerrs = qstds / np.sqrt(NMONTE)
+    merrs = mstds / np.sqrt(NMONTE)
+    cerrs = cstds / np.sqrt(NMONTE)
 
-    # Generate arrays of values for test values of c and m
-    cvals = CMIN * (CMAX / CMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.)) # geom. series
-    mvals = MMIN * (MMAX / MMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.))
-    cgrid, mgrid = np.meshgrid(cvals, mvals) # 2D arrays covering full space
+    # Plot the bestfitting m values and the standard deviation of the NMONTE results
+    plt.clf()
+    plt.axhline(ls='--', color='k')
+    for i in range(len(cvals)):
+        plt.errorbar(
+            mvals * (1. + 0.03 * i), mmean[i, :], yerr=mstds[i, :], fmt='+',
+            label='c = %.2e'%cvals[i])
+    plt.plot(mvals, mvals, 'k')
+    plt.xscale('log')
+    plt.xlim(3.e-4, 3.e0)
+    plt.legend()
+    plt.title('Best fitting m values and standard deviation of test popn.')
+    plt.ylabel('Best fitting m')
+    plt.xlabel('Input m')
+    plt.savefig(os.path.join('plots', 'mvals_stds_CF1.png'))
+    # Plot the bestfitting m values and the standard errors of the NMONTE results
+    plt.clf()
+    plt.axhline(ls='--', color='k')
+    for i in range(len(cvals)):
+        plt.errorbar(
+            mvals * (1. + 0.03 * i), mmean[i, :], yerr=merrs[i, :], fmt='+',
+            label='c = %.2e'%cvals[i])
+    plt.plot(mvals, mvals, 'k')
+    plt.xscale('log')
+    plt.xlim(3.e-4, 3.e0)
+    plt.legend()
+    plt.title('Best fitting m values and standard error on mean')
+    plt.ylabel('Best fitting m')
+    plt.xlabel('Input m')
+    plt.savefig(os.path.join('plots', 'mvals_errs_CF1.png'))
 
-    # Create empty storage arrays
-    qCF1 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
-    mCF1 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
-    cCF1 = np.empty((NBINS_TEST, NBINS_TEST, NMONTE))
-
-    # Then generate submissions, and truth submissions
-    for c, i in zip(cvals, range(NBINS_TEST)):
-
-        print "Calculating CF metrics with c_i = "+str(c)
-        for m, j in zip(mvals, range(NBINS_TEST)):
-
-            print "Calculating CF metrics with m_i = "+str(m)
-            for krepeat in range(NMONTE):
-
-                # Make a fake submission
-                theta, mapEsubs, mapBsubs, maperrsubs, mapEtrues, mapBtrues = \
-                    g3metrics.make_submission_var_shear_CF(
-                        c1=c, c2=c, m1=m, m2=m, g1true_list=g1true_list, g2true_list=g2true_list,
-                        noise_sigma=NOISE_SIGMA, dx_grid=DX_GRID, nbins=NBINS_ANGULAR,
-                        min_sep=MIN_SEP, max_sep=MAX_SEP)
-                qCF1_tmp, c_tmp, m_tmp = g3metrics.metricMapCF_var_shear(
-                    mapEsubs, maperrsubs, mapEtrues, NTRUESETS, nbins=NBINS_ANGULAR,
-                    min_sep=MIN_SEP, max_sep=MAX_SEP, plot=PLOT)
-                qCF1[i, j, krepeat] = qCF1_tmp
-                mCF1[i, j, krepeat] = m_tmp
-                cCF1[i, j, krepeat] = c_tmp
-                print "Completed "+str(krepeat + 1)+"/"+str(NMONTE)+" Monte Carlo realizations"
-
-    print "Saving output"
-    np.save('qCF1.npy', qCF1)
-    np.save('mCF1.npy', mCF1)
-    np.save('cCF1.npy', cCF1)
-    
+    # Plot the bestfitting c^2 values and the standard deviation of the NMONTE results
+    plt.clf()
+    plt.axes([0.175, 0.125, 0.775, 0.775])
+    plt.axhline(ls='--', color='k')
+    for i in range(len(mvals)):
+        plt.errorbar(
+            cvals**2 * (1. + 0.03 * i), cmean[i, :], yerr=cstds[i, :], fmt='+',
+            label='m = %.2e'%mvals[i])
+    plt.plot(cvals**2, cvals**2, 'k')
+    plt.xscale('log')
+    plt.xlim(3.e-9, 1.e-1)
+    plt.legend()
+    plt.title(r'Best fitting c$^2$ values and standard deviation of test popn.')
+    plt.ylabel(r'Best fitting c$^2$')
+    plt.xlabel(r'Input c$^2$')
+    plt.savefig(os.path.join('plots', 'cvals_stds_CF1.png'))
+    # Plot the bestfitting c^2 values and the standard errors of the NMONTE results
+    plt.clf()
+    plt.axes([0.175, 0.125, 0.775, 0.775])
+    plt.axhline(ls='--', color='k')
+    for i in range(len(mvals)):
+        plt.errorbar(
+            cvals**2 * (1. + 0.03 * i), cmean[i, :], yerr=cerrs[i, :], fmt='+',
+            label='m = %.2e'%mvals[i])
+    plt.plot(cvals**2, cvals**2, 'k')
+    plt.xscale('log')
+    plt.xlim(3.e-9, 1.e-1)
+    plt.legend()
+    plt.title(r'Best fitting c$^2$ values and standard error on mean')
+    plt.ylabel(r'Best fitting c$^2$')
+    plt.xlabel(r'Input c$^2$')
+    plt.savefig(os.path.join('plots', 'cvals_errs_CF1.png'))
 
