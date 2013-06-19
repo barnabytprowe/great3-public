@@ -23,9 +23,10 @@ nuse = n
 mycat = mrdfits(incatw, 1)
 nlines = n_elements(mycat)
 print,'Read in ',nlines,' from file ',incatw
+in_seed=seed
 sort_ind = randomu(seed,nlines)
 mycat = mycat[sort(sort_ind)]
-print,'Randomly reordered using seed',seed
+print,'Randomly reordered using seed',in_seed
 
 ; select galaxies, <= nuse depending on how many galaxies are in input catalog
 mycatuse = mycat[start:start+(nuse-1 < nlines)]
