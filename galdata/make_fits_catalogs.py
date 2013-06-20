@@ -73,7 +73,7 @@ for i_cat in range(n_catfiles):
         fit_bulgefit = dat.field('bulgefit')
         fit_status = dat.field('mpfit_status')
     if i_cat > 0:
-        fit_ident = np.append(fit_ident, dat.field('ident'))
+        fit_ident = np.append(fit_ident, dat.field('galid'))
         fit_sersicfit = np.append(fit_sersicfit, dat.field('sersicfit'), axis=0)
         fit_bulgefit = np.append(fit_bulgefit, dat.field('bulgefit'), axis=0)
         fit_status = np.append(fit_status, dat.field('mpfit_status'), axis=0)
@@ -81,7 +81,7 @@ for i_cat in range(n_catfiles):
     # increment counter
     n_fit_tot += n
 
-    # fields: ('IDENT', 'MAG_AUTO', 'FLUX_AUTO', 'MAGERR_AUTO', 'FLUX_RADIUS',
+    # fields in first: ('IDENT', 'MAG_AUTO', 'FLUX_AUTO', 'MAGERR_AUTO', 'FLUX_RADIUS',
     # 'FLUXERR_AUTO', 'KRON_RADIUS', 'MU_MAX', 'MU_CLASS', 'CLEAN', 'GOOD', 'FLAGS', 'SN',
     # 'SN_NON_CORR', 'FWHM_IMAGE', 'ALPHA_J2000', 'DELTA_J2000', 'X_IMAGE', 'Y_IMAGE', 'A_IMAGE',
     # 'B_IMAGE', 'THETA_IMAGE', 'PETRO_RADIUS', 'D', 'E1_R', 'E2_R', 'E1_RU', 'E2_RU', 'GAMMA1',
