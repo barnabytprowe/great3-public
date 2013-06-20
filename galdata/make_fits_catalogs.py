@@ -5,8 +5,7 @@ import numpy as np
 
 # define variables etc.
 galsim_catfile = 'real_galaxy_catalog_23.5.fits'
-fit_catfiles = ['totalRAW_00000_13119.fits.gz',
-                'totalRAW_13200_26113.fits.gz',
+fit_catfiles = ['BRIGHTtotalRAW00000.26113.fits.gz',
                 'totalRAW00000.29949.fits.gz']
 n_catfiles = len(fit_catfiles)
 cosmos_catfile = 'lensing14.fits.gz'
@@ -74,10 +73,7 @@ for i_cat in range(n_catfiles):
         fit_bulgefit = dat.field('bulgefit')
         fit_status = dat.field('mpfit_status')
     if i_cat > 0:
-        if i_cat < 2:
-            fit_ident = np.append(fit_ident, dat.field('ident'))
-        else:
-            fit_ident = np.append(fit_ident, dat.field('galid'))
+        fit_ident = np.append(fit_ident, dat.field('ident'))
         fit_sersicfit = np.append(fit_sersicfit, dat.field('sersicfit'), axis=0)
         fit_bulgefit = np.append(fit_bulgefit, dat.field('bulgefit'), axis=0)
         fit_status = np.append(fit_status, dat.field('mpfit_status'), axis=0)
@@ -85,7 +81,7 @@ for i_cat in range(n_catfiles):
     # increment counter
     n_fit_tot += n
 
-    # First two have fields: ('IDENT', 'MAG_AUTO', 'FLUX_AUTO', 'MAGERR_AUTO', 'FLUX_RADIUS',
+    # fields: ('IDENT', 'MAG_AUTO', 'FLUX_AUTO', 'MAGERR_AUTO', 'FLUX_RADIUS',
     # 'FLUXERR_AUTO', 'KRON_RADIUS', 'MU_MAX', 'MU_CLASS', 'CLEAN', 'GOOD', 'FLAGS', 'SN',
     # 'SN_NON_CORR', 'FWHM_IMAGE', 'ALPHA_J2000', 'DELTA_J2000', 'X_IMAGE', 'Y_IMAGE', 'A_IMAGE',
     # 'B_IMAGE', 'THETA_IMAGE', 'PETRO_RADIUS', 'D', 'E1_R', 'E2_R', 'E1_RU', 'E2_RU', 'GAMMA1',
@@ -123,19 +119,6 @@ for i_cat in range(n_catfiles):
     # 'CHISQ_EXP_MASK', 'CHISQ_SERSIC_MASK', 'CHISQ_DVC_MASK', 'DOF_BULGE_MASK', 'DOF_DISK_MASK',
     # 'DOF_EXP_MASK', 'DOF_SERSIC_MASK', 'DOF_DVC_MASK', 'SN_REFF_SERSIC', 'SKY_SERSIC',
     # 'SKY_SERSIC_ERR', 'SKY_SERSIC_COVAR', 'DVC_BTT_ERR', 'EXP_BTT_ERR')
-    #
-    # Last one has fields:
-    # ('GALID', 'ID2', 'ALPHA_J2000', 'DELTA_J2000', 'BULGEFIT', 'DISKFIT', 'SERSICFIT',
-    # 'CHISQ_BULGE', 'CHISQ_DISK', 'CHISQ_SERSIC', 'COVAR_BULGE', 'COVAR_DISK', 'COVAR_SERSIC',
-    # 'PERR_BULGE', 'PERR_DISK', 'PERR_SERSIC', 'MPFIT_STATUS', 'DOF_BULGE', 'DOF_DISK',
-    # 'DOF_SERSIC', 'DOF_DVC', 'DOF_EXP', 'EXPFIT', 'DVCFIT', 'CHISQ_EXP', 'CHISQ_DVC', 'PERR_EXP',
-    # 'PERR_DVC', 'COVAR_EXP', 'COVAR_DVC', 'FRACDEV', 'XCROP', 'YCROP', 'XLEN', 'YLEN', 'DVC_BTT',
-    # 'EXP_BTT', 'MAD_SKY', 'MAD_SERSIC', 'MAD_SERSIC_MASK', 'MAD_DVCB', 'MAD_DVCB_MASK',
-    # 'MAD_EXPB', 'MAD_EXPB_MASK', 'MAD_EXP', 'MAD_EXP_MASK', 'MAD_DVC', 'MAD_DVC_MASK',
-    # 'CHISQ_BULGE_MASK', 'CHISQ_DISK_MASK', 'CHISQ_EXP_MASK', 'CHISQ_SERSIC_MASK',
-    # 'CHISQ_DVC_MASK', 'DOF_BULGE_MASK', 'DOF_DISK_MASK', 'DOF_EXP_MASK', 'DOF_SERSIC_MASK',
-    # 'DOF_DVC_MASK', 'SN_REFF_SERSIC', 'SKY_BULGE', 'SKY_BULGE_ERR', 'SKY_BULGE_COVAR',
-    # 'DVC_BTT_ERR', 'EXP_BTT_ERR')
 
 print "Read in ",n_fit_tot," from ",n_catfiles," fit files"
 
