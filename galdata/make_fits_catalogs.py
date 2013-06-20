@@ -179,22 +179,22 @@ print out_sersicfit.shape
 # here's what we want:
 # IDENT, photo-z, magnitude, flux_radius, SERSICFIT, BULGEFIT (for now that's all)
 tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
-                                                       format='d',
+                                                       format='J',
                                                        array=out_ident),
                                          pyfits.Column(name='mag_auto',
-                                                       format='e',
+                                                       format='D',
                                                        array=out_mag_auto),
                                          pyfits.Column(name='flux_radius',
-                                                       format='e',
+                                                       format='D',
                                                        array=out_flux_rad),
                                          pyfits.Column(name='zphot',
-                                                       format='e',
+                                                       format='D',
                                                        array=out_zphot),
                                          pyfits.Column(name='sersicfit',
-                                                       format='e',
+                                                       format='8D',
                                                        array=out_sersicfit),
                                          pyfits.Column(name='bulgefit',
-                                                       format='e',
+                                                       format='16D',
                                                        array=out_bulgefit)]
                                         ))
 # eventually we also want a way to assess goodness of fit
