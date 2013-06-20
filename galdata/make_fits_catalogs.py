@@ -10,7 +10,8 @@ fit_catfiles = ['totalRAW_00000_13119.fits.gz',
                 'totalRAW00000.29949.fits.gz']
 n_catfiles = len(fit_catfiles)
 cosmos_catfile = 'lensing14.fits.gz'
-out_catfile = 'real_galaxy_catalog_23.5_fits.fits'
+out_fitfile = 'real_galaxy_catalog_23.5_fits.fits'
+out_catfile = 'real_galaxy_catalog_23.5.fits'
 
 # read in real galaxy catalog
 galsim_cat = pyfits.getdata(galsim_catfile)
@@ -71,6 +72,7 @@ for i_cat in range(n_catfiles):
         fit_ident = dat.field('ident')
         fit_sersicfit = dat.field('sersicfit')
         fit_bulgefit = dat.field('bulgefit')
+        fit_status = dat.field('mpfit_status')
     if i_cat > 0:
         if i_cat < 2:
             fit_ident = np.append(fit_ident, dat.field('ident'))
@@ -78,6 +80,7 @@ for i_cat in range(n_catfiles):
             fit_ident = np.append(fit_ident, dat.field('galid'))
         fit_sersicfit = np.append(fit_sersicfit, dat.field('sersicfit'), axis=0)
         fit_bulgefit = np.append(fit_bulgefit, dat.field('bulgefit'), axis=0)
+        fit_status = np.append(fit_status, dat.field('mpfit_status'), axis=0)
 
     # increment counter
     n_fit_tot += n
@@ -135,9 +138,6 @@ for i_cat in range(n_catfiles):
     # 'DVC_BTT_ERR', 'EXP_BTT_ERR')
 
 print "Read in ",n_fit_tot," from ",n_catfiles," fit files"
-# print fit_ident.shape: (N, )
-# print fit_sersicfit.shape: (N, 8)
-# print fit_bulgefit.shape: (N, 16)
 
 print "Making correspondence between IDENT values for all inputs"
 cos_ind = np.zeros_like(galsim_ident)
@@ -172,12 +172,11 @@ out_zphot = cos_zphot[cos_ind[use_ind]]
 # rearrange the FIT arrays with fit quantities in the same order as galsim_ident
 out_sersicfit = fit_sersicfit[fit_ind[use_ind],:]
 out_bulgefit = fit_bulgefit[fit_ind[use_ind],:]
-print out_mag_auto.shape
-print out_sersicfit.shape
+out_fit_status = fit_status[fit_ind[use_ind],:]
 
 # make output data structure
 # here's what we want:
-# IDENT, photo-z, magnitude, flux_radius, SERSICFIT, BULGEFIT (for now that's all)
+# IDENT, photo-z, magnitude, flux_radius, SERSICFIT, BULGEFIT, fit status
 tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
                                                        format='J',
                                                        array=out_ident),
@@ -195,16 +194,17 @@ tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
                                                        array=out_sersicfit),
                                          pyfits.Column(name='bulgefit',
                                                        format='16D',
-                                                       array=out_bulgefit)]
+                                                       array=out_bulgefit),
+                                         pyfits.Column(name='fit_status',
+                                                       format='5J',
+                                                       array=out_fit_status)]
                                         ))
-# eventually we also want a way to assess goodness of fit
 
 # write outputs
-print "Writing to file ",out_catfile
-tbhdu.writeto(out_catfile)
+print "Writing to file ",out_fitfile
+tbhdu.writeto(out_fitfile, clobber=True)
 
 # write new subset of catalog file
-print "Re-writing to file ",galsim_catfile
+print "Re-writing to file ",out_catfile
 galsim_cat = pyfits.BinTableHDU(galsim_cat[use_ind])
-print len(galsim_cat)," entries"
-galsim_cat.writeto(galsim_catfile, clobber=True)
+galsim_cat.writeto(out_catfile, clobber=True)
