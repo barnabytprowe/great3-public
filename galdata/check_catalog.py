@@ -7,6 +7,7 @@
 #   addition to entries in catalog.
 # * histograms of various quantities
 # * 2d scatter plots of various quantities
+# * failure patterns for fits
 import pyfits
 import numpy as np
 import galsim
@@ -82,7 +83,7 @@ ax4 = fig.add_subplot(234)
 ax4.hist(real_galaxy_catalog.weight))
 ax4.set_xlabel('weight')
 ax4.set_ylabel('counts')
-sersic_fit = fit.catalog.field('sersicfit')
+sersic_fit = fit_catalog.field('sersicfit')
 sersic_n = sersic_fit[:,2]
 print sersic_n.shape
 ax5 = fig.add_subplot(235)
@@ -120,4 +121,30 @@ ax5.set_xlabel('Flux radius')
 ax5.set_ylabel('Sersic HLR')
 outfile = os.path.join(out_dir,out_pref+'2d_scatter.png')
 print "Writing 2d scatter plots to file ",outfile
+plt.savefig(outfile)
+
+# failure rates
+sersicfit_status = fit_catalog.field('fit_status')[:,4]
+bulgefit_status = fit_catalog.field('fit_status')[:,0]
+s_fail_ind = np.where((sersicfit_status == 0) | (sersicfit_status == 5))[0]
+print "Number of Sersic fit failures: ",len(s_fail_ind)
+b_fail_ind = np.where((bulgefit_status == 0) | (bulgefit_status == 5))[0]
+print "Number of 2 component fit failures: ",len(b_fail_ind)
+other_fail_ind = np.where((sersic_n < 0) & (sersicfit_status != 0) & (sersicfit_status != 5))[0]
+print "Number of Sersic fit failures that were not properly flagged: ",len(other_fail_ind)
+# let's check distribution of size, mag for failures vs. for everything
+fig = plt.figure()
+ax1 = fig.add_subplot(211)
+ax1.hist(fit_catalog.field('mag_auto'), normed=True, facecolor='blue', alpha=0.5, label='All')
+ax1.hist(fit_catalog.field('mag_auto')[s_fail_ind], normed=True, facecolor='red', alpha=0.5, label='Sersic failures')
+ax1.hist(fit_catalog.field('mag_auto')[b_fail_ind], normed=True, facecolor='green', alpha=0.5, label='2 component failures')
+ax1.set_xlabel('F814W magnitude')
+ax2 = fig.add_subplot(212)
+ax2.hist(fit_catalog.field('flux_radius'), normed=True, facecolor='blue', alpha=0.5, label='All')
+ax2.hist(fit_catalog.field('flux_radius')[s_fail_ind], normed=True, facecolor='red', alpha=0.5, label='All')
+ax2.hist(fit_catalog.field('flux_radius')[b_fail_ind], normed=True, facecolor='green', alpha=0.5, label='All')
+ax2.set_xlabel('Flux radius')
+plt.legend()
+outfile = os.path.join(out_dir,out_pref+'1d_hist_failures.png')
+print "Writing 1d histograms for failure cases to file ",outfile
 plt.savefig(outfile)
