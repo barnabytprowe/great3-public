@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 
 # file name definitions, etc.
 in_dir = '/Users/rmandelb/great3/data-23.5'
-cat_file = 'real_galaxy_catalog_23.5.fits'
-fit_file = 'real_galaxy_catalog_23.5_fits.fits'
+cat_file = 'real_galaxy_catalog_23.5_sub.fits'
+fit_file = 'real_galaxy_catalog_23.5_sub_fits.fits'
 out_dir = 'diagnostics'
-out_pref = 'full_'
+out_pref = 'sub_'
 
 # check contents
 filename = os.path.join(in_dir, cat_file)
@@ -67,60 +67,59 @@ test_im.write(outfile)
 # 1d histograms of various things: mag_auto, flux_radius, zphot,
 # weight, sersic n
 fig = plt.figure()
-ax1 = fig.add_subplot(231)
-ax1.hist(fit_catalog.field('mag_auto'))
+ax1 = fig.add_subplot(321)
+ax1.hist(fit_catalog.field('mag_auto'), bins=0.25*np.arange(26)+18)
 ax1.set_xlabel('F814W magnitude')
-ax1.set_ylabel('counts')
-ax2 = fig.add_subplot(232)
-ax2.hist(fit_catalog.field('flux_radius'))
+ax2 = fig.add_subplot(322)
+ax2.hist(0.03*fit_catalog.field('flux_radius'), bins=0.05*np.arange(40))
 ax2.set_xlabel('Flux radius')
-ax2.set_ylabel('counts')
-ax3 = fig.add_subplot(233)
-ax3.hist(fit_catalog.field('zphot'))
+ax3 = fig.add_subplot(323)
+ax3.hist(fit_catalog.field('zphot'), bins=0.1*np.arange(41))
 ax3.set_xlabel('Photo-z')
-ax3.set_ylabel('counts')
-ax4 = fig.add_subplot(234)
-ax4.hist(real_galaxy_catalog.weight))
+ax4 = fig.add_subplot(324)
+ax4.hist(real_galaxy_catalog.weight, bins=0.2*np.arange(20))
 ax4.set_xlabel('weight')
-ax4.set_ylabel('counts')
 sersic_fit = fit_catalog.field('sersicfit')
 sersic_n = sersic_fit[:,2]
 print sersic_n.shape
-ax5 = fig.add_subplot(235)
-ax5.hist(sersic_n)
+ax5 = fig.add_subplot(325)
+ax5.hist(sersic_n, bins=0.25*np.arange(40))
 ax5.set_xlabel('Sersic n')
-ax5.set_ylabel('counts')
 outfile = os.path.join(out_dir,out_pref+'1d_hist.png')
 print "Writing 1d histograms to file ",outfile
+fig.tight_layout()
 plt.savefig(outfile)
 
 # 2d scatter plots: mag_auto from fits vs. real_galaxy_catalog; size
 # vs. mag, mag_auto vs. zphot, size vs. weight, sersic size vs. flux_rad
 fig = plt.figure()
-ax1 = fig.add_subplot(231)
+ax1 = fig.add_subplot(321)
 ax1.scatter(fit_catalog.field('mag_auto'), real_galaxy_catalog.mag)
 ax1.set_xlabel('Mag in fit catalog')
 ax1.set_ylabel('Mag in RGC')
-ax2 = fig.add_subplot(232)
-ax2.scatter(fit_catalog.field('mag_auto'), fit_catalog.field('flux_radius'))
+ax2 = fig.add_subplot(322)
+ax2.scatter(fit_catalog.field('mag_auto'), 0.03*fit_catalog.field('flux_radius'))
 ax2.set_xlabel('Mag')
 ax2.set_ylabel('Flux radius')
-ax3 = fig.add_subplot(233)
+ax3 = fig.add_subplot(323)
 ax3.scatter(fit_catalog.field('mag_auto'), fit_catalog.field('zphot'))
 ax3.set_xlabel('Mag')
 ax3.set_ylabel('Photo-z')
-ax4 = fig.add_subplot(234)
-ax4.scatter(fit_catalog.field('flux_radius'),real_galaxy_catalog.weight))
+ax4 = fig.add_subplot(324)
+ax4.scatter(0.03*fit_catalog.field('flux_radius'),real_galaxy_catalog.weight)
 ax4.set_xlabel('Flux radius')
 ax4.set_ylabel('weight')
 sersic_q = sersic_fit[:,3]
 sersic_hlr = 0.03*np.sqrt(sersic_q)*sersic_fit[:,1]
-ax5 = fig.add_subplot(235)
-ax5.scatter(fit_catalog.field('flux_radius'), sersic_hlr)
+ax5 = fig.add_subplot(325)
+ax5.scatter(0.03*fit_catalog.field('flux_radius'), sersic_hlr)
+ax5.set_ylim((0.,3.))
+ax5.set_xlim((0.,3.))
 ax5.set_xlabel('Flux radius')
 ax5.set_ylabel('Sersic HLR')
 outfile = os.path.join(out_dir,out_pref+'2d_scatter.png')
 print "Writing 2d scatter plots to file ",outfile
+fig.tight_layout()
 plt.savefig(outfile)
 
 # failure rates
@@ -147,4 +146,5 @@ ax2.set_xlabel('Flux radius')
 plt.legend()
 outfile = os.path.join(out_dir,out_pref+'1d_hist_failures.png')
 print "Writing 1d histograms for failure cases to file ",outfile
+fig.tight_layout()
 plt.savefig(outfile)
