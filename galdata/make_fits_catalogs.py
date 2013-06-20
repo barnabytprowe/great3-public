@@ -202,3 +202,9 @@ tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
 # write outputs
 print "Writing to file ",out_catfile
 tbhdu.writeto(out_catfile)
+
+# write new subset of catalog file
+print "Re-writing to file ",galsim_catfile
+galsim_cat = pyfits.BinTableHDU(galsim_cat[use_ind])
+print len(galsim_cat)," entries"
+galsim_cat.writeto(galsim_catfile, clobber=True)
