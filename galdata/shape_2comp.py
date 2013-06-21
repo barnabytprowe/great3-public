@@ -13,7 +13,10 @@ out_filename = 'real_galaxy_23.5_shapes.fits'
 pix_scale = 0.03
 
 # define PSF - for later use, could turn into a list of different ones
-psf = galsim.Pixel(pix_scale)
+airy = galsim.Airy(lam_over_diam=206265.*800.e-9/4.)
+pix = galsim.Pixel(pix_scale)
+psf = galsim.Convolve(airy, pix)
+im_psf = psf.draw(dx=pix_scale)
 
 # read in catalog
 infile = os.path.join(in_dir, in_filename)
@@ -55,9 +58,9 @@ for i in range(n):
         obj = galsim.Convolve(gal, psf, gsparams = galsim.GSParams(maximum_fft_size=15000))
         try:
             im = obj.draw(dx = pix_scale)
-            res = im.FindAdaptiveMom()
-            e1[i] = res.observed_shape.e1
-            e2[i] = res.observed_shape.e2
+            res = galsim.hsm.EstimateShear(im, im_psf)
+            e1[i] = res.corrected_e1
+            e2[i] = res.corrected_e2
             do_meas[i] = 1.
         except RuntimeError:
             e1[i] = -10.0
