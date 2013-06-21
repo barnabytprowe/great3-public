@@ -35,17 +35,29 @@ for i in range(n):
     params = dat[i].field('bulgefit')
 
     bulge_q = params[11]
+    disk_q = params[3]
+    if bulge_q < 0 or bulge_q > 1 or disk_q < 0 or disk_q > 1:
+        do_meas[i] = -1
+        e1[i] = -10.0
+        e2[i] = -10.0
+        bt[i] = -10.0
+        continue
+
     bulge_beta = params[15]*galsim.radians
     bulge_hlr = 0.03*np.sqrt(bulge_q)*params[9]
     bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*params[8]
 
-    disk_q = params[3]
     disk_beta = params[7]*galsim.radians
     disk_hlr = 0.03*np.sqrt(disk_q)*params[1]
     disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*params[0]
 
     bfrac = bulge_flux/(bulge_flux+disk_flux)
     bt[i] = bfrac
+    if bt[i] < 0 or bt[i] > 1 or np.isnan(bt[i]):
+        do_meas[i] = -1
+        e1[i] = -10.0
+        e2[i] = -10.0
+        continue
     if bfrac > 0.07 and bfrac < 0.95:
         bulge = galsim.Sersic(4.0, half_light_radius = bulge_hlr, flux = bulge_flux)
         disk = galsim.Exponential(half_light_radius = disk_hlr, flux = disk_flux)
