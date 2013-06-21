@@ -21,7 +21,6 @@ im_psf = psf.draw(dx=pix_scale)
 # read in catalog
 infile = os.path.join(in_dir, in_filename)
 dat = pyfits.getdata(infile)
-dat = dat[0:100]
 n = len(dat)
 print "Read in ",n," from ",infile
 
