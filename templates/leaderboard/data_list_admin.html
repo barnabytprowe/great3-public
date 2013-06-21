@@ -3,7 +3,7 @@
 <P>
 	Additional admin-only data (catalogs) available here:
 	{% for admin_file in admin_files %}
-	<A href="{% url leaderboard.data_views.admin_data admin_file.id %}">{{admin_file.filename}}</A><BR>
+	<A href="{% url leaderboard.data_views.admin_file admin_file.id %}">{{admin_file.filename}}</A><BR>
 	{% endfor %}
 </P>
 {% endblock %}

@@ -1,6 +1,8 @@
 from leaderboard.models import Board, AdminDataFile
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+import django.http
+
 
 def index(request):
 	boards = Board.objects.all()
@@ -16,7 +18,7 @@ def index(request):
 @login_required
 def admin_file(request, index):
 	if not request.user.is_staff:
-		raise Http404		
+		raise django.http.Http404		
 	abs_filename = AdminDataFile.objects.get(id=index).abspath
 	response = django.http.HttpResponse()
 	del response['content-type']
