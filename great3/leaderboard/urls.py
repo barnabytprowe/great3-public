@@ -33,5 +33,6 @@ urlpatterns += patterns('leaderboard.views',
 
 
 urlpatterns += patterns('leaderboard.data_views',
-	url(r'^data/?$', 'index'),
+    url(r'^data/?$', 'index'),
+    url(r'^data/admin/(\d+)/?$', 'admin_file'),
 	)
