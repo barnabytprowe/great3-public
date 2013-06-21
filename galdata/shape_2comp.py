@@ -52,7 +52,7 @@ for i in range(n):
         if disk_q > 0.:
             disk.applyShear(q = disk_q, beta = disk_beta)
         gal = bulge+disk
-        obj = galsim.Convolve(gal, psf)
+        obj = galsim.Convolve(gal, psf, gsparams = galsim.GSParams(maximum_fft_size=15000))
         try:
             im = obj.draw(dx = pix_scale)
             res = im.FindAdaptiveMom()
@@ -60,8 +60,6 @@ for i in range(n):
             e2[i] = res.observed_shape.e2
             do_meas[i] = 1.
         except RuntimeError:
-            im.write('test.fits')
-            raise
             e1[i] = -10.0
             e2[i] = -10.0
             do_meas[i] = -1.
@@ -94,6 +92,9 @@ tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
                                                        format='J',
                                                        array=do_meas)]
                                         ))
+
+fail_ind = np.where(do_meas < -0.5)[0]
+print len(fail_ind),' failures'
 
 # write outputs
 outfile = os.path.join(out_dir, out_filename)
