@@ -81,6 +81,7 @@ def submit(request, board_id):
 
 		if form.is_valid():
 			if team is None: team = form.cleaned_data['team']
+			#check file size here, before upload!
 			ok = save_submission_file(request.FILES['file_upload'], form.cleaned_data['title'], form.cleaned_data['notes'], request.user, team, board)
 			if ok:
 				return HttpResponseRedirect('/leaderboard/board/%s/submitted/'%board_id)

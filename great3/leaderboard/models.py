@@ -15,6 +15,13 @@ PLACEHOLDER_SCORE = -1.0
 PLACEHOLDER_RANK = 1000
 MAXIMUM_ENTRIES_PER_DAY = 3
 MAX_BOARDS_FOR_SCORING = 5
+EXPERIMENT_CHOICES = [
+	('Control','Control'),
+	('Realistic Galaxy','Realistic Galaxy'),
+	('Realistic PSF', 'Realistic PSF'),
+	('Multi-epoch', 'Multi-epoch'),
+	('Everything', 'Everything')
+	]
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
@@ -116,6 +123,7 @@ def score_for_rank(rank):
 
 class Board(models.Model):
 	name = models.CharField(max_length=128, unique=True)
+	experiment = models.CharField(max_length=20, choices=EXPERIMENT_CHOICES)
 	notes = models.CharField(max_length=512)
 	space = models.BooleanField()
 	varying = models.BooleanField()
