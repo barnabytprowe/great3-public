@@ -91,6 +91,12 @@ class Team(models.Model):
 				winners.append(team)
 			else:
 				break
+		if len(winners)>1:
+			scores = [(winner.calculate_score(tiebreak=True), winner) for winner in winners]
+			scores.sort()  #python trick.  sorts by the first element of the tuple
+			best_tiebreak_score = scores[0][0]
+			winners = [w[1] for w in scores if w[0]==best_tiebreak_score]
+			#what if there is still a tie? At the moment we neglect this
 
 		return winners, best_score
 
