@@ -14,6 +14,7 @@ SUBMISSION_SAVE_PATH=os.path.join(os.path.split(__file__)[0], '..','..','results
 PLACEHOLDER_SCORE = -1.0
 PLACEHOLDER_RANK = 1000
 MAXIMUM_ENTRIES_PER_DAY = 3
+MAX_BOARDS_FOR_SCORING = 5
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
@@ -38,11 +39,19 @@ class Team(models.Model):
 	def __unicode__(self):
 		return self.name
 
-	def calculate_score(self):
-		new_score = sum(entry.get_points() for entry in self.entry_set.all())
+	def calculate_score(self, tiebreak=False):
+		scores = [entry.get_points() for entry in self.entry_set.all()]
+		if tiebreak:
+			new_score = sum(scores)
+		else:
+			scores = sorted(scores)[::-1]
+			new_score = sum(scores[:MAX_BOARDS_FOR_SCORING])
 		self.score = new_score
 		self.save()
 		return new_score
+
+	def top_entries_by_rank(self, n=MAX_BOARDS_FOR_SCORING):
+		return self.entry_set.order_by('rank','date')[:n]
 
 
 	@classmethod
@@ -82,6 +91,7 @@ class Team(models.Model):
 				winners.append(team)
 			else:
 				break
+
 		return winners, best_score
 
 
@@ -173,7 +183,13 @@ class Entry(models.Model):
 		p = self.get_points()
 		if p==0:
 			return ""
-		return str(p)
+		top_entries = self.team.top_entries_by_rank()
+		print top_entries
+		in_my_top = self in top_entries
+		if in_my_top:
+			return str(p)
+		else:
+			return str(p) + " [X]"
 
 	def get_filename(self):
 		return os.path.join(SUBMISSION_SAVE_PATH, str(self.id)) + '.g3_result'
