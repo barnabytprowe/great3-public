@@ -11,11 +11,11 @@ import sys
 
 SCORE_LOG_FILE = os.path.join(installation_base, "results", "results.log")
 texts = {
-    'Control': 'The baseline branch with parametric galaxy and PSF models, with a single image per galaxy. ',
-    'Realistic Galaxy': 'Galaxies models are drawn from real deep data. ',
-    'Realistic PSF': 'PSF models are simulations of realistic experiments. ',
+    'Control': 'The baseline experiment with parametric galaxy and PSF models, with a single exposure for each field. ',
+    'Realistic Galaxy': 'Galaxies models are drawn from real high-resolution, deep data. ',
+    'Realistic PSF': 'PSF models are simulations of realistic experiments, including spatial variation that participants must infer. ',
     'Multi-epoch': 'Each galaxy is observed multiple times with different PSFs and noise realizations. ',
-    'Everything': 'All the effects from the different experiments are present: galaxies and PSFs are realistic, and there are multiple images of each galaxy. ',
+    'Everything': 'All the effects from the different experiments are present: galaxies and PSFs are realistic, and there are multiple exposures for each field. ',
 }
 
 
@@ -32,10 +32,10 @@ class Command(BaseCommand):
                     notes = texts[experiment[0]]
                     if variable:
                         name += '-variable'
-                        notes += 'Shear and magnification vary across the image according to a power spectrum. '
+                        notes += 'Shear and magnification vary across the field according to a power spectrum. '
                     else:
                         name += '-constant'
-                        notes += 'Shear and magnification are the same for every galaxy. '
+                        notes += 'Shear and magnification are the same for every galaxy in a field.'
                     if space:
                         name += '-space'
                         notes += ' Observing conditions simulate those of a next-generation space telescope.'
