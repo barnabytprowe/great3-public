@@ -86,12 +86,14 @@ class Team(models.Model):
 
 
 def score_for_rank(rank):
-	""" The score that a team gets if their top-ranked ]
+	""" The score that a team gets if their top-ranked
 		entry into a board is at the given rank.
 	"""
-	if   rank==1: return 5
-	elif rank==2: return 3
-	elif rank==3: return 1
+	if   rank==1: return 16
+	elif rank==2: return 8
+	elif rank==3: return 4
+	elif rank==4: return 2
+	elif rank==5: return 1
 	else: return 0
 
 
