@@ -69,7 +69,7 @@ for i in range(n):
         obj = galsim.Convolve(gal, psf, gsparams = galsim.GSParams(maximum_fft_size=15000))
         try:
             im = obj.draw(dx = pix_scale)
-            res = galsim.hsm.EstimateShear(im, im_psf)
+            res = galsim.hsm.EstimateShear(im, im_psf, guess_sig_gal=20)
             e1[i] = res.corrected_e1
             e2[i] = res.corrected_e2
             do_meas[i] = 1.
