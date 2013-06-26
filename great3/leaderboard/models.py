@@ -174,6 +174,7 @@ class Entry(models.Model):
 	score = models.FloatField(default=PLACEHOLDER_SCORE)
 	date = models.DateTimeField(auto_now_add=True)
 	rank = models.IntegerField(default=PLACEHOLDER_RANK)
+	points_text = models.CharField(max_length=24)
 
 	def __unicode__(self):
 		return self.name
@@ -193,20 +194,29 @@ class Entry(models.Model):
 	def get_points(self):
 		return score_for_rank(self.rank)
 
-	def points_text(self):
+
+	def compute_points_text(self):
 		p = self.get_points()
 		if p==0:
-			return ""
+			self.points_text = ""
+			self.save()
+			return
 		top_entries = self.team.top_entries_by_rank()
-		print top_entries
-		in_my_top = self in top_entries
-		if in_my_top:
-			return str(p)
+		in_top = self in top_entries
+		if in_top:
+			self.points_text = str(p)
 		else:
-			return str(p) + " [X]"
+			self.points_text = str(p) + ' [*]'
+		self.save()
+
 
 	def get_filename(self):
 		return os.path.join(SUBMISSION_SAVE_PATH, str(self.id)) + '.g3_result'
+
+	@classmethod
+	def assign_all_points_texts(cls):
+		for entry in cls.objects.all():
+			entry.compute_points_text()
 
 
 def recompute_scoring(*boards):
@@ -215,6 +225,7 @@ def recompute_scoring(*boards):
 	for board in boards:
 		board.assign_ranks()
 	Team.update_scores_and_ranks()
+	Entry.assign_all_points_texts()
 
 #Some initial teams and people
 # Boards
