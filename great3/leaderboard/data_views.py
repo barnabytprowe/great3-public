@@ -16,10 +16,11 @@ def index(request):
 
 
 @login_required
-def admin_file(request, index):
+def admin_file(request, filename):
 	if not request.user.is_staff:
 		raise django.http.Http404		
-	abs_filename = AdminDataFile.objects.get(id=index).abspath
+	dataFile = AdminDataFile.objects.get(filename=filename)
+	abs_filename = dataFile.abspath
 	response = django.http.HttpResponse()
 	del response['content-type']
 	response['X-Sendfile'] = abs_filename
