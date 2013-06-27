@@ -343,6 +343,10 @@ def too_many_entries_in_last_day(team, board):
 	#I know this looks odd - it does not mean "more than one day ago."
 	return test_entry.date > one_day_ago
 
+class PublicDataFile(models.Model):
+	filename = models.CharField(max_length=128)
+	abspath = models.CharField(max_length=512)
+	info = models.CharField(max_length=512)
 
 class AdminDataFile(models.Model):
 	filename = models.CharField(max_length=128)

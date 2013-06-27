@@ -1,4 +1,4 @@
-from leaderboard.models import Board, AdminDataFile
+from leaderboard.models import Board, AdminDataFile, PublicDataFile
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 import django.http
@@ -6,7 +6,8 @@ import django.http
 
 def index(request):
 	boards = Board.objects.all()
-	data = dict(boards=boards)
+	public_files = PublicDataFile.objects.all()
+	data = dict(boards=boards, public_files=public_files)
 	if request.user and request.user.is_staff:
 		admin_files = AdminDataFile.objects.all()
 		data['admin_files'] = admin_files
@@ -21,6 +22,16 @@ def admin_file(request, filename):
 		raise django.http.Http404		
 	dataFile = AdminDataFile.objects.get(filename=filename)
 	abs_filename = dataFile.abspath
+	response = django.http.HttpResponse()
+	del response['content-type']
+	response['X-Sendfile'] = abs_filename
+	return response
+
+
+def public_file(request, filename):
+	dataFile = PublicDataFile.objects.get(filename=filename)
+	abs_filename = dataFile.abspath
+	print abs_filename
 	response = django.http.HttpResponse()
 	del response['content-type']
 	response['X-Sendfile'] = abs_filename

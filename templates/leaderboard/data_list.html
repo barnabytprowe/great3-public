@@ -3,6 +3,14 @@
 
 {% block content %}
 {% block admin_content %} {% endblock %}
+
+<P> Public Data Files </P>
+	<UL>
+	{% for public_file in public_files %}
+	<LI><A href="{% url leaderboard.data_views.public_file public_file.filename %}">{{public_file.filename}}</A> {{public_file.info}} </LI>
+	{% endfor %}
+	</UL>
+
 <P> This is where we would provide links to the data for all of the leaderboards.</P>
 <UL>
 {% for board in boards %}
