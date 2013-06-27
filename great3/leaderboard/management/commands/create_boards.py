@@ -18,6 +18,14 @@ texts = {
     'Everything': 'All the effects from the different experiments are present: galaxies and PSFs are realistic, and there are multiple exposures for each field. ',
 }
 
+fun_names = {
+    'Control': 'Vanilla',
+    'Realistic Galaxy': 'Pizza',
+    'Realistic PSF': 'Popcorn',
+    'Multi-epoch': 'Dimsum',
+    'Everything': 'Buffet',
+}
+
 
 
 class Command(BaseCommand):    
@@ -28,19 +36,19 @@ class Command(BaseCommand):
         for experiment in EXPERIMENT_CHOICES:
             for variable in [True,False]:
                 for space in [True,False]:
-                    name = experiment[0]
+                    name = fun_names[experiment[0]]
                     notes = texts[experiment[0]]
                     if variable:
-                        name += '-variable'
+                        name += '-V'
                         notes += 'Shear and magnification vary across the field according to a power spectrum. '
                     else:
-                        name += '-constant'
+                        name += '-C'
                         notes += 'Shear and magnification are the same for every galaxy in a field.'
                     if space:
-                        name += '-space'
+                        name += 'S'
                         notes += ' Observing conditions simulate those of a next-generation space telescope.'
                     else:
-                        name += '-ground'
+                        name += 'G'
                         notes += ' Observing conditions simulate those of a ground-based survey.'
                     try:
                         board = Board(experiment=experiment[0], varying=variable, space=space, notes=notes, name=name)
