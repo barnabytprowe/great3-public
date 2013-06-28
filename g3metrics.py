@@ -280,7 +280,11 @@ def run_corr2_ascii(x, y, e1, e2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='t
                     sep_units='degrees'):
     import os
     import subprocess
-    f = open(temp_cat, 'wb')
+    import tempfile
+    # Create temporary, unique files for I/O
+    catfile = tempfile.mktemp(suffix=temp_cat)
+    m2file = tempfile.mktemp(suffix=m2_file_name)
+    f = open(catfile, 'wb')
     for (i, j), value in np.ndenumerate(x):
         xij = value
         yij = y[i,j]
@@ -289,12 +293,12 @@ def run_corr2_ascii(x, y, e1, e2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='t
         f.write('%e  %e  %e  %e\n'%(xij, yij, g1ij, g2ij))
     f.close()
     subprocess.Popen([
-        'corr2', params_file, 'file_name='+str(temp_cat), 'm2_file_name='+str(m2_file_name),
+        'corr2', params_file, 'file_name='+str(catfile), 'm2_file_name='+str(m2file),
         'min_sep=%f'%min_sep, 'max_sep=%f'%max_sep, 'nbins=%f'%nbins,
         'x_units='+str(xy_units), 'y_units='+str(xy_units), 'sep_units='+str(sep_units)]).wait()
-    results = np.loadtxt(m2_file_name)
-    os.remove(temp_cat)
-    os.remove(m2_file_name)
+    results = np.loadtxt(m2file)
+    os.remove(catfile)
+    os.remove(m2file)
     return results
 
 def fitline(xarr, yarr):
