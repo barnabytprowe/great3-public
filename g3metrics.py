@@ -471,7 +471,7 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtr
             maperrsub_mean += maperrsub_list[iset * nperset + jimage]
             mapEtrue_mean += mapEtrue_list[iset * nperset + jimage]
             mapBtrue_mean += mapBtrue_list[iset * nperset + jimage]
-        # Divide by nperset to get the mean mapE
+        # Divide by nperset to get the mean mapE etc.
         mapEsub_mean /= float(nperset)
         maperrsub_mean /= (float(nperset) * np.sqrt(ntruesets))
         mapEtrue_mean /= float(nperset)
@@ -532,3 +532,67 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtr
     m = np.mean(np.array(ms))
     Q = np.sqrt(2.) * 1000. / np.sqrt(np.abs(c2 / cfid**2) + (m / mfid)**2)
     return Q, c2, m
+
+def calc_diffs_E(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets, use_errors=False,
+                 select_by_B_leakage=0.):
+    """Calculate differences between all submitted and target E-mode aperture mass statistics,
+    averaged over fields, optionally normalized by errors and excluding large B leakage regions.
+    """
+    # Calculate the number of images per set of realizations (trueset)
+    nperset = len(mapEsub_list) / ntruesets
+    diffs = np.zeros((len(mapEsub_list[0]), ntruesets)) # Assumes all elements of map lists same
+                                                        # length, but an exception will be thrown
+                                                        # later if this is not so...
+    for iset in range(ntruesets):
+        mapEsub_mean = mapEsub_list[iset * nperset]
+        maperrsub_mean = maperrsub_list[iset * nperset]
+        mapEtrue_mean = mapEtrue_list[iset * nperset]
+        mapBtrue_mean = mapBtrue_list[iset * nperset]
+        for jimage in range(nperset)[1:]:
+            mapEsub_mean += mapEsub_list[iset * nperset + jimage]
+            maperrsub_mean += maperrsub_list[iset * nperset + jimage]
+            mapEtrue_mean += mapEtrue_list[iset * nperset + jimage]
+            mapBtrue_mean += mapBtrue_list[iset * nperset + jimage]
+        # Divide by nperset to get the mean mapE etc.
+        mapEsub_mean /= float(nperset)
+        maperrsub_mean /= (float(nperset) * np.sqrt(ntruesets))
+        mapEtrue_mean /= float(nperset)
+        mapBtrue_mean /= float(nperset)
+        # Optionally only select the regions where |true B| < select_by_B_leakage * |true E|
+        if select_by_B_leakage > 0.:
+            use_for_fit = (np.abs(mapBtrue_mean) / np.abs(mapEtrue_mean) < select_by_B_leakage)
+        else:
+            use_for_fit = np.array([True,] * len(mapEsub_mean), dtype=bool)
+
+        # Ready the terms to use for calculating the dispersion statistic
+        submission = mapEsub_mean[use_for_fit]
+        if use_errors:
+            errors = maperrsub_mean[use_for_fit]
+        else:
+            errors = np.ones_like(submission)
+        truth = mapEtrue_mean[use_for_fit]
+        diffs[:, iset] = (submission - truth) / errors
+    # And return...
+    return diffs
+
+def metricG3S_AMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
+                  plot=False, select_by_B_leakage=0., use_errors=False, normalization=1000.):
+    """A metric based on the absolute differences between a submitted E-mode aperture mass (Map)
+    statistic and the target.
+    """
+    diffs = calc_diffs_E(
+        mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets, use_errors=use_errors,
+        select_by_B_leakage=select_by_B_leakage)
+    mean_error = np.mean(np.asarray(maperrsub_list))
+    return normalization * mean_error / np.mean(np.abs(diffs))
+
+def metricG3S_QMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
+                  plot=False, select_by_B_leakage=0., use_errors=False, normalization=1000.):
+    """A metric based on summed (in quadrature) differences between a submitted E-mode aperture
+    mass (Map) statistic and the target.
+    """
+    diffs = calc_diffs_E(
+        mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets, use_errors=use_errors,
+        select_by_B_leakage=select_by_B_leakage)
+    mean_error = np.mean(np.asarray(maperrsub_list))
+    return normalization * mean_error / np.sqrt(np.mean(diffs**2))
