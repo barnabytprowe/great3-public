@@ -428,11 +428,12 @@ def calculate_mapE_unitc(ngrid=100, dx_grid=0.1, nbins=8, min_sep=0.1, max_sep=1
     if plotfile is not None:
         import matplotlib.pyplot as plt
         plt.plot(results_unitc[:, 0], results_unitc[:, 1])
+        plt.plot(results_unitc[:, 0], results_unitc[:, 2])
         plt.xlabel('theta [degrees]')
         plt.ylabel(r'E mode <M$_{ap}$$^2$> for unit c$_1$=c$_2$=1')
         print "Saving plot of unit c1=c2=1 <Map^2> to "+plotfile
         plt.savefig(plotfile)
-    return results_unitc[:, 0], results_unitc[:, 1]
+    return results_unitc[:, 0], results_unitc[:, 1], results_unitc[:, 2]
 
 def map_squared_diff_func(cm_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
     """Squared difference of an m-c model of the aperture mass statistic and the submission.
@@ -442,14 +443,14 @@ def map_squared_diff_func(cm_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
         ) / maperrsub)**2
     return retval
 
-def metricMapCF_var_shear(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets, ngrid=100,
-                          dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3, min_sep=0.1, max_sep=10.,
-                          plot=False):
+def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets, ngrid=100,
+                             dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3, min_sep=0.1, max_sep=10.,
+                             plot=False):
     """The ntruesets must be an integer divisor of len(mapEsub_list)
     """
     import scipy.optimize
     # First calculate what an input unit c1=c2=1 looks like
-    theta, mapE_unitc = calculate_mapE_unitc(
+    theta, mapE_unitc, mapB_unitc = calculate_mapE_unitc(
         ngrid=ngrid, dx_grid=dx_grid, nbins=nbins, min_sep=min_sep, max_sep=max_sep)
     # Calculate the number of images per set of realizations (trueset)
     nperset = len(mapEsub_list) / ntruesets
