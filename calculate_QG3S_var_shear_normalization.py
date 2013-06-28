@@ -26,8 +26,8 @@ CMIN = CFID
 CMAX = 1.e-2
 MMIN = MFID
 MMAX = 1.e-1
-NBINS_TEST = 2      # Number of bins to plot in the ranges above
-NMONTE = 1          # Number of montecarlo samples
+NBINS_TEST = 5      # Number of bins to plot in the ranges above
+NMONTE = 50         # Number of montecarlo samples
 
 # Generate arrays of values for test values of c and m
 CVALS = CMIN * (CMAX / CMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.)) # geo series
@@ -43,7 +43,6 @@ OUTFILE = os.path.join(
 if __name__ == "__main__":
 
     reference_ps = g3metrics.read_ps(galsim_dir=GALSIM_DIR)
-
     # Make the truth catalogues (a list of 2D, NGRIDxNGRID numpy arrays), reusing the reference_ps
     # each time for simplicity
     g1true_list, g2true_list = g3metrics.make_var_truth_catalogs(
@@ -68,9 +67,10 @@ if __name__ == "__main__":
                 # Calculate the metrics
                 qG3S_AMD_unnorm[i, j, krepeat] = g3metrics.metricG3S_AMD(
                     mapEsubs, maperrsubs, mapEtrues, mapBtrues, NTRUESETS, normalization=1.)
-                qG3S_QMD_unnorm[i, j, krepeat] = g3metrics.metricG3S_AMD(
+                qG3S_QMD_unnorm[i, j, krepeat] = g3metrics.metricG3S_QMD(
                     mapEsubs, maperrsubs, mapEtrues, mapBtrues, NTRUESETS, normalization=1.)
-                print "Completed "+str(krepeat + 1)+"/"+str(NMONTE)+" Monte Carlo realizations"
+                print str(__file__)+": Completed "+str(krepeat + 1)+"/"+str(NMONTE)+\
+                    " Monte Carlo realizations"
 
             sys.stdout.write('\n')
 
