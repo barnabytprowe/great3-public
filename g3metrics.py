@@ -415,7 +415,7 @@ def metricQuadPS_var_shear(k, pEsub_list, varsub_list, pEtrue_list, scaling=0.00
     Q = scaling / np.sqrt(np.sum(I_tilde_over_k**2))
     return Q, mean_pEsub, mean_pEtrue, mean_diff
 
-def calculate_mapE_unitc(ngrid=100, dx_grid=0.1, nbins=8, min_sep=0.1, max_sep=10., plotfile=None):
+def calculate_map_unitc(ngrid=100, dx_grid=0.1, nbins=8, min_sep=0.1, max_sep=10., plotfile=None):
     """Calculate the aperture mass statistic for this geometry due a constant input ellipticity
     c1=c2=1.
     """
@@ -443,14 +443,15 @@ def map_squared_diff_func(cm_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
         ) / maperrsub)**2
     return retval
 
-def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, ntruesets, ngrid=100,
-                             dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3, min_sep=0.1, max_sep=10.,
-                             plot=False):
+def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
+                             ngrid=100, dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3, min_sep=0.1,
+                             max_sep=10., plot=False, select_by_B_leakage=0.,
+                             correct_B_theory=True, use_errors=False):
     """The ntruesets must be an integer divisor of len(mapEsub_list)
     """
     import scipy.optimize
     # First calculate what an input unit c1=c2=1 looks like
-    theta, mapE_unitc, mapB_unitc = calculate_mapE_unitc(
+    theta, mapE_unitc, mapB_unitc = calculate_map_unitc(
         ngrid=ngrid, dx_grid=dx_grid, nbins=nbins, min_sep=min_sep, max_sep=max_sep)
     # Calculate the number of images per set of realizations (trueset)
     nperset = len(mapEsub_list) / ntruesets
@@ -460,19 +461,45 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, ntrues
         mapEsub_mean = mapEsub_list[iset * nperset]
         maperrsub_mean = maperrsub_list[iset * nperset]
         mapEtrue_mean = mapEtrue_list[iset * nperset]
+        mapBtrue_mean = mapBtrue_list[iset * nperset]
         for jimage in range(nperset)[1:]:
             mapEsub_mean += mapEsub_list[iset * nperset + jimage]
             maperrsub_mean += maperrsub_list[iset * nperset + jimage]
             mapEtrue_mean += mapEtrue_list[iset * nperset + jimage]
+            mapBtrue_mean += mapBtrue_list[iset * nperset + jimage]
         # Divide by nperset to get the mean mapE
         mapEsub_mean /= float(nperset)
         maperrsub_mean /= (float(nperset) * np.sqrt(ntruesets))
         mapEtrue_mean /= float(nperset)
+        mapBtrue_mean /= float(nperset)
+        # Optionally only select the regions where |true B| < select_by_B_leakage * |true E|
+        if select_by_B_leakage > 0.:
+            use_for_fit = (np.abs(mapBtrue_mean) / np.abs(mapEtrue_mean) < select_by_B_leakage)
+        else:
+            use_for_fit = np.array([True,] * len(mapEsub_mean), dtype=bool)
+
+        # Ready the terms to go to the fitter
+        submission = mapEsub_mean[use_for_fit]
+        if use_errors:
+            errors = maperrsub_mean[use_for_fit]
+        else:
+            errors = np.ones_like(submission)
+        truth = mapEtrue_mean[use_for_fit]
+        unit_contamination = mapE_unitc[use_for_fit]
+        if correct_B_theory:
+            submission -= mapBtrue_mean[use_for_fit]
+            truth -= mapBtrue_mean[use_for_fit]
+            unit_contamination -= mapB_unitc[use_for_fit]
+            #import pdb; pdb.set_trace()
         # Use scipy.optimize to fit m and c (note should change this to numpy.leastsq since the
         # model can be made approximately linear 
         results = scipy.optimize.leastsq(
             map_squared_diff_func, np.array([0., 0.]),
-            args=(mapEsub_mean, maperrsub_mean, mapEtrue_mean, mapE_unitc))
+            args=(
+                submission,
+                errors,
+                truth,
+                unit_contamination))
         c2 = results[0][0]
         m = results[0][1]
         if plot:
@@ -480,18 +507,20 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, ntrues
             import matplotlib.pyplot as plt
             if not os.path.isdir('plots'): os.mkdir('plots')
             plt.errorbar(
-                theta, mapEsub_mean, yerr=maperrsub_mean, label='Map submission', color='r')
-            plt.plot(theta, mapEtrue_mean, 'g--', label='Map true realizations')
+                theta, submission, yerr=maperrsub_mean, label='Map submission', color='r')
+            plt.plot(theta, truth , 'g--', label='Map truth realizations')
             plt.plot(
-                theta, mapEtrue_mean * (1. + 2. * m) + mapE_unitc * c2, 'b',
+                theta, truth * (1. + 2. * m) + unit_contamination * c2, 'b',
                 label='Best fitting linear model')
             plt.legend()
             plt.title(
                 r'Best fitting m = '+str(m)+',  c$^2$ = '+str(c2)+' \n'+
                 'Set '+str(iset + 1)+'/'+str(ntruesets)+' ('+str(nperset)+' images)')
             plt.xlabel('theta [degrees]')
+            plt.xscale('log')
             plt.ylabel('E-mode Map')
-            plt.savefig(os.path.join('plots', 'aperture_mass_metric_set'+str(iset+1)+'.png'))
+            plt.savefig(os.path.join(
+                'plots', 'aperture_mass_metric_set'+str(iset+1)+'of'+str(ntruesets)+'.png'))
             plt.show()
         c2s.append(c2)
         ms.append(m)

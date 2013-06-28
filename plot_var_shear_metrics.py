@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 import galsim
 import g3metrics
 
-NIMS = 200
-NGRID = 100         # Each image contains a grid of NGRID x NGRID galaxies
-DX_GRID = 0.1       # Grid spacing (must be in degrees)
+NIMS = 8
+NGRID = 500         # Each image contains a grid of NGRID x NGRID galaxies
+DX_GRID = 0.02      # Grid spacing (must be in degrees)
 NOISE_SIGMA = 0.05  # Expected noise on each shear after shape noise pushed largely into B-mode
 NBINS_ANGULAR = 15  # Number of angular bins for correlation function metric
 MIN_SEP = DX_GRID
 MAX_SEP = 10.
 
-NTRUESETS = 10     # Don't necessarily need to have NIMS input shears. But easiest if
+NTRUESETS = 8      # Don't necessarily need to have NIMS input shears. But easiest if
                    # NTRUESETS is an integral fraction of NIMS..
 
 CFID = 1.e-4 # Fiducial, "target" m and c values
@@ -24,16 +24,15 @@ CMIN = CFID
 CMAX = 1.e-2
 MMIN = MFID
 MMAX = 1.e-1
-NBINS_TEST = 5      # Number of bins to plot in the ranges above
-NMONTE = 15         # Number of montecarlo samples
-NOISE_SIGMA = 0.05  # Noise due to pixel shot noist on a shear estimate, per galaxy
+NBINS_TEST = 3      # Number of bins to plot in the ranges above
+NMONTE = 30         # Number of montecarlo samples
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
 GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
 
-QFILE = os.path.join('results', 'qCF1.npy')
-MFILE = os.path.join('results', 'mCF1.npy')
-CFILE = os.path.join('results', 'cCF1.npy')
+QFILE = os.path.join('results', 'qCF1fine.npy')
+MFILE = os.path.join('results', 'mCF1fine.npy')
+CFILE = os.path.join('results', 'cCF1fine.npy')
 
 if __name__ == "__main__":
 
@@ -75,7 +74,7 @@ if __name__ == "__main__":
                             nbins=NBINS_ANGULAR, min_sep=MIN_SEP, max_sep=MAX_SEP)
                     #import pdb; pdb.set_trace()
                     qCF1_tmp, c_tmp, m_tmp = g3metrics.metricMapCF_var_shear_mc(
-                        mapEsubs, maperrsubs, mapEtrues, NTRUESETS, nbins=NBINS_ANGULAR,
+                        mapEsubs, maperrsubs, mapEtrues, mapBtrues, NTRUESETS, nbins=NBINS_ANGULAR,
                         min_sep=MIN_SEP, max_sep=MAX_SEP, plot=PLOT)
                     qCF1[i, j, krepeat] = qCF1_tmp
                     mCF1[i, j, krepeat] = m_tmp
