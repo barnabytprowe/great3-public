@@ -209,7 +209,7 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
         theta = results[:, 0]
         mEsub_list.append(results[:, 1])
         mBsub_list.append(results[:, 2])
-        merrsub_list.append(results[:, 4])
+        merrsub_list.append(results[:, 5])
     if calculate_truth:
         ret = theta, mEsub_list, mBsub_list, merrsub_list, mEtrue_list, mBtrue_list
     else:
@@ -584,6 +584,7 @@ def metricG3S_AMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nt
         mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
         use_errors=use_errors, select_by_B_leakage=select_by_B_leakage)
     mean_error = np.mean(np.asarray(maperrsub_list))
+    import pdb; pdb.set_trace()
     return normalization * mean_error / np.mean(np.abs(diffs))
 
 def metricG3S_QMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
@@ -595,4 +596,5 @@ def metricG3S_QMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nt
         mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
         use_errors=use_errors, select_by_B_leakage=select_by_B_leakage)
     mean_error = np.mean(np.asarray(maperrsub_list))
+    import pdb; pdb.set_trace()
     return normalization * mean_error / np.sqrt(np.mean(diffs**2))
