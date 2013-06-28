@@ -4,21 +4,21 @@ import matplotlib.pyplot as plt
 import galsim
 import g3metrics
 
-NIMS = 8#200 #8
-NGRID = 500#100 #500        # Each image contains a grid of NGRID x NGRID galaxies
-DX_GRID = 0.02#02      # Grid spacing (must be in degrees)
-NOISE_SIGMA = 0.05 # Expected noise on each shear after shape noise pushed largely into B-mode
+NIMS = 200
+NGRID = 100         # Each image contains a grid of NGRID x NGRID galaxies
+DX_GRID = 0.1       # Grid spacing (must be in degrees)
+NOISE_SIGMA = 0.05  # Expected noise on each shear after shape noise pushed largely into B-mode
 NBINS_ANGULAR = 15  # Number of angular bins for correlation function metric
 MIN_SEP = DX_GRID
 MAX_SEP = 10.
 
-NTRUESETS = 1      # Don't necessarily need to have NIMS input shears. But easiest if
+NTRUESETS = 10     # Don't necessarily need to have NIMS input shears. But easiest if
                    # NTRUESETS is an integral fraction of NIMS..
 
 CFID = 1.e-4 # Fiducial, "target" m and c values
 MFID = 1.e-3 #
 
-PLOT = True # Plot while calculating?
+PLOT = False # Plot while calculating?
 # Plotting ranges of interest
 CMIN = CFID
 CMAX = 1.e-2
@@ -73,7 +73,7 @@ if __name__ == "__main__":
                             c1=c, c2=c, m1=m, m2=m, g1true_list=g1true_list,
                             g2true_list=g2true_list, noise_sigma=NOISE_SIGMA, dx_grid=DX_GRID,
                             nbins=NBINS_ANGULAR, min_sep=MIN_SEP, max_sep=MAX_SEP)
-                    import pdb; pdb.set_trace()
+                    #import pdb; pdb.set_trace()
                     qCF1_tmp, c_tmp, m_tmp = g3metrics.metricMapCF_var_shear_mc(
                         mapEsubs, maperrsubs, mapEtrues, NTRUESETS, nbins=NBINS_ANGULAR,
                         min_sep=MIN_SEP, max_sep=MAX_SEP, plot=PLOT)
