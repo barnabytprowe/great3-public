@@ -586,7 +586,7 @@ def metricG3S_AMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nt
     """
     diffs = calc_diffs_E(
         mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
-        use_individual_errors=use_individual_errors, select_by_B_leakage=select_by_B_leakage)
+        select_by_B_leakage=select_by_B_leakage)
     return normalization / np.mean(np.abs(diffs))
 
 def metricG3S_QMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
@@ -596,5 +596,5 @@ def metricG3S_QMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nt
     """
     diffs = calc_diffs_E(
         mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
-        use_individual_errors=use_individual_errors, select_by_B_leakage=select_by_B_leakage)
+        select_by_B_leakage=select_by_B_leakage)
     return normalization / np.sqrt(np.mean(diffs**2))
