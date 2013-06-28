@@ -534,9 +534,11 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtr
     return Q, c2, m
 
 def calc_diffs_E(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
-                 use_errors=False, select_by_B_leakage=0.):
+                 select_by_B_leakage=0.):
     """Calculate differences between all submitted and target E-mode aperture mass statistics,
-    averaged over fields, optionally normalized by errors and excluding large B leakage regions.
+    averaged over fields, optionally excluding large B leakage regions.
+
+    
     """
     # Calculate the number of images per set of realizations (trueset)
     nperset = len(mapEsub_list) / ntruesets
@@ -563,38 +565,29 @@ def calc_diffs_E(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntr
             use_for_fit = (np.abs(mapBtrue_mean) / np.abs(mapEtrue_mean) < select_by_B_leakage)
         else:
             use_for_fit = np.array([True,] * len(mapEsub_mean), dtype=bool)
-
         # Ready the terms to use for calculating the dispersion statistic
         submission = mapEsub_mean[use_for_fit]
-        if use_errors:
-            errors = maperrsub_mean[use_for_fit]
-        else:
-            errors = np.ones_like(submission)
         truth = mapEtrue_mean[use_for_fit]
-        diffs[:, iset] = (submission - truth) / errors
+        diffs[:, iset] = (submission - truth)
     # And return...
     return diffs
 
 def metricG3S_AMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
-                  plot=False, select_by_B_leakage=0., use_errors=False, normalization=1000.):
+                  select_by_B_leakage=0., normalization=1.):
     """A metric based on the absolute differences between a submitted E-mode aperture mass (Map)
     statistic and the target.
     """
     diffs = calc_diffs_E(
         mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
-        use_errors=use_errors, select_by_B_leakage=select_by_B_leakage)
-    mean_error = np.mean(np.asarray(maperrsub_list))
-    import pdb; pdb.set_trace()
-    return normalization * mean_error / np.mean(np.abs(diffs))
+        use_individual_errors=use_individual_errors, select_by_B_leakage=select_by_B_leakage)
+    return normalization / np.mean(np.abs(diffs))
 
 def metricG3S_QMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
-                  plot=False, select_by_B_leakage=0., use_errors=False, normalization=1000.):
+                  select_by_B_leakage=0., normalization=1.):
     """A metric based on summed (in quadrature) differences between a submitted E-mode aperture
     mass (Map) statistic and the target.
     """
     diffs = calc_diffs_E(
         mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
-        use_errors=use_errors, select_by_B_leakage=select_by_B_leakage)
-    mean_error = np.mean(np.asarray(maperrsub_list))
-    import pdb; pdb.set_trace()
-    return normalization * mean_error / np.sqrt(np.mean(diffs**2))
+        use_individual_errors=use_individual_errors, select_by_B_leakage=select_by_B_leakage)
+    return normalization / np.sqrt(np.mean(diffs**2))
