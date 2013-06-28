@@ -12,9 +12,9 @@ NBINS_ANGULAR = 15  # Number of angular bins for correlation function metric
 MIN_SEP = DX_GRID
 MAX_SEP = 10.
 
-USE_ERRORS = True
+USE_ERRORS = False
 CORRECT_B = False
-OUTFILE_SUFFIX = "fine_useerrors"
+OUTFILE_SUFFIX = "fine_noerrors"
 
 NTRUESETS = 8      # Don't necessarily need to have NIMS input shears. But easiest if
                    # NTRUESETS is an integral fraction of NIMS..
@@ -28,7 +28,7 @@ CMIN = CFID
 CMAX = 1.e-2
 MMIN = MFID
 MMAX = 1.e-1
-NBINS_TEST = 3      # Number of bins to plot in the ranges above
+NBINS_TEST = 5      # Number of bins to plot in the ranges above
 NMONTE = 50         # Number of montecarlo samples
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
@@ -84,7 +84,8 @@ if __name__ == "__main__":
                     qCF1[i, j, krepeat] = qCF1_tmp
                     mCF1[i, j, krepeat] = m_tmp
                     cCF1[i, j, krepeat] = c_tmp
-                    print "Completed "+str(krepeat + 1)+"/"+str(NMONTE)+" Monte Carlo realizations"
+                    print ("Completed "+str(krepeat + 1)+"/"+str(NMONTE)+
+                           " Monte Carlo realizations for "+OUTFILE_SUFFIX)
         print "Saving output"
         np.save(QFILE, qCF1)
         np.save(MFILE, mCF1)
