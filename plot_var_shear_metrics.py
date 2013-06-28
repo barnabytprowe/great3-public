@@ -12,6 +12,10 @@ NBINS_ANGULAR = 15  # Number of angular bins for correlation function metric
 MIN_SEP = DX_GRID
 MAX_SEP = 10.
 
+USE_ERRORS = True
+CORRECT_B = False
+OUTFILE_SUFFIX = "fine_useerrors"
+
 NTRUESETS = 8      # Don't necessarily need to have NIMS input shears. But easiest if
                    # NTRUESETS is an integral fraction of NIMS..
 
@@ -25,14 +29,14 @@ CMAX = 1.e-2
 MMIN = MFID
 MMAX = 1.e-1
 NBINS_TEST = 3      # Number of bins to plot in the ranges above
-NMONTE = 30         # Number of montecarlo samples
+NMONTE = 50         # Number of montecarlo samples
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
 GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
 
-QFILE = os.path.join('results', 'qCF1fine.npy')
-MFILE = os.path.join('results', 'mCF1fine.npy')
-CFILE = os.path.join('results', 'cCF1fine.npy')
+QFILE = os.path.join('results', 'qCF1'+OUTFILE_SUFFIX+'.npy')
+MFILE = os.path.join('results', 'mCF1'+OUTFILE_SUFFIX+'.npy')
+CFILE = os.path.join('results', 'cCF1'+OUTFILE_SUFFIX+'.npy')
 
 if __name__ == "__main__":
 
@@ -75,7 +79,8 @@ if __name__ == "__main__":
                     #import pdb; pdb.set_trace()
                     qCF1_tmp, c_tmp, m_tmp = g3metrics.metricMapCF_var_shear_mc(
                         mapEsubs, maperrsubs, mapEtrues, mapBtrues, NTRUESETS, nbins=NBINS_ANGULAR,
-                        min_sep=MIN_SEP, max_sep=MAX_SEP, plot=PLOT)
+                        min_sep=MIN_SEP, max_sep=MAX_SEP, plot=PLOT, correct_B_theory=CORRECT_B,
+                        use_errors=USE_ERRORS)
                     qCF1[i, j, krepeat] = qCF1_tmp
                     mCF1[i, j, krepeat] = m_tmp
                     cCF1[i, j, krepeat] = c_tmp
@@ -110,7 +115,7 @@ if __name__ == "__main__":
     plt.title('Best fitting m values and standard deviation of test popn.')
     plt.ylabel('Best fitting m')
     plt.xlabel('Input m')
-    plt.savefig(os.path.join('plots', 'mvals_stds_CF1_fine.png'))
+    plt.savefig(os.path.join('plots', 'mvals_stds_CF1_'+OUTFILE_SUFFIX+'.png'))
     # Plot the bestfitting m values and the standard errors of the NMONTE results
     plt.clf()
     plt.axhline(ls='--', color='k')
@@ -125,7 +130,7 @@ if __name__ == "__main__":
     plt.title('Best fitting m values and standard error on mean')
     plt.ylabel('Best fitting m')
     plt.xlabel('Input m')
-    plt.savefig(os.path.join('plots', 'mvals_errs_CF1_fine.png'))
+    plt.savefig(os.path.join('plots', 'mvals_errs_CF1_'+OUTFILE_SUFFIX+'.png'))
 
     # Plot the bestfitting c^2 values and the standard deviation of the NMONTE results
     plt.clf()
@@ -142,7 +147,7 @@ if __name__ == "__main__":
     plt.title(r'Best fitting c$^2$ values and standard deviation of test popn.')
     plt.ylabel(r'Best fitting c$^2$')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'cvals_stds_CF1_fine.png'))
+    plt.savefig(os.path.join('plots', 'cvals_stds_CF1_'+OUTFILE_SUFFIX+'.png'))
     # Plot the bestfitting c^2 values and the standard errors of the NMONTE results
     plt.clf()
     plt.axes([0.175, 0.125, 0.775, 0.775])
@@ -159,7 +164,7 @@ if __name__ == "__main__":
     plt.title(r'Best fitting c$^2$ values and standard error on mean')
     plt.ylabel(r'Best fitting c$^2$')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'cvals_errs_CF1_fine.png'))
+    plt.savefig(os.path.join('plots', 'cvals_errs_CF1_'+OUTFILE_SUFFIX+'.png'))
 
     # Plot the Q metric values and the standard deviation of the NMONTE results
     plt.clf()
@@ -174,7 +179,7 @@ if __name__ == "__main__":
     plt.title('Mean Q metric and standard deviation of test popn.')
     plt.ylabel('QCF1')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'Qs_stds_CF1_fine.png'))
+    plt.savefig(os.path.join('plots', 'Qs_stds_CF1_'+OUTFILE_SUFFIX+'.png'))
     # Plot Q values and the standard errors of the NMONTE results
     plt.clf()
     plt.axhline(ls='--', color='k')
@@ -188,5 +193,4 @@ if __name__ == "__main__":
     plt.title('Mean Q metric and standard error on mean')
     plt.ylabel('QCF1')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'Qs_errs_CF1_fine.png'))
-
+    plt.savefig(os.path.join('plots', 'Qs_errs_CF1_'+OUTFILE_SUFFIX+'.png'))

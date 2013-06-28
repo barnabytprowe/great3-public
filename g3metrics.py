@@ -450,8 +450,8 @@ def map_squared_diff_func(cm_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
 def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
                              ngrid=100, dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3, min_sep=0.1,
                              max_sep=10., plot=False, select_by_B_leakage=0.,
-                             correct_B_theory=True, use_errors=False):
-    """The ntruesets must be an integer divisor of len(mapEsub_list)
+                             correct_B_theory=True, use_errors=True):
+    """The ntruesets must be an integer divisor of len(mapEsub_list).
     """
     import scipy.optimize
     # First calculate what an input unit c1=c2=1 looks like
@@ -510,19 +510,26 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtr
             import os
             import matplotlib.pyplot as plt
             if not os.path.isdir('plots'): os.mkdir('plots')
+            plt.clf()
+            plt.axes([0.16, 0.1, 0.775, 0.85])
             plt.errorbar(
-                theta, submission, yerr=maperrsub_mean, label='Map submission', color='r')
-            plt.plot(theta, truth , 'g--', label='Map truth realizations')
+                theta, submission, yerr=maperrsub_mean, label='E submission', color='k')
+            if correct_B_theory:
+                plt.plot(theta, truth , 'g--', label='Map truth realizations')
+            else:
+                plt.plot(theta[use_for_fit], mapEtrue_mean[use_for_fit], 'g--', label='E true')
+                plt.plot(theta[use_for_fit], mapBtrue_mean[use_for_fit], 'r--', label='B true')
             plt.plot(
                 theta, truth * (1. + 2. * m) + unit_contamination * c2, 'b',
                 label='Best fitting linear model')
+            plt.axhline(color='k')
             plt.legend()
             plt.title(
                 r'Best fitting m = '+str(m)+',  c$^2$ = '+str(c2)+' \n'+
                 'Set '+str(iset + 1)+'/'+str(ntruesets)+' ('+str(nperset)+' images)')
             plt.xlabel('theta [degrees]')
             plt.xscale('log')
-            plt.ylabel('E-mode Map')
+            plt.ylabel('Aperture mass dispersion')
             plt.savefig(os.path.join(
                 'plots', 'aperture_mass_metric_set'+str(iset+1)+'of'+str(ntruesets)+'.png'))
             plt.show()
