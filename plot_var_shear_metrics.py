@@ -110,7 +110,7 @@ if __name__ == "__main__":
     plt.title('Best fitting m values and standard deviation of test popn.')
     plt.ylabel('Best fitting m')
     plt.xlabel('Input m')
-    plt.savefig(os.path.join('plots', 'mvals_stds_CF1.png'))
+    plt.savefig(os.path.join('plots', 'mvals_stds_CF1_fine.png'))
     # Plot the bestfitting m values and the standard errors of the NMONTE results
     plt.clf()
     plt.axhline(ls='--', color='k')
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     plt.title('Best fitting m values and standard error on mean')
     plt.ylabel('Best fitting m')
     plt.xlabel('Input m')
-    plt.savefig(os.path.join('plots', 'mvals_errs_CF1.png'))
+    plt.savefig(os.path.join('plots', 'mvals_errs_CF1_fine.png'))
 
     # Plot the bestfitting c^2 values and the standard deviation of the NMONTE results
     plt.clf()
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     plt.title(r'Best fitting c$^2$ values and standard deviation of test popn.')
     plt.ylabel(r'Best fitting c$^2$')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'cvals_stds_CF1.png'))
+    plt.savefig(os.path.join('plots', 'cvals_stds_CF1_fine.png'))
     # Plot the bestfitting c^2 values and the standard errors of the NMONTE results
     plt.clf()
     plt.axes([0.175, 0.125, 0.775, 0.775])
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     plt.title(r'Best fitting c$^2$ values and standard error on mean')
     plt.ylabel(r'Best fitting c$^2$')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'cvals_errs_CF1.png'))
+    plt.savefig(os.path.join('plots', 'cvals_errs_CF1_fine.png'))
 
     # Plot the Q metric values and the standard deviation of the NMONTE results
     plt.clf()
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     plt.title('Mean Q metric and standard deviation of test popn.')
     plt.ylabel('QCF1')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'Qs_stds_CF1.png'))
+    plt.savefig(os.path.join('plots', 'Qs_stds_CF1_fine.png'))
     # Plot Q values and the standard errors of the NMONTE results
     plt.clf()
     plt.axhline(ls='--', color='k')
@@ -188,5 +188,5 @@ if __name__ == "__main__":
     plt.title('Mean Q metric and standard error on mean')
     plt.ylabel('QCF1')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'Qs_errs_CF1.png'))
+    plt.savefig(os.path.join('plots', 'Qs_errs_CF1_fine.png'))
 
