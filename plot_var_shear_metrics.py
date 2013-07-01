@@ -12,9 +12,9 @@ NBINS_ANGULAR = 15  # Number of angular bins for correlation function metric
 MIN_SEP = DX_GRID
 MAX_SEP = 10.
 
-USE_ERRORS = False
+USE_ERRORS = True
 CORRECT_B = False
-OUTFILE_SUFFIX = "fine_noerrors"
+OUTFILE_SUFFIX = "fine_useerrors"
 
 NTRUESETS = 8      # Don't necessarily need to have NIMS input shears. But easiest if
                    # NTRUESETS is an integral fraction of NIMS..
@@ -102,12 +102,18 @@ if __name__ == "__main__":
     merrs = mstds / np.sqrt(NMONTE)
     cerrs = cstds / np.sqrt(NMONTE)
 
+    # Normalise Qs to to Q=1000 for fiducial
+    qnorm = qmean[0, 0]
+    qmean *= 1000. / qnorm
+    qstds *= 1000. / qnorm
+    qerrs *= 1000. / qnorm
+
     # Plot the bestfitting m values and the standard deviation of the NMONTE results
     plt.clf()
     plt.axhline(ls='--', color='k')
     for i in range(len(cvals)):
         plt.errorbar(
-            mvals * (1. + 0.03 * i), mmean[i, :], yerr=mstds[i, :], fmt='+',
+            mvals * (1.025**i), mmean[i, :], yerr=mstds[i, :],
             label='c = %.2e'%cvals[i])
     plt.plot(mvals, mvals, 'k')
     plt.xscale('log')
@@ -116,13 +122,13 @@ if __name__ == "__main__":
     plt.title('Best fitting m values and standard deviation of test popn.')
     plt.ylabel('Best fitting m')
     plt.xlabel('Input m')
-    plt.savefig(os.path.join('plots', 'mvals_stds_CF1_'+OUTFILE_SUFFIX+'.png'))
+    plt.savefig(os.path.join('plots', 'mvals_stds_QG3MC_'+OUTFILE_SUFFIX+'.png'))
     # Plot the bestfitting m values and the standard errors of the NMONTE results
     plt.clf()
     plt.axhline(ls='--', color='k')
     for i in range(len(cvals)):
         plt.errorbar(
-            mvals * (1. + 0.03 * i), mmean[i, :], yerr=merrs[i, :], fmt='+',
+            mvals * (1.025**i), mmean[i, :], yerr=merrs[i, :],
             label='c = %.2e'%cvals[i])
     plt.plot(mvals, mvals, 'k')
     plt.xscale('log')
@@ -131,7 +137,7 @@ if __name__ == "__main__":
     plt.title('Best fitting m values and standard error on mean')
     plt.ylabel('Best fitting m')
     plt.xlabel('Input m')
-    plt.savefig(os.path.join('plots', 'mvals_errs_CF1_'+OUTFILE_SUFFIX+'.png'))
+    plt.savefig(os.path.join('plots', 'mvals_errs_QG3MC_'+OUTFILE_SUFFIX+'.png'))
 
     # Plot the bestfitting c^2 values and the standard deviation of the NMONTE results
     plt.clf()
@@ -139,23 +145,24 @@ if __name__ == "__main__":
     plt.axhline(ls='--', color='k')
     for i in range(len(mvals)):
         plt.errorbar(
-            cvals**2 * (1. + 0.03 * i), cmean[:, i], yerr=cstds[:, i], fmt='+',
+            cvals**2 * (1.05**i), cmean[:, i], yerr=cstds[:, i], fmt='+',
             label='m = %.2e'%mvals[i])
     plt.plot(cvals**2, cvals**2, 'k')
     plt.xscale('log')
+    plt.yscale('log')
     plt.xlim(3.e-9, 1.e-1)
     plt.legend()
     plt.title(r'Best fitting c$^2$ values and standard deviation of test popn.')
     plt.ylabel(r'Best fitting c$^2$')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'cvals_stds_CF1_'+OUTFILE_SUFFIX+'.png'))
+    plt.savefig(os.path.join('plots', 'cvals_stds_QG3MC_'+OUTFILE_SUFFIX+'.png'))
     # Plot the bestfitting c^2 values and the standard errors of the NMONTE results
     plt.clf()
     plt.axes([0.175, 0.125, 0.775, 0.775])
     plt.axhline(ls='--', color='k')
     for i in range(len(mvals)):
         plt.errorbar(
-            cvals**2 * (1. + 0.03 * i), cmean[:, i], yerr=cerrs[:, i], fmt='+',
+            cvals**2 * (1.05**i), cmean[:, i], yerr=cerrs[:, i], fmt='+',
             label='m = %.2e'%mvals[i])
     plt.plot(cvals**2, cvals**2, 'k')
     plt.xscale('log')
@@ -165,33 +172,33 @@ if __name__ == "__main__":
     plt.title(r'Best fitting c$^2$ values and standard error on mean')
     plt.ylabel(r'Best fitting c$^2$')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'cvals_errs_CF1_'+OUTFILE_SUFFIX+'.png'))
+    plt.savefig(os.path.join('plots', 'cvals_errs_QG3MC_'+OUTFILE_SUFFIX+'.png'))
 
     # Plot the Q metric values and the standard deviation of the NMONTE results
     plt.clf()
     plt.axhline(ls='--', color='k')
     for i in range(len(mvals)):
         plt.errorbar(
-            cvals**2 * (1. + 0.03 * i), qmean[:, i], yerr=qstds[:, i], fmt='+',
+            cvals**2 * (1.08**i), qmean[:, i], yerr=qstds[:, i],
             label='m = %.2e'%mvals[i])
     plt.xscale('log')
-    plt.xlim(1.e-3, 1.e-10)
+    plt.xlim(1.e-3, 1.e-12)
     plt.legend()
-    plt.title('Mean Q metric and standard deviation of test popn.')
-    plt.ylabel('QCF1')
+    plt.title('Mean QG3MC metric and standard deviation of test popn.')
+    plt.ylabel('Q')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'Qs_stds_CF1_'+OUTFILE_SUFFIX+'.png'))
+    plt.savefig(os.path.join('plots', 'Qs_stds_QG3MC_'+OUTFILE_SUFFIX+'.png'))
     # Plot Q values and the standard errors of the NMONTE results
     plt.clf()
     plt.axhline(ls='--', color='k')
     for i in range(len(mvals)):
         plt.errorbar(
-            cvals**2 * (1. + 0.03 * i), qmean[:, i], yerr=qerrs[:, i], fmt='+',
+            cvals**2 * (1.08**i), qmean[:, i], yerr=qerrs[:, i],
             label='m = %.2e'%mvals[i])
     plt.xscale('log')
-    plt.xlim(1.e-3, 1.e-10)
+    plt.xlim(1.e-3, 1.e-12)
     plt.legend()
-    plt.title('Mean Q metric and standard error on mean')
-    plt.ylabel('QCF1')
+    plt.title('Mean QG3MC metric and standard error on mean')
+    plt.ylabel('Q')
     plt.xlabel(r'Input c$^2$')
-    plt.savefig(os.path.join('plots', 'Qs_errs_CF1_'+OUTFILE_SUFFIX+'.png'))
+    plt.savefig(os.path.join('plots', 'Qs_errs_QG3MC_'+OUTFILE_SUFFIX+'.png'))
