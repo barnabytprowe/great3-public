@@ -325,24 +325,24 @@ def fitline(xarr, yarr):
     var_b  = sigma2 * S / Del
     return (a, b, var_a, cov_ab, var_b)
 
-def metricQ08_const_shear(g1est, g2est, g1true, g2true, ntruesets):
+def metricQ08_const_shear(g1est, g2est, g1true, g2true, nfields):
     """Calculate a GREAT08-style Q value for constant shear branch results.
 
-    Each element of the input arrays g1est, g2est is assumed to be the average of the shear
+    Each element of the input arrays `g1est`, `g2est` is assumed to be the average of the shear
     estimates in a large image, of which there will be some decent-sized number (~200).   The arrays
-    g1true, g2true are the corresponding truth values.  There are ntruesets independent truth values
-    in each array.
+    `g1true`, `g2true` are the corresponding truth values.  There are `nfields` independent truth
+    values in each array.
     """
-    if len(g1est) % ntruesets != 0:
-        raise ValueError("Number of separate truth values ntrue is not a divisor for the number "+
+    if len(g1est) % nfields != 0:
+        raise ValueError("Number of separate truth values nfields is not a divisor for the number "+
                          "of input array elements without remainder.")
-    nset = len(g1est) / ntruesets  # Number of elements in each set of distinct truth values
+    nsubfields = len(g1est) / nfields  # Number of elements in each set of distinct truth values
     g1set = []
     g2set = []
-    for i in range(ntruesets):
-        g1set.append(np.mean((g1est - g1true)[i * nset: (i + 1) * nset]))
-        g2set.append(np.mean((g2est - g2true)[i * nset: (i + 1) * nset]))
-    return 1.e-4 / (0.5 * ((sum(g1set) / float(ntruesets))**2 + (sum(g2set) / float(ntruesets))**2))
+    for i in range(nfields):
+        g1set.append(np.mean((g1est - g1true)[i * nsubfields: (i + 1) * nsubfields]))
+        g2set.append(np.mean((g2est - g2true)[i * nsubfields: (i + 1) * nsubfields]))
+    return 1.e-4 / (0.5 * ((sum(g1set) / float(nfields))**2 + (sum(g2set) / float(nfields))**2))
 
 def metricQZ1_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
     """Calculate a metric along the lines suggested by Joe Zuntz in Pittsburgh (option 1).
