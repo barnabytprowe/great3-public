@@ -3,44 +3,42 @@
 import numpy as np
 import galsim
 
-def make_const_truth_normal_dist(ntrue, nims, true_sigma=0.03,
-                                 saveto='./g3truth/g3_const_shear_truth.dat'):
-    """Generate truth catalogues with a N(0, TRUE_SIGMA) distribution of input truth values in
+def make_const_truth_normal_dist(nfields, nims, true_sigma=0.03):
+    """Generate truth catalogues with a N(0, `true_sigma`) distribution of input truth values in
     g1 and g2.
 
-    Set saveto=None to disable hardcopy output.  nims should be an integer multiple of ntrue.
+    `nims` should be an integer multiple of `nfields`.
     """
-    if (nims % ntrue) != 0:
-        raise ValueError("nims must be divisible by ntrue.")
-    imagen = np.arange(nims, dtype=int) + 1
-    g1true = np.repeat(np.random.randn(ntrue) * true_sigma, nims/ntrue)  # these should have NIMS
-    g2true = np.repeat(np.random.randn(ntrue) * true_sigma, nims/ntrue)  # elements, with repetition
-    if saveto is not None:
-        import os
-        if not os.path.isdir(os.path.split(saveto)[0]):
-            os.mkdir(os.path.split(saveto)[0])
-        np.savetxt(saveto, np.array((imagen, g1true, g2true)).T, fmt=('%d', '%14.7f', '%14.7f'))
+    if (nims % nfields) != 0:
+        raise ValueError("nims must be divisible by nfields.")
+    g1true = np.repeat(np.random.randn(nfields) * true_sigma, nims / nfields)
+    g2true = np.repeat(np.random.randn(nfields) * true_sigma, nims / nfields)
     return g1true, g2true
 
-def make_const_truth_uniform_dist(ntrue, nims, true_range=0.03,
-                                  saveto='./g3truth/g3_const_shear_truth.dat'):
-    """Generate truth catalogues with a U(-TRUE_RANGE, TRUE_RANGE) distribution of input truth
-    values in g1 and g2.
+def make_const_truth_uniform_annular(nfields, nims, range_min=0.02, range_max=0.05):
+    """Generate truth catalogues of shear with values distributed evenly in the annulus
+    `range_min` < |g| <= `range_max`.
 
-    Set saveto=None to disable hardcopy output. nims should be an integer multiple of ntrue.
+    `nims` should be an integer multiple of `nfields`.
     """
-    if (nims % ntrue) != 0:
-        raise ValueError("nims must be divisible by ntrue.")
-    if not os.path.isdir('g3truth'):
-        os.mkdir('g3truth')
-    imagen = np.arange(nims, dtype=int) + 1
-    g1true = np.repeat((2. * np.random.rand(ntrue) - 1.) * true_range, nims/ntrue)
-    g2true = np.repeat((2. * np.random.rand(ntrue) - 1.) * true_range, nims/ntrue)
-    if saveto is not None:
-        import os
-        if not os.path.isdir(os.path.split(saveto)[0]):
-            os.mkdir(os.path.split(saveto)[0])
-        np.savetxt(saveto, np.array((imagen, g1true, g2true)).T, fmt=('%d', '%14.7f', '%14.7f'))
+    if (nims % nfields) != 0:
+        raise ValueError("nims must be divisible by nfields.")
+    nsubfields = nims / nfields
+    g1true_list = []
+    g2true_list = []
+    for i in range(nfields):
+        # Get the values by rejection sampling: inefficient but easy and `nfields` is not large!
+        while True:
+            g1 = (2. * np.random.rand() - 1.) * range_max
+            g2 = (2. * np.random.rand() - 1.) * range_max
+            gsquared = g1 * g1 + g2 * g2
+            if gsquared > range_min**2 and gsquared <= range_max**2:
+                break
+        g1true_list.append(np.repeat(g1, nsubfields))
+        g2true_list.append(np.repeat(g2, nsubfields))
+    # Make arrays of length nims
+    g1true = np.concatenate(g1true_list)
+    g2true = np.concatenate(g2true_list)
     return g1true, g2true
 
 def read_ps(galsim_dir=None):
