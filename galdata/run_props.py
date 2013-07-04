@@ -16,7 +16,7 @@ psf_type = sys.argv[1]
 allowed_types = ['Kolmogorov', 'Euclid']
 if psf_type not in allowed_types:
     raise ValueError("PSF type is not allowed!")
-if psf_type is 'Kolmogorov':
+if psf_type == 'Kolmogorov':
     psf = galsim.Kolmogorov(fwhm = float(sys.argv[2]))
 else:
     lambda_m = 800.e-9
