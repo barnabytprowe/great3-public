@@ -29,11 +29,11 @@ GAL_HDU: HDU containing the image of this galaxy in the file called GAL_FILENAME
 
 PSF_HDU: HDU containing the image of the PSF for this galaxy in the file called PSF_FILENAME.
 
-PIXEL_SCALE: pixel scale for the galaxy and PSF images in arcsec (0.03 in all cases).
+PIXEL_SCALE: Pixel scale for the galaxy and PSF images in arcsec (0.03 in all cases).
 
-NOISE_MEAN: mean value of the pixels in the image that do not contain the galaxy.
+NOISE_MEAN: Mean value of the pixels in the image that do not contain the galaxy.
 
-NOISE_VARIANCE: variance of the pixel values for pixels in the image that do not contain the galaxy.
+NOISE_VARIANCE: Variance of the pixel values for pixels in the image that do not contain the galaxy.
 
 
 (2) The files containing galaxy and PSF images are real_galaxy_images_23.5_n?.fits and
@@ -50,7 +50,7 @@ IDENT: COSMOS identifier.
 
 MAG_AUTO: F814W magnitude (MAG_AUTO in COSMOS catalog).
 
-FLUX_RADIUS: half-light radius for the PSF-convolved object (flux_radius from the COSMOS catalog),
+FLUX_RADIUS: Half-light radius for the PSF-convolved object (flux_radius from the COSMOS catalog),
 in units of pixels.
 
 ZPHOT: Photometric redshift from the COSMOS catalog (Ilbert et al. 2009, ApJ, 690, 1236) version
