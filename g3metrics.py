@@ -96,7 +96,7 @@ def make_var_truth_catalogs(nfields, nims, ps_list, ngrid=100, dx_grid=0.1,
     # Loop through the power spectra and build the gridded shear realizations for each image
     for ps in ps_list:
         g1, g2 = ps.buildGrid(grid_spacing=dx_grid, ngrid=ngrid, units=grid_units, rng=rng)
-        for i in range(nubfields):
+        for i in range(nsubfields):
             g1true_list.append(g1)
             g2true_list.append(g2)
     return g1true_list, g2true_list
