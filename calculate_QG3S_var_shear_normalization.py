@@ -30,8 +30,8 @@ NBINS_TEST = 5      # Number of bins to plot in the ranges above
 NMONTE = 100        # Number of montecarlo samples
 
 # Generate arrays of values for test values of c and m
-CVALS = CMIN * (CMAX / CMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.)) # geo series
-MVALS = MMIN * (MMAX / MMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.))
+CVALS = CMIN * (CMAX / CMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1)) # geo series
+MVALS = MMIN * (MMAX / MMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1))
 CGRID, MGRID = np.meshgrid(CVALS, MVALS) # 2D arrays covering full space
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
