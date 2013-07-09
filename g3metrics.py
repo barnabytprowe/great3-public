@@ -57,18 +57,18 @@ def read_ps(galsim_dir=None):
     ret = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
     return ret
 
-def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1, grid_units=galsim.degrees,
-                            rng=None):
+def make_var_truth_catalogs(nfields, nims, ps_list, ngrid=100, dx_grid=0.1,
+                            grid_units=galsim.degrees, rng=None):
     """Generate truth catalogues of g1, g2 in a grid of galaxy locations for each of nims images.
 
     Inputs
     ------
-    ntrue      Number of underlying true power spectra to realize, must be the same as
+    nfields    Number of underlying true power spectra to realize, must be the same as
                `len(ps_list)`.  Note this parameter is mostly retained for syntactical similarity
                with const truth table generation scripts, aiding checking.
     nims       The number of images across which to make realizations of the power spectra in
-               `ps_list`. nims should be an integer multiple of ntrue.
-    ps_list    List of galsim.PowerSpectrum objects of length `ntrue`, used to select the
+               `ps_list`. `nims` should be an integer multiple of `nfields`.
+    ps_list    List of galsim.PowerSpectrum objects of length `nfields`, used to select the
                power spectra for use in the realizations of g1, g2.
     ngrid      Number of galaxies along a side of the (assumed square) image grid
     dx_grid    Image grid spacing in units of `grid_units`.
@@ -80,23 +80,23 @@ def make_var_truth_catalogs(ntrue, nims, ps_list, ngrid=100, dx_grid=0.1, grid_u
     NumPy arrays of dimensions ngrid x ngrid, containg the realizations of the shear field g1 and g2
     components at the grid points specified.
     """
-    if (nims % ntrue) != 0:
-        raise ValueError("nims must be divisible by ntrue.")
-    if len(ps_list) != ntrue:
-        raise ValueError("Input ps_list does not have ntrue elements.")
+    if (nims % nfields) != 0:
+        raise ValueError("nims must be divisible by nfields.")
+    if len(ps_list) != nfields:
+        raise ValueError("Input ps_list does not have nfields elements.")
     if rng is None:
         rng = galsim.BaseDeviate()
     if not isinstance(rng, galsim.BaseDeviate):
         raise TypeError("Input rng not a galsimBaseDeviate or derived class instance.") 
-   # Number of sets of ntrue images
-    nsets = nims / ntrue
+   # Number of subfields per field
+    nsubfields = nims / nfields
     # Setup empty lists for storing the g1, g2 NumPy arrays
     g1true_list = []
     g2true_list = []
     # Loop through the power spectra and build the gridded shear realizations for each image
     for ps in ps_list:
         g1, g2 = ps.buildGrid(grid_spacing=dx_grid, ngrid=ngrid, units=grid_units, rng=rng)
-        for i in range(nsets):
+        for i in range(nubfields):
             g1true_list.append(g1)
             g2true_list.append(g2)
     return g1true_list, g2true_list
@@ -445,35 +445,35 @@ def map_squared_diff_func(cm_array, mapEsub, maperrsub, mapEtrue, mapEunitc):
         ) / maperrsub)**2
     return retval
 
-def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
+def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nfields,
                              ngrid=100, dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3, min_sep=0.1,
                              max_sep=10., plot=False, select_by_B_leakage=0.,
                              correct_B_theory=True, use_errors=True):
-    """The ntruesets must be an integer divisor of len(mapEsub_list).
+    """The nfields must be an integer divisor of len(mapEsub_list).
     """
     import scipy.optimize
     # First calculate what an input unit c1=c2=1 looks like
     theta, mapE_unitc, mapB_unitc = calculate_map_unitc(
         ngrid=ngrid, dx_grid=dx_grid, nbins=nbins, min_sep=min_sep, max_sep=max_sep)
-    # Calculate the number of images per set of realizations (trueset)
-    nperset = len(mapEsub_list) / ntruesets
+    # Calculate the number of subfields of images per fields
+    nsubfields = len(mapEsub_list) / nfields
     c2s = []
     ms = []
-    for iset in range(ntruesets):
-        mapEsub_mean = mapEsub_list[iset * nperset]
-        maperrsub_mean = maperrsub_list[iset * nperset]
-        mapEtrue_mean = mapEtrue_list[iset * nperset]
-        mapBtrue_mean = mapBtrue_list[iset * nperset]
-        for jimage in range(nperset)[1:]:
-            mapEsub_mean += mapEsub_list[iset * nperset + jimage]
-            maperrsub_mean += maperrsub_list[iset * nperset + jimage]
-            mapEtrue_mean += mapEtrue_list[iset * nperset + jimage]
-            mapBtrue_mean += mapBtrue_list[iset * nperset + jimage]
+    for iset in range(nfields):
+        mapEsub_mean = mapEsub_list[iset * nsubfields]
+        maperrsub_mean = maperrsub_list[iset * nsubfields]
+        mapEtrue_mean = mapEtrue_list[iset * nsubfields]
+        mapBtrue_mean = mapBtrue_list[iset * nsubfields]
+        for jimage in range(nsubfields)[1:]:
+            mapEsub_mean += mapEsub_list[iset * nsubfields + jimage]
+            maperrsub_mean += maperrsub_list[iset * nsubfields + jimage]
+            mapEtrue_mean += mapEtrue_list[iset * nsubfields + jimage]
+            mapBtrue_mean += mapBtrue_list[iset * nsubfields + jimage]
         # Divide by nperset to get the mean mapE etc.
-        mapEsub_mean /= float(nperset)
-        maperrsub_mean /= (float(nperset) * np.sqrt(ntruesets))
-        mapEtrue_mean /= float(nperset)
-        mapBtrue_mean /= float(nperset)
+        mapEsub_mean /= float(nsubfields)
+        maperrsub_mean /= (float(nsubfields) * np.sqrt(nsubfields))
+        mapEtrue_mean /= float(nsubfields)
+        mapBtrue_mean /= float(nsubfields)
         # Optionally only select the regions where |true B| < select_by_B_leakage * |true E|
         if select_by_B_leakage > 0.:
             use_for_fit = (np.abs(mapBtrue_mean) / np.abs(mapEtrue_mean) < select_by_B_leakage)
@@ -524,12 +524,12 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtr
             plt.legend()
             plt.title(
                 r'Best fitting m = '+str(m)+',  c$^2$ = '+str(c2)+' \n'+
-                'Set '+str(iset + 1)+'/'+str(ntruesets)+' ('+str(nperset)+' images)')
+                'Set '+str(iset + 1)+'/'+str(nfields)+' ('+str(nsubfields)+' images)')
             plt.xlabel('theta [degrees]')
             plt.xscale('log')
             plt.ylabel('Aperture mass dispersion')
             plt.savefig(os.path.join(
-                'plots', 'aperture_mass_metric_set'+str(iset+1)+'of'+str(ntruesets)+'.png'))
+                'plots', 'aperture_mass_metric_set'+str(iset+1)+'of'+str(nfields)+'.png'))
             plt.show()
         c2s.append(c2)
         ms.append(m)
@@ -538,33 +538,33 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtr
     Q = np.sqrt(2.) * 1000. / np.sqrt(np.abs(c2 / cfid**2) + (m / mfid)**2)
     return Q, c2, m
 
-def calc_diffs_E(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
+def calc_diffs_E(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nfields,
                  select_by_B_leakage=0.):
     """Calculate differences between all submitted and target E-mode aperture mass statistics,
     averaged over fields, optionally excluding large B leakage regions.
 
     
     """
-    # Calculate the number of images per set of realizations (trueset)
-    nperset = len(mapEsub_list) / ntruesets
-    diffs = np.empty((len(mapEsub_list[0]), ntruesets)) # Assumes all elements of map lists same
+    # Calculate the number of images per field
+    nsubfields = len(mapEsub_list) / nfields
+    diffs = np.empty((len(mapEsub_list[0]), nfields)) # Assumes all elements of map lists same
                                                         # length, but an exception will be thrown
                                                         # later if this is not so...
-    for iset in range(ntruesets):
-        mapEsub_mean = mapEsub_list[iset * nperset]
-        maperrsub_mean = maperrsub_list[iset * nperset]
-        mapEtrue_mean = mapEtrue_list[iset * nperset]
-        mapBtrue_mean = mapBtrue_list[iset * nperset]
-        for jimage in range(nperset)[1:]:
-            mapEsub_mean += mapEsub_list[iset * nperset + jimage]
-            maperrsub_mean += maperrsub_list[iset * nperset + jimage]
-            mapEtrue_mean += mapEtrue_list[iset * nperset + jimage]
-            mapBtrue_mean += mapBtrue_list[iset * nperset + jimage]
-        # Divide by nperset to get the mean mapE etc.
-        mapEsub_mean /= float(nperset)
-        maperrsub_mean /= (float(nperset) * np.sqrt(ntruesets))
-        mapEtrue_mean /= float(nperset)
-        mapBtrue_mean /= float(nperset)
+    for iset in range(nfields):
+        mapEsub_mean = mapEsub_list[iset * nsubfields]
+        maperrsub_mean = maperrsub_list[iset * nsubfields]
+        mapEtrue_mean = mapEtrue_list[iset * nsubfields]
+        mapBtrue_mean = mapBtrue_list[iset * nsubfields]
+        for jimage in range(nsubfields)[1:]:
+            mapEsub_mean += mapEsub_list[iset * nsubfields + jimage]
+            maperrsub_mean += maperrsub_list[iset * nsubfields + jimage]
+            mapEtrue_mean += mapEtrue_list[iset * nsubfields + jimage]
+            mapBtrue_mean += mapBtrue_list[iset * nsubfields + jimage]
+        # Divide by nsubfields to get the mean mapE etc.
+        mapEsub_mean /= float(nsubfields)
+        maperrsub_mean /= (float(nsubfields) * np.sqrt(nsubfields))
+        mapEtrue_mean /= float(nsubfields)
+        mapBtrue_mean /= float(nsubfields)
         # Optionally only select the regions where |true B| < select_by_B_leakage * |true E|
         if select_by_B_leakage > 0.:
             use_for_fit = (np.abs(mapBtrue_mean) / np.abs(mapEtrue_mean) < select_by_B_leakage)
@@ -577,22 +577,22 @@ def calc_diffs_E(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntr
     # And return...
     return diffs
 
-def metricG3S_AMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
+def metricG3S_AMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nfields,
                   select_by_B_leakage=0., normalization=1.):
     """A metric based on the absolute differences between a submitted E-mode aperture mass (Map)
     statistic and the target.
     """
     diffs = calc_diffs_E(
-        mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
+        mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nfields,
         select_by_B_leakage=select_by_B_leakage)
     return normalization / np.mean(np.abs(diffs))
 
-def metricG3S_QMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
+def metricG3S_QMD(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nfields,
                   select_by_B_leakage=0., normalization=1.):
     """A metric based on summed (in quadrature) differences between a submitted E-mode aperture
     mass (Map) statistic and the target.
     """
     diffs = calc_diffs_E(
-        mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, ntruesets,
+        mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nfields,
         select_by_B_leakage=select_by_B_leakage)
     return normalization / np.sqrt(np.mean(diffs**2))

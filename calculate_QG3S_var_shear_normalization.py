@@ -14,20 +14,20 @@ NBINS_ANGULAR = 15  # Number of angular bins for correlation function metric
 MIN_SEP = DX_GRID
 MAX_SEP = 10.
 
-NTRUESETS = 8      # Don't necessarily need to have NIMS input shears. But easiest if
-                   # NTRUESETS is an integral fraction of NIMS..
+NFIELDS = 8      # Don't necessarily need to have NIMS input shear fields. Easiest if
+                 # NFIELDS is an integral fraction of NIMS..
 
-CFID = 1.e-4 # Fiducial, "target" m and c values
-MFID = 1.e-3 #
+CFID = 2.e-4 # Fiducial, "target" m and c values
+MFID = 2.e-3 #
 
 PLOT = False # Plot while calculating?
 # Plotting ranges of interest
 CMIN = CFID
-CMAX = 1.e-2
+CMAX = 2.e-2
 MMIN = MFID
-MMAX = 1.e-1
+MMAX = 2.e-1
 NBINS_TEST = 5      # Number of bins to plot in the ranges above
-NMONTE = 50         # Number of montecarlo samples
+NMONTE = 100        # Number of montecarlo samples
 
 # Generate arrays of values for test values of c and m
 CVALS = CMIN * (CMAX / CMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1.)) # geo series
@@ -42,22 +42,28 @@ OUTFILE = os.path.join(
 
 if __name__ == "__main__":
 
+    # Load up the reference PS
     reference_ps = g3metrics.read_ps(galsim_dir=GALSIM_DIR)
-    # Make the truth catalogues (a list of 2D, NGRIDxNGRID numpy arrays), reusing the reference_ps
-    # each time for simplicity
-    g1true_list, g2true_list = g3metrics.make_var_truth_catalogs(
-        NTRUESETS, NIMS, [reference_ps,] * NTRUESETS, ngrid=NGRID, dx_grid=DX_GRID,
-        grid_units=galsim.degrees)
     # Define some empty storage arrays
     qG3S_AMD_unnorm = np.empty((len(CVALS), len(MVALS), NMONTE))
     qG3S_QMD_unnorm = np.empty((len(CVALS), len(MVALS), NMONTE))
-    
-    # Then generate submissions, and truth submissions
-    for c, i in zip(CVALS, range(NBINS_TEST)):
-        print "Calculating CF metrics with c_i = "+str(c)
-        for m, j in zip(MVALS, range(NBINS_TEST)):
-            print "Calculating CF metrics with m_i = "+str(m)
-            for krepeat in range(NMONTE):
+
+    # Then loop
+    for krepeat in range(NMONTE):
+
+        # Make the truth catalogues (a list of 2D, NGRIDxNGRID numpy arrays), reusing the reference
+        # ps each time for simplicity
+        print "Generating truth tables for Monte Carlo realization = "+str(krepeat + 1)+"/"+\
+            str(NMONTE)
+        g1true_list, g2true_list = g3metrics.make_var_truth_catalogs(
+            NFIELDS, NIMS, [reference_ps,] * NFIELDS, ngrid=NGRID, dx_grid=DX_GRID,
+            grid_units=galsim.degrees)
+
+        # Then generate submissions, and truth submissions
+        for c, i in zip(CVALS, range(NBINS_TEST)):
+            print "Calculating CF metrics with c_i = "+str(c)
+            for m, j in zip(MVALS, range(NBINS_TEST)):
+                print "Calculating CF metrics with m_i = "+str(m)
                 # Make a fake submission
                 theta, mapEsubs, mapBsubs, maperrsubs, mapEtrues, mapBtrues = \
                     g3metrics.make_submission_var_shear_CF(
@@ -66,13 +72,13 @@ if __name__ == "__main__":
                         nbins=NBINS_ANGULAR, min_sep=MIN_SEP, max_sep=MAX_SEP)
                 # Calculate the metrics
                 qG3S_AMD_unnorm[i, j, krepeat] = g3metrics.metricG3S_AMD(
-                    mapEsubs, maperrsubs, mapEtrues, mapBtrues, NTRUESETS, normalization=1.)
+                    mapEsubs, maperrsubs, mapEtrues, mapBtrues, NFIELDS, normalization=1.)
                 qG3S_QMD_unnorm[i, j, krepeat] = g3metrics.metricG3S_QMD(
-                    mapEsubs, maperrsubs, mapEtrues, mapBtrues, NTRUESETS, normalization=1.)
+                    mapEsubs, maperrsubs, mapEtrues, mapBtrues, NFIELDS, normalization=1.)
                 print str(__file__)+": Completed "+str(krepeat + 1)+"/"+str(NMONTE)+\
                     " Monte Carlo realizations"
 
-            sys.stdout.write('\n')
+        sys.stdout.write('\n')
 
     print ""
     print "Writing results to "+OUTFILE

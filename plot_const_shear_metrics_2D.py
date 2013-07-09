@@ -2,12 +2,14 @@ import os
 import numpy as np
 import g3metrics
 
+# Currently setup for doing NOISE FREE simulations!
+
 NIMS = 200               # Number of images per set, always 200 for G10
 NGALS_PER_IM = 1     # In GREAT08/GREAT10 there were 10000 galaxies, but here there's no noise
 TRUE_SIGMA = 0.04        # Standard deviation of true input shears for normal distribution
 TRUE_RANGE = 0.08        # Range of true input shears for a uniform distribution
-NTRUESETS = 50           # Don't necessarily need to have NIMS input shears. But easiest if
-                         # NTRUESETS is an integral fraction of NIMS..
+NFIELDS = 10             # Don't necessarily need to have NIMS input shears. But easiest if
+                         # NFIELDS is an integral fraction of NIMS..
 
 CFID = 2.e-4 # Fiducial, "target" m and c values
 MFID = 2.e-3 #
@@ -29,7 +31,7 @@ mvals = MMIN * (MMAX / MMIN)**(np.arange(NBINS) / float(NBINS - 1.))
 cgrid, mgrid = np.meshgrid(cvals, mvals) # 2D arrays covering full space
 
 # Generate the truth tables
-g1true, g2true = g3metrics.make_const_truth_normal_dist(NTRUESETS, NIMS, true_sigma=TRUE_SIGMA)
+g1true, g2true = g3metrics.make_const_truth_normal_dist(NFIELDS, NIMS, true_sigma=TRUE_SIGMA)
 
 # Create empty storage arrays in which to put
 QZ1_mcboth = np.empty((NBINS, NBINS))
