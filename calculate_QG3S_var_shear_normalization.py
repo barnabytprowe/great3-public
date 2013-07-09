@@ -36,7 +36,7 @@ CGRID, MGRID = np.meshgrid(CVALS, MVALS) # 2D arrays covering full space
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
 #GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
-GALSIM_DIR=os.path.join("/home", "browe", "great3", "64")
+GALSIM_DIR=os.path.join("/home", "browe", "great3", "64", "GalSim")
 
 OUTFILE = os.path.join(
     'results', 'normalization_G3S_N'+str(NMONTE)+'_noise_sigma'+str(NOISE_SIGMA)+'.pkl')
