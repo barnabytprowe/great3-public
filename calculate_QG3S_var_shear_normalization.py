@@ -76,9 +76,9 @@ if __name__ == "__main__":
                     mapEsubs, maperrsubs, mapEtrues, mapBtrues, NFIELDS, normalization=1.)
                 qG3S_QMD_unnorm[i, j, krepeat] = g3metrics.metricG3S_QMD(
                     mapEsubs, maperrsubs, mapEtrues, mapBtrues, NFIELDS, normalization=1.)
-                print str(__file__)+": Completed "+str(krepeat + 1)+"/"+str(NMONTE)+\
-                    " Monte Carlo realizations"
 
+        print str(__file__)+": Completed "+str(krepeat + 1)+"/"+str(NMONTE)+\
+                    " Monte Carlo realizations"
         sys.stdout.write('\n')
 
     print ""
