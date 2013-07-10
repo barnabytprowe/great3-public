@@ -102,7 +102,7 @@ class Team(models.Model):
 	def winning_teams(cls):
 		teams = cls.objects.order_by('-score')
 		if len(teams)==0:
-			return [], PLACEHOLDER_SCORE
+			return [], PLACEHOLDER_SCORE, NO_TIEBREAK
 		top_team = teams[0]
 		winners = [top_team]
 		best_score = top_team.score
@@ -132,11 +132,11 @@ def score_for_rank(rank):
 	""" The score that a team gets if their top-ranked
 		entry into a board is at the given rank.
 	"""
-	if   rank==1: return 16
-	elif rank==2: return 8
-	elif rank==3: return 4
-	elif rank==4: return 2
-	elif rank==5: return 1
+	if   rank==1: return 16000
+	elif rank==2: return 8000
+	elif rank==3: return 4000
+	elif rank==4: return 2000
+	elif rank==5: return 1000
 	else: return 0
 
 
