@@ -9,7 +9,7 @@
 <P>No entries have been scored yet so there is no current winner.</P>
 {% elif winners|length == 1 %}
 {% with winners|first as winner %}
-<P> Team <A href="{% url leaderboard.team_views.detail winner.id %}">  {{ winner }} </A> is in the lead with {{score}} points!</P>
+<P> Team <A href="{% url leaderboard.team_views.detail winner.id %}">  {{ winner }} </A> is in the lead with {{score}} points{{tiebreak}}!</P>
 {% endwith %}
 {% else %}
 <P> These teams are sharing the lead with {{score}} points! 

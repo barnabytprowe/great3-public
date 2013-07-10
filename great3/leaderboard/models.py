@@ -15,6 +15,10 @@ PLACEHOLDER_SCORE = -1.0
 PLACEHOLDER_RANK = 1000
 MAXIMUM_ENTRIES_PER_DAY = 3
 MAX_BOARDS_FOR_SCORING = 5
+NO_TIEBREAK = 0
+TIEBREAK_ALL_SCORES = 1
+TIEBREAK_TIMESTAMP = 2
+
 EXPERIMENT_CHOICES = [
 	('Control','Control'),
 	('Realistic Galaxy','Realistic Galaxy'),
@@ -46,13 +50,22 @@ class Team(models.Model):
 	def __unicode__(self):
 		return self.name
 
-	def calculate_score(self, tiebreak=False):
+	def earliest_ranked_entry_time(self):
+		entries = [(entry.get_points(), entry) for entry in self.entry_set.all()]
+		entries =sorted(entries)[::-1] #sorted by score (first tuple element), ascending
+		entries = [e[1] for e in entries if e[0]>0] #all the entries with any points
+		timestamps = sorted([entry.date for entry in entries])
+		return timestamps[0]
+
+	def calculate_tiebreak_score(self):
 		scores = [entry.get_points() for entry in self.entry_set.all()]
-		if tiebreak:
-			new_score = sum(scores)
-		else:
-			scores = sorted(scores)[::-1]
-			new_score = sum(scores[:MAX_BOARDS_FOR_SCORING])
+		total_score = sum(scores)
+		return total_score
+
+	def calculate_score(self):
+		scores = [entry.get_points() for entry in self.entry_set.all()]
+		scores = sorted(scores)[::-1]
+		new_score = sum(scores[:MAX_BOARDS_FOR_SCORING])
 		self.score = new_score
 		self.save()
 		return new_score
@@ -98,14 +111,21 @@ class Team(models.Model):
 				winners.append(team)
 			else:
 				break
+		tiebreak=0
 		if len(winners)>1:
-			scores = [(winner.calculate_score(tiebreak=True), winner) for winner in winners]
+			scores = [(winner.calculate_tiebreak_score(), winner) for winner in winners]
 			scores.sort()  #python trick.  sorts by the first element of the tuple
-			best_tiebreak_score = scores[0][0]
+			best_tiebreak_score = scores[-1][0] #last score should be highest
 			winners = [w[1] for w in scores if w[0]==best_tiebreak_score]
-			#what if there is still a tie? At the moment we neglect this
+			tiebreak=1
+		# Second tie-break!  Time-stamp on the earliest entry
+		if len(winners)>1:
+			timestamps = [(winner.earliest_ranked_entry_time(), winner) for winner in winners]
+			timestamps.sort()
+			winners = [timestamps[0][1]]
+			tiebreak=2
 
-		return winners, best_score
+		return winners, best_score, tiebreak
 
 
 def score_for_rank(rank):
