@@ -43,9 +43,11 @@ def setup(request):
 
 
 class TeamCreationForm(forms.ModelForm):
+	tainted = forms.BooleanField(label="Tick if any Great-3 Exective Team members will contribute to team entries:", required=False)
+
 	class Meta:
 		model = Team
-		fields = ("name","notes")
+		fields = ("name","notes","tainted")
 		widgets = {"notes":forms.Textarea}
 	def clean_name(self):
 		name=self.cleaned_data["name"].strip()

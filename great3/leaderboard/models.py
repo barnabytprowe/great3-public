@@ -46,16 +46,26 @@ class Team(models.Model):
 	notes = models.CharField(max_length=512)
 	score = models.IntegerField(default=0)
 	rank = models.IntegerField(default=PLACEHOLDER_RANK)
+	tainted = models.BooleanField(default=False)
 
 	def __unicode__(self):
 		return self.name
+
+	def score_text(self):
+		if self.tainted:
+			return '*'
+		else:
+			return str(self.score)
 
 	def earliest_ranked_entry_time(self):
 		entries = [(entry.get_points(), entry) for entry in self.entry_set.all()]
 		entries =sorted(entries)[::-1] #sorted by score (first tuple element), ascending
 		entries = [e[1] for e in entries if e[0]>0] #all the entries with any points
 		timestamps = sorted([entry.date for entry in entries])
-		return timestamps[0]
+		if timestamps:
+			return timestamps[0]
+		else:
+			return None
 
 	def calculate_tiebreak_score(self):
 		scores = [entry.get_points() for entry in self.entry_set.all()]
@@ -73,7 +83,6 @@ class Team(models.Model):
 	def top_entries_by_rank(self, n=MAX_BOARDS_FOR_SCORING):
 		return self.entry_set.order_by('rank','date')[:n]
 
-
 	@classmethod
 	@transaction.commit_manually()
 	def update_ranks(cls):
@@ -87,6 +96,8 @@ class Team(models.Model):
 		return len(self.entry_set.all())
 
 	def rank_text(self):
+		if self.tainted:
+			return "*"
 		if self.rank==PLACEHOLDER_RANK:
 			return "-"
 		else:
@@ -154,7 +165,7 @@ class Board(models.Model):
 		ranked_teams = []
 		rank=1
 		for entry in entries:
-			if entry.team in ranked_teams:
+			if entry.team in ranked_teams or entry.team.tainted:
 				entry.rank=PLACEHOLDER_RANK
 			else:
 				ranked_teams.append(entry.team)
@@ -200,6 +211,8 @@ class Entry(models.Model):
 		return self.name
 
 	def rank_text(self):
+		if self.team.tainted:
+			return '*'
 		r = self.rank
 		if r==PLACEHOLDER_RANK:
 			return ""
@@ -209,7 +222,10 @@ class Entry(models.Model):
 		if self.score == PLACEHOLDER_SCORE:
 			return "...Calculating..."
 		else:
-			return "%.1f" % self.score
+			score = "%.1f" % self.score
+			if self.team.tainted:
+				score += ' *'
+			return score
 
 	def get_points(self):
 		return score_for_rank(self.rank)
