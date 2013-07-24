@@ -12,8 +12,9 @@
 {% block content %}
 	<H3> Team:  {{ team.name }} </H3>
 	<P> Notes:  {{ team.notes }} </P>
-	<P> Total score: {{ team.score }} </P>
+	<P> Total score: {{ team.score_text }} </P>
 	<P> Overall rank: {{ team.rank_text }} </P>
+	{% if team.tainted %}<P>This team is tainted by the help of Great-3 executive members and cannot score points or gain ranks</P> {% endif %}
 	<H4> Leaderboard entries </H4>
 
 	<table id="teamTable" class="tablesorter">

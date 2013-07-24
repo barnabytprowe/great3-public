@@ -15,6 +15,10 @@ PLACEHOLDER_SCORE = -1.0
 PLACEHOLDER_RANK = 1000
 MAXIMUM_ENTRIES_PER_DAY = 3
 MAX_BOARDS_FOR_SCORING = 5
+NO_TIEBREAK = 0
+TIEBREAK_ALL_SCORES = 1
+TIEBREAK_TIMESTAMP = 2
+
 EXPERIMENT_CHOICES = [
 	('Control','Control'),
 	('Realistic Galaxy','Realistic Galaxy'),
@@ -42,24 +46,42 @@ class Team(models.Model):
 	notes = models.CharField(max_length=512)
 	score = models.IntegerField(default=0)
 	rank = models.IntegerField(default=PLACEHOLDER_RANK)
+	tainted = models.BooleanField(default=False)
 
 	def __unicode__(self):
 		return self.name
 
-	def calculate_score(self, tiebreak=False):
-		scores = [entry.get_points() for entry in self.entry_set.all()]
-		if tiebreak:
-			new_score = sum(scores)
+	def score_text(self):
+		if self.tainted:
+			return '*'
 		else:
-			scores = sorted(scores)[::-1]
-			new_score = sum(scores[:MAX_BOARDS_FOR_SCORING])
+			return str(self.score)
+
+	def earliest_ranked_entry_time(self):
+		entries = [(entry.get_points(), entry) for entry in self.entry_set.all()]
+		entries =sorted(entries)[::-1] #sorted by score (first tuple element), ascending
+		entries = [e[1] for e in entries if e[0]>0] #all the entries with any points
+		timestamps = sorted([entry.date for entry in entries])
+		if timestamps:
+			return timestamps[0]
+		else:
+			return None
+
+	def calculate_tiebreak_score(self):
+		scores = [entry.get_points() for entry in self.entry_set.all()]
+		total_score = sum(scores)
+		return total_score
+
+	def calculate_score(self):
+		scores = [entry.get_points() for entry in self.entry_set.all()]
+		scores = sorted(scores)[::-1]
+		new_score = sum(scores[:MAX_BOARDS_FOR_SCORING])
 		self.score = new_score
 		self.save()
 		return new_score
 
 	def top_entries_by_rank(self, n=MAX_BOARDS_FOR_SCORING):
 		return self.entry_set.order_by('rank','date')[:n]
-
 
 	@classmethod
 	@transaction.commit_manually()
@@ -74,6 +96,8 @@ class Team(models.Model):
 		return len(self.entry_set.all())
 
 	def rank_text(self):
+		if self.tainted:
+			return "*"
 		if self.rank==PLACEHOLDER_RANK:
 			return "-"
 		else:
@@ -89,7 +113,7 @@ class Team(models.Model):
 	def winning_teams(cls):
 		teams = cls.objects.order_by('-score')
 		if len(teams)==0:
-			return [], PLACEHOLDER_SCORE
+			return [], PLACEHOLDER_SCORE, NO_TIEBREAK
 		top_team = teams[0]
 		winners = [top_team]
 		best_score = top_team.score
@@ -98,25 +122,32 @@ class Team(models.Model):
 				winners.append(team)
 			else:
 				break
+		tiebreak=0
 		if len(winners)>1:
-			scores = [(winner.calculate_score(tiebreak=True), winner) for winner in winners]
+			scores = [(winner.calculate_tiebreak_score(), winner) for winner in winners]
 			scores.sort()  #python trick.  sorts by the first element of the tuple
-			best_tiebreak_score = scores[0][0]
+			best_tiebreak_score = scores[-1][0] #last score should be highest
 			winners = [w[1] for w in scores if w[0]==best_tiebreak_score]
-			#what if there is still a tie? At the moment we neglect this
+			tiebreak=1
+		# Second tie-break!  Time-stamp on the earliest entry
+		if len(winners)>1:
+			timestamps = [(winner.earliest_ranked_entry_time(), winner) for winner in winners]
+			timestamps.sort()
+			winners = [timestamps[0][1]]
+			tiebreak=2
 
-		return winners, best_score
+		return winners, best_score, tiebreak
 
 
 def score_for_rank(rank):
 	""" The score that a team gets if their top-ranked
 		entry into a board is at the given rank.
 	"""
-	if   rank==1: return 16
-	elif rank==2: return 8
-	elif rank==3: return 4
-	elif rank==4: return 2
-	elif rank==5: return 1
+	if   rank==1: return 16000
+	elif rank==2: return 8000
+	elif rank==3: return 4000
+	elif rank==4: return 2000
+	elif rank==5: return 1000
 	else: return 0
 
 
@@ -134,7 +165,7 @@ class Board(models.Model):
 		ranked_teams = []
 		rank=1
 		for entry in entries:
-			if entry.team in ranked_teams:
+			if entry.team in ranked_teams or entry.team.tainted:
 				entry.rank=PLACEHOLDER_RANK
 			else:
 				ranked_teams.append(entry.team)
@@ -180,6 +211,8 @@ class Entry(models.Model):
 		return self.name
 
 	def rank_text(self):
+		if self.team.tainted:
+			return '*'
 		r = self.rank
 		if r==PLACEHOLDER_RANK:
 			return ""
@@ -189,7 +222,10 @@ class Entry(models.Model):
 		if self.score == PLACEHOLDER_SCORE:
 			return "...Calculating..."
 		else:
-			return "%.1f" % self.score
+			score = "%.1f" % self.score
+			if self.team.tainted:
+				score += ' *'
+			return score
 
 	def get_points(self):
 		return score_for_rank(self.rank)
