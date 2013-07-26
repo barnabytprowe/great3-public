@@ -19,7 +19,7 @@ experiments = [
 ]
 obs_type = [
     'ground',
-    #'space',
+    'space',
 ]
 shear_type = [
     'constant',
