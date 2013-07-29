@@ -19,17 +19,18 @@ experiments = [
 ]
 obs_type = [
     'ground',
-    'space',
+    #'space',
 ]
 shear_type = [
-    'constant',
-    #'variable',
+    #'constant',
+    'variable',
 ]
 
 root = 'test_run'
 subfield_max = 2                # I keep this small so the test doesn't take too long.
 data_dir = 'great3_fit_data'    # This should be set up as a sim-link to your Dropbox folder.
-seed = 12345                    # Whatever.
+ps_dir = '../inputs/ps/tables' 
+seed = 12345                    # Whatever.  (But not zero.)
 
 # Clean up possible residue from previous runs.
 shutil.rmtree(root, ignore_errors=True)
@@ -38,7 +39,8 @@ shutil.rmtree(root, ignore_errors=True)
 t1 = time.time()
 great3.run(root, subfield_max=subfield_max,
            experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-           dir=data_dir, seed=seed, steps=['metaparameters', 'catalogs', 'config']
+           gal_dir=data_dir, ps_dir=ps_dir,
+           seed=seed, steps=['metaparameters', 'catalogs', 'config']
 )
 t2 = time.time()
 print
