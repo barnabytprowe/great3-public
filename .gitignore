@@ -1,7 +1,2 @@
-g3truth/*
-g3subs/*
-results/*
-*.pyc
-*.png
 temp*
 .DS_Store
