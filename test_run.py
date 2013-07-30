@@ -19,14 +19,15 @@ experiments = [
 ]
 obs_type = [
     'ground',
-    #'space',
+    'space',
 ]
 shear_type = [
-    #'constant',
+    'constant',
     'variable',
 ]
 
 root = 'test_run'
+subfield_min = 0
 subfield_max = 2                # I keep this small so the test doesn't take too long.
 data_dir = 'great3_fit_data'    # This should be set up as a sim-link to your Dropbox folder.
 ps_dir = '../inputs/ps/tables' 
@@ -37,7 +38,9 @@ shutil.rmtree(root, ignore_errors=True)
 
 # Build catalogs, etc.
 t1 = time.time()
-great3.run(root, subfield_max=subfield_max,
+great3.constants.nrows = 20
+great3.constants.ncols = 20
+great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
            experiments=experiments, obs_type=obs_type, shear_type=shear_type,
            gal_dir=data_dir, ps_dir=ps_dir,
            seed=seed, steps=['metaparameters', 'catalogs', 'config']
@@ -70,9 +73,10 @@ os.chdir('..')
 
 # Build images using great3.run
 t1 = time.time()
-great3.run(root, subfield_max=subfield_max,
+great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
            experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-           dir=data_dir, seed=seed, steps=['images']
+           gal_dir=data_dir, ps_dir=ps_dir,
+           seed=seed, steps=['images']
 )
 t2 = time.time()
 print
@@ -81,10 +85,11 @@ print
 
 # Check that images are the same.
 print 'Checking diffs: (No output means success)'
+sys.stdout.flush()
 for dir in dirs:
-    for i in range(subfield_max+1):
+    for i in range(subfield_min, subfield_max+1):
         f1 = os.path.join(dir,'image-%03d-0.fits'%i)
         f2 = os.path.join(dir,'yaml_image-%03d-0.fits'%i)
-        p = subprocess.Popen(['diff',f1,f2])
+        p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
         p.communicate()
 
