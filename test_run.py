@@ -27,8 +27,8 @@ shear_type = [
 ]
 
 root = 'test_run'
-subfield_min = 0
-subfield_max = 2                # I keep this small so the test doesn't take too long.
+subfield_min = 199    # Start with the last regular field if we want to check out the deep fields.
+subfield_max = 201    # Total of 3 sub-fields
 data_dir = 'great3_fit_data'    # This should be set up as a sim-link to your Dropbox folder.
 ps_dir = '../inputs/ps/tables' 
 seed = 12345                    # Whatever.  (But not zero.)
@@ -93,3 +93,13 @@ for dir in dirs:
         p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
         p.communicate()
 
+# Now package up the data that should be public
+t1 = time.time()
+great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
+           experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+           gal_dir=data_dir, seed=seed, steps=['packages']
+)
+t2 = time.time()
+print
+print 'Time for great3.run packages = ',t2-t1
+print
