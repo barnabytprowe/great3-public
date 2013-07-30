@@ -72,7 +72,7 @@ os.chdir('..')
 t1 = time.time()
 great3.run(root, subfield_max=subfield_max,
            experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-           dir=data_dir, seed=seed, steps=['images']
+           gal_dir=data_dir, seed=seed, steps=['images']
 )
 t2 = time.time()
 print
@@ -88,3 +88,13 @@ for dir in dirs:
         p = subprocess.Popen(['diff',f1,f2])
         p.communicate()
 
+# Now package up the data that should be public
+t1 = time.time()
+great3.run(root, subfield_max=subfield_max,
+           experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+           gal_dir=data_dir, seed=seed, steps=['packages']
+)
+t2 = time.time()
+print
+print 'Time for great3.run packages = ',t2-t1
+print
