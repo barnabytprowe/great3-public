@@ -51,6 +51,7 @@ print 'Time for great3.run up to config = ',t2-t1
 print
 
 # build images using galsim_yaml
+t1 = time.time()
 dirs = []
 os.chdir(root)
 for exp in experiments:
@@ -62,14 +63,18 @@ for exp in experiments:
             s = shear[0]
             f = e + o + s + '.yaml'
             dirs.append( os.path.join(root,exp,obs,shear) )
-            t1 = time.time()
+            t3 = time.time()
             p = subprocess.Popen(['galsim_yaml',f,'-v1'])
             p.communicate() # wait until done
-            t2 = time.time()
+            t4 = time.time()
             print
-            print 'Time for galsim_yaml',f,'= ',t2-t1
+            print 'Time for galsim_yaml',f,'= ',t4-t3
             print
 os.chdir('..')
+t2 = time.time()
+print
+print 'Total time for galsim_yaml = ',t2-t1
+print
 
 # Build images using great3.run
 t1 = time.time()
