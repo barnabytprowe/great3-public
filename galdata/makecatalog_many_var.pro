@@ -66,7 +66,8 @@ datastr = {ident: 0L, $
            PSF_hdu: 0L, $
            pixel_scale: 0.D, $; arcsec
            noise_mean: 0.D, $
-           noise_variance: 0.D}
+           noise_variance: 0.D, $
+           noise_filename: ''}
 data = replicate(datastr, ngal)
            
 ; populate the data structure from the input catalog
@@ -86,6 +87,7 @@ for i=0L,nuse-1 do begin
    data[i].PSF_hdu=i-(nfile-1)*per
    data[i].noise_mean=mean[i]
    data[i].noise_variance=var[i]
+   data[i].noise_filename='acs_I_unrot_sci_20_cf.fits'
 endfor
    
 ;data.gal_hdu = indices

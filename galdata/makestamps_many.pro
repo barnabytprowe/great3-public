@@ -82,7 +82,7 @@ for i=0L,ncat-1 do begin
       
 
    ;; find that region in x, y, and expand its size by factor of
-   ;; 1.25 (unless that goes beyond the whole postage stamp)
+   ;; 2.00 (unless that goes beyond the whole postage stamp)
       tmpsize = size(img)
       centroidval = 0.5*tmpsize[1]
       arrind = array_indices(seg, wimg)
@@ -94,8 +94,8 @@ for i=0L,ncat-1 do begin
       xsize = max(xminussize, xplussize)
       
    
-      minxc = round(centroidval - 1.25*xsize) > 0
-      maxxc = round(centroidval + 1.25*xsize) < tmpsize[1]-1
+      minxc = round(centroidval - 2.00*xsize) > 0
+      maxxc = round(centroidval + 2.00*xsize) < tmpsize[1]-1
    
    ;; check for case when too few pixels are found.  Could be due
    ;; to centroid being displaced.  just use midpoint of image
@@ -105,8 +105,8 @@ for i=0L,ncat-1 do begin
          xplussize = maxx-midx
          xminussize = midx-minx
          xsize = max(xminussize, xplussize)
-         minx = round(midx - 1.5*xsize) > 0
-         maxx = round(midx + 1.5*xsize) < tmpsize[1]-1
+         minx = round(midx - 2.0*xsize) > 0
+         maxx = round(midx + 2.0*xsize) < tmpsize[1]-1
       endif else begin
          minx = minxc
          maxx = maxxc
@@ -120,8 +120,8 @@ for i=0L,ncat-1 do begin
       ysize = max(yminussize, yplussize)
       
    
-      minyc = round(centroidval - 1.25*ysize) > 0
-      maxyc = round(centroidval + 1.25*ysize) < tmpsize[1]-1
+      minyc = round(centroidval - 2.00*ysize) > 0
+      maxyc = round(centroidval + 2.00*ysize) < tmpsize[1]-1
 
    ;; check for case when too few pixels are found.  Could be due
    ;; to centroid being displaced.  just use midpoint
@@ -131,18 +131,36 @@ for i=0L,ncat-1 do begin
          yplussize = maxy-midy
          yminussize = midy-miny
          ysize = max(yminussize, yplussize)
-         miny = round(midy - 1.5*ysize) > 0
-         maxy = round(midy + 1.5*ysize) < tmpsize[1]-1
+         miny = round(midy - 2.0*ysize) > 0
+         maxy = round(midy + 2.0*ysize) < tmpsize[1]-1
       endif else begin
          miny = minyc
          maxy = maxyc
       endelse
-      
 
-   ; for PSF, cut it off where flux is <1000x peak
+      ;; check if it's square.  If not, then make it square by
+      ;; adopting the size in the dimension that is larger.
+      ddy = maxy + 1 - miny
+      ddx = maxx + 1 - minx
+      if (ddy gt ddx) then begin
+         delta_size = ddy - ddx
+         delta_size_1 = delta_size / 2
+         delta_size_2 = delta_size - delta_size_1
+         minx = minx - delta_size_1 > 0
+         maxx = maxx + delta_size_2 < tmpsize[1]-1
+      endif
+      if (ddx gt ddy) then begin
+         delta_size = ddx - ddy
+         delta_size_1 = delta_size / 2
+         delta_size_2 = delta_size - delta_size_1
+         miny = miny - delta_size_1 > 0
+         maxy = maxy + delta_size_2 < tmpsize[1]-1
+      endif
+
+   ; for PSF, cut it off where flux is <2000x peak
       tmpsize = size(psf)
       centroidval = 0.5*tmpsize[1]
-      wkeep = where(psf ge 0.001*max(psf),nkeep)
+      wkeep = where(psf ge 0.0005*max(psf),nkeep)
       arrind = array_indices(psf,wkeep)
       minxp = min(arrind[0,*])
       maxxp = max(arrind[0,*])
