@@ -27,7 +27,10 @@ shear_type = [
 ]
 
 root = 'test_run'
-subfield_max = 2                # I keep this small so the test doesn't take too long.
+subfield_min = 199              # Start with the last regular field if we want to check out the deep
+                                # fields.
+subfield_max = 201              # Keep the difference between subfield_min and max small so the test
+                                # doesn't take too long.
 data_dir = 'great3_fit_data'    # This should be set up as a sim-link to your Dropbox folder.
 ps_dir = '../inputs/ps/tables' 
 seed = 12345                    # Whatever.  (But not zero.)
@@ -37,7 +40,7 @@ shutil.rmtree(root, ignore_errors=True)
 
 # Build catalogs, etc.
 t1 = time.time()
-great3.run(root, subfield_max=subfield_max,
+great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
            experiments=experiments, obs_type=obs_type, shear_type=shear_type,
            gal_dir=data_dir, ps_dir=ps_dir,
            seed=seed, steps=['metaparameters', 'catalogs', 'config']
@@ -70,7 +73,7 @@ os.chdir('..')
 
 # Build images using great3.run
 t1 = time.time()
-great3.run(root, subfield_max=subfield_max,
+great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
            experiments=experiments, obs_type=obs_type, shear_type=shear_type,
            gal_dir=data_dir, seed=seed, steps=['images']
 )
@@ -82,7 +85,7 @@ print
 # Check that images are the same.
 print 'Checking diffs: (No output means success)'
 for dir in dirs:
-    for i in range(subfield_max+1):
+    for i in range(subfield_min, subfield_max+1):
         f1 = os.path.join(dir,'image-%03d-0.fits'%i)
         f2 = os.path.join(dir,'yaml_image-%03d-0.fits'%i)
         p = subprocess.Popen(['diff',f1,f2])
@@ -90,7 +93,7 @@ for dir in dirs:
 
 # Now package up the data that should be public
 t1 = time.time()
-great3.run(root, subfield_max=subfield_max,
+great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
            experiments=experiments, obs_type=obs_type, shear_type=shear_type,
            gal_dir=data_dir, seed=seed, steps=['packages']
 )
