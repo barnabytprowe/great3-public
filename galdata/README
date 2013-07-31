@@ -87,3 +87,9 @@ fixed to 1 and 4, respectively, and they are required to have the same centroid.
 FIT_STATUS: An array of 5 numbers indicating the status of the fit.  The first of those numbers is
 the status for BULGEFIT, and the last of those 5 numbers is the status for SERSICFIT.  A status of 0
 or 5 indicates failure.
+
+FIT_MAD_S: the median absolute deviation between the image and the SERSICFIT model, as determined in
+a region containing primarily pixels in the galaxy (not sky).  This can be used comparatively with
+FIT_MAD_B to determine which is a better description of the galaxy.
+
+FIT_MAD_B: same as FIT_MAD_S, but for the BULGEFIT model.
