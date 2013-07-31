@@ -35,9 +35,9 @@ for i in range(n):
         print "...",i
     params = dat[i].field('bulgefit')
     sparams = dat[i].field('sersicfit')
-    bstat = dat[i].field('mpfit_status')[0]
-    sstat = dat[i].field('mpfit_status')[4]
-    dvc_btt = dat[i].field('dvc_btt')
+    bstat = dat[i].field('fit_status')[0]
+    sstat = dat[i].field('fit_status')[4]
+    dvc_btt = dat[i].field('fit_dvc_btt')
     bmad = dat[i].field('fit_mad_b')
     smad = dat[i].field('fit_mad_s')
 
