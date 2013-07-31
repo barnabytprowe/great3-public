@@ -75,14 +75,16 @@ for i_cat in range(n_catfiles):
         fit_mag_auto = dat.field('mag_auto')
         fit_mad_s = dat.field('mad_sersic_mask')
         fit_mad_b = dat.field('mad_dvcb_mask')
+        fit_dvc_btt = dat.field('dvc_btt')
     if i_cat > 0:
         fit_ident = np.append(fit_ident, dat.field('galid'))
         fit_sersicfit = np.append(fit_sersicfit, dat.field('sersicfit'), axis=0)
         fit_bulgefit = np.append(fit_bulgefit, dat.field('bulgefit'), axis=0)
         fit_status = np.append(fit_status, dat.field('mpfit_status'), axis=0)
         fit_mag_auto = np.append(fit_mag_auto, np.zeros_like(dat.field('galid')), axis=0)
-        fit_mad_s = np.append(fit_mad_s, np.zeros_like(dat.field('mad_sersic_mask')), axis=0)
-        fit_mad_b = np.append(fit_mad_b, np.zeros_like(dat.field('mad_dvcb_mask')), axis=0)
+        fit_mad_s = np.append(fit_mad_s, dat.field('mad_sersic_mask'), axis=0)
+        fit_mad_b = np.append(fit_mad_b, dat.field('mad_dvcb_mask'), axis=0)
+        fit_dvc_btt = np.append(fit_dvc_btt, dat.field('dvc_btt'), axis=0)
 
     # increment counter
     n_fit_tot += n
@@ -168,6 +170,7 @@ out_bulgefit = fit_bulgefit[fit_ind[use_ind],:]
 out_fit_status = fit_status[fit_ind[use_ind],:]
 out_fit_mad_s = fit_mad_s[fit_ind[use_ind],:]
 out_fit_mad_b = fit_mad_b[fit_ind[use_ind],:]
+out_fit_dvc_btt = fit_dvc_btt[fit_ind[use_ind],:]
 
 # make output data structure
 # here's what we want:
@@ -198,7 +201,10 @@ tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
                                                        array=out_fit_mad_s),
                                          pyfits.Column(name='fit_mad_b',
                                                        format='D',
-                                                       array=out_fit_mad_b)]
+                                                       array=out_fit_mad_b),
+                                         pyfits.Column(name='fit_dvc_btt',
+                                                       format='D',
+                                                       array=out_fit_dvc_btt)]
                                         ))
 
 # write outputs

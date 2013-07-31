@@ -93,3 +93,5 @@ a region containing primarily pixels in the galaxy (not sky).  This can be used 
 FIT_MAD_B to determine which is a better description of the galaxy.
 
 FIT_MAD_B: same as FIT_MAD_S, but for the BULGEFIT model.
+
+FIT_DVC_BTT: The bulge-to-total flux ratio (B/T) for the 2-component BULGEFIT.
