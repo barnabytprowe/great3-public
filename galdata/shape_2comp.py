@@ -54,15 +54,15 @@ for i in range(n):
             continue
 
     if use_bulgefit[i]:
+        bulge_q = params[11]
         bulge_beta = params[15]*galsim.radians
         bulge_hlr = 0.03*np.sqrt(bulge_q)*params[9]
         bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*params[8]
-        bulge_q = params[11]
 
+        disk_q = params[3]
         disk_beta = params[7]*galsim.radians
         disk_hlr = 0.03*np.sqrt(disk_q)*params[1]
         disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*params[0]
-        disk_q = params[3]
         
         bfrac = bulge_flux/(bulge_flux+disk_flux)
 
