@@ -5,7 +5,7 @@ import numpy as np
 
 # define variables etc.
 galsim_catfile = 'real_galaxy_catalog_23.5.fits'
-fit_catfiles = ['BRIGHTtotalRAW00000.26113.fits.gz',
+fit_catfiles = ['BRIGHTtotalRAW00000.26113.fits',
                 'totalRAW00000.29949.fits.gz']
 n_catfiles = len(fit_catfiles)
 cosmos_catfile = 'lensing14.fits.gz'
@@ -72,11 +72,17 @@ for i_cat in range(n_catfiles):
         fit_sersicfit = dat.field('sersicfit')
         fit_bulgefit = dat.field('bulgefit')
         fit_status = dat.field('mpfit_status')
+        fit_mag_auto = dat.field('mag_auto')
+        fit_mad_s = dat.field('mad_sersic_mask')
+        fit_mad_b = dat.field('mad_dvcb_mask')
     if i_cat > 0:
         fit_ident = np.append(fit_ident, dat.field('galid'))
         fit_sersicfit = np.append(fit_sersicfit, dat.field('sersicfit'), axis=0)
         fit_bulgefit = np.append(fit_bulgefit, dat.field('bulgefit'), axis=0)
         fit_status = np.append(fit_status, dat.field('mpfit_status'), axis=0)
+        fit_mag_auto = np.append(fit_mag_auto, np.zeros_like(dat.field('galid')), axis=0)
+        fit_mad_s = np.append(fit_mad_s, np.zeros_like(dat.field('mad_sersic_mask')), axis=0)
+        fit_mad_b = np.append(fit_mad_b, np.zeros_like(dat.field('mad_dvcb_mask')), axis=0)
 
     # increment counter
     n_fit_tot += n
@@ -151,11 +157,17 @@ print "Actually using ",len(out_ident)
 out_mag_auto = cos_mag_auto[cos_ind[use_ind]]
 out_flux_rad = cos_flux_rad[cos_ind[use_ind]]
 out_zphot = cos_zphot[cos_ind[use_ind]]
+test_mag_auto = fit_mag_auto[fit_ind[use_ind]]
+print 'mag auto test:'
+print out_mag_auto[0:9]
+print test_mag_auto[0:9]
 
 # rearrange the FIT arrays with fit quantities in the same order as galsim_ident
 out_sersicfit = fit_sersicfit[fit_ind[use_ind],:]
 out_bulgefit = fit_bulgefit[fit_ind[use_ind],:]
 out_fit_status = fit_status[fit_ind[use_ind],:]
+out_fit_mad_s = fit_mad_s[fit_ind[use_ind],:]
+out_fit_mad_b = fit_mad_b[fit_ind[use_ind],:]
 
 # make output data structure
 # here's what we want:
@@ -180,7 +192,13 @@ tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
                                                        array=out_bulgefit),
                                          pyfits.Column(name='fit_status',
                                                        format='5J',
-                                                       array=out_fit_status)]
+                                                       array=out_fit_status),
+                                         pyfits.Column(name='fit_mad_s',
+                                                       format='D',
+                                                       array=out_fit_mad_s),
+                                         pyfits.Column(name='fit_mad_b',
+                                                       format='D',
+                                                       array=out_fit_mad_b)]
                                         ))
 
 # write outputs
