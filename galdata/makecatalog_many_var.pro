@@ -6,39 +6,13 @@ PRO makecatalog_many_var,label,start,n,per,varfile,seed
 ;; for each file
 
 ; define input catalog, output file
-incatw = './shera_catalog_23.5.fits'
 outcat = './real_galaxy_catalog'+label+'.fits'
+tmpoutcat = 'foo.fits'
 
-
-; define names of files that will contain the images - needs to be
-; modified based on makestamps.pro
-
-
-; how many galaxies to include?
-nuse = n
-
-; read input catalog: note, ordering is NOT random, so let's
-; reorder randomly (but self-consistently with previous script by
-; using an input seed that is the same)
-mycat = mrdfits(incatw, 1)
+; read input / output catalog
+mycat = mrdfits(outcat, 1)
 nlines = n_elements(mycat)
-print,'Read in ',nlines,' from file ',incatw
-in_seed=seed
-sort_ind = randomu(seed,nlines)
-mycat = mycat[sort(sort_ind)]
-print,'Randomly reordered using seed',in_seed
-
-; select galaxies, <= nuse depending on how many galaxies are in input catalog
-mycatuse = mycat[start:start+(nuse-1 < nlines)]
-ngal = n_elements(mycatuse)
-print,'Using ',ngal
-
-; renormalize the weights from the input catalog, but let's not
-; be too crazy here: use max weight of 5.
-mycatuse.ps_wt = mycatuse.ps_wt < 5.
-mycatuse.ps_wt = mycatuse.ps_wt/max(mycatuse.ps_wt)
-
-indices = lindgen(ngal)
+print,'Read in ',nlines,' from file ',outcat
 
 ; 
 OPENR,1,varfile
@@ -47,11 +21,6 @@ READF,1,H
 CLOSE,1
 mean = H(0,*)
 var = H(1,*)
-mean = mean[sort(sort_ind)]
-var = var[sort(sort_ind)]
-mean = mean[start:start+(nuse-1 < nlines)]
-var = var[start:start+(nuse-1 < nlines)]
-print,'From varfile: ',n_elements(mean),n_elements(var),ngal
 
 ; make new data structure
 datastr = {ident: 0L, $
@@ -68,33 +37,32 @@ datastr = {ident: 0L, $
            noise_mean: 0.D, $
            noise_variance: 0.D, $
            noise_filename: ''}
-data = replicate(datastr, ngal)
+data = replicate(datastr, nlines)
            
 ; populate the data structure from the input catalog
-data.ident = mycatuse.ident
-data.ra = mycatuse.ra
-data.dec = mycatuse.dec
-data.mag = mycatuse.F814W
-data.band[*] = 'F814W'
-data.weight = mycatuse.ps_wt
-data.pixel_scale = 0.03
+data.ident = mycat.ident
+data.ra = mycat.ra
+data.dec = mycat.dec
+data.mag = mycat.mag
+data.band = mycat.band
+data.weight = mycat.weight
+data.pixel_scale = mycat.pixel_scale
+data.gal_filename = mycat.gal_filename
+data.PSF_filename = mycat.PSF_filename
+data.gal_hdu = mycat.gal_hdu
+data.PSF_hdu = mycat.PSF_hdu
 
-for i=0L,nuse-1 do begin
-   nfile=i/per+1
-   data[i].gal_filename = 'real_galaxy_images'+label+'_n'+string(nfile,format='(I0)')+'.fits'
-   data[i].PSF_filename = 'real_galaxy_PSF_images'+label+'_n'+string(nfile,format='(I0)')+'.fits'
-   data[i].gal_hdu=i-(nfile-1)*per
-   data[i].PSF_hdu=i-(nfile-1)*per
-   data[i].noise_mean=mean[i]
-   data[i].noise_variance=var[i]
-   data[i].noise_filename='acs_I_unrot_sci_20_cf.fits'
+for i=0L,nlines-1 do begin
+   data[i].noise_mean = mean[i]
+   data[i].noise_variance = var[i]
+   data[i].noise_filename = 'acs_I_unrot_sci_20_cf.fits'
 endfor
-   
+
 ;data.gal_hdu = indices
 ;data.PSF_hdu = indices
            
 ; write output catalog
-print,'Writing to file ',outcat
-mwrfits,data,outcat,/create
+print,'Writing to file ',tmpoutcat
+mwrfits,data,tmpoutcat,/create
 
 END
