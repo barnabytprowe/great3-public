@@ -38,9 +38,11 @@ for i in range(n):
     bstat = dat[i].field('mpfit_status')[0]
     sstat = dat[i].field('mpfit_status')[4]
     dvc_btt = dat[i].field('dvc_btt')
+    bmad = dat[i].field('fit_mad_b')
+    smad = dat[i].field('fit_mad_s')
 
     # First decide if we can / should use bulgefit, otherwise sersicfit
-    if bstat<1 or bstat>4 or dvc_btt<0.1 or dvc_btt>0.9 or np.isnan(dvc_btt) or params[9]<=0 or params[1]<=0 or params[11]<0.051 or params[3]<0.051:
+    if bstat<1 or bstat>4 or dvc_btt<0.1 or dvc_btt>0.9 or np.isnan(dvc_btt) or params[9]<=0 or params[1]<=0 or params[11]<0.051 or params[3]<0.051 or smad<bmad:
         use_bulgefit[i] = 0
         # Then check if sersicfit is viable; if not, this object is a total failure:
         if sstat<1 or sstat>4 or sparams[1]<=0 or sparams[0]=<0:
