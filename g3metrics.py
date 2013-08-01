@@ -41,7 +41,7 @@ def make_const_truth_uniform_annular(nfields, nims, range_min=0.02, range_max=0.
     g2true = np.concatenate(g2true_list)
     return g1true, g2true
 
-def read_ps(galsim_dir=None):
+def read_ps(galsim_dir=None, scale=1.):
     """Read in a Power Spectrum stored in the GalSim repository.
 
     Returns a galsim.PowerSpectrum object.
@@ -50,9 +50,18 @@ def read_ps(galsim_dir=None):
     if galsim_dir is None:
         raise ValueError(
             "You must supply a directory for your GalSim install via the `galsim_dir` kwarg.")
-    tab_ps = galsim.LookupTable(
-        file=os.path.join(galsim_dir, 'examples', 'data', 'cosmo-fid.zmed1.00_smoothed.out'),
-        interpolant='linear')
+    file=os.path.join(galsim_dir, 'examples', 'data', 'cosmo-fid.zmed1.00_smoothed.out')
+    if scale == 1.:
+        tab_ps = galsim.LookupTable(file=file, interpolant='linear')
+    else:
+        data = np.loadtxt(file).transpose()
+        if data.shape[0] != 2:
+            raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
+        x=data[0]
+        f=data[1]
+        f *= scale
+        tab_ps = galsim.LookupTable(x=x, f=f, interpolant='linear')
+
     # Put this table into an E-mode power spectrum and return
     ret = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
     return ret
