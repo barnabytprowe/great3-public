@@ -41,6 +41,12 @@ def create_user_profile(sender, instance, created, **kwargs):
 post_save.connect(create_user_profile, sender=User)
 
 
+class Method(models.Model):
+	name = models.CharField(max_length=128, unique=True, error_messages={"unique":"Another team has already used this method name"})
+	team = models.ForeignKey('Team')
+	def __unicode__(self):
+		return self.name
+
 class Team(models.Model):
 	name = models.CharField(max_length=128, unique=True)
 	notes = models.CharField(max_length=512)
@@ -199,6 +205,7 @@ class Board(models.Model):
 class Entry(models.Model):
 	team = models.ForeignKey('Team')
 	name = models.CharField(max_length=128, unique=True)
+	method = models.ForeignKey('Method')
 	notes = models.CharField(max_length=512)
 	user = models.ForeignKey(User)
 	board = models.ForeignKey('Board')
@@ -331,9 +338,9 @@ def create_data():
 	recompute_scoring()
 
 
-def save_submission_file(submission, name, notes, user, team, board):
+def save_submission_file(submission, name, notes, method, user, team, board):
 	print "Sanity check the file size here"
-	entry = Entry(team=team, name=name, notes=notes, user=user, board=board)
+	entry = Entry(team=team, name=name, notes=notes, user=user, method=method, board=board)
 	entry.save()
 	try:
 		with open(entry.get_filename(), 'wb+') as destination:
@@ -368,7 +375,6 @@ def user_is_member_of_team(user, team):
 
 
 def too_many_entries_in_last_day(team, board):
-	print "Checking"
 	try:
 		test_entry = Entry.objects.filter(team=team, board=board).order_by('-date')[MAXIMUM_ENTRIES_PER_DAY-1]
 		print Entry.objects.filter(team=team).order_by('-date')
