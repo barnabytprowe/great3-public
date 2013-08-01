@@ -27,8 +27,8 @@ shear_type = [
 ]
 
 root = 'test_run'
-subfield_min = 199    # Start with the last regular field if we want to check out the deep fields.
-subfield_max = 201    # Total of 3 sub-fields
+subfield_min = 0
+subfield_max = 2    # Total of 3 sub-fields
 data_dir = 'great3_fit_data'    # This should be set up as a sim-link to your Dropbox folder.
 ps_dir = '../inputs/ps/tables' 
 seed = 12345                    # Whatever.  (But not zero.)
