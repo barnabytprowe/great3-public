@@ -71,8 +71,8 @@ Sersic profile with free n.  The array entries are:
                      the x axis of the image).
 
        GalSim wants to know the half-light radius that is the geometric mean of the major and minor
-       axis lengths, and typically works in terms of arcsec, so when initializing the galsim.Sersic
-       object, use a half-light-radius of 
+       axis lengths, and typically works in terms of arcsec (where the scale is always 0.03"/pixel),
+       so when initializing the galsim.Sersic object, use a half-light-radius of
        hlr=0.03*sqrt(q)*R_{1/2}.
 
        To relate these quantities to the object total flux that is needed to define the object in
@@ -87,3 +87,11 @@ fixed to 1 and 4, respectively, and they are required to have the same centroid.
 FIT_STATUS: An array of 5 numbers indicating the status of the fit.  The first of those numbers is
 the status for BULGEFIT, and the last of those 5 numbers is the status for SERSICFIT.  A status of 0
 or 5 indicates failure.
+
+FIT_MAD_S: the median absolute deviation between the image and the SERSICFIT model, as determined in
+a region containing primarily pixels in the galaxy (not sky).  This can be used comparatively with
+FIT_MAD_B to determine which is a better description of the galaxy.
+
+FIT_MAD_B: same as FIT_MAD_S, but for the BULGEFIT model.
+
+FIT_DVC_BTT: The bulge-to-total flux ratio (B/T) for the 2-component BULGEFIT.

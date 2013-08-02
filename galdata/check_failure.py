@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # define filenames etc.
-fit_cat = 'real_galaxy_catalog_23.5_fits.fits'
-shape_cat = 'real_galaxy_23.5_shapes.fits'
+fit_cat = '/Users/rmandelb/great3/data-23.5/real_galaxy_catalog_23.5_fits.fits'
+shape_cat = '/Users/rmandelb/great3/data-23.5/real_galaxy_23.5_shapes.fits'
 outfile = 'diagnostics/shape_failures.png'
 
 # read in fit information, etc.
