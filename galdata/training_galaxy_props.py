@@ -77,8 +77,9 @@ def training_galaxy_props(psf,
             if sstat<1 or sstat>4 or sparams[1]<=0 or sparams[0]<=0:
                 use_bulgefit[i] = -1
                 do_meas[i] = -1
-                e1[i] = -10.
-                e2[i] = -10.
+                resolution[i] = -10.
+                noise_var_snr_20[i] = -10.
+                flux_frac[i] = -10.
                 bt[i] = -10.
                 continue
 
@@ -96,10 +97,12 @@ def training_galaxy_props(psf,
             bfrac = bulge_flux/(bulge_flux+disk_flux)
 
             if bfrac < 0 or bfrac > 1 or np.isnan(bfrac):
-                e1[i] = -10.
-                e2[i] = -10.
-                do_meas[i] = -1
                 use_bulgefit[i] = -1
+                do_meas[i] = -1
+                resolution[i] = -10.
+                noise_var_snr_20[i] = -10.
+                flux_frac[i] = -10.
+                bt[i] = -10.
                 continue
 
             bt[i] = bfrac
