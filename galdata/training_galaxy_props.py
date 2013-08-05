@@ -71,74 +71,75 @@ def training_galaxy_props(psf,
         bmad = dat[i].field('fit_mad_b')
         smad = dat[i].field('fit_mad_s')
 
-    if bstat<1 or bstat>4 or dvc_btt<0.1 or dvc_btt>0.9 or np.isnan(dvc_btt) or params[9]<=0 or params[1]<=0 or params[11]<0.051 or params[3]<0.051 or smad<bmad:
-        use_bulgefit[i] = 0
-        # Then check if sersicfit is viable; if not, this object is a total failure:
-        if sstat<1 or sstat>4 or sparams[1]<=0 or sparams[0]<=0:
-            use_bulgefit[i] = -1
-            do_meas[i] = -1
-            e1[i] = -10.
-            e2[i] = -10.
-            bt[i] = -10.
-            continue
+        if bstat<1 or bstat>4 or dvc_btt<0.1 or dvc_btt>0.9 or np.isnan(dvc_btt) or params[9]<=0 or params[1]<=0 or params[11]<0.051 or params[3]<0.051 or smad<bmad:
+            use_bulgefit[i] = 0
+            # Then check if sersicfit is viable; if not, this object is a total failure:
+            if sstat<1 or sstat>4 or sparams[1]<=0 or sparams[0]<=0:
+                use_bulgefit[i] = -1
+                do_meas[i] = -1
+                e1[i] = -10.
+                e2[i] = -10.
+                bt[i] = -10.
+                continue
 
-    if use_bulgefit[i]:
-        bulge_q = params[11]
-        bulge_beta = params[15]*galsim.radians
-        bulge_hlr = 0.03*np.sqrt(bulge_q)*params[9]
-        bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*params[8]
+        if use_bulgefit[i]:
+            bulge_q = params[11]
+            bulge_beta = params[15]*galsim.radians
+            bulge_hlr = 0.03*np.sqrt(bulge_q)*params[9]
+            bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*params[8]
 
-        disk_q = params[3]
-        disk_beta = params[7]*galsim.radians
-        disk_hlr = 0.03*np.sqrt(disk_q)*params[1]
-        disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*params[0]
-        
-        bfrac = bulge_flux/(bulge_flux+disk_flux)
+            disk_q = params[3]
+            disk_beta = params[7]*galsim.radians
+            disk_hlr = 0.03*np.sqrt(disk_q)*params[1]
+            disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*params[0]
+            
+            bfrac = bulge_flux/(bulge_flux+disk_flux)
 
-        if bfrac < 0 or bfrac > 1 or np.isnan(bfrac):
-            e1[i] = -10.
-            e2[i] = -10.
-            do_meas[i] = -1
-            use_bulgefit[i] = -1
-            continue
+            if bfrac < 0 or bfrac > 1 or np.isnan(bfrac):
+                e1[i] = -10.
+                e2[i] = -10.
+                do_meas[i] = -1
+                use_bulgefit[i] = -1
+                continue
 
-        bt[i] = bfrac
-        bulge = galsim.Sersic(4.0, half_light_radius = bulge_hlr, flux = bulge_flux)
-        disk = galsim.Exponential(half_light_radius = disk_hlr, flux = disk_flux)
-        if bulge_q > 0.:
-            bulge.applyShear(q = bulge_q, beta = bulge_beta)
-        if disk_q > 0.:
-            disk.applyShear(q = disk_q, beta = disk_beta)
-        gal = bulge+disk
-        gal_flux = bulge_flux + disk_flux
+            bt[i] = bfrac
+            bulge = galsim.Sersic(4.0, half_light_radius = bulge_hlr, flux = bulge_flux)
+            disk = galsim.Exponential(half_light_radius = disk_hlr, flux = disk_flux)
+            if bulge_q > 0.:
+                bulge.applyShear(q = bulge_q, beta = bulge_beta)
+            if disk_q > 0.:
+                disk.applyShear(q = disk_q, beta = disk_beta)
+            gal = bulge+disk
+            gal_flux = bulge_flux + disk_flux
 
-    else:
-        gal_n = sparams[2]
-        tmp_ser = galsim.Sersic(gal_n, half_light_radius=1.)
-        gal_bn = (1./tmp_ser.getScaleRadius())**(1./gal_n)
-        prefactor = gal_n * math.gamma(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
-        gal_q = sparams[3]
-        gal_beta = sparams[7]*galsim.radians
-        gal_hlr = 0.03*np.sqrt(gal_q)*sparams[1]
-        gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*params[0]
+        else:
+            gal_n = sparams[2]
+            if gal_n < 0.3: gal_n = 0.3
+            tmp_ser = galsim.Sersic(gal_n, half_light_radius=1.)
+            gal_bn = (1./tmp_ser.getScaleRadius())**(1./gal_n)
+            prefactor = gal_n * math.gamma(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
+            gal_q = sparams[3]
+            gal_beta = sparams[7]*galsim.radians
+            gal_hlr = 0.03*np.sqrt(gal_q)*sparams[1]
+            gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*params[0]
 
-        gal = galsim.Sersic(gal_n, half_light_radius = gal_hlr, flux = gal_flux)
-        if gal_q > 0.:
-            gal.applyShear(q = gal_q, beta = gal_beta)
+            gal = galsim.Sersic(gal_n, half_light_radius = gal_hlr, flux = gal_flux)
+            if gal_q > 0.:
+                gal.applyShear(q = gal_q, beta = gal_beta)
 
-    obj = galsim.Convolve(gal, epsf, gsparams = galsim.GSParams(maximum_fft_size=15000))
-    im = galsim.ImageF(ps_size, ps_size)
-    flux_frac[i] = im.array.sum()/gal_flux
-    noise_var_snr_20[i] = np.sum(im.array**2) / 20.**2
+        obj = galsim.Convolve(gal, epsf, gsparams = galsim.GSParams(maximum_fft_size=15000))
+        im = galsim.ImageF(ps_size, ps_size)
+        flux_frac[i] = im.array.sum()/gal_flux
+        noise_var_snr_20[i] = np.sum(im.array**2) / 20.**2
 
         # try getting resolution
-    try:
-        result = galsim.hsm.EstimateShear(im, im_epsf, guess_sig_gal=20)
-        resolution[i] = result.resolution_factor
-        do_meas[i] = 1. # made model and was able to measure shape
-    except RuntimeError:
-        resolution[i] = -10.
-        do_meas[i] = 0. # made model and did other calculations, but could not measure shape
+        try:
+            result = galsim.hsm.EstimateShear(im, im_epsf, guess_sig_gal=20)
+            resolution[i] = result.resolution_factor
+            do_meas[i] = 1. # made model and was able to measure shape
+        except RuntimeError:
+            resolution[i] = -10.
+            do_meas[i] = 0. # made model and did other calculations, but could not measure shape
 
     # save results to file
     tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
