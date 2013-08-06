@@ -41,9 +41,9 @@ for filename in property_files:
 to_use = np.ones(n_gal, dtype=np.bool)
 for i_file in range(n_files):
     to_use = to_use & (props_list[i_file]['do_meas'] == 1)
-# also use flag for fit failures
-bulgefit_status = fit_catalog.field('fit_status')[:,0]
-to_use = to_use & ((bulgefit_status != 0) & (bulgefit_status != 5))
+# also use flag for fit failures: should make sure use_bulgefit==0 or 1
+use_bulgefit = props_list[0]['use_bulgefit']
+to_use = to_use & ((use_bulgefit == 0) | (use_bulgefit == 1))
 # use flag for failures when getting shapes needed for shape noise cancellation
 do_meas = shape_catalog.field('do_meas')
 to_use = to_use & ((do_meas == 0) | (do_meas == 1))
@@ -84,7 +84,10 @@ tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
                                                        array=flux_frac),
                                          pyfits.Column(name='max_var',
                                                        format='5D',
-                                                       array=max_var)]
+                                                       array=max_var),
+                                         pyfits.Column(name='use_bulgefit',
+                                                       format='D',
+                                                       array=use_bulgefit)]
                                         ))
 
 # write outputs
