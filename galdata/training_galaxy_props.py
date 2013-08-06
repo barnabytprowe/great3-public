@@ -86,12 +86,12 @@ def training_galaxy_props(psf,
         if use_bulgefit[i]:
             bulge_q = params[11]
             bulge_beta = params[15]*galsim.radians
-            bulge_hlr = 0.03*np.sqrt(bulge_q)*params[9]
+            bulge_hlr = 0.03*size_factor*np.sqrt(bulge_q)*params[9]
             bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*params[8]
 
             disk_q = params[3]
             disk_beta = params[7]*galsim.radians
-            disk_hlr = 0.03*np.sqrt(disk_q)*params[1]
+            disk_hlr = 0.03*size_factor*np.sqrt(disk_q)*params[1]
             disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*params[0]
             
             bfrac = bulge_flux/(bulge_flux+disk_flux)
@@ -123,7 +123,7 @@ def training_galaxy_props(psf,
             prefactor = gal_n * math.gamma(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
             gal_q = sparams[3]
             gal_beta = sparams[7]*galsim.radians
-            gal_hlr = 0.03*np.sqrt(gal_q)*sparams[1]
+            gal_hlr = 0.03*size_factor*np.sqrt(gal_q)*sparams[1]
             gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*params[0]
 
             gal = galsim.Sersic(gal_n, half_light_radius = gal_hlr, flux = gal_flux)
