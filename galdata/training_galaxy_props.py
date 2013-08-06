@@ -132,6 +132,13 @@ def training_galaxy_props(psf,
 
         obj = galsim.Convolve(gal, epsf, gsparams = galsim.GSParams(maximum_fft_size=15000))
         im = galsim.ImageF(ps_size, ps_size)
+        try:
+            im = obj.draw(dx = pix_scale)
+        except:
+            do_meas[i] = -0.5 # fit parameters make object impossible to draw
+            resolution[i] = -10.
+            noise_var_snr_20[i] = -10.
+            flux_frac[i] = -10.
         flux_frac[i] = im.array.sum()/gal_flux
         noise_var_snr_20[i] = np.sum(im.array**2) / 20.**2
 
