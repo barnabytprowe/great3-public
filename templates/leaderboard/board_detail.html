@@ -18,6 +18,7 @@
 	<THEAD>
 		<TH> Entry Name </TH>
 		<TH> Team </TH>
+		<TH> Method </TH>
 		<TH> Score </TH>
 		<TH> Rank </TH>
 		<TH> Points </TH>
@@ -28,6 +29,7 @@
 		<TR>
 			<TD> <A href="{% url leaderboard.entry_views.detail entry.id %}"> {{ entry.name }}</A> </TD>
 			<TD> <A href="{% url leaderboard.team_views.detail entry.team.id %}"> {{ entry.team }}</A> </TD>
+			<TD> {{ entry.method }} </TD>
 			<TD> {{ entry.score_text }} </TD>
 			<TD> {{ entry.rank_text }} </TD>
 			<TD> {{ entry.points_text }} </TD>
