@@ -389,7 +389,11 @@ class PublicDataFile(models.Model):
 	filename = models.CharField(max_length=128)
 	abspath = models.CharField(max_length=512)
 	info = models.CharField(max_length=512)
+	def __unicode__(self):
+		return self.filename
 
 class AdminDataFile(models.Model):
 	filename = models.CharField(max_length=128)
 	abspath = models.CharField(max_length=512)
+	def __unicode__(self):
+		return self.filename
