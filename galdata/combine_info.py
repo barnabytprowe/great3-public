@@ -6,7 +6,7 @@ import os
 # define filenames, etc.
 cat_file_name = '/Users/rmandelb/great3/data-23.5/real_galaxy_catalog_23.5.fits'
 fit_file_name = '/Users/rmandelb/great3/data-23.5/real_galaxy_catalog_23.5_fits.fits'
-shape_file_name = 'real_galaxy_23.5_shapes.fits'
+shape_file_name = '/Users/rmandelb/great3/data-23.5/real_galaxy_23.5_shapes.fits'
 property_files = ['real_galaxy_catalog_23.5_props_Euclid_0.05.fits',
                   'real_galaxy_catalog_23.5_props_Euclid_0.10.fits',
                   'real_galaxy_catalog_23.5_props_Kolm_0.5_0.2.fits',
@@ -41,9 +41,10 @@ for filename in property_files:
 to_use = np.ones(n_gal, dtype=np.bool)
 for i_file in range(n_files):
     to_use = to_use & (props_list[i_file]['do_meas'] == 1)
-# also use flag for fit failures: should make sure use_bulgefit==0 or 1
-use_bulgefit = props_list[0]['use_bulgefit']
-to_use = to_use & ((use_bulgefit == 0) | (use_bulgefit == 1))
+# also use flag for fit failures: should make sure use_bulgefit==0 or 1 for all values of seeing
+for i_file in range(n_files):
+    use_bulgefit = props_list[i_file]['use_bulgefit']
+    to_use = to_use & ((use_bulgefit == 0) | (use_bulgefit == 1))
 # use flag for failures when getting shapes needed for shape noise cancellation
 do_meas = shape_catalog.field('do_meas')
 to_use = to_use & ((do_meas == 0) | (do_meas == 1))
@@ -61,12 +62,14 @@ ident = catalog.field('ident')
 resolution = np.zeros((n_gal,n_files-len(exclude_file)))
 flux_frac = np.zeros((n_gal,n_files-len(exclude_file)))
 max_var = np.zeros((n_gal,n_files-len(exclude_file)))
+use_bulgefit = np.zeros((n_gal,n_files-len(exclude_file)))
 i_file_use = 0
 for i_file in range(n_files):
     if i_file not in exclude_file:
         resolution[:,i_file_use] = props_list[i_file]['resolution']
         flux_frac[:,i_file_use] = props_list[i_file]['flux_frac']
         max_var[:,i_file_use] = props_list[i_file]['noise_var_snr_20']/1.05e-7
+        use_bulgefit[:,i_file_use] = props_list[i_file]['use_bulgefit']
         i_file_use += 1
 
 # save results to file
@@ -86,7 +89,7 @@ tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
                                                        format='5D',
                                                        array=max_var),
                                          pyfits.Column(name='use_bulgefit',
-                                                       format='D',
+                                                       format='5D',
                                                        array=use_bulgefit)]
                                         ))
 
