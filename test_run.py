@@ -62,12 +62,9 @@ for exp in experiments:
         o = obs[0]
         for shear in shear_type:
             s = shear[0]
-            f = e + o + s + '.yaml'
             dirs.append( os.path.join(root,exp,obs,shear) )
-            config_names.append(f)
-            f = e + o + s + '_psf.yaml'
-            dirs.append( os.path.join(root,exp,obs,shear) )
-            psf_config_names.append(f)
+            config_names.append(e + o + s + '.yaml')
+            psf_config_names.append(e + o + s + '_psf.yaml')
 
 
 # Build config files
@@ -118,6 +115,16 @@ os.chdir('..')
 t2 = time.time()
 print 'Total time for galsim_yaml = ',t2-t1
 print
+
+# Move these files to a different name, so we can compare them to the ones built in the next step.
+for dir in dirs:
+    for i in range(subfield_min, subfield_max+1):
+        f1 = os.path.join(dir,'image-%03d-0.fits'%i)
+        f2 = os.path.join(dir,'yaml_image-%03d-0.fits'%i)
+        shutil.move(f1,f2)
+        f1 = os.path.join(dir,'starfield_image-%03d-0.fits'%i)
+        f2 = os.path.join(dir,'yaml_starfield_image-%03d-0.fits'%i)
+        shutil.move(f1,f2)
 
 # Build images using great3.run
 t1 = time.time()
