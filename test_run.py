@@ -54,6 +54,7 @@ print
 # Make list of config file names and directories:
 dirs = []
 config_names = []
+psf_config_names = []
 for exp in experiments:
     e = exp[0]
     if e == 'r': e = exp[5]
@@ -64,10 +65,15 @@ for exp in experiments:
             f = e + o + s + '.yaml'
             dirs.append( os.path.join(root,exp,obs,shear) )
             config_names.append(f)
+            f = e + o + s + '_psf.yaml'
+            dirs.append( os.path.join(root,exp,obs,shear) )
+            psf_config_names.append(f)
+
 
 # Build config files
 t1 = time.time()
 new_config_names = []
+new_psf_config_names = []
 for i in range(n_config):
     first = subfield_min + (subfield_max-subfield_min+1)/n_config * i
     last = subfield_min + (subfield_max-subfield_min+1)/n_config * (i+1) - 1
@@ -80,6 +86,11 @@ for i in range(n_config):
         name, ext = os.path.splitext(config_name)
         new_name = '%s_%02d.yaml'%(name,i)
         new_config_names.append(new_name)
+        shutil.copy(os.path.join(root,config_name),os.path.join(root,new_name))
+    for config_name in psf_config_names:
+        name, ext = os.path.splitext(config_name)
+        new_name = '%s_%02d_psf.yaml'%(name,i)
+        new_psf_config_names.append(new_name)
         shutil.copy(os.path.join(root,config_name),os.path.join(root,new_name))
 t2 = time.time()
 print
@@ -96,6 +107,13 @@ for config_name in new_config_names:
     t4 = time.time()
     print 'Time for galsim_yaml',config_name,'= ',t4-t3
     print
+for config_name in new_psf_config_names:
+    t3 = time.time()
+    p = subprocess.Popen(['galsim_yaml',config_name,'-v1'])
+    p.communicate() # wait until done
+    t4 = time.time()
+    print 'Time for galsim_yaml',config_name,'= ',t4-t3
+    print
 os.chdir('..')
 t2 = time.time()
 print 'Total time for galsim_yaml = ',t2-t1
@@ -106,7 +124,7 @@ t1 = time.time()
 great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
            experiments=experiments, obs_type=obs_type, shear_type=shear_type,
            gal_dir=data_dir, ps_dir=ps_dir,
-           seed=seed, steps=['images']
+           seed=seed, steps=['gal_images', 'psf_images']
 )
 t2 = time.time()
 print
@@ -122,8 +140,25 @@ for dir in dirs:
         f2 = os.path.join(dir,'yaml_image-%03d-0.fits'%i)
         p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
         p.communicate()
+        f1 = os.path.join(dir,'starfield_image-%03d-0.fits'%i)
+        f2 = os.path.join(dir,'yaml_starfield_image-%03d-0.fits'%i)
+        p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
+        p.communicate()
 print 'End diffs.'
 print
+
+# Measure star parameters required for metric
+t1 = time.time()
+great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
+           experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+           gal_dir=data_dir, ps_dir=ps_dir,
+           seed=seed, steps=['star_params']
+)
+t2 = time.time()
+print
+print 'Time for great3.run star_params = ',t2-t1
+print
+
 
 # Now package up the data that should be public
 t1 = time.time()
