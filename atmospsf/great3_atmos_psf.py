@@ -273,7 +273,7 @@ if __name__ == "__main__":
     t_exp = 120.0 # exposure time in seconds
     diam = 4.0    # telescope size
     handbook = True # are we doing a combined size/whisker plot for handbook?
-    outfile = '../../handbook/figs/great3_atmos_psf.eps'
+    outfile = '../../handbook/figs/great3_atmos_psf.png'
 
     # Currently set up to do a random realization with seed initialized from the time.
     A, theta_0, seeing = atmosPSFParams(t_exp=t_exp, diam=diam)
