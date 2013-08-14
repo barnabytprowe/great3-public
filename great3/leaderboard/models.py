@@ -394,6 +394,9 @@ class PublicDataFile(models.Model):
 	#miscellaneous files are files that are not
 	#one of the data set tarballs, they are extra stuff
 	miscellaneous = models.BooleanField(default=True)
+	mirror1 = models.URLField(blank=True, null=True)
+	mirror2 = models.URLField(blank=True, null=True)  # Just in case
+	mirror3 = models.URLField(blank=True, null=True)
 	def __unicode__(self):
 		return self.filename
 

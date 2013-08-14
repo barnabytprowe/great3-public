@@ -13,7 +13,7 @@ Other branches for which data will be available when the official challenge star
 <UL>
 {% for board in boards %}
 <LI> {% if board.datafile%}  
-		<A href="{% url leaderboard.data_views.public_file board.datafile.filename %}">Branch {{board}}</A> {{board.datafile.info}}
+		<A href="{% url leaderboard.data_views.public_file board.datafile.filename %}">Branch {{board}}</A> {{board.datafile.info}}. {% if board.datafile.mirror1 %}  <A href={{board.datafile.mirror1}}>US Mirror</A> {% endif %}
 	{% else %}
 		Data for {{board}} is not available yet
 	{% endif %} </LI>
