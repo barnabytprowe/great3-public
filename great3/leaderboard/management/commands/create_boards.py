@@ -11,11 +11,11 @@ import sys
 
 SCORE_LOG_FILE = os.path.join(installation_base, "results", "results.log")
 texts = {
-    'Control': 'The baseline experiment with parametric galaxy and PSF models, with a single exposure for each field. ',
+    'Control': 'The baseline experiment with parametric galaxy, with a single exposure for each field. PSF models are complex but constant across the image, and they are provided for participants as a noise-free star field.',
     'Realistic Galaxy': 'Galaxies models are drawn from real high-resolution, deep data. ',
-    'Realistic PSF': 'PSF models are simulations of realistic experiments, including spatial variation that participants must infer. ',
+    'Realistic PSF': 'PSF models are simulations of realistic experiments, including spatial variation that participants must infer from star fields. ',
     'Multi-epoch': 'Each galaxy is observed multiple times with different PSFs and noise realizations. ',
-    'Everything': 'All the effects from the different experiments are present: galaxies and PSFs are realistic, and there are multiple exposures for each field. ',
+    'Everything': 'All the effects from the different experiments are present: galaxies are realistic, PSFs vary and must be inferred from star fields, and there are multiple exposures for each field. ',
 }
 
 fun_names = {
@@ -51,9 +51,7 @@ class Command(BaseCommand):
                         name += 'G'
                         notes += ' Observing conditions simulate those of a ground-based survey.'
                     try:
-                        datafile = PublicDataFile(filename=name+".tar.gz", abspath="/path/to/data/filename.tar.gz", info="md5=XXX", miscellaneous=False)
-                        datafile.save()
-                        board = Board(experiment=experiment[0], varying=variable, space=space, notes=notes, name=name, datafile=datafile)
+                        board = Board(experiment=experiment[0], varying=variable, space=space, notes=notes, name=name)
                         board.save()
                     except django.db.utils.IntegrityError:
                         print 'You cannot run this command a second time without deleting the database'
