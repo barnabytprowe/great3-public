@@ -70,7 +70,7 @@ class SubmissionForm(forms.Form):
 
 def index(request):
 	""" List of all leaderboards """
-	boards = Board.objects.all().order_by('name')
+	boards = Board.objects.filter(enabled=True).order_by('name')
 	data = dict(boards=boards)
 	return render(request,'leaderboard/board_list.html',data)
 
@@ -80,6 +80,8 @@ def detail(request, board_id):
 	try:
 		board = Board.objects.get(id=board_id)
 	except Board.DoesNotExist:
+		raise Http404
+	if not board.enabled:
 		raise Http404
 	entries = board.entry_set.order_by('-score')
 	data = dict(board=board, entries=entries)
@@ -98,7 +100,8 @@ def submit(request, board_id):
 		board = Board.objects.get(id=board_id)
 	except Board.DoesNotExist:
 		raise Http404
-
+	if not board.enabled:
+		raise Http404
 	all_teams = request.user.get_profile().teams.all()
 
 	if not all_teams:

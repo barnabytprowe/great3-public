@@ -165,6 +165,7 @@ class Board(models.Model):
 	space = models.BooleanField()
 	varying = models.BooleanField()
 	datafile = models.ForeignKey('PublicDataFile', null=True, blank=True)
+	enabled = models.BooleanField()
 
 	@transaction.commit_manually()
 	def assign_ranks(self):
@@ -183,7 +184,7 @@ class Board(models.Model):
 
 	@classmethod
 	def assign_all_ranks(cls):
-		for board in cls.objects.all():
+		for board in cls.objects.filter(enabled=True):
 			board.assign_ranks()
 
 	def number_entries(self):
@@ -265,7 +266,7 @@ class Entry(models.Model):
 
 def recompute_scoring(*boards):
 	if not boards:
-		boards = Board.objects.all()
+		boards = Board.objects.filter(enabled=True)
 	for board in boards:
 		board.assign_ranks()
 	Team.update_scores_and_ranks()

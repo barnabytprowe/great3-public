@@ -51,7 +51,7 @@ class Command(BaseCommand):
                         name += 'G'
                         notes += ' Observing conditions simulate those of a ground-based survey.'
                     try:
-                        board = Board(experiment=experiment[0], varying=variable, space=space, notes=notes, name=name)
+                        board = Board(experiment=experiment[0], varying=variable, space=space, notes=notes, name=name, enabled=False)
                         board.save()
                     except django.db.utils.IntegrityError:
                         print 'You cannot run this command a second time without deleting the database'
