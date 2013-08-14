@@ -4,10 +4,14 @@
 
 		
 		<link rel="stylesheet" href="{{ STATIC_URL }}css/nav.css" type="text/css" media="print, projection, screen" />
-		<style type="text/css">body {border: 50px solid WHITE;}</style>
+		<style type="text/css">
+		body {border: 50px solid WHITE;}
+		</style>
+		<style type="text/css">
+		p {max-width:600px; text-align:justify;}
+		</style>
 		{% block header_includes %}
 		{% endblock %}
-
 	</HEAD>
 	<BODY>
 		<DIV align="left" ><A href="{% url leaderboard.views.front_page %}"><IMG src="{{ STATIC_URL }}img/Home.png"></DIV></A>
