@@ -164,6 +164,7 @@ class Board(models.Model):
 	notes = models.CharField(max_length=512)
 	space = models.BooleanField()
 	varying = models.BooleanField()
+	datafile = models.ForeignKey('PublicDataFile', null=True, blank=True)
 
 	@transaction.commit_manually()
 	def assign_ranks(self):
@@ -389,6 +390,9 @@ class PublicDataFile(models.Model):
 	filename = models.CharField(max_length=128)
 	abspath = models.CharField(max_length=512)
 	info = models.CharField(max_length=512)
+	#miscellaneous files are files that are not
+	#one of the data set tarballs, they are extra stuff
+	miscellaneous = models.BooleanField(default=True)
 	def __unicode__(self):
 		return self.filename
 

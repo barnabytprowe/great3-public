@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 import django.db.utils
-from leaderboard.models import Board, EXPERIMENT_CHOICES
+from leaderboard.models import Board, EXPERIMENT_CHOICES, PublicDataFile
 from great3.settings import installation_base
 import numpy as np
 import os
@@ -51,7 +51,9 @@ class Command(BaseCommand):
                         name += 'G'
                         notes += ' Observing conditions simulate those of a ground-based survey.'
                     try:
-                        board = Board(experiment=experiment[0], varying=variable, space=space, notes=notes, name=name)
+                        datafile = PublicDataFile(filename=name+".tar.gz", abspath="/path/to/data/filename.tar.gz", info="md5=XXX", miscellaneous=False)
+                        datafile.save()
+                        board = Board(experiment=experiment[0], varying=variable, space=space, notes=notes, name=name, datafile=datafile)
                         board.save()
                     except django.db.utils.IntegrityError:
                         print 'You cannot run this command a second time without deleting the database'
