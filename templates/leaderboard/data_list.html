@@ -4,8 +4,8 @@
 {% block content %}
 {% block admin_content %} {% endblock %}
 
-
 <H4> Challenge Data Sets</H4>
+<P>Below are links to download the preliminary data (alpha release) for the control branches, with placeholders for the other branches for which data will be available when the official challenge starts. We will soon have a US mirror in place as well. Please be aware that there will be small updates to the preliminary dataset for the control branches when the official challenge starts, so make sure to sign up for updates on challenge status to receive a notification when that occurs.</P>
 <UL>
 {% for board in boards %}
 <LI> {% if board.datafile%}  
@@ -16,7 +16,7 @@
 {% endfor %}
 </UL>
 
-<H4> Miscellaneous Data Files </H4>
+<H4> Other Data Files </H4>
 	<UL>
 		{% for public_file in public_files %}
 			<LI><A href="{% url leaderboard.data_views.public_file public_file.filename %}">{{public_file.filename}}</A> {{public_file.info}} </LI>
