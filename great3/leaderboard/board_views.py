@@ -54,7 +54,7 @@ class SubmissionForm(forms.Form):
 
 		method_name=self.cleaned_data.get('method')
 		if method_name=='None':
-			method_name=self.cleaned_data.get('new method name').strip()
+			method_name=self.cleaned_data.get('new_method_name').strip()
 		if method_name=='':
 			raise forms.ValidationError("Please select a method name from the drop-down list or enter a new name.")
 		try:
