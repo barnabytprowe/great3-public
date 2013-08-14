@@ -164,6 +164,8 @@ class Board(models.Model):
 	notes = models.CharField(max_length=512)
 	space = models.BooleanField()
 	varying = models.BooleanField()
+	datafile = models.ForeignKey('PublicDataFile', null=True, blank=True)
+	enabled = models.BooleanField()
 
 	@transaction.commit_manually()
 	def assign_ranks(self):
@@ -182,7 +184,7 @@ class Board(models.Model):
 
 	@classmethod
 	def assign_all_ranks(cls):
-		for board in cls.objects.all():
+		for board in cls.objects.filter(enabled=True):
 			board.assign_ranks()
 
 	def number_entries(self):
@@ -264,7 +266,7 @@ class Entry(models.Model):
 
 def recompute_scoring(*boards):
 	if not boards:
-		boards = Board.objects.all()
+		boards = Board.objects.filter(enabled=True)
 	for board in boards:
 		board.assign_ranks()
 	Team.update_scores_and_ranks()
@@ -389,6 +391,12 @@ class PublicDataFile(models.Model):
 	filename = models.CharField(max_length=128)
 	abspath = models.CharField(max_length=512)
 	info = models.CharField(max_length=512)
+	#miscellaneous files are files that are not
+	#one of the data set tarballs, they are extra stuff
+	miscellaneous = models.BooleanField(default=True)
+	mirror1 = models.URLField(blank=True, null=True)
+	mirror2 = models.URLField(blank=True, null=True)  # Just in case
+	mirror3 = models.URLField(blank=True, null=True)
 	def __unicode__(self):
 		return self.filename
 

@@ -5,9 +5,9 @@ import django.http
 
 
 def index(request):
-	boards = Board.objects.all()
-	public_files = PublicDataFile.objects.all()
-	data = dict(boards=boards, public_files=public_files)
+	boards = Board.objects.filter(enabled=True).order_by('-datafile__filename')
+	misc_public_files = PublicDataFile.objects.filter(miscellaneous=True)
+	data = dict(boards=boards, public_files=misc_public_files)
 	if request.user and request.user.is_staff:
 		admin_files = AdminDataFile.objects.all()
 		data['admin_files'] = admin_files
@@ -31,7 +31,6 @@ def admin_file(request, filename):
 def public_file(request, filename):
 	dataFile = PublicDataFile.objects.get(filename=filename)
 	abs_filename = dataFile.abspath
-	print abs_filename
 	response = django.http.HttpResponse()
 	del response['content-type']
 	response['X-Sendfile'] = abs_filename
