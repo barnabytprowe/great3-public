@@ -167,7 +167,7 @@ print 'Time for great3.run star_params = ',t2-t1
 print
 
 
-# Now package up the data that should be public
+# Now package up the data that should be public, and truth tables
 t1 = time.time()
 great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
            experiments=experiments, obs_type=obs_type, shear_type=shear_type,
