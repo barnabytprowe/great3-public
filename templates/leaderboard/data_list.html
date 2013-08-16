@@ -7,10 +7,16 @@
 <H4> Challenge Data Sets</H4>
 <P>Below are links to download the preliminary data (alpha release) for the control branches of the data. We will soon have a US mirror in place as well.</P>
 
-Other branches for which data will be available when the official challenge starts.  </P>
+
+<P><a href="https://github.com/barnabytprowe/great3-public/wiki/Challenge-dataset-format">Description of file format here</a>
+
+
+
+<P>Other branches for which data will be available when the official challenge starts.  </P>
 
 <P>Please be aware that there will be small updates to the preliminary dataset for the control branches when the official challenge starts, so make sure to sign up for updates on challenge status to receive a notification when that occurs.</P>
 <UL>
+{% if boards %}
 {% for board in boards %}
 <LI> {% if board.datafile%}  
 		<A href="{% url leaderboard.data_views.public_file board.datafile.filename %}">Branch {{board}}</A> {{board.datafile.info}}. {% if board.datafile.mirror1 %}  <A href={{board.datafile.mirror1}}>US Mirror</A> {% endif %}
@@ -18,6 +24,9 @@ Other branches for which data will be available when the official challenge star
 		Data for {{board}} is not available yet
 	{% endif %} </LI>
 {% endfor %}
+{% else %}
+<LI>No data files are available for download yet.  When they are, they will be here.</LI>
+{% endif %}
 </UL>
 
 <H4> Other Data Files </H4>
