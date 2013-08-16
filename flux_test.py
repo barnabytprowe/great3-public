@@ -10,6 +10,7 @@ import scipy.stats as stats
 dir = '/Users/rmandelb/great3/data-23.5'
 fit_catalog = 'real_galaxy_catalog_23.5_fits.fits'
 sel_catalog = 'real_galaxy_selection_info.fits'
+out_catalog = 'real_galaxy_deltamag_info.fits'
 
 # read in the fit and selection catalogs
 fit_data = pyfits.getdata(os.path.join(dir, fit_catalog))
@@ -100,6 +101,17 @@ n, bins, patches = ax.hist(fit_diff, 100, range=(-2,2))
 ax.set_xlabel('Magnitude difference, Claire - linear fit')
 plt.savefig('claire_mag_histdiff.png')
 print "Number with difference >1 mag (either direction):",len(fit_diff[np.abs(fit_diff)>=1])
+print "Number with difference >0.5 mag (either direction):",len(fit_diff[np.abs(fit_diff)>=0.5])
 print "Number that are >1 mag fainter:",len(fit_diff[fit_diff>=1])
 print "Difference for UFO that Barney identified,",fit_diff[fit_data.field('ident')==102152]
 
+tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
+                                                       format='J',
+                                                       array=fit_data.field('ident')),
+                                         pyfits.Column(name='delta_mag',
+                                                       format='D',
+                                                       array=fit_diff)]
+                                        ))
+outfile = os.path.join(dir,out_catalog)
+print "Writing to file ",outfile
+tbhdu.writeto(outfile, clobber=True)
