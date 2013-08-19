@@ -44,32 +44,36 @@ NFIELDS = 10      # This is the total number of fields in a branch
 NSUBFIELDS = 200  # This is the total number of subfields in a branch (so that each field consists
                   # of NSUBFIELDS/NFIELDS subfields)
 
+def get_generate_rotations(branchname, path="."):
+    """If the rotation file has already been built for this `branchname`, simply returns an array
+    of rotation angles to align with the PSF.  If the rotation file has not been built, does this
+    first.
+    """
+    if not os.path.isfile(os.path.join(branchname)
 
-def const_branch(submission_file, rotation_file, truth_file):
+
+
+def const_branch(submission, rotation, truth):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
-    @param rotation_file    File containing the rotation angles that need to be applied for each
-                            subfield before fitting `m_i` and `c_i`.
-    @param truth_file       File containing the true shears in each subfield - same format as the
-                            `submission_file`.
+    @param rotation         NumPy array containing the rotation angles that need to be applied for
+                            each subfield before fitting `m_i` and `c_i`.  Supplied as radians.
+    @param truth            NumPy array containing the true shears in each field.
     @return                 The metric Q_c.
     """
     if not os.path.isfile(submission_file):
         raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
-    if not os.path.isfile(rotation_file):
-        raise ValueError("Supplied rotation_file '"+rotation_file+"' does not exist.")
-    if not os.path.isfile(truth_file):
-        raise ValueError("Supplied truth_file '"+truth_file+"' does not exist.")
+    
     # Load the submission and label the slices we're interested in
     data = np.loadtxt(submission_file)
-    subfield = data[:, 0]
+    subfield = data[:, 0]  # Or should this be field?  Was confused slightly...
     g1sub = data[:, 1]
     g2sub = data[:, 2]
     # Load up the rotations, then rotate g1 & g2 in the correct sense
-    two_theta = 2. * np.loadtxt(rotation_file)
-    g1rot = +g1sub * np.cos(two_theta) + g2sub * np.sin(two_theta)
-    g2rot = -g1sub * np.sin(two_theta) + g2sub * np.cos(two_theta)
-    # Load up the truth, rotate this in the same sense, then use the g3metrics.fitline routine to
+    g1rot = +g1sub * np.cos(rotation) + g2sub * np.sin(rotation)
+    g2rot = -g1sub * np.sin(rotation) + g2sub * np.cos(rotation)
+    # Rotate the truth in the same sense, then use the g3metrics.fitline routine to
     # perform simple linear regression
-    
+    g1true = +truth[:, 0] * np.cos(rotation) + truth[:, 1] * np.sin(rotation)
+    g2true = -truth[:, 0] * np.sin(rotation) + truth[:, 1] * np.cos(rotation)
