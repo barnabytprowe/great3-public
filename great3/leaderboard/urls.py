@@ -28,7 +28,7 @@ urlpatterns += patterns('leaderboard.entry_views',
 
 )
 urlpatterns += patterns('leaderboard.views',
-	url(r'/?^$', 'front_page'),
+	url(r'^/?$', 'front_page'),
 	)
 
 
