@@ -30,7 +30,8 @@ ACCOUNT_ACTIVATION_DAYS = 7
 
 ADMINS = (
     ('Joe Zuntz', 'joezuntz@googlemail.com'),
-    # ('Your Name', 'your_email@example.com'),
+    ('Barnaby Rowe', 'barnaby.t.p.rowe@gmail.com'),
+    ('Rachel Mandelbaum', 'rmandelb@andrew.cmu.edu'),
 )
 
 MANAGERS = ADMINS
