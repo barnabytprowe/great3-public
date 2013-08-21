@@ -30,7 +30,7 @@ fun_names = {
 
 class Command(BaseCommand):    
     args = ''
-    help = 'Checks for entries that do not have a score yet and processes them'
+    help = 'Set up the boards'
 
     def handle(self, *args, **options):
         for experiment in EXPERIMENT_CHOICES:
@@ -38,18 +38,18 @@ class Command(BaseCommand):
                 for space in [True,False]:
                     name = fun_names[experiment[0]]
                     notes = texts[experiment[0]]
-                    if variable:
-                        name += '-V'
-                        notes += 'Shear and magnification vary across the field according to a power spectrum. '
-                    else:
-                        name += '-C'
-                        notes += 'Shear and magnification are the same for every galaxy in a field.'
                     if space:
-                        name += 'S'
+                        name += '-S'
                         notes += ' Observing conditions simulate those of a next-generation space telescope.'
                     else:
-                        name += 'G'
+                        name += '-G'
                         notes += ' Observing conditions simulate those of a ground-based survey.'
+                    if variable:
+                        name += 'V'
+                        notes += ' Shear and magnification vary across the field according to a power spectrum. '
+                    else:
+                        name += 'C'
+                        notes += ' Shear and magnification are the same for every galaxy in a field.'
                     try:
                         board = Board(experiment=experiment[0], varying=variable, space=space, notes=notes, name=name, enabled=False)
                         board.save()
