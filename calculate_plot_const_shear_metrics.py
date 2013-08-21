@@ -148,3 +148,16 @@ if __name__ == "__main__":
     plt.ylabel('Q')
     plt.xlabel('m')
     plt.savefig(os.path.join('plots', 'const_QZ2_vs_m_N'+str(NMONTE)+'.png'))
+
+    print ""
+    print "Table of constant shear Q at constant c = cfid = "+str(CFID)
+    print "    m        Q   "
+    for m, Q in zip(mvals, qZ1mean[0, :]):
+        print "{:8f} {:8.3f}".format(m, Q)
+
+    print ""
+    print "Table of constant shear Q at constant m = mfid = "+str(MFID)
+    print "    c        Q   "
+    for c, Q in zip(cvals, qZ1mean[:, 0]):
+        print "{:8f} {:8.3f}".format(c, Q)
+

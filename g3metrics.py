@@ -41,7 +41,7 @@ def make_const_truth_uniform_annular(nfields, nims, range_min=0.02, range_max=0.
     g2true = np.concatenate(g2true_list)
     return g1true, g2true
 
-def read_ps(galsim_dir=None):
+def read_ps(galsim_dir=None, scale=1.):
     """Read in a Power Spectrum stored in the GalSim repository.
 
     Returns a galsim.PowerSpectrum object.
@@ -50,9 +50,18 @@ def read_ps(galsim_dir=None):
     if galsim_dir is None:
         raise ValueError(
             "You must supply a directory for your GalSim install via the `galsim_dir` kwarg.")
-    tab_ps = galsim.LookupTable(
-        file=os.path.join(galsim_dir, 'examples', 'data', 'cosmo-fid.zmed1.00_smoothed.out'),
-        interpolant='linear')
+    file=os.path.join(galsim_dir, 'examples', 'data', 'cosmo-fid.zmed1.00_smoothed.out')
+    if scale == 1.:
+        tab_ps = galsim.LookupTable(file=file, interpolant='linear')
+    else:
+        data = np.loadtxt(file).transpose()
+        if data.shape[0] != 2:
+            raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
+        x=data[0]
+        f=data[1]
+        f *= scale
+        tab_ps = galsim.LookupTable(x=x, f=f, interpolant='linear')
+
     # Put this table into an E-mode power spectrum and return
     ret = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
     return ret
@@ -194,13 +203,13 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
             *g2true_list[i].shape)
         # Then estimate the true signals if asked, and the noisy submission ones
         if calculate_truth:
-            results_truth = run_corr2_ascii(
+            results_truth = run_corr2(
                 x, y, g1true_list[i], g2true_list[i], min_sep=min_sep, max_sep=max_sep, nbins=nbins,
                 temp_cat='temp.cat', params_file='corr2.params', m2_file_name='temp.m2',
                 xy_units='degrees', sep_units='degrees')
             mEtrue_list.append(results_truth[:, 1])
             mBtrue_list.append(results_truth[:, 2])
-        results = run_corr2_ascii(
+        results = run_corr2(
                 x, y, g1gals, g2gals, min_sep=min_sep, max_sep=max_sep, nbins=nbins,
                 temp_cat='temp.cat', params_file='corr2.params', m2_file_name='temp.m2',
                 xy_units='degrees', sep_units='degrees')
@@ -292,6 +301,39 @@ def run_corr2_ascii(x, y, e1, e2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='t
     f.close()
     subprocess.Popen([
         'corr2', params_file, 'file_name='+str(catfile), 'm2_file_name='+str(m2file),
+        'min_sep=%f'%min_sep, 'max_sep=%f'%max_sep, 'nbins=%f'%nbins,
+        'x_units='+str(xy_units), 'y_units='+str(xy_units), 'sep_units='+str(sep_units)]).wait()
+    results = np.loadtxt(m2file)
+    os.remove(catfile)
+    os.remove(m2file)
+    return results
+
+def run_corr2(x, y, g1, g2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='temp.cat',
+              params_file='corr2.params', m2_file_name='temp.m2', xy_units='degrees',
+              sep_units='degrees'):
+    import os
+    import subprocess
+    import tempfile
+    import pyfits
+    # Create temporary, unique files for I/O
+    catfile = tempfile.mktemp(suffix=temp_cat)
+    m2file = tempfile.mktemp(suffix=m2_file_name)
+    # Use fits binary table for faster I/O. (Converting to/from strings is slow.)
+    assert x.shape == y.shape
+    assert x.shape == g1.shape
+    assert x.shape == g2.shape
+    x_col = pyfits.Column(name='x', format='1D', array=x.flatten() )
+    y_col = pyfits.Column(name='y', format='1D', array=y.flatten() )
+    g1_col = pyfits.Column(name='g1', format='1D', array=g1.flatten() )
+    g2_col = pyfits.Column(name='g2', format='1D', array=g2.flatten() )
+    cols = pyfits.ColDefs([x_col, y_col, g1_col, g2_col])
+    table = pyfits.new_table(cols)
+    phdu = pyfits.PrimaryHDU()
+    hdus = pyfits.HDUList([phdu,table])
+    hdus.writeto(catfile,clobber=True)
+    subprocess.Popen([
+        'corr2', params_file, 'file_name='+str(catfile), 'm2_file_name='+str(m2file),
+        'file_type=FITS',
         'min_sep=%f'%min_sep, 'max_sep=%f'%max_sep, 'nbins=%f'%nbins,
         'x_units='+str(xy_units), 'y_units='+str(xy_units), 'sep_units='+str(sep_units)]).wait()
     results = np.loadtxt(m2file)
@@ -425,7 +467,7 @@ def calculate_map_unitc(ngrid=100, dx_grid=0.1, nbins=8, min_sep=0.1, max_sep=10
     x, y = np.meshgrid(xygrid, xygrid)
     e1unitc = np.ones_like(x)
     e2unitc = np.ones_like(x)
-    results_unitc = run_corr2_ascii(
+    results_unitc = run_corr2(
         x, y, e1unitc, e2unitc, min_sep=min_sep, max_sep=max_sep, nbins=nbins)
     if plotfile is not None:
         import matplotlib.pyplot as plt

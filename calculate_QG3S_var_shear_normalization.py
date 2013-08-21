@@ -29,14 +29,16 @@ MMAX = 2.e-1
 NBINS_TEST = 5      # Number of bins to plot in the ranges above
 NMONTE = 100        # Number of montecarlo samples
 
+SCALEPS = 2.        # Factor by which to multiply the PS in order to increase m sensitivity
+
 # Generate arrays of values for test values of c and m
 CVALS = CMIN * (CMAX / CMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1)) # geo series
 MVALS = MMIN * (MMAX / MMIN)**(np.arange(NBINS_TEST) / float(NBINS_TEST - 1))
 CGRID, MGRID = np.meshgrid(CVALS, MVALS) # 2D arrays covering full space
 
 #GALSIM_DIR=os.path.join("/Path", "To", "Your", "Repo")
-#GALSIM_DIR=os.path.join("/Users", "browe", "great3", "galsim")
-GALSIM_DIR=os.path.join("/home", "browe", "great3", "64", "GalSim")
+GALSIM_DIR=os.path.join("/Users", "browe", "great3", "GalSim")
+#GALSIM_DIR=os.path.join("/home", "browe", "great3", "64", "GalSim")
 
 OUTFILE = os.path.join(
     'results', 'normalization_G3S_N'+str(NMONTE)+'_noise_sigma'+str(NOISE_SIGMA)+'.pkl')
@@ -44,7 +46,7 @@ OUTFILE = os.path.join(
 if __name__ == "__main__":
 
     # Load up the reference PS
-    reference_ps = g3metrics.read_ps(galsim_dir=GALSIM_DIR)
+    reference_ps = g3metrics.read_ps(galsim_dir=GALSIM_DIR, scale=SCALEPS)
     # Define some empty storage arrays
     qG3S_AMD_unnorm = np.empty((len(CVALS), len(MVALS), NMONTE))
     qG3S_QMD_unnorm = np.empty((len(CVALS), len(MVALS), NMONTE))
