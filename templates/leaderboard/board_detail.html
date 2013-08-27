@@ -39,5 +39,9 @@
 	</TBODY>
 </table>
 <P><A href="{% url leaderboard.board_views.submit board.id %}"> Submit to this leaderboard</A></P>
+{% if board.datafile.filename %}
 <A href="{% url leaderboard.data_views.public_file board.datafile.filename %}">Download leaderboard challenge data </A>.   {% if board.datafile.mirror1 %}  <A href={{board.datafile.mirror1}}>US Mirror</A>. {{board.datafile.info}}. {% endif %}
+{% else %}
+The data files for this board are not yet ready.
+{% endif %}
 {% endblock %}
