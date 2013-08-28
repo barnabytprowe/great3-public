@@ -4,14 +4,17 @@ import os
 installation_base  = os.path.join(os.path.split(__file__)[0], '..', '..')
 
 try:
-    from secret_settings import SECRET_KEY, EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_USE_TLS, DEBUG
+    from secret_settings import SECRET_KEY, EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_USE_TLS, DEBUG, RECAPTCHA_PRIVATE_KEY
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 except ImportError:
     SECRET_KEY = '4_q-o#r6d=64gm285hh_!dqk)g%2$=&amp;@c1=6g@e%wzj@wfl16c'
     EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
     EMAIL_FILE_PATH = os.path.join(installation_base, "emails")
     DEBUG = True
+    RECAPTCHA_PRIVATE_KEY=''
 
+RECAPTCHA_USE_SSL = True
+RECAPTCHA_PUBLIC_KEY='6LdlseYSAAAAAP1z-d0k5UiIVTJLsZberkXlXmlT'
 
 TEMPLATE_DEBUG = DEBUG
 
@@ -152,6 +155,7 @@ INSTALLED_APPS = (
     'leaderboard',
     'registration',
     'axes',
+    'captcha',
 )
 
 AXES_LOGIN_FAILURE_LIMIT=10

@@ -7,6 +7,8 @@ Forms and validation code for user registration.
 from django.contrib.auth.models import User
 from django import forms
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
+from captcha.fields import ReCaptchaField
 
 
 # I put this on all required fields, because it's easier to pick up
@@ -41,7 +43,8 @@ class RegistrationForm(forms.Form):
                                 label=_("Password"))
     password2 = forms.CharField(widget=forms.PasswordInput(attrs=attrs_dict, render_value=False),
                                 label=_("Password (again)"))
-    
+    if settings.RECAPTCHA_PRIVATE_KEY:
+        captcha = ReCaptchaField()
     def clean_username(self):
         """
         Validate that the username is alphanumeric and is not already
