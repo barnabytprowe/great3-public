@@ -26,31 +26,61 @@ of mean shear g1 and g2 in each subfield.
  
 Variable shear branches
 -----------------------
-Each submission file (one per branch?) CHECK THESE DETAILS WITH MELANIE'S CODE OUTPUT
+Each submission file (one per branch?) CHECK THESE DETAILS WITH MELANIE'S CODE OUTPUT.
 """
 
 import os
+import sys
 import numpy as np
+sys.path.append(os.path.join("..", ".."))
+import great3.mass_produce as mass_produce
 try:
     import g3metrics
 except ImportError:
-    import sys
     path, module = os.path.split(__file__)
     sys.path.append(os.path.join(path, "..", "..", "metrics")) # Appends the great3-private/metrics
                                                                # folder to path
     import g3metrics
 
-NFIELDS = 10      # This is the total number of fields in a branch
-NSUBFIELDS = 200  # This is the total number of subfields in a branch (so that each field consists
-                  # of NSUBFIELDS/NFIELDS subfields)
+NSUBFIELDS = 200 # Total number of subfields, not necessarily equal to the number of subfields made
+                 # in mass_produce as that script also generates the deep fields
 
-def get_generate_rotations(branchname, path="."):
-    """If the rotation file has already been built for this `branchname`, simply returns an array
-    of rotation angles to align with the PSF.  If the rotation file has not been built, does this
-    first.
+def get_generate_rotations(experiment, obs_type, rot_dir="rotations", sim_root_dir="."):
+    """If the rotation file has already been built for this constant shear branch, simply returns an
+    array of rotation angles to align with the PSF.  This array is of shape `(NSUBFIELDS, n_epochs)`
+    where the number of epochs `n_epochs` is determined from the experiment name using the mapper.
+
+    If the rotation file has not been built, does this first.
+
+    @param[in] experiment    experiment for this branch, one of 'control', 'real_galaxy',
+                             'real_psf', 'multiepoch', 'full'
+    @param[in] obs_type      observation type for this branch, one of 'ground' or 'space'
+    @return An array containing all the rotation angles, in radians.
     """
-    if not os.path.isfile(os.path.join(branchname)
+    rotfile = os.path.join(rot_dir, "g3rot_"+experiment[0]+obs_type[0]+".npy")
+    if not os.path.isfile(os.path.join(rotfile)):
+         # If we haven't already built the rotation file, loop over all the subfields and epochs
+         # First work out if the experiment is multi-exposure and has multiple epochs
+         if experiment in ("multiepoch", "full"):
+             import great3.constants
+             n_epochs = great3.constants.n_epochs
+         else:
+             n_epochs = 1
+         # Setup the array for storing the rotation values
+         rotations = np.empty((NSUBFIELDS, n_epochs))
+         # Then build a mapper for this branch to find the stored StarParameters as written by the
+         # builder defined in great3.builder... Note shear_type = constant always!
+         import great3.mapper
+         mapper = great3.mapper.Mapper(sim_root_dir, experiment, obs_type, 'constant')
+         for epoch_index in range(n_epochs):
 
+             for subfield_index in range(NSUBFIELDS):
+
+                 starshape_parameters = mapper.read(
+                     "starshape_parameters", data_id={
+                         "epoch_index": epoch_index, "subfield_index": subfield_index})
+                 rotations[subfield_index, epoch_index] = .5 * np.arctan2(
+                     starshape_parameters['psf_g2'], starshape_parameters['psf_g1'])
 
 
 def const_branch(submission, rotation, truth):
