@@ -11,10 +11,10 @@ import great3
 
 # Set which branches to test...
 experiments = [
+    'multiepoch',
     'control',
     #'real_gal',
     #'real_psf',
-    #'multiepoch',
     #'full',
 ]
 obs_type = [
@@ -39,8 +39,8 @@ shutil.rmtree(root, ignore_errors=True)
 
 # Build catalogs, etc.
 t1 = time.time()
-great3.constants.nrows = 20
-great3.constants.ncols = 20
+great3.constants.nrows = 10
+great3.constants.ncols = 10
 great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
         experiments=experiments, obs_type=obs_type, shear_type=shear_type,
         gal_dir=data_dir, ps_dir=ps_dir,
@@ -53,6 +53,7 @@ print
 
 # Make list of config file names and directories:
 dirs = []
+n_epochs = []
 config_names = []
 psf_config_names = []
 for exp in experiments:
@@ -65,7 +66,10 @@ for exp in experiments:
             dirs.append( os.path.join(root,exp,obs,shear) )
             config_names.append(e + o + s + '.yaml')
             psf_config_names.append(e + o + s + '_psf.yaml')
-
+            if exp == "multiepoch" or exp == "full":
+                n_epochs.append(great3.constants.n_epochs)
+            else:
+                n_epochs.append(1)
 
 # Build config files
 t1 = time.time()
@@ -117,14 +121,17 @@ print 'Total time for galsim_yaml = ',t2-t1
 print
 
 # Move these files to a different name, so we can compare them to the ones built in the next step.
-for dir in dirs:
+for ind in range(len(dirs)):
+    dir = dirs[ind]
+    n_epoch = n_epochs[ind]
     for i in range(subfield_min, subfield_max+1):
-        f1 = os.path.join(dir,'image-%03d-0.fits'%i)
-        f2 = os.path.join(dir,'yaml_image-%03d-0.fits'%i)
-        shutil.move(f1,f2)
-        f1 = os.path.join(dir,'starfield_image-%03d-0.fits'%i)
-        f2 = os.path.join(dir,'yaml_starfield_image-%03d-0.fits'%i)
-        shutil.move(f1,f2)
+        for j in range(0, n_epoch):
+            f1 = os.path.join(dir,'image-%03d-%1d.fits'%(i,j))
+            f2 = os.path.join(dir,'yaml_image-%03d-%1d.fits'%(i,j))
+            shutil.move(f1,f2)
+            f1 = os.path.join(dir,'starfield_image-%03d-%1d.fits'%(i,j))
+            f2 = os.path.join(dir,'yaml_starfield_image-%03d-%1d.fits'%(i,j))
+            shutil.move(f1,f2)
 
 # Build images using great3.run
 t1 = time.time()
@@ -141,16 +148,19 @@ print
 # Check that images are the same.
 print 'Checking diffs: (No output means success)'
 sys.stdout.flush()
-for dir in dirs:
+for ind in range(len(dirs)):
+    dir = dirs[ind]
+    n_epoch = n_epochs[ind]
     for i in range(subfield_min, subfield_max+1):
-        f1 = os.path.join(dir,'image-%03d-0.fits'%i)
-        f2 = os.path.join(dir,'yaml_image-%03d-0.fits'%i)
-        p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
-        p.communicate()
-        f1 = os.path.join(dir,'starfield_image-%03d-0.fits'%i)
-        f2 = os.path.join(dir,'yaml_starfield_image-%03d-0.fits'%i)
-        p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
-        p.communicate()
+        for j in range(0, n_epoch):
+            f1 = os.path.join(dir,'image-%03d-%1d.fits'%(i,j))
+            f2 = os.path.join(dir,'yaml_image-%03d-%1d.fits'%(i,j))
+            p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
+            p.communicate()
+            f1 = os.path.join(dir,'starfield_image-%03d-%1d.fits'%(i,j))
+            f2 = os.path.join(dir,'yaml_starfield_image-%03d-%1d.fits'%(i,j))
+            p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
+            p.communicate()
 print 'End diffs.'
 print
 
