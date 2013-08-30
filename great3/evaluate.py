@@ -60,7 +60,7 @@ def get_generate_rotations(experiment, obs_type, rot_dir="rotations", sim_root_d
     TODO: Would like to work out a way to compare timestamps or something so that we can ensure that
     the rotation files get rebuilt if necessary after a regeneration of the sims.
     """
-    rotfile = os.path.join(rot_dir, "g3rot_"+experiment[0]+obs_type[0]+".npy")
+    rotfile = os.path.join(rot_dir, "g3rot_"+experiment[0]+obs_type[0]+".asc")
     if os.path.isfile(os.path.join(rotfile)):
         rotations = np.loadtxt(rotfile)
     else:
@@ -77,7 +77,7 @@ def get_generate_rotations(experiment, obs_type, rot_dir="rotations", sim_root_d
         # builder defined in great3.builder... Note shear_type = constant always!
         import great3.mapper
         mapper = great3.mapper.Mapper(sim_root_dir, experiment, obs_type, 'constant')
-        output_header = "# epoch"
+        output_header = "# Rotations for "+experiment+"-"+obs_type+"-constant\n"+"# epoch"
         for epoch_index in range(n_epochs):
             output_header+=" "+str(epoch_index)
             for subfield_index in range(NSUBFIELDS):
