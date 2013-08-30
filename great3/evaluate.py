@@ -56,32 +56,41 @@ def get_generate_rotations(experiment, obs_type, rot_dir="rotations", sim_root_d
                              'real_psf', 'multiepoch', 'full'
     @param[in] obs_type      observation type for this branch, one of 'ground' or 'space'
     @return An array containing all the rotation angles, in radians.
+
+    TODO: Would like to work out a way to compare timestamps or something so that we can ensure that
+    the rotation files get rebuilt if necessary after a regeneration of the sims.
     """
     rotfile = os.path.join(rot_dir, "g3rot_"+experiment[0]+obs_type[0]+".npy")
-    if not os.path.isfile(os.path.join(rotfile)):
-         # If we haven't already built the rotation file, loop over all the subfields and epochs
-         # First work out if the experiment is multi-exposure and has multiple epochs
-         if experiment in ("multiepoch", "full"):
-             import great3.constants
-             n_epochs = great3.constants.n_epochs
-         else:
-             n_epochs = 1
-         # Setup the array for storing the rotation values
-         rotations = np.empty((NSUBFIELDS, n_epochs))
-         # Then build a mapper for this branch to find the stored StarParameters as written by the
-         # builder defined in great3.builder... Note shear_type = constant always!
-         import great3.mapper
-         mapper = great3.mapper.Mapper(sim_root_dir, experiment, obs_type, 'constant')
-         for epoch_index in range(n_epochs):
-
-             for subfield_index in range(NSUBFIELDS):
-
-                 starshape_parameters = mapper.read(
-                     "starshape_parameters", data_id={
-                         "epoch_index": epoch_index, "subfield_index": subfield_index})
-                 rotations[subfield_index, epoch_index] = .5 * np.arctan2(
-                     starshape_parameters['psf_g2'], starshape_parameters['psf_g1'])
-
+    if os.path.isfile(os.path.join(rotfile)):
+        rotations = np.loadtxt(rotfile)
+    else:
+        # If we haven't already built the rotation file, loop over all the subfields and epochs
+        # First work out if the experiment is multi-exposure and has multiple epochs
+        if experiment in ("multiepoch", "full"):
+            import great3.constants
+            n_epochs = great3.constants.n_epochs
+        else:
+            n_epochs = 1
+        # Setup the array for storing the rotation values
+        rotations = np.empty((NSUBFIELDS, n_epochs))
+        # Then build a mapper for this branch to find the stored StarParameters as written by the
+        # builder defined in great3.builder... Note shear_type = constant always!
+        import great3.mapper
+        mapper = great3.mapper.Mapper(sim_root_dir, experiment, obs_type, 'constant')
+        output_header = "# epoch"
+        for epoch_index in range(n_epochs):
+            output_header+=" "+str(epoch_index)
+            for subfield_index in range(NSUBFIELDS):
+                starshape_parameters = mapper.read(
+                    "starshape_parameters", data_id={
+                        "epoch_index": epoch_index, "subfield_index": subfield_index})
+                rotations[subfield_index, epoch_index] = .5 * np.arctan2(
+                    starshape_parameters['psf_g2'], starshape_parameters['psf_g1'])
+        # We have built rotations, but then save this file as ascii for use next time
+        with open(rotfile, 'wb') as fout:
+            fout.write(output_header+"\n")
+            np.savetxt(fout, rotations, fmt="%e20.16 " * n_epochs)
+    return rotations
 
 def const_branch(submission, rotation, truth):
     """Calculate the Q_c for a constant shear branch submission.
