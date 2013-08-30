@@ -45,7 +45,8 @@ except ImportError:
 NSUBFIELDS = 200 # Total number of subfields, not necessarily equal to the number of subfields made
                  # in mass_produce as that script also generates the deep fields
 
-def get_generate_rotations(experiment, obs_type, rot_dir="rotations", sim_root_dir="."):
+def get_generate_rotations(experiment, obs_type, rot_dir="./rotations",
+                           sim_root_dir="/great3/public/truth"):
     """If the rotation file has already been built for this constant shear branch, simply returns an
     array of rotation angles to align with the PSF.  This array is of shape `(NSUBFIELDS, n_epochs)`
     where the number of epochs `n_epochs` is determined from the experiment name using the mapper.
