@@ -46,26 +46,43 @@ NSUBFIELDS = 200 # Total number of subfields, not necessarily equal to the numbe
                  # in mass_produce as that script also generates the deep fields
 
 def get_generate_rotations(experiment, obs_type, rot_dir="./rotations",
-                           sim_root_dir="/great3/public/truth"):
+                           sim_truth_dir="/users/browe/great3/truth"):
     """If the rotation file has already been built for this constant shear branch, simply returns an
     array of rotation angles to align with the PSF.  This array is of shape `(NSUBFIELDS, n_epochs)`
     where the number of epochs `n_epochs` is determined from the experiment name using the mapper.
 
     If the rotation file has not been built, does this first.
 
-    @param[in] experiment    experiment for this branch, one of 'control', 'real_galaxy',
-                             'real_psf', 'multiepoch', 'full'
-    @param[in] obs_type      observation type for this branch, one of 'ground' or 'space'
+    @param experiment     experiment for this branch, one of 'control', 'real_galaxy', 'real_psf',
+                          'multiepoch', 'full'
+    @param obs_type       observation type for this branch, one of 'ground' or 'space'
+    @param rot_dir        directory from/into which to load/store rotation files
+                          (default=`./rotations`)
+    @param sim_truth_dir  root directory in which the truth information for the challenge is stored
     @return An array containing all the rotation angles, in radians.
-
-    TODO: Would like to work out a way to compare timestamps or something so that we can ensure that
-    the rotation files get rebuilt if necessary after a regeneration of the sims.
     """
     rotfile = os.path.join(rot_dir, "g3rot_"+experiment[0]+obs_type[0]+".asc")
-    if os.path.isfile(os.path.join(rotfile)):
+    use_stored = True
+    if not os.path.isfile(os.path.join(rotfile)):
+        use_stored = False
+    else:
+        # Then compare timestamps for the rotation file and the first starshape_parameters file
+        # (subfield = 000, epoch =0) for this branch.  If the former is older than the latter, force
+        # rebuild...
+        rotmtime = os.path.getmtime(rotfile)
+        import great3.mapper
+        mapper = great3.mapper.Mapper(sim_root_dir, experiment, obs_type, 'constant')
+        starshape_file_template, _ ,_ = mapper.mappings['starshape_parmeters']  
+        starshape_file_0_0 = os.path.join(
+            mapper.full_dir, starshape_file_template % {"epoch_index": 0, "subfield_index": 0})
+        starshapemtime = os.path.getmtime(starshape_file_0_0)
+        if rotmtime < starshapemtime:
+            use_stored = False
+    # Then load / build as required 
+    if use_stored is True:
         rotations = np.loadtxt(rotfile)
     else:
-        # If we haven't already built the rotation file, loop over all the subfields and epochs
+        # To build we must loop over all the subfields and epochs
         # First work out if the experiment is multi-exposure and has multiple epochs
         if experiment in ("multiepoch", "full"):
             import great3.constants
