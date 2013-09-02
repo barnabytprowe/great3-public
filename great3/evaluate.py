@@ -105,6 +105,8 @@ def get_generate_rotations(experiment, obs_type, rot_dir="./rotations",
                 rotations[subfield_index, epoch_index] = .5 * np.arctan2(
                     starshape_parameters['psf_g2'], starshape_parameters['psf_g1'])
         # We have built rotations, but then save this file as ascii for use next time
+        if not os.path.isdir(rot_dir):
+            os.mkdir(rot_dir)
         with open(rotfile, 'wb') as fout:
             fout.write(output_header+"\n")
             np.savetxt(fout, rotations, fmt="%e20.16 " * n_epochs)
