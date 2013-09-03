@@ -12,9 +12,9 @@ import great3
 
 # Set which branches to test...
 experiments = [
-    'real_psf',
-    'multiepoch',
+    'variable_psf',
     'control',
+    #'multiepoch',
     #'real_gal',
     #'full',
 ]
@@ -40,14 +40,12 @@ shutil.rmtree(root, ignore_errors=True)
 
 # Build catalogs, etc.
 t1 = time.time()
-# Reduce number of galaxies so it won't take so long - factor of 100
+# Reduce number of galaxies so it won't take so long
 great3.constants.nrows = 10
 great3.constants.ncols = 10
-# Reduce number of stars so it won't take so long - factor of 100
-great3.constants.star_density = 0.02 # per arcmin^2
-great3.constants.n_star_ideal = 3600. * great3.constants.star_density * \
-    great3.constants.image_size_deg**2 / great3.constants.n_subfields_per_field["constant"][True]
-great3.constants.n_star_actual = int(numpy.sqrt(great3.constants.n_star_ideal))**2
+# Reduce number of stars so it won't take so long
+great3.constants.min_star_density = 0.01 # per arcmin^2
+great3.constants.max_star_density = 0.03
 great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
         experiments=experiments, obs_type=obs_type, shear_type=shear_type,
         gal_dir=data_dir, ps_dir=ps_dir,
