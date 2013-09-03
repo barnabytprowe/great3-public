@@ -31,9 +31,14 @@ Each submission file (one per branch?) CHECK THESE DETAILS WITH MELANIE'S CODE O
 
 import os
 import sys
+import logging
 import numpy as np
-sys.path.append(os.path.join("..", ".."))
+# This is some sys.path hackery to make sure that it is Rachel's great/__init__.py that gets run on
+# import great3, not Joe's one directly visible from ./
+sys.path.insert(0, os.path.join("..", ".."))
+import great3
 import great3.mapper
+sys.path.append(sys.path.pop(0)) # Return the path back to normal (i.e. with ./ as the first entry)
 try:
     import g3metrics
 except ImportError:
@@ -54,37 +59,63 @@ STORAGE_DIR = "./metric_calculation_products" # Folder into which to store usefu
                                               # outputs of metric calculations (e.g. rotation files,
                                               # dicts, mapE tables) which need be calculated only
                                               # once
-TRUTH_DIR = "/Users/browe/great3/truth"
+TRUTH_DIR = "/Users/browe/great3/truth"       # Root folder in which the truth values are unpacked
+                                              # (admin only)
 
 SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
 ROTATIONS_FILE_PREFIX = "rotations_"
 
-def get_generate_const_truth(experiment, obs_type):
+def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
+                             logger=None):
     """Get or generate an array containing the true g1, g2 per subfield
 
     Returns an array of shape (NSUBFIELDS, 2)
     """
-    gtruefile = os.path.join(STORAGE_DIR, GTRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+".asc") 
+    gtruefile = os.path.join(storage_dir, GTRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+".asc")
+    mapper = great3.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
     use_stored = True
-    if not os.path.isfile(gtrue_file):
+    if not os.path.isfile(gtruefile):
         use_stored = False
+        if logger:
+            logger.info(
+                "First build of shear truth tables using values from "+
+                os.path.join(mapper.full_dir, "shear_params-*.yaml"))
     else:
         # Compare timestamps for the gtruefile and the first shear_params file
-        # (subfield = 000) for this branch.  If the former is older than the latter, force
-        # rebuild...
+        # (subfield = 000) for this branch.  If the former is older than the latter, or this file,
+        # force rebuild...
         gtruemtime = os.path.getmtime(gtruefile)
-        mapper = great3.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
         shear_params_file0 = os.path.join(mapper.full_dir, "shear_params-000.yaml")
         shear_params_mtime = os.path.getmtime(shear_params_file0)
-        if gtruemtime < shear_params_mtime:
-            use_stored = False 
-    # Then load or build (and save) the subfield_dict
-    if use_stored is True:
+        if gtruemtime < shear_params_mtime or gtruemtime < os.path.getmtime(__file__):
+            use_stored = False
+            if logger:
+                logger.info(
+                    "Updating out-of-date shear truth tables using newer values from "+
+                    os.path.join(mapper.full_dir, "shear_params-*.yaml"))
+    # Then load or build (and save) the array of truth values per subfield
+    if use_stored:
+        if logger:
+            logger.info("Loading shear truth tables from "+gtruefile) 
         gtrue = np.loadtxt(gtruefile)
     else: 
+        params_prefix = os.path.join(mapper.full_dir, "shear_params-") 
         gtrue = np.empty((NSUBFIELDS, 2))
-        # TODO COMPLETE THIS!
+        import yaml
+        for i in range(NSUBFIELDS):
+            params_file = params_prefix+("%03d" % i)+".yaml"
+            with open(params_file, 'rb') as funit:
+                gdict = yaml.load(funit)
+                gtrue[i, 0] = gdict['g1']
+                gtrue[i, 1] = gdict['g2']
+        if logger:
+            logger.info("Saving shear truth table to "+gtruefile)
+        if not os.path.isdir(storage_dir):
+            os.mkdir(storage_dir)
+        with open(gtruefile, 'wb') as fout:
+            fout.write("# g1 g2\n")
+            np.savetxt(fout, gtrue)
     return gtrue 
 
 
@@ -193,13 +224,6 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
             fout.write(output_header+"\n")
             np.savetxt(fout, rotations, fmt="%e20.16 " * n_epochs)
     return rotations
-
-def get_generate_const_truth(experiment, obs_type):
-    """Get or generate an array containing the true g1, g2 per subfield
-
-    (NSUBFIELDS, 2)
-    """
-
 
 def Q_const(submission_file, experiment, obs_type):
     """Calculate the Q_c for a constant shear branch submission.
