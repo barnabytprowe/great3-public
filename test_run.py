@@ -13,7 +13,7 @@ import great3
 # Set which branches to test...
 experiments = [
     'variable_psf',
-    'control',
+    #'control',
     #'multiepoch',
     #'real_gal',
     #'full',
@@ -63,7 +63,6 @@ config_names = []
 psf_config_names = []
 for exp in experiments:
     e = exp[0]
-    if e == 'r': e = exp[5]
     for obs in obs_type:
         o = obs[0]
         for shear in shear_type:
