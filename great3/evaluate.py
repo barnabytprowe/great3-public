@@ -56,13 +56,45 @@ STORAGE_DIR = "./metric_calculation_products" # Folder into which to store usefu
                                               # once
 TRUTH_DIR = "/Users/browe/great3/truth"
 
+SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
+GTRUTH_FILE_PREFIX = "gtruth_"
+ROTATIONS_FILE_PREFIX = "rotations_"
+
+def get_generate_const_truth(experiment, obs_type):
+    """Get or generate an array containing the true g1, g2 per subfield
+
+    Returns an array of shape (NSUBFIELDS, 2)
+    """
+    gtruefile = os.path.join(STORAGE_DIR, GTRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+".asc") 
+    use_stored = True
+    if not os.path.isfile(gtrue_file):
+        use_stored = False
+    else:
+        # Compare timestamps for the gtruefile and the first shear_params file
+        # (subfield = 000) for this branch.  If the former is older than the latter, force
+        # rebuild...
+        gtruemtime = os.path.getmtime(gtruefile)
+        mapper = great3.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
+        shear_params_file0 = os.path.join(mapper.full_dir, "shear_params-000.yaml")
+        shear_params_mtime = os.path.getmtime(shear_params_file0)
+        if gtruemtime < shear_params_mtime:
+            use_stored = False 
+    # Then load or build (and save) the subfield_dict
+    if use_stored is True:
+        gtrue = np.loadtxt(gtruefile)
+    else: 
+        gtrue = np.empty((NSUBFIELDS, 2))
+        # TODO COMPLETE THIS!
+    return gtrue 
+
+
 def get_generate_const_truth_subfield_dict(experiment, obs_type, naive=False, diff_tol=1.e-14,
                                            storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR):
     """Get or generate a dict mapping which subfields contain which of NFIELDS independent truth
     shear values.
     """
     subfield_dict_file = os.path.join(
-        STORAGE_DIR, "subfield_dict_"+experiment[0]+obs_type[0]+".yaml") 
+        STORAGE_DIR, SUBFIELD_DICT_FILE_PREFIX+experiment[0]+obs_type[0]+".yaml") 
     use_stored = True
     if not os.path.isfile(subfield_dict_file):
         use_stored = False
@@ -83,8 +115,8 @@ def get_generate_const_truth_subfield_dict(experiment, obs_type, naive=False, di
             subfield_dict = yaml.load(funit)
     else:
         if not naive:
-            raise NotImplementedError(
-                "Sorry, only the naive true shear <-> subfield mapping is coded!")
+            gtrue = generate_const_truth(experiment, obs_type)
+            # TODO: COMPLETE THIS!
         else: # Hackily make this dict by hand for now...
             for i in range(NFIELDS):
                 subfield_dict.update( # In the current dataset this is just sequential
@@ -113,7 +145,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     @param truth_dir      Root directory in which the truth information for the challenge is stored
     @return               An array containing all the rotation angles, in radians
     """
-    rotfile = os.path.join(storage_dir, "rotations_"+experiment[0]+obs_type[0]+".asc")
+    rotfile = os.path.join(storage_dir, ROTATIONS_FILE_PREFIX+experiment[0]+obs_type[0]+".asc")
     use_stored = True
     if not os.path.isfile(rotfile):
         use_stored = False
@@ -126,7 +158,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
         starshape_file_template, _ ,_ = mapper.mappings['starshape_parmeters']  
         starshape_file00 = os.path.join(
             mapper.full_dir, starshape_file_template % {"epoch_index": 0, "subfield_index": 0})
-        starshapemtime = os.path.getmtime(starshape_file_00)
+        starshapemtime = os.path.getmtime(starshape_file_0_0)
         if rotmtime < starshapemtime:
             use_stored = False
     # Then load / build as required 
