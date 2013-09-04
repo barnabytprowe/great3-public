@@ -52,6 +52,9 @@ NSUBFIELDS = 200 # Total number of subfields, not necessarily equal to the numbe
                  # in mass_produce as that script also generates the deep fields
 NSUBFIELDSPERFIELD = NSUBFIELDS / NFIELDS
 
+CFID = 2.e-4
+MFID = 2.e-3
+
 TRUTH_SUBFIELD_DICT = {} # A dictionary containing the mapping between subfields containing the
                          # same applied shear [one of NFIELDS pairs of independent (g1, g2) values]
 
@@ -66,15 +69,17 @@ SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
 ROTATIONS_FILE_PREFIX = "rotations_"
 
+
+
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
                              logger=None):
-    """Get or generate an array of shape (NSUBFIELDS, 2) containing the true g1, g2 per subfield.
+    """Get or generate arrays of subfield_index, g1true, g2true, each of length `NSUBFIELDS`.
 
     If the gtruth file has already been built for this constant shear branch, loads and
-    returns the saved copy.
+    returns the saved copies.
 
     If the array of truth values has not been built, or is older than the first entry in the set of
-    shear_params files, the array is built first, saved to file, then returned.
+    shear_params files, the arrays are built first, saved to file, then returned.
 
     @param experiment     Experiment for this branch, one of 'control', 'real_galaxy',
                           'variable_psf', 'multiepoch', 'full'
@@ -82,7 +87,7 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     @param storage_dir    Directory from/into which to load/store rotation files
     @param truth_dir      Root directory in which the truth information for the challenge is stored
     @param logger         Python logging.Logger instance, for message logging
-    @return               The array of truth shear values for each subfield
+    @return subfield_index, g1true, g2true
     """
     gtruefile = os.path.join(storage_dir, GTRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+".asc")
     mapper = great3.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
@@ -110,18 +115,19 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     if use_stored:
         if logger:
             logger.info("Loading shear truth tables from "+gtruefile) 
-        gtrue = np.loadtxt(gtruefile)
+        gtruedata = np.loadtxt(gtruefile)
     else: 
         params_prefix = os.path.join(mapper.full_dir, "shear_params-") 
-        gtrue = np.empty((NSUBFIELDS, 2))
+        gtruedata = np.empty((NSUBFIELDS, 3))
         import yaml
+        gtruedata[:, 0] = np.arange(NSUBFIELDS)
         for i in range(NSUBFIELDS):
 
             params_file = params_prefix+("%03d" % i)+".yaml"
             with open(params_file, 'rb') as funit:
                 gdict = yaml.load(funit)
-                gtrue[i, 0] = gdict['g1']
-                gtrue[i, 1] = gdict['g2']
+                gtruedata[i, 1] = gdict['g1']
+                gtruedata[i, 2] = gdict['g2']
 
         if logger:
             logger.info("Saving shear truth table to "+gtruefile)
@@ -130,8 +136,8 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
         with open(gtruefile, 'wb') as fout:
             fout.write("#  True shears for "+experiment+"-"+obs_type+"-constant\n")
             fout.write("#  g1true  g2true\n")
-            np.savetxt(fout, gtrue, fmt=" %+.18e %+.18e")
-    return gtrue 
+            np.savetxt(fout, gtruedata, fmt=" %4d %+.18e %+.18e")
+    return (gtruedata[:, 0]).astype(int), gtruedata[:, 1], gtruedata[:, 2]
 
 def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_DIR,
                                      truth_dir=TRUTH_DIR, logger=None):
@@ -184,15 +190,15 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
         with open(subfield_dict_file, 'rb') as funit:
             subfield_dict = cPickle.load(funit)
     else:
-        gtrue = get_generate_const_truth(experiment, obs_type, logger=logger)
+        _, g1true, g2true = get_generate_const_truth(experiment, obs_type, logger=logger)
         # First of all get all the unique (g1, g2) values, in the order in which they first
         # appear in the arrays (so as not to mess up pairs) as suggested in
         # http://stackoverflow.com/questions/12926898/numpy-unique-without-sort
-        g1unique, g1unique_indices = np.unique(gtrue[:, 0], return_index=True) 
-        g2unique, g2unique_indices = np.unique(gtrue[:, 1], return_index=True)
+        g1unique, g1unique_indices = np.unique(g1true, return_index=True) 
+        g2unique, g2unique_indices = np.unique(g2true, return_index=True)
         # Put back into first-found order
-        g1unique_unsorted = [gtrue[:, 0][index] for index in sorted(g1unique_indices)]
-        g2unique_unsorted = [gtrue[:, 1][index] for index in sorted(g2unique_indices)]
+        g1unique_unsorted = [g1true[index] for index in sorted(g1unique_indices)]
+        g2unique_unsorted = [g2true[index] for index in sorted(g2unique_indices)]
         # Sanity check
         if len(g1unique_unsorted) != NFIELDS or len(g2unique_unsorted) != NFIELDS:
             raise ValueError(
@@ -204,10 +210,10 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
         g1dict = {"value": g1unique_unsorted, "subfield_indices":[]}
         g2dict = {"value": g2unique_unsorted, "subfield_indices":[]}
         ifullset = np.arange(NSUBFIELDS, dtype=int)
-        for g1true, g2true in zip(g1dict["value"], g2dict["value"]):
+        for g1trueval, g2trueval in zip(g1dict["value"], g2dict["value"]):
 
-            ig1subset = ifullset[gtrue[:, 0] == g1true]
-            ig2subset = ifullset[gtrue[:, 1] == g2true]
+            ig1subset = ifullset[g1true == g1trueval]
+            ig2subset = ifullset[g2true == g2trueval]
             if tuple(ig1subset) != tuple(ig2subset): # Tuple comparison
                 raise ValueError(
                     "Unique values of truth g1 and g2 do not correspond pairwise!")
@@ -305,13 +311,17 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
             np.savetxt(fout, rotations, fmt=" %+.18f" * n_epochs)
     return rotations
 
-def Q_const(submission_file, experiment, obs_type):
+def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
+            logger=None):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
     @param experiment       Experiment for this branch, one of 'control', 'real_galaxy',
                             'variable_psf', 'multiepoch', 'full'
     @param obs_type         Observation type for this branch, one of 'ground' or 'space'
+    @param storage_dir      Directory from/into which to load/store rotation files
+    @param truth_dir        Root directory in which the truth information for the challenge is
+                            stored
     @return                 The metric Q_const
     """
     if not os.path.isfile(submission_file):
@@ -319,13 +329,21 @@ def Q_const(submission_file, experiment, obs_type):
     
     # Load the submission and label the slices we're interested in
     data = np.loadtxt(submission_file)
-    subfield = data[:, 0]  # Or should this be field?  Was confused slightly...
+    subfield = data[:, 0]  
     g1sub = data[:, 1]
     g2sub = data[:, 2]
     # Load up the rotations, then rotate g1 & g2 in the correct sense
-    g1rot = +g1sub * np.cos(rotation) + g2sub * np.sin(rotation)
-    g2rot = -g1sub * np.sin(rotation) + g2sub * np.cos(rotation)
+    rotations = get_generate_const_rotations(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
+    g1srot = +g1sub * np.cos(rotations) + g2sub * np.sin(rotations)
+    g2srot = -g1sub * np.sin(rotations) + g2sub * np.cos(rotations)
+    # Load the truth
+    _, g1truth, g2truth = get_generate_const_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
     # Rotate the truth in the same sense, then use the g3metrics.fitline routine to
     # perform simple linear regression
-    g1true = +truth[:, 0] * np.cos(rotation) + truth[:, 1] * np.sin(rotation)
-    g2true = -truth[:, 0] * np.sin(rotation) + truth[:, 1] * np.cos(rotation)
+    g1trot = +g1truth * np.cos(rotations) + g2truth * np.sin(rotations)
+    g2trot = -g1truth * np.sin(rotations) + g2truth * np.cos(rotations)
+    Q_c = g3metrics.metricQZ1_const_shear(g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
+    print Q_c
+    return Q_c 
