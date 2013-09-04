@@ -288,15 +288,29 @@ class VariableShearBuilder(ShearBuilder):
         phi_n_x = self._phin(n, x/beta)
         return phi_n_x / np.sqrt(beta)
 
+    def _hermite(self, n, x):
+        try:
+            import scipy.special as spec
+            # get the H_n function from scipy
+            hn = spec.hermite(n)
+            # evaluate it at our x
+            return hn(x)
+        except:
+            # If you don't have scipy, use a simple recursion relation:
+            if n == 0:
+                return 1.
+            else:
+                hkm1 = 1.
+                hk = 2.*x
+                for k in range(1,n):
+                    hk, hkm1 = 2.*x*hk - 2.*k*hkm1, hk
+                return hk
+
     def _phin(self, n, x):
         """A helper function defining shapelets basis functions at an array of positions x, for
         order n."""
-        import scipy.special as spec
         import math
-        # get the H_n function from scipy
-        hn = spec.hermite(n)
-        # evaluate it at our x
-        hn_x = hn(x)
+        hn_x = self._hermite(n,x)
         # Put in the exponential factor, and properly normalize it.
         phi_n_x = hn_x * np.exp(-(x**2)/2.)
         phi_n_x /= np.sqrt((2.**n) * np.sqrt(np.pi) * math.factorial(n))
