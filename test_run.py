@@ -105,26 +105,26 @@ if do_config:
     print 'Time for great3.run config = ',t2-t1
     print
 
-# build images using galsim_yaml
+# build images using galsim -f yaml
     t1 = time.time()
     os.chdir(root)
     for config_name in new_config_names:
         t3 = time.time()
-        p = subprocess.Popen(['galsim_yaml',config_name,'-v1'])
+        p = subprocess.Popen(['galsim -f yaml',config_name,'-v1'])
         p.communicate() # wait until done
         t4 = time.time()
-        print 'Time for galsim_yaml',config_name,'= ',t4-t3
+        print 'Time for galsim -f yaml',config_name,'= ',t4-t3
         print
     for config_name in new_psf_config_names:
         t3 = time.time()
-        p = subprocess.Popen(['galsim_yaml',config_name,'-v1'])
+        p = subprocess.Popen(['galsim -f yaml',config_name,'-v1'])
         p.communicate() # wait until done
         t4 = time.time()
-        print 'Time for galsim_yaml',config_name,'= ',t4-t3
+        print 'Time for galsim -f yaml',config_name,'= ',t4-t3
         print
     os.chdir('..')
     t2 = time.time()
-    print 'Total time for galsim_yaml = ',t2-t1
+    print 'Total time for galsim -f yaml = ',t2-t1
     print
 
 # Move these files to a different name, so we can compare them to the ones built in the next step.
