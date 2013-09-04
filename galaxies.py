@@ -164,6 +164,33 @@ class PlaceholderGalaxyBuilder(GalaxyBuilder):
         obj.applyShear(e1=record['galaxy_e1'], e2=record['galaxy_e2'])
         return obj, None
 
+def _gammafn(x):
+    """The gamma function is present in python2.7's math module, but not 2.6.
+    So try using that, and if it fails, use some code from RosettaCode:
+    http://rosettacode.org/wiki/Gamma_function#Python
+    """
+    try:
+        import math
+        return math.gamma(x)
+    except:
+        y  = float(x) - 1.0;
+        sm = _gammafn._a[-1];
+        for an in _gammafn._a[-2::-1]:
+            sm = sm * y + an;
+        return 1.0 / sm;
+
+_gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.65587807152025388108,
+              -0.04200263503409523553, 0.16653861138229148950, -0.04219773455554433675,
+              -0.00962197152787697356, 0.00721894324666309954, -0.00116516759185906511,
+              -0.00021524167411495097, 0.00012805028238811619, -0.00002013485478078824,
+              -0.00000125049348214267, 0.00000113302723198170, -0.00000020563384169776,
+               0.00000000611609510448, 0.00000000500200764447, -0.00000000118127457049,
+               0.00000000010434267117, 0.00000000000778226344, -0.00000000000369680562,
+               0.00000000000051003703, -0.00000000000002058326, -0.00000000000000534812,
+               0.00000000000000122678, -0.00000000000000011813, 0.00000000000000000119,
+               0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
+             )
+ 
 class COSMOSGalaxyBuilder(GalaxyBuilder):
     """A GalaxyBuilder subclass for making COSMOS-based galaxies.
 
@@ -471,13 +498,13 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 # Fudge this if it is at the edge.  Now that GalSim #325 and #449 allow Sersic n in
                 # the range 0.3<=n<=6, the only problem is that Claire occasionally goes as low as
                 # n=0.2.
+                if gal_n < 0.3: gal_n = 0.3
                 gal_q = params[3]
                 gal_beta = params[7]*galsim.radians + rot_angle[ind]*galsim.radians
                 gal_hlr = 0.03*self.size_rescale*np.sqrt(gal_q)*params[1]
-                if gal_n < 0.3: gal_n = 0.3
                 tmp_ser = galsim.Sersic(gal_n, half_light_radius=1.)
                 gal_bn = (1./tmp_ser.getScaleRadius())**(1./gal_n)
-                prefactor = gal_n * math.gamma(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
+                prefactor = gal_n * _gammafn(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
                 gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*params[0]/self.size_rescale**2/0.03**2
                 record["gal_sn"] = approx_sn_gal[all_indices[ind]]
                 record["bulge_n"] = gal_n
