@@ -128,8 +128,9 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
         with open(gtruefile, 'wb') as fout:
-            fout.write("# g1 g2\n")
-            np.savetxt(fout, gtrue)
+            fout.write("#  True shears for "+experiment+"-"+obs_type+"-constant\n")
+            fout.write("#  g1true  g2true\n")
+            np.savetxt(fout, gtrue, fmt=" %+.18e %+.18e")
     return gtrue 
 
 def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_DIR,
@@ -229,7 +230,7 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
     return subfield_dict
 
 def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
-                                 truth_dir=TRUTH_DIR):
+                                 truth_dir=TRUTH_DIR, logger=None):
     """Get or generate an array of rotation angles for Q_const calculation.
 
     If the rotation file has already been built for this constant shear branch, loads and returns an
@@ -246,6 +247,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     @param truth_dir      Root directory in which the truth information for the challenge is stored
     @return               An array containing all the rotation angles, in radians
     """
+    import great3.mapper
     rotfile = os.path.join(storage_dir, ROTATIONS_FILE_PREFIX+experiment[0]+obs_type[0]+".asc")
     mapper = great3.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
     use_stored = True
@@ -263,7 +265,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
         starshape_file_template, _ ,_ = mapper.mappings['starshape_parameters']  
         starshape_file00 = os.path.join(
             mapper.full_dir, starshape_file_template % {"epoch_index": 0, "subfield_index": 0})
-        starshapemtime = os.path.getmtime(starshape_file_0_0)
+        starshapemtime = os.path.getmtime(starshape_file00+".yaml")
         if rotmtime < starshapemtime or rotmtime < os.path.getmtime(__file__):
             use_stored = False
             logger.info(
@@ -272,6 +274,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     # Then load / build as required 
     if use_stored is True:
         rotations = np.loadtxt(rotfile)
+        if logger:
+            logger.info("Loading rotations from "+rotfile) 
     else:
         # To build we must loop over all the subfields and epochs
         # First work out if the experiment is multi-exposure and has multiple epochs
@@ -282,12 +286,9 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
             n_epochs = 1
         # Setup the array for storing the rotation values
         rotations = np.empty((NSUBFIELDS, n_epochs))
-        # Then build a mapper for this branch to find the stored StarParameters as written by the
-        # builder defined in great3.builder... Note shear_type = constant always!
-        mapper = great3.mapper.Mapper(sim_root_dir, experiment, obs_type, 'constant')
-        output_header = "# Rotations for "+experiment+"-"+obs_type+"-constant\n"+"# epoch"
+        output_header = "#  Rotations for "+experiment+"-"+obs_type+"-constant\n"+"#  epoch"
         for epoch_index in range(n_epochs):
-            output_header+=" "+str(epoch_index)
+            output_header+="  "+str(epoch_index)
             for subfield_index in range(NSUBFIELDS):
                 starshape_parameters = mapper.read(
                     "starshape_parameters", data_id={
@@ -295,11 +296,13 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
                 rotations[subfield_index, epoch_index] = .5 * np.arctan2(
                     starshape_parameters['psf_g2'], starshape_parameters['psf_g1'])
         # We have built rotations, but then save this file as ascii for use next time
+        if logger:
+            logger.info("Saving rotations to "+rotfile)    
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
         with open(rotfile, 'wb') as fout:
             fout.write(output_header+"\n")
-            np.savetxt(fout, rotations, fmt="%e20.16 " * n_epochs)
+            np.savetxt(fout, rotations, fmt=" %+.18f" * n_epochs)
     return rotations
 
 def Q_const(submission_file, experiment, obs_type):
