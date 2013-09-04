@@ -322,7 +322,7 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     @param storage_dir      Directory from/into which to load/store rotation files
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
-    @return                 The metric Q_const
+    @return The metric Q_const, & best fitting c1, m1, c2, m2, sigc1, sigcm1, sigc2, sigm2
     """
     if not os.path.isfile(submission_file):
         raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
@@ -345,5 +345,4 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     g1trot = +g1truth * np.cos(rotations) + g2truth * np.sin(rotations)
     g2trot = -g1truth * np.sin(rotations) + g2truth * np.cos(rotations)
     Q_c = g3metrics.metricQZ1_const_shear(g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
-    print Q_c
     return Q_c 
