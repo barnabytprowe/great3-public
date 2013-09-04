@@ -105,29 +105,29 @@ if do_config:
     print 'Time for great3sims.run config = ',t2-t1
     print
 
-# build images using galsim -f yaml
+    # build images using galsim executable
     t1 = time.time()
     os.chdir(root)
     for config_name in new_config_names:
         t3 = time.time()
-        p = subprocess.Popen(['galsim -f yaml',config_name,'-v1'])
+        p = subprocess.Popen(['galsim',config_name,'-v1'])
         p.communicate() # wait until done
         t4 = time.time()
-        print 'Time for galsim -f yaml',config_name,'= ',t4-t3
+        print 'Time for galsim',config_name,'= ',t4-t3
         print
     for config_name in new_psf_config_names:
         t3 = time.time()
-        p = subprocess.Popen(['galsim -f yaml',config_name,'-v1'])
+        p = subprocess.Popen(['galsim',config_name,'-v1'])
         p.communicate() # wait until done
         t4 = time.time()
-        print 'Time for galsim -f yaml',config_name,'= ',t4-t3
+        print 'Time for galsim',config_name,'= ',t4-t3
         print
     os.chdir('..')
     t2 = time.time()
-    print 'Total time for galsim -f yaml = ',t2-t1
+    print 'Total time for galsim = ',t2-t1
     print
 
-# Move these files to a different name, so we can compare them to the ones built in the next step.
+    # Move these files to a different name, so we can compare to the ones built in the next step.
     for ind in range(len(dirs)):
         dir = dirs[ind]
         n_epoch = n_epochs[ind]
