@@ -261,7 +261,8 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
         if not os.path.isdir('g3subs'):
             os.mkdir('g3subs')
         np.savetxt(
-            './g3subs/g3_const_shear_sub.'+label+'.dat', np.array((truth[:, 0], g1sub, g2sub)).T,
+            './g3subs/g3_const_shear_sub.'+label+'.dat',
+            np.array((np.arange(nims), g1sub, g2sub)).T,
             fmt=('%d', '%14.7f', '%14.7f'))
     return g1sub, g2sub
 
