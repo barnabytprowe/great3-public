@@ -135,7 +135,7 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
             os.mkdir(storage_dir)
         with open(gtruefile, 'wb') as fout:
             fout.write("#  True shears for "+experiment+"-"+obs_type+"-constant\n")
-            fout.write("#  g1true  g2true\n")
+            fout.write("#  subfield_index  g1true  g2true\n")
             np.savetxt(fout, gtruedata, fmt=" %4d %+.18e %+.18e")
     return (gtruedata[:, 0]).astype(int), gtruedata[:, 1], gtruedata[:, 2]
 
