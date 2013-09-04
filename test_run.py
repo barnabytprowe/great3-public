@@ -8,7 +8,7 @@ import shutil
 import numpy
 
 sys.path.append('..')
-import great3
+import great3sims
 
 # Set which branches to test...
 experiments = [
@@ -43,19 +43,19 @@ shutil.rmtree(root, ignore_errors=True)
 # Build catalogs, etc.
 t1 = time.time()
 # Reduce number of galaxies so it won't take so long
-great3.constants.nrows = 10
-great3.constants.ncols = 10
+great3sims.constants.nrows = 10
+great3sims.constants.ncols = 10
 # Reduce number of stars so it won't take so long
-great3.constants.min_star_density = 0.01 # per arcmin^2
-great3.constants.max_star_density = 0.03
-great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
-        experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-        gal_dir=data_dir, ps_dir=ps_dir,
-        seed=seed, steps=['metaparameters', 'catalogs']
+great3sims.constants.min_star_density = 0.01 # per arcmin^2
+great3sims.constants.max_star_density = 0.03
+great3sims.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
+               experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+               gal_dir=data_dir, ps_dir=ps_dir,
+               seed=seed, steps=['metaparameters', 'catalogs']
 )
 t2 = time.time()
 print
-print 'Time for great3.run up to catalogs = ',t2-t1
+print 'Time for great3sims.run up to catalogs = ',t2-t1
 print
 
 # Make list of config file names and directories:
@@ -73,7 +73,7 @@ for exp in experiments:
             config_names.append(e + o + s + '.yaml')
             psf_config_names.append(e + o + s + '_psf.yaml')
             if exp == "multiepoch" or exp == "full":
-                n_epochs.append(great3.constants.n_epochs)
+                n_epochs.append(great3sims.constants.n_epochs)
             else:
                 n_epochs.append(1)
 
@@ -85,11 +85,11 @@ if do_config:
     for i in range(n_config):
         first = subfield_min + (subfield_max-subfield_min+1)/n_config * i
         last = subfield_min + (subfield_max-subfield_min+1)/n_config * (i+1) - 1
-        great3.run(root, subfield_min=first, subfield_max=last,
-                   experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-                   gal_dir=data_dir, ps_dir=ps_dir,
-                   seed=seed, steps=['config']
-                   )
+        great3sims.run(root, subfield_min=first, subfield_max=last,
+                       experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+                       gal_dir=data_dir, ps_dir=ps_dir,
+                       seed=seed, steps=['config']
+                       )
         for config_name in config_names:
             name, ext = os.path.splitext(config_name)
             new_name = '%s_%02d.yaml'%(name,i)
@@ -102,7 +102,7 @@ if do_config:
             shutil.copy(os.path.join(root,config_name),os.path.join(root,new_name))
     t2 = time.time()
     print
-    print 'Time for great3.run config = ',t2-t1
+    print 'Time for great3sims.run config = ',t2-t1
     print
 
 # build images using galsim -f yaml
@@ -140,16 +140,16 @@ if do_config:
                 f2 = os.path.join(dir,'yaml_starfield_image-%03d-%1d.fits'%(i,j))
                 shutil.move(f1,f2)
 
-# Build images using great3.run
+# Build images using great3sims.run
 t1 = time.time()
-great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
-           experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-           gal_dir=data_dir, ps_dir=ps_dir,
-           seed=seed, steps=['gal_images', 'psf_images']
+great3sims.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
+               experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+               gal_dir=data_dir, ps_dir=ps_dir,
+               seed=seed, steps=['gal_images', 'psf_images']
 )
 t2 = time.time()
 print
-print 'Time for great3.run images = ',t2-t1
+print 'Time for great3sims.run images = ',t2-t1
 print
 
 # Check that images are the same.
@@ -174,24 +174,24 @@ if do_config:
 
 # Measure star parameters required for metric
 t1 = time.time()
-great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
-           experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-           gal_dir=data_dir, ps_dir=ps_dir,
-           seed=seed, steps=['star_params']
+great3sims.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
+               experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+               gal_dir=data_dir, ps_dir=ps_dir,
+               seed=seed, steps=['star_params']
 )
 t2 = time.time()
 print
-print 'Time for great3.run star_params = ',t2-t1
+print 'Time for great3sims.run star_params = ',t2-t1
 print
 
 
 # Now package up the data that should be public, and truth tables
 t1 = time.time()
-great3.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
-           experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-           gal_dir=data_dir, seed=seed, steps=['packages']
+great3sims.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
+               experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+               gal_dir=data_dir, seed=seed, steps=['packages']
 )
 t2 = time.time()
 print
-print 'Time for great3.run packages = ',t2-t1
+print 'Time for great3sims.run packages = ',t2-t1
 print
