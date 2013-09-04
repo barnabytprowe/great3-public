@@ -8,8 +8,8 @@ Constant shear branches
 Each submission file (one per branch) should take the format of a 3-column ASCII catalog, e.g.:
 
     # SUBFIELD  G1  G2
-    1   -.25424  0.23111
-    2   -.05111  0.37123
+    0   -.25424  0.23111
+    1   -.05111  0.37123
     ...
 
 or similar.  The hashed header/comment can be omitted, and almost all formats for the numbers are
@@ -20,13 +20,13 @@ fine.  The main criterion to be satisfied is that after
 the `data` object must be a NumPy array with shape `(NSUBFIELDS, 3)`, where `NSUBFIELDS` is the
 total number of subfields in the branch (currently fixed at 200).
 
-In addition, the array slice `data[:, 0]` must be the subfield number in ascending order from 1 to 
-`NSUBFIELDS`.  The array slices `data[:, 1]` and `data[:, 2]` must be the corresponding estimates
-of mean shear g1 and g2 in each subfield.
+In addition, the array slice `data[:, 0]` must be the subfield number in ascending order from `0` to
+`NSUBFIELDS - 1`.  The array slices `data[:, 1]` and `data[:, 2]` must be the corresponding
+estimates of mean shear g1 and g2 in each subfield.
  
 Variable shear branches
 -----------------------
-Each submission file (one per branch?) CHECK THESE DETAILS WITH MELANIE'S CODE OUTPUT.
+Each submission file (one per branch?) CHECK THESE DETAILS WITH MELANIE'S CODE OUTPUT, TODO.
 """
 
 import os
@@ -76,8 +76,8 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     If the array of truth values has not been built, or is older than the first entry in the set of
     shear_params files, the array is built first, saved to file, then returned.
 
-    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy', 'real_psf',
-                          'multiepoch', 'full'
+    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy',
+                          'variable_psf', 'multiepoch', 'full'
     @param obs_type       Observation type for this branch, one of 'ground' or 'space'
     @param storage_dir    Directory from/into which to load/store rotation files
     @param truth_dir      Root directory in which the truth information for the challenge is stored
@@ -144,8 +144,8 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
     If the subfield_dict has not been built, or is older than the first entry in the set of
     shear_params files, the subfield_dict is built first, saved to file, then returned.
 
-    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy', 'real_psf',
-                          'multiepoch', 'full'
+    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy',
+                          'variable_psf', 'multiepoch', 'full'
     @param obs_type       Observation type for this branch, one of 'ground' or 'space'
     @param storage_dir    Directory from/into which to load/store rotation files
     @param truth_dir      Root directory in which the truth information for the challenge is stored
@@ -240,8 +240,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     If the rotation file has not been built, or is older than the first entry in the set of
     starshape_parameters files, the array of rotations is built, saved to file, then returned.
 
-    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy', 'real_psf',
-                          'multiepoch', 'full'
+    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy',
+                          'variable_psf', 'multiepoch', 'full'
     @param obs_type       Observation type for this branch, one of 'ground' or 'space'
     @param storage_dir    Directory from/into which to load/store rotation files
     @param truth_dir      Root directory in which the truth information for the challenge is stored
@@ -309,8 +309,8 @@ def Q_const(submission_file, experiment, obs_type):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
-    @param experiment       Experiment for this branch, one of 'control', 'real_galaxy', 'real_psf',
-                            'multiepoch', 'full'
+    @param experiment       Experiment for this branch, one of 'control', 'real_galaxy',
+                            'variable_psf', 'multiepoch', 'full'
     @param obs_type         Observation type for this branch, one of 'ground' or 'space'
     @return                 The metric Q_const
     """
