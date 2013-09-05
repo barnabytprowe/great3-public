@@ -508,6 +508,13 @@ class SimBuilder(object):
         # Delegate the basic 'psf' dict to psf_builder
         d['psf'] = self.psf_builder.makeConfigDict()
 
+        if self.variable_psf:
+            d['psf']['signal_to_noise'] = { 'type' : 'Catalog', 'col' : 'star_snr' }
+            d['image']['noise'] = {
+                'type' : 'Gaussian',
+                'variance' : { 'type' : 'Dict', 'key' : 'noise.variance' }
+            }
+
         # Set up the file name for the yaml config file:
         experiment_letter = experiment[0]
         if experiment_letter == 'r': experiment_letter = experiment[5]
@@ -530,6 +537,9 @@ class SimBuilder(object):
         f.close()
 
         # Now make the appropriate changes for the gal images:
+        if self.variable_psf:
+            del d['psf']['signal_to_noise']
+
         d['input']['catalog']['file_name']['format'] = 'epoch_catalog-%03d-%1d.fits'
         d['output']['file_name']['format'] = 'image-%03d-%1d.fits'
         nx = constants.ncols
@@ -551,10 +561,6 @@ class SimBuilder(object):
                   }
         }
         d['image']['gsparams'] = { 'maximum_fft_size' : 10240 }
-        d['image']['noise'] = {
-            'type' : 'Gaussian',
-            'variance' : { 'type' : 'Dict', 'key' : 'noise.variance' }
-        }
 
         # Delegate the basic 'gal' dict to galaxy_builder
         d['gal'] = self.galaxy_builder.makeConfigDict()
@@ -660,7 +666,6 @@ class SimBuilder(object):
                                             epoch_index=epoch_index)
         star_catalog = self.mapper.read("star_catalog", epoch_parameters)
         seed = epoch_parameters["noise_seed"]
-        rng = galsim.UniformDeviate(seed)
 
         pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
         xsize = constants.xsize[self.obs_type][self.multiepoch]
@@ -681,6 +686,9 @@ class SimBuilder(object):
 
         cached_psf_obj = None
         for record in star_catalog:
+            rng = galsim.UniformDeviate(seed)
+            seed = seed + 1
+
             bbox = galsim.BoundsI(
                 xmin=int(record['xmin']), ymin=int(record['ymin']),
                 xmax=int(record['xmax']), ymax=int(record['ymax']),
