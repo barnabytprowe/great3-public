@@ -237,8 +237,11 @@ class SimBuilder(object):
         galaxies and shear values.
         """
         subfield_parameters = self.mapper.read("subfield_parameters", subfield_index=subfield_index)
-        field_parameters = self.mapper.read("field_parameters",
-            field_index=subfield_index/constants.n_subfields_per_field[self.shear_type][self.variable_psf])
+        field_parameters = self.mapper.read(
+            "field_parameters",
+            field_index = ( subfield_index / 
+                            constants.n_subfields_per_field[self.shear_type][self.variable_psf] ) 
+        )
         catalog = numpy.zeros(constants.nrows * constants.ncols,
                               dtype=numpy.dtype(subfield_parameters["subfield_schema"]))
         index = 0
@@ -313,10 +316,11 @@ class SimBuilder(object):
             # on an image grid, the parameters of which are to be defined here.  Finally, let's
             # define a DistDeviate to use to draw random values of S/N.  I decided on the function
             # to use via the super-duper-scientific method of reading points off of Chihway's
-            # dN/dmag plot for the range of magnitudes where that function is roughly linear on a log-log plot (i.e.,
-            # excluding the bits where it's not linear since stars are often saturated and not used
-            # for PSF estimation), then converting dN/dmag to dN/d(S/N) by assuming that we have a
-            # constant sky level so only the star fluxes change, and that S/N(mag=25)=25.
+            # dN/dmag plot for the range of magnitudes where that function is roughly linear on a 
+            # log-log plot (i.e., excluding the bits where it's not linear since stars are often 
+            # saturated and not used for PSF estimation), then converting dN/dmag to dN/d(S/N) by 
+            # assuming that we have a constant sky level so only the star fluxes change, and that 
+            # S/N(mag=25)=25.
             dist_deviate = galsim.DistDeviate(
                 rng,
                 function = lambda x : (-2.5*numpy.log10(x)+10.5)/x, x_min=25., x_max=400.)
@@ -351,9 +355,11 @@ class SimBuilder(object):
                         record['yshift'] = sy
                         # But these numbers are the true positions within the field.
                         record['x_field_true_deg'] = (constants.image_size_deg-1.) * rng() + \
-                            epoch_parameters["epoch_offset"][0] * constants.image_size_deg / constants.nrows
+                            epoch_parameters["epoch_offset"][0] * constants.image_size_deg / \
+                            constants.nrows
                         record['y_field_true_deg'] = (constants.image_size_deg-1.) * rng() + \
-                            epoch_parameters["epoch_offset"][1] * constants.image_size_deg / constants.ncols
+                            epoch_parameters["epoch_offset"][1] * constants.image_size_deg / \
+                            constants.ncols
                         # Finally, let's make a S/N value for this star (per epoch).  In other
                         # words, the star would have S/N=record['star_snr'] in a single-epoch
                         # branch, or in each of the images in a multi-epoch branch.  This differs
@@ -696,8 +702,8 @@ class SimBuilder(object):
             offset = galsim.PositionD(record['xshift'],record['yshift'])
             final.draw(stamp, normalization='f', offset=offset)
             if self.variable_psf:
-                self.noise_builder.addStarImageNoise(rng, epoch_parameters['noise'], record['star_snr'],
-                                                     stamp)
+                self.noise_builder.addStarImageNoise(
+                    rng, epoch_parameters['noise'], record['star_snr'], stamp)
 
         self.mapper.write(star_image, "starfield_image", epoch_parameters)
 

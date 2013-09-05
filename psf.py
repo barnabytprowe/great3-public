@@ -1051,29 +1051,29 @@ class VariablePSFBuilder(PSFBuilder):
             for i_tile in range(self.n_tiles):
                 if self.obs_type == "ground":
                     new_model = \
-                        ground_optical_psf.OpticalPSFModel(position_list_filename = \
-                                                               '../psfs/ground_optical_psf_zernike_coefficients_41x41/ZEMAXInput.dat',
-                                                           lam = self.lam[self.obs_type],
-                                                           diameter = self.diam[self.obs_type],
-                                                           obscuration = \
-                                                               self.obscuration[self.obs_type],
-                                                           nstruts = self.n_struts[self.obs_type],
-                                                           dz = psf_parameters["dz"][i_tile],
-                                                           dx = psf_parameters["x_decenter"][i_tile],
-                                                           dy = psf_parameters["y_decenter"][i_tile],
-                                                           tx = psf_parameters["x_tilt"][i_tile],
-                                                           ty = psf_parameters["y_tilt"][i_tile])
+                        ground_optical_psf.OpticalPSFModel(
+                            position_list_filename = \
+                            '../psfs/ground_optical_psf_zernike_coefficients_41x41/ZEMAXInput.dat',
+                            lam = self.lam[self.obs_type],
+                            diameter = self.diam[self.obs_type],
+                            obscuration = self.obscuration[self.obs_type],
+                            nstruts = self.n_struts[self.obs_type],
+                            dz = psf_parameters["dz"][i_tile],
+                            dx = psf_parameters["x_decenter"][i_tile],
+                            dy = psf_parameters["y_decenter"][i_tile],
+                            tx = psf_parameters["x_tilt"][i_tile],
+                            ty = psf_parameters["y_tilt"][i_tile])
                 else:
                     new_model = \
-                        space_optical_psf.OpticalPSFModel(filename = \
-                                                              '../psfs/afta_wfirst_example_psf_exaggerated.fields_and_coefs.fits',
-                                                          lam = self.lam[self.obs_type],
-                                                          diameter = self.diam[self.obs_type],
-                                                          obscuration = \
-                                                              self.obscuration[self.obs_type],
-                                                          nstruts = self.n_struts[self.obs_type],
-                                                          rms = self.space_rms_additional_aber,
-                                                          seed = int(psf_parameters["additional_aber_seed"][i_tile]))
+                        space_optical_psf.OpticalPSFModel(
+                            filename = \
+                            '../psfs/afta_wfirst_example_psf_exaggerated.fields_and_coefs.fits',
+                            lam = self.lam[self.obs_type],
+                            diameter = self.diam[self.obs_type],
+                            obscuration = self.obscuration[self.obs_type],
+                            nstruts = self.n_struts[self.obs_type],
+                            rms = self.space_rms_additional_aber,
+                            seed = int(psf_parameters["additional_aber_seed"][i_tile]))
                 tmp_list.append(new_model)
             self.cached_optics.append(tmp_list)
 
@@ -1084,7 +1084,8 @@ class VariablePSFBuilder(PSFBuilder):
                 tmp_list = [] # list for galsim.PowerSpectrum instances
 
                 import os
-                atmos_psf_pk_amp = psf_parameters["atmos_psf_pk_amp"] # this is actually a list (all tiles)
+                # this is actually a list (all tiles)
+                atmos_psf_pk_amp = psf_parameters["atmos_psf_pk_amp"] 
                 atmos_psf_pk_theta0 = psf_parameters["atmos_psf_pk_theta0"]
 
                 # To begin, we have to read in some tabulated P(k), one per tile.
