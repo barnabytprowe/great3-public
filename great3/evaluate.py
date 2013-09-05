@@ -292,6 +292,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
             n_epochs = 1
         # Setup the array for storing the rotation values
         rotations = np.empty((NSUBFIELDS, n_epochs))
+        # TODO: Change how this is handled for MULTIEPOCH experiments!
         output_header = "#  Rotations for "+experiment+"-"+obs_type+"-constant\n"+"#  epoch"
         for epoch_index in range(n_epochs):
             output_header+="  "+str(epoch_index)
@@ -309,6 +310,9 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
         with open(rotfile, 'wb') as fout:
             fout.write(output_header+"\n")
             np.savetxt(fout, rotations, fmt=" %+.18f" * n_epochs)
+    if len(rotations.shape) > 1:
+        if rotations.shape[1] == 1:
+            rotations = rotations.flatten()
     return rotations
 
 def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
@@ -333,16 +337,18 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     g1sub = data[:, 1]
     g2sub = data[:, 2]
     # Load up the rotations, then rotate g1 & g2 in the correct sense
+    # NOTE THE MINUS SIGN!  This is because we need to rotated the coordinates back into a frame
+    # in which the primary direction of the PSF is g1, and the orthogonal is g2
     rotations = get_generate_const_rotations(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
-    g1srot = +g1sub * np.cos(rotations) + g2sub * np.sin(rotations)
-    g2srot = -g1sub * np.sin(rotations) + g2sub * np.cos(rotations)
+    g1srot = g1sub * np.cos(-2. * rotations) - g2sub * np.sin(-2. * rotations)
+    g2srot = g1sub * np.sin(-2. * rotations) + g2sub * np.cos(-2. * rotations)
     # Load the truth
     _, g1truth, g2truth = get_generate_const_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
     # Rotate the truth in the same sense, then use the g3metrics.fitline routine to
     # perform simple linear regression
-    g1trot = +g1truth * np.cos(rotations) + g2truth * np.sin(rotations)
-    g2trot = -g1truth * np.sin(rotations) + g2truth * np.cos(rotations)
+    g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
+    g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
     Q_c = g3metrics.metricQZ1_const_shear(g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
     return Q_c 
