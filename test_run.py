@@ -34,7 +34,7 @@ subfield_max = 5    # Total of 3x2 sub-fields  (2 per config file)
 data_dir = 'great3_fit_data'    # This should be set up as a sim-link to your Dropbox folder.
 ps_dir = '../inputs/ps/tables' 
 seed = 12345                    # Whatever.  (But not zero.)
-do_config = False   # Do config-related steps?  For now, this is False, because they are not set up
+do_config = True    # Do config-related steps?  For now, this is False, because they are not set up
                     # properly for variable PSF branches.
 
 # Clean up possible residue from previous runs.
@@ -93,11 +93,13 @@ if do_config:
         for config_name in config_names:
             name, ext = os.path.splitext(config_name)
             new_name = '%s_%02d.yaml'%(name,i)
+            print config_name,'->',new_name
             new_config_names.append(new_name)
             shutil.copy(os.path.join(root,config_name),os.path.join(root,new_name))
         for config_name in psf_config_names:
             name, ext = os.path.splitext(config_name)
-            new_name = '%s_%02d_psf.yaml'%(name,i)
+            new_name = '%s_%02d.yaml'%(name,i)
+            print config_name,'->',new_name
             new_psf_config_names.append(new_name)
             shutil.copy(os.path.join(root,config_name),os.path.join(root,new_name))
     t2 = time.time()
