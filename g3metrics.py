@@ -224,7 +224,7 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
     return ret
 
 def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
-                                label=None):
+                                label=None, rotate_cs=None):
     """Make a fake const shear submission.
 
     BARNEY NOTE: In the real data we should do this in the (x, y) coordinate frame determined
@@ -243,16 +243,24 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
     nims = len(g1true)
     if len(g2true) != nims:
         raise ValueError("Supplied g1true, g2true not matching length.")
-
+    
     # Then ready some arrays for the output submission
     g1sub = np.empty(nims)
     g2sub = np.empty(nims)
-
+    # Make the c1 and c2 an array for rotation if necessary
+    c1 = c1 * np.ones(nims)
+    c2 = c2 * np.ones(nims)
+    if rotate_cs is not None:
+        c1arr = c1 * np.cos(2. * rotate_cs) - c2 * np.sin(2. * rotate_cs)
+        c2arr = c1 * np.sin(2. * rotate_cs) + c2 * np.cos(2. * rotate_cs)
+    else:
+        c1arr = c1
+        c2arr = c2
     # Loop generating subs (doing this the long way - could use central limit theorem but this is
     # super safe!)
     for i in range(nims):
-        g1gals = (1. + m1) * g1true[i] + c1 + np.random.randn(ngals_per_im) * noise_sigma
-        g2gals = (1. + m2) * g2true[i] + c2 + np.random.randn(ngals_per_im) * noise_sigma
+        g1gals = (1. + m1) * g1true[i] + c1arr[i] + np.random.randn(ngals_per_im) * noise_sigma
+        g2gals = (1. + m2) * g2true[i] + c2arr[i] + np.random.randn(ngals_per_im) * noise_sigma
         g1sub[i] = np.mean(g1gals)
         g2sub[i] = np.mean(g2gals)
     # Save output if requested
@@ -264,6 +272,7 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
             './g3subs/g3_const_shear_sub.'+label+'.dat',
             np.array((np.arange(nims), g1sub, g2sub)).T,
             fmt=('%d', '%14.7f', '%14.7f'))
+
     return g1sub, g2sub
 
 def _calculateSvalues(xarr, yarr, sigma2=1.):
