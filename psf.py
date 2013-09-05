@@ -417,6 +417,7 @@ class ConstPSFBuilder(PSFBuilder):
         obscuration = np.zeros(n_epochs)
         n_struts = np.zeros(n_epochs)
         strut_angle = np.zeros(n_epochs)
+        pad_factor = np.zeros(n_epochs)
         if self.obs_type == "ground":
             atmos_psf_fwhm = np.zeros(n_epochs)
             atmos_psf_e = np.zeros(n_epochs)
@@ -465,6 +466,9 @@ class ConstPSFBuilder(PSFBuilder):
                     uniform_deviate()*(max_strut_angle-min_strut_angle) + min_strut_angle
             else:
                 strut_angle[i_epoch] = 0.
+
+            # This is the default.  But option here to go larger if desired.
+            pad_factor[i_epoch] = 1.5
 
             if self.obs_type == "ground":
                 # for seeing values, check whether we need to force them to follow the distribution
@@ -522,7 +526,8 @@ class ConstPSFBuilder(PSFBuilder):
         schema = [("opt_psf_lam_over_diam", float),
                   ("opt_psf_obscuration", float),
                   ("opt_psf_n_struts", int),
-                  ("opt_psf_strut_angle", float)]
+                  ("opt_psf_strut_angle", float),
+                  ("opt_psf_pad_factor", float)]
         for aber in self.use_aber:
             schema.append((self.opt_schema_pref+aber, float))
         if self.obs_type == "ground":
@@ -538,7 +543,7 @@ class ConstPSFBuilder(PSFBuilder):
 
         # Prepare the dict that this function must return.
         psf_dict = dict(schema=schema, lam_over_diam=lam_over_diam, obscuration=obscuration,
-                        n_struts=n_struts, strut_angle=strut_angle)
+                        n_struts=n_struts, strut_angle=strut_angle, pad_factor=pad_factor)
         for aber in self.use_aber:
             psf_dict[aber] = aber_dict[aber]
         if self.obs_type == "ground":
@@ -563,6 +568,7 @@ class ConstPSFBuilder(PSFBuilder):
                  obscuration=field_parameters["obscuration"][epoch_index],
                  n_struts=field_parameters["n_struts"][epoch_index],
                  strut_angle=field_parameters["strut_angle"][epoch_index],
+                 pad_factor=field_parameters["pad_factor"][epoch_index],
                  schema=field_parameters["schema"])
         for aber in self.use_aber:
             psf_dict[aber]=field_parameters[aber][epoch_index]
@@ -586,6 +592,7 @@ class ConstPSFBuilder(PSFBuilder):
             record["opt_psf_obscuration"] = psf_parameters["obscuration"]
             record["opt_psf_n_struts"] = psf_parameters["n_struts"]
             record["opt_psf_strut_angle"] = psf_parameters["strut_angle"]
+            record["opt_psf_pad_factor"] = psf_parameters["pad_factor"]
             for aber in self.use_aber:
                 record[self.opt_schema_pref+aber] = psf_parameters[aber]
             if self.obs_type == "ground":
@@ -615,7 +622,9 @@ class ConstPSFBuilder(PSFBuilder):
             'coma2' : { 'type' : 'Catalog', 'col' : 'opt_psf_coma2' },
             'trefoil1' : { 'type' : 'Catalog', 'col' : 'opt_psf_trefoil1' },
             'trefoil2' : { 'type' : 'Catalog', 'col' : 'opt_psf_trefoil2' },
-            'spher' : { 'type' : 'Catalog', 'col' : 'opt_psf_spher' }
+            'spher' : { 'type' : 'Catalog', 'col' : 'opt_psf_spher' },
+            'pad_factor' : { 'type' : 'Catalog', 'col' : 'opt_psf_pad_factor' },
+            'suppress_warning' : True
         }
         if self.obs_type == 'ground':
             d = {
@@ -681,6 +690,8 @@ class ConstPSFBuilder(PSFBuilder):
                                         obscuration=record["opt_psf_obscuration"],
                                         nstruts=record["opt_psf_n_struts"],
                                         strut_angle=record["opt_psf_strut_angle"]*galsim.degrees,
+                                        pad_factor=record["opt_psf_pad_factor"],
+                                        suppress_warning=True,
                                         **aber_dict)
         if self.obs_type == "space":
             jitter_psf = galsim.Gaussian(sigma=record["opt_psf_jitter_sigma"])
@@ -765,6 +776,9 @@ class VariablePSFBuilder(PSFBuilder):
         "space" : 6,
         "ground" : 0,
         }
+
+    # This is the default.  But option here to go larger if desired.
+    pad_factor = 1.5
 
     # For space-based PSFs only: include jitter and charge diffusion.  The plan as stated on #42,
     # based on discussion with Lance Miller and several WFIRST people, is to make jitter a Gaussian
@@ -935,7 +949,8 @@ class VariablePSFBuilder(PSFBuilder):
         schema = [("opt_psf_lam_over_diam", float),
                   ("opt_psf_obscuration", float),
                   ("opt_psf_n_struts", int),
-                  ("opt_psf_strut_angle", float)]
+                  ("opt_psf_strut_angle", float),
+                  ("opt_psf_pad_factor", float)]
         for aber in self.use_aber:
             schema.append((self.opt_schema_pref+aber, float))
         if self.obs_type == "ground":
@@ -967,7 +982,8 @@ class VariablePSFBuilder(PSFBuilder):
         psf_dict = dict(schema=schema, lam_over_diam=self.lam_over_diam[self.obs_type],
                         obscuration=self.obscuration[self.obs_type],
                         n_struts=self.n_struts[self.obs_type], strut_angle=0.,
-                        star_density=star_density)
+                        pad_factor=self.pad_factor,
+                        star_density=star_density, n_star_linear=n_star_linear)
         if self.obs_type == "ground":
             psf_dict["atmos_psf_fwhm"]=atmos_psf_fwhm
             psf_dict["atmos_psf_pk_amp"]=atmos_psf_pk_amp
@@ -996,6 +1012,7 @@ class VariablePSFBuilder(PSFBuilder):
                  obscuration=field_parameters["obscuration"],
                  n_struts=field_parameters["n_struts"],
                  strut_angle=field_parameters["strut_angle"],
+                 pad_factor=field_parameters["pad_factor"],
                  star_density=field_parameters["star_density"],
                  n_star_linear=field_parameters["n_star_linear"],
                  schema=field_parameters["schema"])
@@ -1063,6 +1080,7 @@ class VariablePSFBuilder(PSFBuilder):
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
                             nstruts = self.n_struts[self.obs_type],
+                            pad_factor = self.pad_factor,
                             dz = psf_parameters["dz"][i_tile],
                             dx = psf_parameters["x_decenter"][i_tile],
                             dy = psf_parameters["y_decenter"][i_tile],
@@ -1077,6 +1095,7 @@ class VariablePSFBuilder(PSFBuilder):
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
                             nstruts = self.n_struts[self.obs_type],
+                            pad_factor = self.pad_factor,
                             rms = self.space_rms_additional_aber,
                             seed = int(psf_parameters["additional_aber_seed"][i_tile]))
                 tmp_list.append(new_model)
@@ -1256,6 +1275,7 @@ class VariablePSFBuilder(PSFBuilder):
             record["opt_psf_obscuration"] = psf_parameters["obscuration"]
             record["opt_psf_n_struts"] = psf_parameters["n_struts"]
             record["opt_psf_strut_angle"] = psf_parameters["strut_angle"]
+            record["opt_psf_pad_factor"] = psf_parameters["pad_factor"]
 
     def makeConfigDict(self):
         d = {
@@ -1273,7 +1293,9 @@ class VariablePSFBuilder(PSFBuilder):
             'coma2' : { 'type' : 'Catalog', 'col' : 'opt_psf_coma2' },
             'trefoil1' : { 'type' : 'Catalog', 'col' : 'opt_psf_trefoil1' },
             'trefoil2' : { 'type' : 'Catalog', 'col' : 'opt_psf_trefoil2' },
-            'spher' : { 'type' : 'Catalog', 'col' : 'opt_psf_spher' }
+            'spher' : { 'type' : 'Catalog', 'col' : 'opt_psf_spher' },
+            'pad_factor' : { 'type' : 'Catalog', 'col' : 'opt_psf_pad_factor' },
+            'suppress_warning' : True
         }
         if self.obs_type == 'ground':
             d = {
@@ -1335,6 +1357,8 @@ class VariablePSFBuilder(PSFBuilder):
                                         obscuration=record["opt_psf_obscuration"],
                                         nstruts=record["opt_psf_n_struts"],
                                         strut_angle=record["opt_psf_strut_angle"]*galsim.degrees,
+                                        pad_factor=record["opt_psf_pad_factor"],
+                                        suppress_warning=True,
                                         **aber_dict)
         if self.obs_type == "space":
             jitter_psf = galsim.Gaussian(sigma=record["opt_psf_jitter_sigma"])
