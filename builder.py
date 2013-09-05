@@ -328,10 +328,7 @@ class SimBuilder(object):
             # First, determine how many stars, which will determine the size of the catalog to
             # write.  Note that this is for a single epoch/subfield, which means the number of stars
             # should be 1/20 of those for the entire field.
-            n_star_ideal = 3600. * epoch_parameters["psf"]["star_density"] * \
-                constants.image_size_deg**2 / constants.n_subfields_per_field[self.shear_type][self.variable_psf]
-            n_star_linear = int(numpy.sqrt(n_star_ideal))
-
+            n_star_linear = epoch_parameters["psf"]["n_star_linear"]
             star_catalog = numpy.zeros(n_star_linear * n_star_linear,
                                        dtype=numpy.dtype(epoch_parameters["star_schema"]))
             index = 0
@@ -473,8 +470,8 @@ class SimBuilder(object):
 
         # The image field:
         if self.variable_psf:
-            nx = int(numpy.sqrt(constants.n_star_actual))
-            ny = int(numpy.sqrt(constants.n_star_actual))
+            nx = {'type' : 'Dict', 'key' : 'psf.n_star_linear'}
+            ny = {'type' : 'Dict', 'key' : 'psf.n_star_linear'}
         else:
             nx = constants.nx_constpsf
             ny = constants.ny_constpsf
@@ -497,7 +494,12 @@ class SimBuilder(object):
             'random_seed' : {
                 'type' : 'Sequence',
                 'first' : { 'type' : 'Dict', 'key' : 'noise_seed' },
-                'nitems' : nx*ny
+                'nitems' : {
+                    'type' : 'Eval',
+                    'str' : 'nx*ny',
+                    'inx' : { 'type' : 'Current', 'key' : 'image.nx_tiles' },
+                    'iny' : { 'type' : 'Current', 'key' : 'image.ny_tiles' }
+                }
             },
 
             'index_convention' : 'python',
@@ -667,10 +669,7 @@ class SimBuilder(object):
 
         # Make PSF image
         if self.variable_psf:
-            n_star_ideal = 3600. * epoch_parameters["psf"]["star_density"] * \
-                constants.image_size_deg**2 / constants.n_subfields_per_field[self.shear_type][self.variable_psf]
-            n_star_linear = int(numpy.sqrt(n_star_ideal))
-
+            n_star_linear = epoch_parameters["psf"]["n_star_linear"]
             star_image = galsim.ImageF(n_star_linear * xsize,
                                        n_star_linear * ysize,
                                        scale=pixel_scale)

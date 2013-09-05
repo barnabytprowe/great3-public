@@ -860,6 +860,10 @@ class VariablePSFBuilder(PSFBuilder):
         # image.
         star_density = constants.min_star_density + \
             uniform_deviate()*(constants.max_star_density - constants.min_star_density)
+        n_star_ideal = ( 3600. * star_density * constants.image_size_deg**2 /
+                         constants.n_subfields_per_field[self.shear_type][self.variable_psf] )
+        n_star_linear = int(np.ceil(np.sqrt(n_star_ideal)))
+
 
         # Get the basic parameters per epoch.  The per-observation parameters have two dimensions:
         # n_tiles x n_epochs.  The ones that are overall the same for a given observation type are
@@ -993,6 +997,7 @@ class VariablePSFBuilder(PSFBuilder):
                  n_struts=field_parameters["n_struts"],
                  strut_angle=field_parameters["strut_angle"],
                  star_density=field_parameters["star_density"],
+                 n_star_linear=field_parameters["n_star_linear"],
                  schema=field_parameters["schema"])
         if self.obs_type == "ground":
             psf_dict["atmos_psf_fwhm"] = field_parameters["atmos_psf_fwhm"][:,epoch_index]
