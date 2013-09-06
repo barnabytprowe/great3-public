@@ -33,11 +33,8 @@ import os
 import sys
 import logging
 import numpy as np
-# This is some sys.path hackery to make sure that it is Rachel's great/__init__.py that gets run on
-# import great3, not Joe's one directly visible from ./
-sys.path.insert(0, os.path.join("..", ".."))
-import great3
-import great3.mapper
+import great3sims
+import great3sims.mapper
 sys.path.append(sys.path.pop(0)) # Return the path back to normal (i.e. with ./ as the first entry)
 try:
     import g3metrics
@@ -90,7 +87,7 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     @return subfield_index, g1true, g2true
     """
     gtruefile = os.path.join(storage_dir, GTRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+".asc")
-    mapper = great3.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
     use_stored = True
     if not os.path.isfile(gtruefile):
         use_stored = False
@@ -162,7 +159,7 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
 
     subfield_dict_file = os.path.join(
         storage_dir, SUBFIELD_DICT_FILE_PREFIX+experiment[0]+obs_type[0]+".pkl")
-    mapper = great3.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
     use_stored = True
     if not os.path.isfile(subfield_dict_file):
         use_stored = False
@@ -253,9 +250,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     @param truth_dir      Root directory in which the truth information for the challenge is stored
     @return               An array containing all the rotation angles, in radians
     """
-    import great3.mapper
     rotfile = os.path.join(storage_dir, ROTATIONS_FILE_PREFIX+experiment[0]+obs_type[0]+".asc")
-    mapper = great3.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
     use_stored = True
     if not os.path.isfile(rotfile):
         use_stored = False
@@ -286,8 +282,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
         # To build we must loop over all the subfields and epochs
         # First work out if the experiment is multi-exposure and has multiple epochs
         if experiment in ("multiepoch", "full"):
-            import great3.constants
-            n_epochs = great3.constants.n_epochs
+            import great3sims.constants
+            n_epochs = great3sims.constants.n_epochs
         else:
             n_epochs = 1
         # Setup the array for storing the rotation values
