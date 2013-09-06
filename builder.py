@@ -539,7 +539,11 @@ class SimBuilder(object):
         # Now make the appropriate changes for the gal images:
         if self.variable_psf:
             del d['psf']['signal_to_noise']
-
+        else:
+            d['image']['noise'] = {
+                'type' : 'Gaussian',
+                'variance' : { 'type' : 'Dict', 'key' : 'noise.variance' }
+            }
         d['input']['catalog']['file_name']['format'] = 'epoch_catalog-%03d-%1d.fits'
         d['output']['file_name']['format'] = 'image-%03d-%1d.fits'
         nx = constants.ncols
