@@ -33,9 +33,9 @@ import os
 import sys
 import logging
 import numpy as np
+sys.path.append(os.path.join("..", ".."))
 import great3sims
 import great3sims.mapper
-sys.path.append(sys.path.pop(0)) # Return the path back to normal (i.e. with ./ as the first entry)
 try:
     import g3metrics
 except ImportError:
@@ -250,6 +250,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     @param truth_dir      Root directory in which the truth information for the challenge is stored
     @return               An array containing all the rotation angles, in radians
     """
+    import great3sims
     rotfile = os.path.join(storage_dir, ROTATIONS_FILE_PREFIX+experiment[0]+obs_type[0]+".asc")
     mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
     use_stored = True
@@ -322,7 +323,7 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     @param storage_dir      Directory from/into which to load/store rotation files
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
-    @return The metric Q_const, & best fitting c1, m1, c2, m2, sigc1, sigcm1, sigc2, sigm2
+    @return The metric Q_const, & best fitting c+, m+, cx, mx, sigc+, sigcm+, sigcx, sigmx
     """
     if not os.path.isfile(submission_file):
         raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
