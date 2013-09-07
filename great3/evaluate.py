@@ -91,7 +91,7 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     use_stored = True
     if not os.path.isfile(gtruefile):
         use_stored = False
-        if logger:
+        if logger is not None:
             logger.info(
                 "First build of shear truth tables using values from "+
                 os.path.join(mapper.full_dir, "shear_params-*.yaml"))
@@ -104,13 +104,13 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
         shear_params_mtime = os.path.getmtime(shear_params_file0)
         if gtruemtime < shear_params_mtime or gtruemtime < os.path.getmtime(__file__):
             use_stored = False
-            if logger:
+            if logger is not None:
                 logger.info(
                     "Updating out-of-date shear truth tables using newer values from "+
                     os.path.join(mapper.full_dir, "shear_params-*.yaml"))
     # Then load or build (and save) the array of truth values per subfield
     if use_stored:
-        if logger:
+        if logger is not None:
             logger.info("Loading shear truth tables from "+gtruefile) 
         gtruedata = np.loadtxt(gtruefile)
     else: 
@@ -126,7 +126,7 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
                 gtruedata[i, 1] = gdict['g1']
                 gtruedata[i, 2] = gdict['g2']
 
-        if logger:
+        if logger is not None:
             logger.info("Saving shear truth table to "+gtruefile)
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
@@ -163,7 +163,7 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
     use_stored = True
     if not os.path.isfile(subfield_dict_file):
         use_stored = False
-        if logger:
+        if logger is not None:
             logger.info(
                 "First build of shear-subfield dictionary using values from "+
                 os.path.join(mapper.full_dir, "shear_params-*.yaml"))
@@ -176,13 +176,13 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
         shear_params_mtime = os.path.getmtime(shear_params_file0)
         if dictmtime < shear_params_mtime or dictmtime < os.path.getmtime(__file__):
             use_stored = False 
-            if logger:
+            if logger is not None:
                 logger.info(
                     "Updating out-of-date shear-subfield dictionary using newer values from "+
                     os.path.join(mapper.full_dir, "shear_params-*.yaml"))
     # Then load or build (and save) the subfield_dict
     if use_stored is True:
-        if logger:
+        if logger is not None:
             logger.info("Loading shear-subfield dictionary from "+subfield_dict_file)  
         with open(subfield_dict_file, 'rb') as funit:
             subfield_dict = cPickle.load(funit)
@@ -223,7 +223,7 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
         # Then put both g1 and g2 into the subfield_dict
         subfield_dict = {"g1": g1dict, "g2": g2dict}
         # Save the resulting subfield_dict
-        if logger:
+        if logger is not None:
             logger.info("Saving subfield_dict to "+subfield_dict_file)
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir) 
@@ -256,7 +256,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     use_stored = True
     if not os.path.isfile(rotfile):
         use_stored = False
-        if logger:
+        if logger is not None:
             logger.info(
                 "First build of rotations file using starshape_parameters from "+
                 mapper.full_dir)
@@ -271,13 +271,14 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
         starshapemtime = os.path.getmtime(starshape_file00+".yaml")
         if rotmtime < starshapemtime or rotmtime < os.path.getmtime(__file__):
             use_stored = False
-            logger.info(
+            if logger is not None:
+                logger.info(
                     "Updating out-of-date rotations file using newer starshape_parameters from "+
                     mapper.full_dir)
     # Then load / build as required 
     if use_stored is True:
         rotations = np.loadtxt(rotfile)
-        if logger:
+        if logger is not None:
             logger.info("Loading rotations from "+rotfile) 
     else:
         # To build we must loop over all the subfields and epochs
@@ -300,7 +301,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
                 rotations[subfield_index, epoch_index] = .5 * np.arctan2(
                     starshape_parameters['psf_g2'], starshape_parameters['psf_g1'])
         # We have built rotations, but then save this file as ascii for use next time
-        if logger:
+        if logger is not None:
             logger.info("Saving rotations to "+rotfile)    
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
@@ -329,6 +330,8 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
         raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
     
     # Load the submission and label the slices we're interested in
+    if logger is not None:
+        logger.info("Calculating Q_c metric for "+submission_file)
     data = np.loadtxt(submission_file)
     subfield = data[:, 0]  
     g1sub = data[:, 1]
@@ -348,4 +351,8 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
     g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
     Q_c = g3metrics.metricQZ1_const_shear(g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
-    return Q_c 
+    return Q_c
+
+def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
+                                logger=None)
+
