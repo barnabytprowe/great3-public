@@ -73,8 +73,8 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
                              logger=None):
     """Get or generate arrays of subfield_index, g1true, g2true, each of length `NSUBFIELDS`.
 
-    If the gtruth file has already been built for this constant shear branch, loads and
-    returns the saved copies.
+    If the gtruth file has already been built for this constant shear branch, loads and returns the
+    saved copies.
 
     If the array of truth values has not been built, or is older than the first entry in the set of
     shear_params files, the arrays are built first, saved to file, then returned.
@@ -132,8 +132,8 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
         with open(gtruefile, "wb") as fout:
-            fout.write("#  True shears for "+experiment+"-"+obs_type+"-constant\n")
-            fout.write("#  subfield_index  g1true  g2true\n")
+            fout.write("# True shears for "+experiment+"-"+obs_type+"-constant\n")
+            fout.write("# subfield_index  g1true  g2true\n")
             np.savetxt(fout, gtruedata, fmt=" %4d %+.18e %+.18e")
     return (gtruedata[:, 0]).astype(int), gtruedata[:, 1], gtruedata[:, 2]
 
@@ -237,8 +237,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     """Get or generate an array of rotation angles for Q_const calculation.
 
     If the rotation file has already been built for this constant shear branch, loads and returns an
-    array of rotation angles to align with the PSF.  This array is of shape `(NSUBFIELDS, n_epochs)`
-    where the number of epochs `n_epochs` is determined from the experiment name using the mapper.
+    array of rotation angles to align with the PSF.  This array is of shape `(NSUBFIELDS,)`, having
+    averaged over the `n_epochs` epochs in the case of multi-epoch branches.
 
     If the rotation file has not been built, or is older than the first entry in the set of
     starshape_parameters files, the array of rotations is built, saved to file, then returned.
@@ -301,7 +301,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
                 psf_g1[subfield_index, epoch_index] = starshape_parameters["psf_g1"]
                 psf_g2[subfield_index, epoch_index] = starshape_parameters["psf_g2"]
 
-        mean_psf_g1 = psf_g1.mean(axis=1)
+        mean_psf_g1 = psf_g1.mean(axis=1) # Handily this flattens even if n_epochs = 1
         mean_psf_g2 = psf_g2.mean(axis=1)
         rotations = .5 * np.arctan2(mean_psf_g2, mean_psf_g1)
         # We have built rotations, but then save this file as ascii for use next time
@@ -310,10 +310,9 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
         with open(rotfile, "wb") as fout:
-            fout.write("#  Rotations for "+experiment+"-"+obs_type+"-constant\n")
-            fout.write("#  subfield_index  rotation [radians]\n")
-            np.savetxt(
-                fout, np.array((np.arange(NSUBFIELDS), rotations)).T, fmt=" %4d %+.18f")
+            fout.write("# Rotations for "+experiment+"-"+obs_type+"-constant\n")
+            fout.write("# subfield_index  rotation [radians]\n")
+            np.savetxt(fout, np.array((np.arange(NSUBFIELDS), rotations)).T, fmt=" %4d %+.18f")
     return rotations
 
 def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
@@ -338,8 +337,8 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     subfield = data[:, 0]  
     g1sub = data[:, 1]
     g2sub = data[:, 2]
-    # Load up the rotations, then rotate g1 & g2 in the correct sense
-    # NOTE THE MINUS SIGN!  This is because we need to rotated the coordinates back into a frame
+    # Load up the rotations, then rotate g1 & g2 in the correct sense.
+    # NOTE THE MINUS SIGNS!  This is because we need to rotated the coordinates back into a frame
     # in which the primary direction of the PSF is g1, and the orthogonal is g2
     rotations = get_generate_const_rotations(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
@@ -357,7 +356,22 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
 
 def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
                                   truth_dir=TRUTH_DIR, logger=None):
-    """Get or generate an array of offsets for each of the subfields relative to the subfield.
+    """Get or generate arrays of subfield_index, offset_deg_x, offset_deg_y, each of length
+    `NSUBFIELDS`.
+
+    If the offsets file has already been built for this variable shear branch, loads and returns the
+    saved arrays.
+
+    If the arrays of offset values have not been built, or are older than the first entry in the set
+    of subfield_offset files, the arrays are built first, saved to file, then returned.
+
+    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy',
+                          'variable_psf', 'multiepoch', 'full'
+    @param obs_type       Observation type for this branch, one of 'ground' or 'space'
+    @param storage_dir    Directory from/into which to load/store rotation files
+    @param truth_dir      Root directory in which the truth information for the challenge is stored
+    @param logger         Python logging.Logger instance, for message logging
+    @return subfield_index, offset_deg_x, offset_deg_y
     """
     offsetfile = os.path.join(storage_dir, OFFSETS_FILE_PREFIX+experiment[0]+obs_type[0]+"v.asc") 
     mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable")
@@ -404,8 +418,8 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
         with open(offsetfile, "wb") as fout:
-            fout.write("#  Subfield offsets for "+experiment+"-"+obs_type+"-variable\n")
-            fout.write("#  subfield_index  offset_deg_x  offset_deg_y\n")
+            fout.write("# Subfield offsets for "+experiment+"-"+obs_type+"-variable\n")
+            fout.write("# subfield_index  offset_deg_x  offset_deg_y\n")
             np.savetxt(fout, offsets, fmt=" %4d %.18e %.18e")
     return (offsets[:, 0]).astype(int), offsets[:, 1], offsets[:, 2]
 
