@@ -101,8 +101,8 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
         # (subfield = 000) for this branch.  If the former is older than the latter, or this file,
         # force rebuild...
         gtruemtime = os.path.getmtime(gtruefile)
-        shear_params_file0 = os.path.join(mapper.full_dir, "shear_params-000.yaml")
-        shear_params_mtime = os.path.getmtime(shear_params_file0)
+        shear_params_file = os.path.join(mapper.full_dir, "shear_params-000.yaml")
+        shear_params_mtime = os.path.getmtime(shear_params_file)
         if gtruemtime < shear_params_mtime or gtruemtime < os.path.getmtime(__file__):
             use_stored = False
             if logger is not None:
@@ -172,8 +172,8 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
         # (subfield = 000) for this branch.  If the former is older than the latter, or this file, 
         # force rebuild...
         dictmtime = os.path.getmtime(subfield_dict_file)
-        shear_params_file0 = os.path.join(mapper.full_dir, "shear_params-000.yaml")
-        shear_params_mtime = os.path.getmtime(shear_params_file0)
+        shear_params_file = os.path.join(mapper.full_dir, "shear_params-000.yaml")
+        shear_params_mtime = os.path.getmtime(shear_params_file)
         if dictmtime < shear_params_mtime or dictmtime < os.path.getmtime(__file__):
             use_stored = False 
             if logger is not None:
@@ -266,9 +266,9 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
         # this file, force rebuild...
         rotmtime = os.path.getmtime(rotfile)
         starshape_file_template, _ ,_ = mapper.mappings['starshape_parameters']  
-        starshape_file00 = os.path.join(
+        starshape_file = os.path.join(
             mapper.full_dir, starshape_file_template % {"epoch_index": 0, "subfield_index": 0})
-        starshapemtime = os.path.getmtime(starshape_file00+".yaml")
+        starshapemtime = os.path.getmtime(starshape_file+".yaml")
         if rotmtime < starshapemtime or rotmtime < os.path.getmtime(__file__):
             use_stored = False
             if logger is not None:
@@ -387,8 +387,8 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
         # (subfield = 000) for this branch.  If the former is older than the latter, or
         # this file, force rebuild...
         offsetmtime = os.path.getmtime(offsetfile)
-        subfield_offset_file0 = os.path.join(mapper.full_dir, "subfield_offset-000.yaml")
-        subfield_offset_mtime = os.path.getmtime(subfield_offset_file0)
+        subfield_offset_file = os.path.join(mapper.full_dir, "subfield_offset-000.yaml")
+        subfield_offset_mtime = os.path.getmtime(subfield_offset_file)
         if offsetmtime < subfield_offset_mtime or offsetmtime < os.path.getmtime(__file__):
             use_stored = False 
             if logger is not None:
@@ -397,7 +397,7 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
                     os.path.join(mapper.full_dir, "subfield_offset-*.yaml"))
     # Then load / build as required 
     if use_stored is True:
-        rotations = np.loadtxt(offsetfile)
+        offsets = np.loadtxt(offsetfile)
         if logger is not None:
             logger.info("Loading offsets from "+offsetfile) 
     else:
@@ -426,6 +426,8 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
 def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                                 logger=None):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
+
+    @return theta, map_E
     """
     mapEtruefile = os.path.join(
         storage_dir, MAPETRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+"v.asc")
@@ -435,26 +437,27 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         use_stored = False
         if logger is not None:
             logger.info(
-                "First build of mapE truth file using galaxy_catalog files from "+
+                "First build of map_E truth file using galaxy_catalog files from "+
                 mapper.full_dir)
     else:
         # Then compare timestamps for the mapE file and the first galaxy_catalog file
         # (subfield = 000) for this branch.  If the former is older than the latter, or
         # this file, force rebuild...
         mapEmtime = os.path.getmtime(mapEtruefile)
-        galaxy_catalog_file_template, _ ,_ = mapper.mappings["galaxy_catalog"]  
-        galaxy_catalog_file0 = os.path.join(
-            mapper.full_dir, starshape_file_template % {"epoch_index": 0, "subfield_index": 0})
-        starshapemtime = os.path.getmtime(starshape_file00+".yaml")
-        if rotmtime < starshapemtime or rotmtime < os.path.getmtime(__file__):
+        catalog_file_template, _ ,_ = mapper.mappings["galaxy_catalog"]  
+        catalog_file = os.path.join(
+            mapper.full_dir, galaxy_catalog_file_template % {"subfield_index": 0})
+        catalogmtime = os.path.getmtime(catalog_file+".fits")
+        if mapEmtime < catalogmtime or mapEmtime < os.path.getmtime(__file__):
             use_stored = False
             if logger is not None:
                 logger.info(
-                    "Updating out-of-date rotations file using newer starshape_parameters from "+
+                    "Updating out-of-date map_E file using newer galaxy_catalogs from "+
                     mapper.full_dir)
     # Then load / build as required 
     if use_stored is True:
-        rotations = np.loadtxt(rotfile)
+        data = np.loadtxt(mapEtruefile)
+        theta, map_E = data[:, 0], data[:, 1]
         if logger is not None:
-            logger.info("Loading rotations from "+rotfile) 
-    return None 
+            logger.info("Loading truth map_E from "+mapEtruefile)
+    return theta, map_E 
