@@ -277,9 +277,9 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
                     mapper.full_dir)
     # Then load / build as required 
     if use_stored is True:
-        rotations = np.loadtxt(rotfile)[:, 1] # First column is just subfield indices
         if logger is not None:
             logger.info("Loading rotations from "+rotfile) 
+        rotations = np.loadtxt(rotfile)[:, 1] # First column is just subfield indices
     else:
         # To build we must loop over all the subfields and epochs
         # First work out if the experiment is multi-exposure and has multiple epochs
@@ -397,9 +397,9 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
                     os.path.join(mapper.full_dir, "subfield_offset-*.yaml"))
     # Then load / build as required 
     if use_stored is True:
-        offsets = np.loadtxt(offsetfile)
         if logger is not None:
             logger.info("Loading offsets from "+offsetfile) 
+        offsets = np.loadtxt(offsetfile)
     else:
         offsets_prefix = os.path.join(mapper.full_dir, "subfield_offset-") 
         offsets = np.empty((NSUBFIELDS, 3))
@@ -456,8 +456,17 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                     mapper.full_dir)
     # Then load / build as required 
     if use_stored is True:
-        data = np.loadtxt(mapEtruefile)
-        theta, map_E = data[:, 0], data[:, 1]
         if logger is not None:
             logger.info("Loading truth map_E from "+mapEtruefile)
+        data = np.loadtxt(mapEtruefile)
+        theta, map_E = data[:, 0], data[:, 1]
+    else:
+        # Load the offsets
+        subfield_index, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
+            experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
+        # Loop over subfields and
+        for isub in range(NSUBFIELDS):
+
+            
+
     return theta, map_E 
