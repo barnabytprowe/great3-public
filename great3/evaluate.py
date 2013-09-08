@@ -277,7 +277,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
                     mapper.full_dir)
     # Then load / build as required 
     if use_stored is True:
-        rotations = np.loadtxt(rotfile)
+        rotations = np.loadtxt(rotfile)[:, 1] # First column is just subfield indices
         if logger is not None:
             logger.info("Loading rotations from "+rotfile) 
     else:
@@ -288,29 +288,32 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
             n_epochs = great3sims.constants.n_epochs
         else:
             n_epochs = 1
-        # Setup the array for storing the rotation values
-        rotations = np.empty((NSUBFIELDS, n_epochs))
-        # TODO: Change how this is handled for MULTIEPOCH experiments!
-        output_header = "#  Rotations for "+experiment+"-"+obs_type+"-constant\n"+"#  epoch"
+        # Setup the array for storing the PSF values from which rotations are calculated
+        psf_g1 = np.empty((NSUBFIELDS, n_epochs))
+        psf_g2 = np.empty((NSUBFIELDS, n_epochs))
         for epoch_index in range(n_epochs):
-            output_header+="  "+str(epoch_index)
+
             for subfield_index in range(NSUBFIELDS):
+
                 starshape_parameters = mapper.read(
-                    "starshape_parameters", data_id={
-                        "epoch_index": epoch_index, "subfield_index": subfield_index})
-                rotations[subfield_index, epoch_index] = .5 * np.arctan2(
-                    starshape_parameters['psf_g2'], starshape_parameters['psf_g1'])
+                    "starshape_parameters",
+                    data_id={"epoch_index": epoch_index, "subfield_index": subfield_index})
+                psf_g1[subfield_index, epoch_index] = starshape_parameters["psf_g1"]
+                psf_g2[subfield_index, epoch_index] = starshape_parameters["psf_g2"]
+
+        mean_psf_g1 = psf_g1.mean(axis=1)
+        mean_psf_g2 = psf_g2.mean(axis=1)
+        rotations = .5 * np.arctan2(mean_psf_g2, mean_psf_g1)
         # We have built rotations, but then save this file as ascii for use next time
         if logger is not None:
             logger.info("Saving rotations to "+rotfile)    
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
         with open(rotfile, "wb") as fout:
-            fout.write(output_header+"\n")
-            np.savetxt(fout, rotations, fmt=" %+.18f" * n_epochs)
-    if len(rotations.shape) > 1:
-        if rotations.shape[1] == 1:
-            rotations = rotations.flatten()
+            fout.write("#  Rotations for "+experiment+"-"+obs_type+"-constant\n")
+            fout.write("#  subfield_index  rotation [radians]\n")
+            np.savetxt(
+                fout, np.array((np.arange(NSUBFIELDS), rotations)).T, fmt=" %4d %+.18f")
     return rotations
 
 def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
@@ -371,7 +374,7 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
         # this file, force rebuild...
         offsetmtime = os.path.getmtime(offsetfile)
         subfield_offset_file0 = os.path.join(mapper.full_dir, "subfield_offset-000.yaml")
-        subfield_offest_mtime = os.path.getmtime(subfield_offset_file0)
+        subfield_offset_mtime = os.path.getmtime(subfield_offset_file0)
         if offsetmtime < subfield_offset_mtime or offsetmtime < os.path.getmtime(__file__):
             use_stored = False 
             if logger is not None:
