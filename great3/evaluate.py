@@ -7,7 +7,7 @@ Constant shear branches
 -----------------------
 Each submission file (one per branch) should take the format of a 3-column ASCII catalog, e.g.:
 
-    # SUBFIELD  G1  G2
+    #  SUBFIELD_INDEX  G1  G2
     0   -.25424  0.23111
     1   -.05111  0.37123
     ...
@@ -65,7 +65,8 @@ TRUTH_DIR = "/Users/browe/great3/truth"       # Root folder in which the truth v
 SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
 ROTATIONS_FILE_PREFIX = "rotations_"
-
+OFFSETS_FILE_PREFIX = "offsets_"
+MAPETRUTH_FILE_PREFIX = "mapEtruth_"
 
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
@@ -86,8 +87,8 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     @param logger         Python logging.Logger instance, for message logging
     @return subfield_index, g1true, g2true
     """
-    gtruefile = os.path.join(storage_dir, GTRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+".asc")
-    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
+    gtruefile = os.path.join(storage_dir, GTRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+"c.asc")
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "constant")
     use_stored = True
     if not os.path.isfile(gtruefile):
         use_stored = False
@@ -121,16 +122,16 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
         for i in range(NSUBFIELDS):
 
             params_file = params_prefix+("%03d" % i)+".yaml"
-            with open(params_file, 'rb') as funit:
+            with open(params_file, "rb") as funit:
                 gdict = yaml.load(funit)
-                gtruedata[i, 1] = gdict['g1']
-                gtruedata[i, 2] = gdict['g2']
+                gtruedata[i, 1] = gdict["g1"]
+                gtruedata[i, 2] = gdict["g2"]
 
         if logger is not None:
             logger.info("Saving shear truth table to "+gtruefile)
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
-        with open(gtruefile, 'wb') as fout:
+        with open(gtruefile, "wb") as fout:
             fout.write("#  True shears for "+experiment+"-"+obs_type+"-constant\n")
             fout.write("#  subfield_index  g1true  g2true\n")
             np.savetxt(fout, gtruedata, fmt=" %4d %+.18e %+.18e")
@@ -156,10 +157,9 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
     @return               The subfield_dict (see code below for details)
     """
     import cPickle
-
     subfield_dict_file = os.path.join(
-        storage_dir, SUBFIELD_DICT_FILE_PREFIX+experiment[0]+obs_type[0]+".pkl")
-    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
+        storage_dir, SUBFIELD_DICT_FILE_PREFIX+experiment[0]+obs_type[0]+"c.pkl")
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "constant")
     use_stored = True
     if not os.path.isfile(subfield_dict_file):
         use_stored = False
@@ -251,8 +251,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     @return               An array containing all the rotation angles, in radians
     """
     import great3sims
-    rotfile = os.path.join(storage_dir, ROTATIONS_FILE_PREFIX+experiment[0]+obs_type[0]+".asc")
-    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, 'constant')
+    rotfile = os.path.join(storage_dir, ROTATIONS_FILE_PREFIX+experiment[0]+obs_type[0]+"c.asc")
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "constant")
     use_stored = True
     if not os.path.isfile(rotfile):
         use_stored = False
@@ -305,7 +305,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
             logger.info("Saving rotations to "+rotfile)    
         if not os.path.isdir(storage_dir):
             os.mkdir(storage_dir)
-        with open(rotfile, 'wb') as fout:
+        with open(rotfile, "wb") as fout:
             fout.write(output_header+"\n")
             np.savetxt(fout, rotations, fmt=" %+.18f" * n_epochs)
     if len(rotations.shape) > 1:
@@ -328,7 +328,6 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     """
     if not os.path.isfile(submission_file):
         raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
-    
     # Load the submission and label the slices we're interested in
     if logger is not None:
         logger.info("Calculating Q_c metric for "+submission_file)
@@ -353,6 +352,92 @@ def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_
     Q_c = g3metrics.metricQZ1_const_shear(g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
     return Q_c
 
-def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
-                                logger=None)
+def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
+                                  truth_dir=TRUTH_DIR, logger=None):
+    """Get or generate an array of offsets for each of the subfields relative to the subfield.
+    """
+    offsetfile = os.path.join(storage_dir, OFFSETS_FILE_PREFIX+experiment[0]+obs_type[0]+"v.asc") 
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable")
+    use_stored = True
+    if not os.path.isfile(offsetfile):
+        use_stored = False
+        if logger is not None:
+            logger.info(
+                "First build of offsets file using subfield_offset files from "+
+                mapper.full_dir)
+    else:
+        # Then compare timestamps for the offsets file and the first file
+        # (subfield = 000) for this branch.  If the former is older than the latter, or
+        # this file, force rebuild...
+        offsetmtime = os.path.getmtime(offsetfile)
+        subfield_offset_file0 = os.path.join(mapper.full_dir, "subfield_offset-000.yaml")
+        subfield_offest_mtime = os.path.getmtime(subfield_offset_file0)
+        if offsetmtime < subfield_offset_mtime or offsetmtime < os.path.getmtime(__file__):
+            use_stored = False 
+            if logger is not None:
+                logger.info(
+                    "Updating out-of-date offset file using newer values from "+
+                    os.path.join(mapper.full_dir, "subfield_offset-*.yaml"))
+    # Then load / build as required 
+    if use_stored is True:
+        rotations = np.loadtxt(offsetfile)
+        if logger is not None:
+            logger.info("Loading offsets from "+offsetfile) 
+    else:
+        offsets_prefix = os.path.join(mapper.full_dir, "subfield_offset-") 
+        offsets = np.empty((NSUBFIELDS, 3))
+        import yaml
+        offsets[:, 0] = np.arange(NSUBFIELDS)
+        for i in range(NSUBFIELDS):
 
+            offsets_file = offsets_prefix+("%03d" % i)+".yaml"
+            with open(offsets_file, "rb") as funit:
+                offsetdict = yaml.load(funit)
+                offsets[i, 1] = offsetdict["offset_deg_x"]
+                offsets[i, 2] = offsetdict["offset_deg_y"]
+
+        if logger is not None:
+            logger.info("Saving offset file to "+offsetfile)
+        if not os.path.isdir(storage_dir):
+            os.mkdir(storage_dir)
+        with open(offsetfile, "wb") as fout:
+            fout.write("#  Subfield offsets for "+experiment+"-"+obs_type+"-variable\n")
+            fout.write("#  subfield_index  offset_deg_x  offset_deg_y\n")
+            np.savetxt(fout, offsets, fmt=" %4d %.18e %.18e")
+    return (offsets[:, 0]).astype(int), offsets[:, 1], offsets[:, 2]
+
+def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
+                                logger=None):
+    """Get or generate an array of truth map_E vectors for all the fields in this branch.
+    """
+    mapEtruefile = os.path.join(
+        storage_dir, MAPETRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+"v.asc")
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable") 
+    use_stored = True
+    if not os.path.isfile(mapEtruefile):
+        use_stored = False
+        if logger is not None:
+            logger.info(
+                "First build of mapE truth file using galaxy_catalog files from "+
+                mapper.full_dir)
+    else:
+        # Then compare timestamps for the mapE file and the first galaxy_catalog file
+        # (subfield = 000) for this branch.  If the former is older than the latter, or
+        # this file, force rebuild...
+        mapEmtime = os.path.getmtime(mapEtruefile)
+        galaxy_catalog_file_template, _ ,_ = mapper.mappings["galaxy_catalog"]  
+        galaxy_catalog_file0 = os.path.join(
+            mapper.full_dir, starshape_file_template % {"epoch_index": 0, "subfield_index": 0})
+        starshapemtime = os.path.getmtime(starshape_file00+".yaml")
+        if rotmtime < starshapemtime or rotmtime < os.path.getmtime(__file__):
+            use_stored = False
+            if logger is not None:
+                logger.info(
+                    "Updating out-of-date rotations file using newer starshape_parameters from "+
+                    mapper.full_dir)
+    # Then load / build as required 
+    if use_stored is True:
+        rotations = np.loadtxt(rotfile)
+        if logger is not None:
+            logger.info("Loading rotations from "+rotfile) 
+    return None 
