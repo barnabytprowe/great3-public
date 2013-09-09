@@ -58,6 +58,7 @@ DX_GRID_DEG = 0.1    # Grid spacing in degrees
 
 THETA_MIN_DEG = 0.01 # Minimum and maximum angular scales for logarithmic bins used to calculate the
 THETA_MAX_DEG = 10.0 # aperture mass disp. - MUST match specs given to participants - in degrees
+NBINS_THETA = 15 # Number of logarithmic bins theta for the aperture mass dispersion
 
 TRUTH_SUBFIELD_DICT = {} # A dictionary containing the mapping between subfields containing the
                          # same applied shear [one of NFIELDS pairs of independent (g1, g2) values]
@@ -436,6 +437,17 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
 
     @return theta, map_E
     """
+    # Build basic x and y grids to use for coord positions: note we do this here rather than as
+    # needed later so as to check the dimensions (meshgrid is very quick anyway)
+    xgrid_deg, ygrid_deg = np.meshgrid(
+        np.arange(0., XMAX_GRID_DEG, DX_GRID_DEG), np.arange(0., XMAX_GRID_DEG, DX_GRID_DEG))
+    xgrid_deg = xgrid_deg.flatten() # Flatten these - the default C ordering corresponds to the way
+    ygrid_deg = ygrid_deg.flatten() # the true shears are ordered too, which is handy
+    if len(xgrid_deg) != NGALS_PER_SUBFIELD:
+        raise ValueError(
+            "Dimensions of xgrid_deg and ygrid_deg do not match NGALS_PER_SUBFIELD.  Please check "+
+            "the values of XMAX_GRID_DEG and DX_GRID_DEG in evaluate.py.")
+    # Define storage file and check for its existence and/or age
     mapEtruefile = os.path.join(
         storage_dir, MAPETRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+"v.asc")
     mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable") 
@@ -466,20 +478,21 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         if logger is not None:
             logger.info("Loading truth map_E from "+mapEtruefile)
         data = np.loadtxt(mapEtruefile)
-        theta, map_E = data[:, 0], data[:, 1]
+        theta, map_E, mape_B, maperr = data[:, 1], data[:, 2], data[:, 3], data[:, 4]
     else:
-        # Build basic x and y grids to use for coord positions
-        xgrid, ygrid = np.meshgrid(
-            np.arange(0., XMAX_GRID_DEG, DX_GRID_DEG), np.arange(0., XMAX_GRID_DEG, DX_GRID_DEG))
-        xgrid = xgrid.flatten() # Flatten these - the default C ordering corresponds to the way that
-        ygrid = xgrid.flatten() # the true shears are ordered too, which is handy
+        # Define the field array, then theta and map arrays in which we'll store the results
+        field = np.arange(NBINS_THETA * NFIELDS_PER_BRANCH) / NBINS_THETA
+        print field
+        theta = np.empty(NBINS_THETA * NFIELDS_PER_BRANCH)
+        map_E = np.empty(NBINS_THETA * NFIELDS_PER_BRANCH)
         # Load the offsets
-        subfield_index, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
+        subfield_indices, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
-        # Setup some storage arrays
+        # Setup some storage arrays into which we'll write
         g1true = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
         g2true = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
- 
+        xfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
+        yfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
         # Loop over fields
         import pyfits
         for ifield in range(NFIELDS):
@@ -487,13 +500,29 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             # Read in all the shears in this field and store
             for jsub in range(NSUBFIELDS_PER_FIELD):
 
-                truedata = pyfits.getdata(
-                    os.path.join(mapper.full_dir, ("galaxy_catalog-%03d.fits" % isub))
-                g1true[:, jsub] = truedata["g1"] 
+                # Build the x,y grid using the subfield offsets
+                isubfield_index = jsub + ifield * NSUBFIELDS_PER_FIELD
+                print isubfield_index
+                xfield[:, jsub] = xgrid_deg + offset_deg_x[isubfield_index]
+                yfield[:, jsub] = ygrid_deg + offset_deg_y[isubfield_index]
+                galcatfile = os.path.join(mapper.full_dir, ("galaxy_catalog-%03d.fits" % isub))
+                truedata = pyfits.getdata(galcatfile)
+                if len(truedata) != NGALS_PER_SUBFIELD:
+                    raise ValueError(
+                        "Number of records in "+galcatfile+" (="+str(len(truedata))+") is not "+
+                        "equal to NGALS_PER_SUBFIELD (="+str(NGALS_PER_SUBFIELD)+")")
+                g1true[:, jsub] = truedata["g1"]
                 g2true[:, jsub] = truedata["g2"] 
 
-            
-
-
+            # Having got the x,y and g1, g2 for all the subfields in this field, flatten and use
+            # to calculate the map_E
+            map_results = g3metrics.run_corr2(
+                xfield.flatten(), yfield.flatten(), g1true.flatten(), g2true.flatten(),
+                min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbins=NBINS_THETA,
+                params_file="./corr2.params", xy_units="degrees", sep_units="degrees")
+            theta[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 0] 
+            map_E[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 1]     
+            map_B[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 2]
+            maperr[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 5]
 
     return theta, map_E 
