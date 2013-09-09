@@ -47,10 +47,17 @@ except ImportError:
 NFIELDS = 10     # Total number of fields
 NSUBFIELDS = 200 # Total number of subfields, not necessarily equal to the number of subfields made
                  # in mass_produce as that script also generates the deep fields
-NSUBFIELDSPERFIELD = NSUBFIELDS / NFIELDS
+NSUBFIELDS_PER_FIELD = NSUBFIELDS / NFIELDS
+NGALS_PER_SUBFIELD = 10000 # 100x100 galaxies per subfield
 
 CFID = 2.e-4
 MFID = 2.e-3
+
+XMAX_GRID_DEG = 10.0 # Maximum image spatial extent in degrees
+DX_GRID_DEG = 0.1    # Grid spacing in degrees
+
+THETA_MIN_DEG = 0.01 # Minimum and maximum angular scales for logarithmic bins used to calculate the
+THETA_MAX_DEG = 10.0 # aperture mass disp. - MUST match specs given to participants - in degrees
 
 TRUTH_SUBFIELD_DICT = {} # A dictionary containing the mapping between subfields containing the
                          # same applied shear [one of NFIELDS pairs of independent (g1, g2) values]
@@ -214,7 +221,7 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
             if tuple(ig1subset) != tuple(ig2subset): # Tuple comparison
                 raise ValueError(
                     "Unique values of truth g1 and g2 do not correspond pairwise!")
-            if len(ig1subset) != NSUBFIELDSPERFIELD:
+            if len(ig1subset) != NSUBFIELDS_PER_FIELD:
                 raise ValueError(
                     "Fields of truth shear values do not contain equal numbers of subfields!")
             g1dict["subfield_indices"].append(ig1subset)
@@ -461,12 +468,32 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         data = np.loadtxt(mapEtruefile)
         theta, map_E = data[:, 0], data[:, 1]
     else:
+        # Build basic x and y grids to use for coord positions
+        xgrid, ygrid = np.meshgrid(
+            np.arange(0., XMAX_GRID_DEG, DX_GRID_DEG), np.arange(0., XMAX_GRID_DEG, DX_GRID_DEG))
+        xgrid = xgrid.flatten() # Flatten these - the default C ordering corresponds to the way that
+        ygrid = xgrid.flatten() # the true shears are ordered too, which is handy
         # Load the offsets
         subfield_index, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
-        # Loop over subfields and
-        for isub in range(NSUBFIELDS):
+        # Setup some storage arrays
+        g1true = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
+        g2true = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
+ 
+        # Loop over fields
+        import pyfits
+        for ifield in range(NFIELDS):
+
+            # Read in all the shears in this field and store
+            for jsub in range(NSUBFIELDS_PER_FIELD):
+
+                truedata = pyfits.getdata(
+                    os.path.join(mapper.full_dir, ("galaxy_catalog-%03d.fits" % isub))
+                g1true[:, jsub] = truedata["g1"] 
+                g2true[:, jsub] = truedata["g2"] 
 
             
+
+
 
     return theta, map_E 
