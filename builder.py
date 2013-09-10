@@ -753,8 +753,8 @@ class SimBuilder(object):
                                             "psf_g2": star_g2,
                                             "subfield_index": subfield_index,
                                             "epoch_index": epoch_index}
-        # For variable PSF, choose a random number of stars to measure.  We can just use the first N
-        # in the catalog, since they correspond to completely random positions in the field.
+        # For variable PSF, choose a random subset of the stars to measure.  We can just use the
+        # first N in the catalog, since they correspond to completely random positions in the field.
         if self.variable_psf:
             # Barney suggested using 1% of the stars.  Use np.ceil() to make sure that we don't end
             # up with zero for test runs with few stars.
