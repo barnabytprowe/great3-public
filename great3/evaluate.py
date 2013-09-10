@@ -435,7 +435,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                                 logger=None):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
 
-    @return theta, map_E
+    @return field, theta, map_E, map_B, maperr
     """
     # Build basic x and y grids to use for coord positions: note we do this here rather than as
     # needed later so as to check the dimensions (meshgrid is very quick anyway)
@@ -478,7 +478,8 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         if logger is not None:
             logger.info("Loading truth map_E from "+mapEtruefile)
         data = np.loadtxt(mapEtruefile)
-        theta, map_E, mape_B, maperr = data[:, 1], data[:, 2], data[:, 3], data[:, 4]
+        field, theta, map_E, mape_B, maperr = (
+            data[:, 0], data[:, 1], data[:, 2], data[:, 3], data[:, 4])
     else:
         # Define the field array, then theta and map arrays in which we'll store the results
         field = np.arange(NBINS_THETA * NFIELDS_PER_BRANCH) / NBINS_THETA
@@ -524,5 +525,14 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             map_E[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 1]     
             map_B[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 2]
             maperr[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 5]
-
-    return theta, map_E 
+        # Save these in ASCII format
+        if logger is not None:
+            logger.info("Saving truth map_E file to "+mapEtruefile)
+        with open(mapEtruefile, "wb") as fout:
+            fout.write("# True aperture mass statistics for "+experiment+"-"+obs_type+"-variable\n")
+            fout.write("# field_index  theta [deg]  map_E  map_B  maperr\n")
+            np.savetxt(
+                fout, np.array((field, theta, map_E, map_B, maperr)).T,
+                fmt=" %3d %.18e %.18e %.18e %.18e")
+    # Then return
+    return field, theta, map_E, map_B, maperr 
