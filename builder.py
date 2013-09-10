@@ -724,7 +724,7 @@ class SimBuilder(object):
         # Only do this for constant shear, not variable shear!  The star shapes are needed to create
         # the metric for the constant shear branch fits to (m, c) values.
         if self.shear_type == "variable":
-            pass
+            return
 
         epoch_parameters = self.mapper.read("epoch_parameters", subfield_index=subfield_index,
                                             epoch_index=epoch_index)

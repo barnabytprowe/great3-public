@@ -119,7 +119,7 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
 
     def addNoise(self, rng, parameters, image, noise):
         # Depending on the path we've taken here, this could be an array of length 1, or a scalar.
-        # Make sure it's just as scalar so galsim doesn't barf later on.
+        # Make sure it's just a scalar so galsim doesn't barf later on.
         variance = parameters['variance']
         if isinstance(variance, numpy.ndarray):
             variance = variance[0]
