@@ -692,7 +692,7 @@ class ConstPSFBuilder(PSFBuilder):
                                         nstruts=record["opt_psf_n_struts"],
                                         strut_angle=record["opt_psf_strut_angle"]*galsim.degrees,
                                         pad_factor=record["opt_psf_pad_factor"],
-                                        suppress_warning=True,
+                                        suppress_warning=True, strut_thick=0.05,
                                         **aber_dict)
         if self.obs_type == "space":
             jitter_psf = galsim.Gaussian(sigma=record["opt_psf_jitter_sigma"])
