@@ -5,11 +5,11 @@ from . import constants
 def makeBuilder(obs_type, variable_psf, multiepoch, shear_type, atmos_ps_dir):
     """Return a PSFBuilder appropriate for the given options.
 
-    @param[in] obs_type     Observation type: either "ground" or "space"
-    @param[in] variable_psf     If True, we need a spatially-varying PSF.
+    @param[in] obs_type     Observation type: either "ground" or "space".
+    @param[in] variable_psf If True, we need a spatially-varying PSF.
     @param[in] multiepoch   If True, this is a multiepoch simulation, and we are determining the PSF
-                            of multiple exposures simultaneously.  If False,
-                            the PSF should be that of a single exposure.
+                            of multiple exposures simultaneously.  If False, the PSF should be that
+                            of a single exposure.
     @param[in] shear_type   Shear type: either "constant" or "variable".  We need this for the
                             determination of how many subfields to use per field, and whether there
                             are so few PSFs that we have to force them to follow the seeing
@@ -378,7 +378,8 @@ class ConstPSFBuilder(PSFBuilder):
         # draw random values of seeing from the CDF.  For the sake of simplicity, for this one case
         # only, we are going to store some information we need to track these without duplication.
         if self.shear_type == "variable" and not self.multiepoch and self.obs_type == "ground":
-            n_subfields_per_field = constants.n_subfields_per_field[self.shear_type][self.variable_psf]
+            n_subfields_per_field = \
+                constants.n_subfields_per_field[self.shear_type][self.variable_psf]
             # Only use non-deep fields for this. For deep fields, force it to be something around
             # the median seeing.  (For the case where we're not forcing anything, there will be
             # enough deep observations that there should be some near median.  But for the case
@@ -446,7 +447,7 @@ class ConstPSFBuilder(PSFBuilder):
             tmp_vec = np.zeros(self.n_aber)
             for ind_ab in range(self.n_aber):
                 tmp_vec[ind_ab] = \
-                    self.rms_aberration[self.obs_type] * self.aber_weights[self.obs_type][ind_ab] * \
+                    self.rms_aberration[self.obs_type] * self.aber_weights[self.obs_type][ind_ab] *\
                     gaussian_deviate() / np.sqrt(np.sum(self.aber_weights[self.obs_type]**2))
                 aber_dict[self.use_aber[ind_ab]][i_epoch] = tmp_vec[ind_ab]
 
@@ -714,7 +715,8 @@ class VariablePSFBuilder(PSFBuilder):
     """PSFBuilder for experiments with variable PSF across the images.
 
     This class basically functions as follows:
-    (1) When initialized, it sets up some basic parameters like the number of tiles across the field-of-view.
+    (1) When initialized, it sets up some basic parameters like the number of tiles across the
+        field-of-view.
     (2) generateFieldParameters draws all random numbers that are needed for generation of the PSF
         models.  These will be 2d arrays (indexed by tile and epoch).
     (3) generateEpochParameters just takes the generateFieldParameters outputs and extracts the ones
@@ -1031,7 +1033,8 @@ class VariablePSFBuilder(PSFBuilder):
             psf_dict["jitter_beta"] = field_parameters["jitter_beta"][:,epoch_index]
             psf_dict["charge_sigma"] = field_parameters["charge_sigma"][:,epoch_index]
             psf_dict["charge_e1"] = field_parameters["charge_e1"][:,epoch_index]
-            psf_dict["additional_aber_seed"] = field_parameters["additional_aber_seed"][:,epoch_index]
+            psf_dict["additional_aber_seed"] = \
+                field_parameters["additional_aber_seed"][:,epoch_index]
 
         return psf_dict
 

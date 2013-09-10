@@ -6,15 +6,16 @@ from . import constants
 def makeBuilder(obs_type, multiepoch, variable_psf):
     """Return a NoiseBuilder appropriate for the given options.
 
-    @param[in] obs_type    Observation type: either "ground" or "space"
-    @param[in] multiepoch  If True, this is a multiepoch simulation, and this
-                           is just the noise of a single exposure.  If False,
-                           the noise should be that of a coadd with
-                           constants.n_epochs epochs
-    @param[in] variable_psf    If True, this is a variable PSF branch, which affects the seeing within a
-                           given image.
+    @param[in] obs_type      Observation type: either "ground" or "space"
+    @param[in] multiepoch    If True, this is a multiepoch simulation, and this
+                             is just the noise of a single exposure.  If False,
+                             the noise should be that of a coadd with
+                             constants.n_epochs epochs
+    @param[in] variable_psf  If True, this is a variable PSF branch, which affects the seeing
+                             within a given image.
     """
-    return PlaceholderNoiseBuilder(obs_type=obs_type, multiepoch=multiepoch, variable_psf=variable_psf)
+    return PlaceholderNoiseBuilder(
+        obs_type=obs_type, multiepoch=multiepoch, variable_psf=variable_psf)
 
 class NoiseBuilder(object):
 

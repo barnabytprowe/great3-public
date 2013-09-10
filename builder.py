@@ -868,8 +868,9 @@ class SimBuilder(object):
             # than being given explicitly in the catalog. Also, the subfield offset will be output
             # separately, so that can be used with x / y to get positions in degrees, assuming the
             # user understands how to go from x / y to degrees in a single subfield.
-            # However... if this is a variable_psf branch, then we want to explicitly output information
-            # about the location within the field, the tile, and location within the tile.
+            # However... if this is a variable_psf branch, then we want to explicitly output
+            # information about the location within the field, the tile, and location within the
+            # tile.  
             # Unfortunately this is in the epoch_catalog files rather than subfield_catalog
             # ("unfortunately" because it's the same for all epochs and means we have to read in
             # multiple files) so in that case we have to read in that info as well, and merge the
@@ -919,23 +920,23 @@ class SimBuilder(object):
             # the same additional info as was given for the galaxies re: position within the field
             # and tiles.
             if self.variable_psf:
-                star_use_cols = [('x', int), ('y', int), ('x_tile_index', int), ('y_tile_index', int),
-                                       ('tile_x_pos_deg', float), ('tile_y_pos_deg', float),
-                                       ('x_field_true_deg', float), ('y_field_true_deg', float)]
+                star_use_cols = [('x', int), ('y', int), ('x_tile_index', int), 
+                                       ('y_tile_index', int), ('tile_x_pos_deg', float),
+                                       ('tile_y_pos_deg', float), ('x_field_true_deg', float),
+                                       ('y_field_true_deg', float)]
             else:
                 star_use_cols = [('x', int), ('y', int)]
             if subfield_index <= max_reg_subfield:
                 tmp_dict = {"subfield_index" : subfield_index, "epoch_index" : 0}
-                outfile = root_rel_mapper.copySub(sub_mapper, 'star_catalog', tmp_dict,
-                                                  star_use_cols,
-                                                  new_template = "star_catalog-%(subfield_index)03d")
+                outfile = root_rel_mapper.copySub(
+                    sub_mapper, 'star_catalog', tmp_dict, star_use_cols,
+                    new_template="star_catalog-%(subfield_index)03d")
             else:
                 tmp_dict["deep_subfield_index"] = subfield_index - n_reg_subfields
                 tmp_dict["epoch_index" : 0]
-                outfile = root_rel_mapper.copySub(sub_mapper, 'star_catalog', tmp_dict,
-                                                  star_use_cols,
-                                                  new_template =
-                                                  "deep_star_catalog-%(deep_subfield_index)03d")
+                outfile = root_rel_mapper.copySub(
+                    sub_mapper, 'star_catalog', tmp_dict, star_use_cols,
+                    new_template="deep_star_catalog-%(deep_subfield_index)03d")
             # ... and also copy to text file that gets added 
             outfile_bits = outfile.split('.')
             outfile_bits.remove('fits')
@@ -1002,7 +1003,9 @@ class SimBuilder(object):
         shutil.rmtree(public_mapper.full_dir)
 
     def packageTruth(self, subfield_min, subfield_max):
-        """This method packages up the true shear values and PSF ellipticities for metric calculations."""
+        """This method packages up the true shear values and PSF ellipticities for metric
+        calculations.
+        """
         import shutil
         import tarfile
 

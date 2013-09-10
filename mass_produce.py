@@ -55,9 +55,9 @@ if not package_only:
     # Clean up from previous runs
     shutil.rmtree(root, ignore_errors=True)
 
-    # First we set up a process for each branch.  We use a different random seed for each, and we do the
-    # following steps: metaparameters, catalogs, config.  For config, there is some additional juggling
-    # to do for config file names / dirs.
+    # First we set up a process for each branch.  We use a different random seed for each, and we do
+    # the following steps: metaparameters, catalogs, config.  For config, there is some additional
+    # juggling to do for config file names / dirs.
     prefix1 = 'g3_step1_'
     all_config_names = []
     all_psf_config_names = []
@@ -74,9 +74,9 @@ if not package_only:
         # Write out some scripts.
         mass_produce_utils.pbs_script_python(pbs_file, pbs_name)
         new_config_names, new_psf_config_names = \
-            mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max, experiment,
-                                             obs_type, shear_type, gal_dir, ps_dir, seed,
-                                             n_config_per_branch, my_step=1)
+            mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max,
+                                             experiment, obs_type, shear_type, gal_dir, ps_dir,
+                                             seed, n_config_per_branch, my_step=1)
         for config_name in new_config_names:
             all_config_names.append(config_name)
         for psf_config_name in new_psf_config_names:
