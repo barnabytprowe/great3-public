@@ -299,18 +299,39 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
         # Setup the array for storing the PSF values from which rotations are calculated
         psf_g1 = np.empty((NSUBFIELDS, n_epochs))
         psf_g2 = np.empty((NSUBFIELDS, n_epochs))
-        for epoch_index in range(n_epochs):
+        mean_psf_g1 = np.empty(NSUBFIELDS)
+        mean_psf_g2 = np.empty(NSUBFIELDS)
+        for subfield_index in range(NSUBFIELDS):
 
-            for subfield_index in range(NSUBFIELDS):
+            n_ignore = 0 # Counter for how many epochs had flagged, bad PSF g1/g2 values
+            for epoch_index in range(n_epochs):
 
                 starshape_parameters = mapper.read(
                     "starshape_parameters",
                     data_id={"epoch_index": epoch_index, "subfield_index": subfield_index})
-                psf_g1[subfield_index, epoch_index] = starshape_parameters["psf_g1"]
-                psf_g2[subfield_index, epoch_index] = starshape_parameters["psf_g2"]
+                star_g1 = starshape_parameters["psf_g1"]
+                star_g2 = starshape_parameters["psf_g2"]
+                # Test for flagged failures (these do happen rarely and are given the value
+                # psf_g1=psf_g2=-10.0, see writeStarParameters in great3sims/builders.py)
+                # If the psf ellipticities are failed, we just ignore these for the (m, c) calcs
+                if star_g1 > -9.9 and star_g2 > -9.9:
+                    psf_g1[subfield_index, epoch_index] = star_g1
+                    psf_g2[subfield_index, epoch_index] = star_g2
+                else:
+                    n_ignore += 1
+                    psf_g1[subfield_index, epoch_index] = 0.
+                    psf_g2[subfield_index, epoch_index] = 0.
 
-        mean_psf_g1 = psf_g1.mean(axis=1) # Handily this flattens even if n_epochs = 1
-        mean_psf_g2 = psf_g2.mean(axis=1)
+            # Calculate the mean across the epochs in this subfield taking any flagged values into
+            # account
+            neff = n_epochs - n_ignore
+            if neff > 0:
+                mean_psf_g1[subfield_index] = psf_g1.sum() / float(n_eff) 
+                mean_psf_g2[subfield_index] = psf_g2.sum() / float(n_eff)
+            else:
+                mean_psf_g1[subfield_index] = 0. # This is safe in np.arctan2() -> 0. 
+                mean_psf_g2[subfield_index] = 0.
+ 
         rotations = .5 * np.arctan2(mean_psf_g2, mean_psf_g1)
         # We have built rotations, but then save this file as ascii for use next time
         if logger is not None:
