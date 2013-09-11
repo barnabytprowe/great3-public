@@ -694,6 +694,7 @@ class ConstPSFBuilder(PSFBuilder):
                                         pad_factor=record["opt_psf_pad_factor"],
                                         suppress_warning=True,
                                         **aber_dict)
+        print "\nOpticalPSF stepK = "+str(optical_psf.stepK())
         if self.obs_type == "space":
             jitter_psf = galsim.Gaussian(sigma=record["opt_psf_jitter_sigma"])
             e = record["opt_psf_jitter_e"]
@@ -704,12 +705,16 @@ class ConstPSFBuilder(PSFBuilder):
             e1 = record["opt_psf_charge_e1"]
             if e1 > 0.:
                 charge_psf.applyShear(e1=e1)
-            return galsim.Convolve(jitter_psf, charge_psf, optical_psf)
+            ret = galsim.Convolve(jitter_psf, charge_psf, optical_psf)
+            print "Jittered, charge-diffused PSF stepK = "+str(ret.stepK())
         else:
             atmos_psf = galsim.Kolmogorov(fwhm = record["atmos_psf_fwhm"])
             atmos_psf.applyShear(e = record["atmos_psf_e"], beta =
                                  record["atmos_psf_beta"]*galsim.degrees)
-            return galsim.Convolve(atmos_psf, optical_psf)
+            ret = galsim.Convolve(atmos_psf, optical_psf)
+            print "Atmosphere-convolved PSF stepK = "+str(ret.stepK())
+        print ""
+        return ret
 
 class VariablePSFBuilder(PSFBuilder):
     """PSFBuilder for experiments with variable PSF across the images.
