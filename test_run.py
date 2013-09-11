@@ -12,9 +12,9 @@ import great3sims
 
 # Set which branches to test...
 experiments = [
-    'variable_psf',
+#    'variable_psf',
     'control',
-    'multiepoch',
+#    'multiepoch',
     #'real_gal',
     #'full',
 ]
@@ -24,7 +24,7 @@ obs_type = [
 ]
 shear_type = [
     'constant',
-    'variable',
+#    'variable',
 ]
 
 root = 'test_run'
