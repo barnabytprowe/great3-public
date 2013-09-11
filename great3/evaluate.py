@@ -23,10 +23,43 @@ total number of subfields in the branch (currently fixed at 200).
 In addition, the array slice `data[:, 0]` must be the subfield number in ascending order from `0` to
 `NSUBFIELDS - 1`.  The array slices `data[:, 1]` and `data[:, 2]` must be the corresponding
 estimates of mean shear g1 and g2 in each subfield.
+
+In these details the submission should match the output of the helper script `presubmission.py`
+available at GIVE PUBLIC GITHUB URL.
  
 Variable shear branches
 -----------------------
-Each submission file (one per branch?) CHECK THESE DETAILS WITH MELANIE'S CODE OUTPUT, TODO.
+Each submission file (one per branch) should take the format of an ASCII catalog with a minimum of
+3 columns as in the following example:
+
+    # FIELD_INDEX  THETA [degrees]  MAP_E
+    0   0.0126   2.424e-09
+    0   0.0200   1.429e-06
+    0   0.0316   1.442e-06
+    ...    
+
+The FIELD_INDEX will be an integer between 0 and 9.  THETA should be a sequence of floats giving
+the annular bin centres in degrees; these are logarithmically spaced between the minimum separation
+considered (0.01 degrees) and the maximum (10.0 degrees).  MAP_E is the E-mode aperture mass
+dispersion.  FIELD, THETA (and the thus corresponding MAP_E entries) must be ordered as in the
+output of `presubmission.py`.
+
+The hashed header/comment can be ommitted.  Additional columns can be present provided that the
+location and order of the three described above  Additional columns can be present provided that the
+location and order of the three described above.  An example of this is the output of 
+`presubmission.py` for variable shear branches, which also append columns for the B-mode aperture
+mass dispersion and a (shot  noise only) error estimate.
+
+After
+
+    >>> data = np.loadtxt(submission_file)
+
+the `data` object must be a NumPy array with shape `(NFIELDS * NBINS_THETA, n)`, where `NFIELDS` is
+the total number of fields in the branch (currently fixed at 10), `NBINS_THETA` is the number of
+annular bins in angle used to estimate Map_E in each field (currently fixed at 15), and `n >= 3`.
+
+As mentioned, in these details the submission should match the output of the helper script
+`presubmission.py` available at GIVE PUBLIC GITHUB URL.
 """
 
 import os
