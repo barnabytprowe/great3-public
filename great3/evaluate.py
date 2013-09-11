@@ -25,7 +25,7 @@ In addition, the array slice `data[:, 0]` must be the subfield number in ascendi
 estimates of mean shear g1 and g2 in each subfield.
 
 In these details the submission should match the output of the helper script `presubmission.py`
-available at GIVE PUBLIC GITHUB URL.
+available at https://github.com/barnabytprowe/great3-public .
  
 Variable shear branches
 -----------------------
@@ -59,7 +59,7 @@ the total number of fields in the branch (currently fixed at 10), `NBINS_THETA` 
 annular bins in angle used to estimate Map_E in each field (currently fixed at 15), and `n >= 3`.
 
 As mentioned, in these details the submission should match the output of the helper script
-`presubmission.py` available at GIVE PUBLIC GITHUB URL.
+`presubmission.py` available at https://github.com/barnabytprowe/great3-public .
 """
 
 import os
