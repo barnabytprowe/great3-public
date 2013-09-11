@@ -694,7 +694,9 @@ class ConstPSFBuilder(PSFBuilder):
                                         pad_factor=record["opt_psf_pad_factor"],
                                         suppress_warning=True,
                                         **aber_dict)
+        import numpy as np
         print "\nOpticalPSF stepK = "+str(optical_psf.stepK())
+        print "Physical size = "+str(2. * np.pi / optical_psf.stepK())+" arcsec"
         if self.obs_type == "space":
             jitter_psf = galsim.Gaussian(sigma=record["opt_psf_jitter_sigma"])
             e = record["opt_psf_jitter_e"]
@@ -707,12 +709,14 @@ class ConstPSFBuilder(PSFBuilder):
                 charge_psf.applyShear(e1=e1)
             ret = galsim.Convolve(jitter_psf, charge_psf, optical_psf)
             print "Jittered, charge-diffused PSF stepK = "+str(ret.stepK())
+            print "Physical size = "+str(2. * np.pi / ret.stepK())+" arcsec"
         else:
             atmos_psf = galsim.Kolmogorov(fwhm = record["atmos_psf_fwhm"])
             atmos_psf.applyShear(e = record["atmos_psf_e"], beta =
                                  record["atmos_psf_beta"]*galsim.degrees)
             ret = galsim.Convolve(atmos_psf, optical_psf)
             print "Atmosphere-convolved PSF stepK = "+str(ret.stepK())
+            print "Physical size = "+str(2. * np.pi / ret.stepK())+" arcsec"
         print ""
         return ret
 
