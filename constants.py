@@ -16,16 +16,16 @@ ncols = 100
 # indexed first by observation type and then by single vs. multi-epoch.
 xsize = {
     "space": { # index second level of dictionary based on bool multiepoch
-        True: 48,
-        False : 96,
+        True: 48 * 4,
+        False : 96 * 4,
         },
     # For ground, we use the same pixel scale for both, but it's neater to
     # maintain the same 2-level structure and it leaves open the
     # possibility of having different pixel scales in the two cases if
     # we decide it is necessary later on.
     "ground": {
-        True: 48,
-        False: 48,
+        True: 48 * 2,
+        False: 48 * 2,
         },
     }
 # Let's just require the PS to always be square.
