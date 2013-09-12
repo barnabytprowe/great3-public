@@ -302,7 +302,7 @@ class ConstPSFBuilder(PSFBuilder):
         # Get numbers for various parameters that will be used to make an OpticalPSF:
         # * We choose a range of lam_over_diam motivated by upcoming telescopes and stored within
         #   the class.
-        # * We make draw random aberrations according to some overall RMS for the total over all
+        # * We draw random aberrations according to some overall RMS for the total over all
         #   aberrations, assuming they are independent.
         # * We choose a reasonable range of obscuration, using min/max defined in class.
         # * We choose a reasonable range of struts, using the list of options defined in class.
@@ -330,10 +330,7 @@ class ConstPSFBuilder(PSFBuilder):
             n_struts[i_epoch] = tmp_n_struts
 
             if tmp_n_struts > 0:
-                min_strut_angle = -0.5*360./tmp_n_struts
-                max_strut_angle = 0.5*360./tmp_n_struts
-                strut_angle[i_epoch] = \
-                    uniform_deviate()*(max_strut_angle-min_strut_angle) + min_strut_angle
+                strut_angle[i_epoch] = 360.*uniform_deviate()
             else:
                 strut_angle[i_epoch] = 0.
 
