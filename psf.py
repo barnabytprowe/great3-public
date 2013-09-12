@@ -992,9 +992,7 @@ class VariablePSFBuilder(PSFBuilder):
                     log_theta_0 = np.log10(atmos_psf_pk_theta0[i_tile])
                     theta_0_index = \
                         int(round((log_theta_0 - self.log_min_theta_0)/self.dlog_theta_0))
-                    theta_0_str = str(int(self.theta_0_grid[theta_0_index]))
-                    # fudge something because of rounding error, sigh
-                    if theta_0_str == "485": theta_0_str = "486"
+                    theta_0_str = str(int(round(self.theta_0_grid[theta_0_index])))
                     infile = os.path.join(self.atmos_ps_dir, 'Pk'+theta_0_str+'.dat')
                     dat = np.loadtxt(infile).transpose()
                     # get k, P(k) in 1/arcsec, arcsec^2.  The latter should be used for both the E
