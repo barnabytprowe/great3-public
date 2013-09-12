@@ -357,8 +357,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
 
             # Calculate the mean across the epochs in this subfield taking any flagged values into
             # account
-            neff = n_epochs - n_ignore
-            if neff > 0:
+            n_eff = n_epochs - n_ignore
+            if n_eff > 0:
                 mean_psf_g1[subfield_index] = psf_g1.sum() / float(n_eff) 
                 mean_psf_g2[subfield_index] = psf_g2.sum() / float(n_eff)
             else:
