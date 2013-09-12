@@ -701,6 +701,13 @@ class VariablePSFBuilder(PSFBuilder):
     theta_0_grid = np.logspace(np.log10(min_theta_0), np.log10(max_theta_0), n_theta_0)
 
     def __init__(self, obs_type, multiepoch, shear_type, atmos_ps_dir):
+        # First, a sanity check: we require nrows == ncols for the GalSim lensing engine (in order
+        # to have a square grid), so we check for that before attempting any calculations for
+        # variable PSF, ground-based sims.
+        if obs_type == "ground":
+            if constants.nrows != constants.ncols:
+                raise NotImplementedError("Atmospheric PSF calculations require nrows=ncols")
+
         self.obs_type = obs_type
         self.multiepoch = multiepoch
         self.variable_psf = True # by definition, so it doesn't get passed in as an arg
@@ -1004,6 +1011,8 @@ class VariablePSFBuilder(PSFBuilder):
                     # We just have an additional parameter, tile_fac, that accounts for the fact
                     # that each tile is some fraction of the overall FOV.
                     tile_fac = 1. / self.n_tile_linear
+                    # We've assumed a square grid.  In the __init__ routine for this builder, we
+                    # have already checked that constants.nrows == constants.ncols, so that's okay.
                     n_grid = int(ceil(constants.subfield_grid_subsampling * constants.nrows * tile_fac))
                     grid_spacing = self.tile_size_deg / n_grid
                     grid_center_zerod = 0.5 * self.tile_size_deg
