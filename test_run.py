@@ -97,7 +97,7 @@ if do_config:
             name, ext = os.path.splitext(config_name)
             new_name = '%s_%02d.yaml'%(name,i)
             print config_name,'->',new_name
-            #new_config_names.append(new_name)
+            new_config_names.append(new_name)
             shutil.copy(os.path.join(root,config_name),os.path.join(root,new_name))
         for config_name in psf_config_names:
             name, ext = os.path.splitext(config_name)
