@@ -1030,7 +1030,7 @@ class VariablePSFBuilder(PSFBuilder):
                     tile_fac = 1. / self.n_tile_linear[self.obs_type]
                     # We've assumed a square grid.  In the __init__ routine for this builder, we
                     # have already checked that constants.nrows == constants.ncols, so that's okay.
-                    n_grid = int(ceil(constants.subfield_grid_subsampling * constants.nrows * tile_fac))
+                    n_grid = int(np.ceil(constants.subfield_grid_subsampling * constants.nrows * tile_fac))
                     grid_spacing = self.tile_size_deg / n_grid
                     grid_center_zerod = 0.5 * self.tile_size_deg
                     ps.buildGrid(grid_spacing = grid_spacing,
