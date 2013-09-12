@@ -564,7 +564,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     return field, theta, map_E, map_B, maperr
 
 def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None):
+               logger=None, normalization=1.):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -599,11 +599,13 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     # perform simple linear regression
     g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
     g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
-    Q_c = g3metrics.metricQZ1_const_shear(g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
-    return Q_c
+    Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx = g3metrics.metricQZ1_const_shear(
+        g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
+    Q_c *= normalization
+    return Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None):
+               logger=None, normalization=8.41e-5:
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -613,7 +615,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param storage_dir      Directory from/into which to load/store rotation files
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
-    @return The metric Q_var
+    @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
         raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
@@ -621,6 +623,13 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     if logger is not None:
         logger.info("Calculating Q_v metric for "+submission_file)
     data = np.loadtxt(submission_file)
+    field, theta, map_E, _, _, _ = get_generate_variable_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
+    try:
+        np.testing.assert_array_almost_equal(
+            data[:, 1], theta, decimal=5, err_msg="User theta array does not match desired.")
+    # The definition of Q_v is so simple there is no need to use the g3metrics version
+    Q_v = normalization / np.mean(np.abs(data - map_E))
     return
  
 
