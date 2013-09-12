@@ -258,7 +258,7 @@ class ConstPSFBuilder(PSFBuilder):
             n_fields = (constants.n_subfields - constants.n_deep_subfields) / n_subfields_per_field
             self.dpercentile = (1./float(n_fields))
             self.force_distribution = True
-            self.used_percentile = np.zeros(n_fields)
+            self.used_percentile = np.zeros(n_fields).astype(bool)
         else:
             self.force_distribution = False
 
@@ -361,12 +361,11 @@ class ConstPSFBuilder(PSFBuilder):
                         # Note, the code below will only work for single epoch sims, but we should
                         # have taken care of that logically, above, when setting the value of
                         # self.force_distribution.
-                        test_val = 1
-                        while test_val == 1:
+                        while True:
                             test_rand = uniform_deviate()
                             test_bin = int(test_rand/self.dpercentile)
-                            test_val = self.used_percentile[test_bin]
-                        self.used_percentile[test_bin] = 1
+                            if not self.used_percentile[test_bin]: break
+                        self.used_percentile[test_bin] = True
                         atmos_psf_fwhm[i_epoch] = dist_deviate.val(test_rand)
                     else:
                         test_rand = 0.4 + 0.2 * uniform_deviate()
