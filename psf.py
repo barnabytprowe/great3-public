@@ -106,7 +106,8 @@ def UseZeroIndex(d):
     else:
         # Else recurse onto all sub-dicts.
         for key in d:
-            if isinstance(d[key],dict): UseZeroIndex(d[key])
+            if isinstance(key,dict): UseZeroIndex(key)  # Relevant if d is really a list!
+            elif isinstance(d[key],dict): UseZeroIndex(d[key])
             elif isinstance(d[key],list): UseZeroIndex(d[key])
 
 
