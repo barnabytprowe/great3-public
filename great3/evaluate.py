@@ -359,8 +359,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
             # account
             n_eff = n_epochs - n_ignore
             if n_eff > 0:
-                mean_psf_g1[subfield_index] = psf_g1.sum() / float(n_eff) 
-                mean_psf_g2[subfield_index] = psf_g2.sum() / float(n_eff)
+                mean_psf_g1[subfield_index] = (psf_g1[subfield_index, :]).sum() / float(n_eff) 
+                mean_psf_g2[subfield_index] = (psf_g2[subfield_index, :]).sum() / float(n_eff)
             else:
                 mean_psf_g1[subfield_index] = 0. # This is safe in np.arctan2() -> 0. 
                 mean_psf_g2[subfield_index] = 0.
@@ -536,10 +536,10 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             data[:, 0], data[:, 1], data[:, 2], data[:, 3], data[:, 4])
     else:
         # Define the field array, then theta and map arrays in which we'll store the results
-        field = np.arange(NBINS_THETA * NFIELDS_PER_BRANCH) / NBINS_THETA
+        field = np.arange(NBINS_THETA * NFIELDS) / NBINS_THETA
         print field
-        theta = np.empty(NBINS_THETA * NFIELDS_PER_BRANCH)
-        map_E = np.empty(NBINS_THETA * NFIELDS_PER_BRANCH)
+        theta = np.empty(NBINS_THETA * NFIELDS)
+        map_E = np.empty(NBINS_THETA * NFIELDS)
         # Load the offsets
         subfield_indices, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
