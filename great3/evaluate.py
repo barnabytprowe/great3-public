@@ -517,10 +517,8 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         # (subfield = 000) for this branch.  If the former is older than the latter, or
         # this file, force rebuild...
         mapEmtime = os.path.getmtime(mapEtruefile)
-        catalog_file_template, _ ,_ = mapper.mappings["galaxy_catalog"]  
-        catalog_file = os.path.join(
-            mapper.full_dir, galaxy_catalog_file_template % {"subfield_index": 0})
-        catalogmtime = os.path.getmtime(catalog_file+".fits")
+        catalog_file = os.path.join(mapper.full_dir, "galaxy_catalog-000.fits")
+        catalogmtime = os.path.getmtime(catalog_file)
         if mapEmtime < catalogmtime or mapEmtime < os.path.getmtime(__file__):
             use_stored = False
             if logger is not None:
@@ -532,14 +530,15 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         if logger is not None:
             logger.info("Loading truth map_E from "+mapEtruefile)
         data = np.loadtxt(mapEtruefile)
-        field, theta, map_E, mape_B, maperr = (
+        field, theta, map_E, map_B, maperr = (
             data[:, 0], data[:, 1], data[:, 2], data[:, 3], data[:, 4])
     else:
         # Define the field array, then theta and map arrays in which we'll store the results
         field = np.arange(NBINS_THETA * NFIELDS) / NBINS_THETA
-        print field
         theta = np.empty(NBINS_THETA * NFIELDS)
         map_E = np.empty(NBINS_THETA * NFIELDS)
+        map_B = np.empty(NBINS_THETA * NFIELDS)
+        maperr = np.empty(NBINS_THETA * NFIELDS)
         # Load the offsets
         subfield_indices, offset_deg_x, offset_deg_y = get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
@@ -557,10 +556,10 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
 
                 # Build the x,y grid using the subfield offsets
                 isubfield_index = jsub + ifield * NSUBFIELDS_PER_FIELD
-                print isubfield_index
                 xfield[:, jsub] = xgrid_deg + offset_deg_x[isubfield_index]
                 yfield[:, jsub] = ygrid_deg + offset_deg_y[isubfield_index]
-                galcatfile = os.path.join(mapper.full_dir, ("galaxy_catalog-%03d.fits" % jsub))
+                galcatfile = os.path.join(
+                    mapper.full_dir, ("galaxy_catalog-%03d.fits" % isubfield_index))
                 truedata = pyfits.getdata(galcatfile)
                 if len(truedata) != NGALS_PER_SUBFIELD:
                     raise ValueError(
@@ -575,10 +574,10 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                 xfield.flatten(), yfield.flatten(), g1true.flatten(), g2true.flatten(),
                 min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbins=NBINS_THETA,
                 params_file="./corr2.params", xy_units="degrees", sep_units="degrees")
-            theta[ifield * NFIELDS:  (ifield * NFIELDS + NBINS_THETA)] = map_results[:, 0] 
-            map_E[ifield * NFIELDS:  (ifield * NFIELDS + NBINS_THETA)] = map_results[:, 1]     
-            map_B[ifield * NFIELDS:  (ifield * NFIELDS + NBINS_THETA)] = map_results[:, 2]
-            maperr[ifield * NFIELDS: (ifield * NFIELDS + NBINS_THETA)] = map_results[:, 5]
+            theta[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 0] 
+            map_E[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 1]     
+            map_B[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 2]
+            maperr[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 5]
         # Save these in ASCII format
         if logger is not None:
             logger.info("Saving truth map_E file to "+mapEtruefile)
@@ -587,6 +586,6 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             fout.write("# field_index  theta [deg]  map_E  map_B  maperr\n")
             np.savetxt(
                 fout, np.array((field, theta, map_E, map_B, maperr)).T,
-                fmt=" %3d %.18e %.18e %.18e %.18e")
+                fmt=" %2d %.18e %.18e %.18e %.18e")
     # Then return
     return field, theta, map_E, map_B, maperr 
