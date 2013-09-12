@@ -575,10 +575,10 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                 xfield.flatten(), yfield.flatten(), g1true.flatten(), g2true.flatten(),
                 min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbins=NBINS_THETA,
                 params_file="./corr2.params", xy_units="degrees", sep_units="degrees")
-            theta[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 0] 
-            map_E[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 1]     
-            map_B[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 2]
-            maperr[ifield * NFIELDS: (i * NFIELDS + NBINS_THETA)] = map_results[:, 5]
+            theta[ifield * NFIELDS:  (ifield * NFIELDS + NBINS_THETA)] = map_results[:, 0] 
+            map_E[ifield * NFIELDS:  (ifield * NFIELDS + NBINS_THETA)] = map_results[:, 1]     
+            map_B[ifield * NFIELDS:  (ifield * NFIELDS + NBINS_THETA)] = map_results[:, 2]
+            maperr[ifield * NFIELDS: (ifield * NFIELDS + NBINS_THETA)] = map_results[:, 5]
         # Save these in ASCII format
         if logger is not None:
             logger.info("Saving truth map_E file to "+mapEtruefile)
