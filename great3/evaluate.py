@@ -541,7 +541,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         theta = np.empty(NBINS_THETA * NFIELDS)
         map_E = np.empty(NBINS_THETA * NFIELDS)
         # Load the offsets
-        subfield_indices, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
+        subfield_indices, offset_deg_x, offset_deg_y = get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
         # Setup some storage arrays into which we'll write
         g1true = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
@@ -560,7 +560,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                 print isubfield_index
                 xfield[:, jsub] = xgrid_deg + offset_deg_x[isubfield_index]
                 yfield[:, jsub] = ygrid_deg + offset_deg_y[isubfield_index]
-                galcatfile = os.path.join(mapper.full_dir, ("galaxy_catalog-%03d.fits" % isub))
+                galcatfile = os.path.join(mapper.full_dir, ("galaxy_catalog-%03d.fits" % jsub))
                 truedata = pyfits.getdata(galcatfile)
                 if len(truedata) != NGALS_PER_SUBFIELD:
                     raise ValueError(
