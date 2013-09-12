@@ -973,7 +973,6 @@ class VariablePSFBuilder(PSFBuilder):
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
-                            pad_factor = self.pad_factor,
                             dz = psf_parameters["dz"][i_tile],
                             dx = psf_parameters["x_decenter"][i_tile],
                             dy = psf_parameters["y_decenter"][i_tile],
@@ -989,7 +988,6 @@ class VariablePSFBuilder(PSFBuilder):
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
-                            pad_factor = self.pad_factor,
                             rms = self.space_rms_additional_aber,
                             seed = int(psf_parameters["additional_aber_seed"][i_tile]))
                 tmp_list.append(new_model)
