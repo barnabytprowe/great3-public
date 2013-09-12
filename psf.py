@@ -1004,7 +1004,7 @@ class VariablePSFBuilder(PSFBuilder):
                     # We just have an additional parameter, tile_fac, that accounts for the fact
                     # that each tile is some fraction of the overall FOV.
                     tile_fac = 1. / self.n_tile_linear
-                    n_grid = int(constants.subfield_grid_subsampling * constants.nrows * tile_fac)
+                    n_grid = int(ceil(constants.subfield_grid_subsampling * constants.nrows * tile_fac))
                     grid_spacing = self.tile_size_deg / n_grid
                     grid_center_zerod = 0.5 * self.tile_size_deg
                     ps.buildGrid(grid_spacing = grid_spacing,
