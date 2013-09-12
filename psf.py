@@ -618,6 +618,15 @@ class VariablePSFBuilder(PSFBuilder):
         "ground" : 0.35,
         }
 
+    # Define the size of the tiles to be used to make the PSF models.  The considerations are that
+    # we want to fit an integer number of tiles in a 10x10 degree field, but we also don't want to
+    # stretch the scale of our pre-existing models excessively.  The choices given below lead to
+    # stretching that can be as much as 15%, which is not excessive.
+    n_tile_linear = {
+        "space" : 20, # 20 x 20 tiles, each 0.5 x 0.5 degrees
+        "ground" : 5, # 5 x 5 tiles, each 2 x 2 degrees
+        }
+
     # We have to define the set of aberrations that we'll use, and some names that will go into the
     # schema to specify them.  We know we need all of these for the realistic PSF branch.
     use_aber = ["defocus", "astig1", "astig2", "coma1", "coma2", "trefoil1", "trefoil2", "spher"]
@@ -714,18 +723,17 @@ class VariablePSFBuilder(PSFBuilder):
         self.shear_type = shear_type
         self.atmos_ps_dir = atmos_ps_dir
 
-        if self.obs_type == "space":
-            self.n_tile_linear = 20 # 20 x 20 tiles, each 0.5 x 0.5 degrees
-        else:
-            self.n_tile_linear = 5 # 5 x 5 tiles, each 2 x 2 degrees
-        self.n_tiles = self.n_tile_linear**2
+        # Now that we've specified an obs_type, we can figure out the tile structure:
+        self.n_tiles = self.n_tile_linear[self.obs_type]**2
         # Define coordinates for tiles, in degrees, without any subfield offset
-        self.tile_size_deg = constants.image_size_deg / self.n_tile_linear
+        self.tile_size_deg = constants.image_size_deg / self.n_tile_linear[self.obs_type]
         self.tile_x_min = []
         self.tile_y_min = []
         for i_tile in range(self.n_tiles):
-            self.tile_x_min.append((i_tile % self.n_tile_linear) * self.tile_size_deg)
-            self.tile_y_min.append((i_tile / self.n_tile_linear) * self.tile_size_deg)
+            self.tile_x_min.append((i_tile % self.n_tile_linear[self.obs_type]) *
+                                   self.tile_size_deg)
+            self.tile_y_min.append((i_tile / self.n_tile_linear[self.obs_type]) *
+                                   self.tile_size_deg)
 
     def generateFieldParameters(self, rng, field_index):
         # Define some constants that we will need throughout.
@@ -1010,7 +1018,7 @@ class VariablePSFBuilder(PSFBuilder):
                     # See comments in shear.py, VariableShearBuilder for more explanation.
                     # We just have an additional parameter, tile_fac, that accounts for the fact
                     # that each tile is some fraction of the overall FOV.
-                    tile_fac = 1. / self.n_tile_linear
+                    tile_fac = 1. / self.n_tile_linear[self.obs_type]
                     # We've assumed a square grid.  In the __init__ routine for this builder, we
                     # have already checked that constants.nrows == constants.ncols, so that's okay.
                     n_grid = int(ceil(constants.subfield_grid_subsampling * constants.nrows * tile_fac))
@@ -1067,7 +1075,7 @@ class VariablePSFBuilder(PSFBuilder):
         catalog["x_tile_index"] = x_tile_ind
         catalog["y_tile_index"] = y_tile_ind
         # Convert to our single tile index (as defined for each object)
-        tile_ind = x_tile_ind.astype(int) + self.n_tile_linear * y_tile_ind.astype(int)
+        tile_ind = x_tile_ind.astype(int) + self.n_tile_linear[self.obs_type]*y_tile_ind.astype(int)
         catalog["tile_index"] = tile_ind
         cat_indices = np.arange(len(tile_ind))
         # Do the calculations on a tile-by-tile basis
