@@ -186,9 +186,14 @@ class ConstPSFBuilder(PSFBuilder):
     # Struts: we choose an integer number of struts from the values on the following list.
     # The angle from vertical is chosen at random.
     # For now the thickness is not a free parameter, though it could be.  The possible number of
-    # struts is currently the same for space/ground (it's not a dict) but that would be an easy
-    # change for later.
-    strut_list = [0, 2, 3, 4, 6]
+    # struts differs for space and ground.  Because of issues with accuracy of rendering PSFs with
+    # struts in the latter case (see discussion on
+    # https://github.com/rmandelb/great3-private/pull/53), we do not have any struts for
+    # ground-based sims.
+    strut_list = {
+        "space" : [0, 2, 3, 4, 6],
+        "ground" : [0],
+        }
 
     # For space-based PSFs only: include jitter and charge diffusion.  The plan as stated on #42,
     # based on discussion with Lance Miller and several WFIRST people, is to make jitter a Gaussian
@@ -325,8 +330,9 @@ class ConstPSFBuilder(PSFBuilder):
                                      self.min_obscuration[self.obs_type]) +
                 self.min_obscuration[self.obs_type] )
 
-            strut_rand_ind = int( np.floor( uniform_deviate() * len(self.strut_list) ) )
-            tmp_n_struts = self.strut_list[strut_rand_ind]
+            strut_rand_ind = \
+                int( np.floor( uniform_deviate() * len(self.strut_list[self.obs_type]) ) )
+            tmp_n_struts = self.strut_list[self.obs_type][strut_rand_ind]
             n_struts[i_epoch] = tmp_n_struts
 
             if tmp_n_struts > 0:
@@ -647,7 +653,10 @@ class VariablePSFBuilder(PSFBuilder):
     ground_decenter_rms = 0.15 # mm, per commponent (k.e., dx and dy)
     ground_defocus_rms = 0.06 # mm along z
 
-    # Struts: we choose an integer number of struts corresponding to our models.
+    # Struts: we choose an integer number of struts corresponding to our models.  Based on the
+    # discussion about accuracy of rendering PSFs with struts for ground-based sims on
+    # https://github.com/rmandelb/great3-private/pull/53, we use n_struts=0 for ground-based sims,
+    # unlike our DECam optical model which has 4 struts.
     n_struts = {
         "space" : 6,
         "ground" : 0,
