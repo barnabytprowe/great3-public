@@ -504,7 +504,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             logger.info("Loading truth map_E from "+mapEtruefile)
         data = np.loadtxt(mapEtruefile)
         field, theta, map_E, map_B, maperr = (
-            data[:, 0], data[:, 1], data[:, 2], data[:, 3], data[:, 4])
+            data[:, 0].astype(int), data[:, 1], data[:, 2], data[:, 3], data[:, 4])
     else:
         # Define the field array, then theta and map arrays in which we'll store the results
         field = np.arange(NBINS_THETA * NFIELDS) / NBINS_THETA
@@ -564,7 +564,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     return field, theta, map_E, map_B, maperr
 
 def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=1.):
+               logger=None, normalization=1.089):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -588,24 +588,33 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     # Load up the rotations, then rotate g1 & g2 in the correct sense.
     # NOTE THE MINUS SIGNS!  This is because we need to rotated the coordinates back into a frame
     # in which the primary direction of the PSF is g1, and the orthogonal is g2
-    rotations = get_generate_const_rotations(
-        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
-    g1srot = g1sub * np.cos(-2. * rotations) - g2sub * np.sin(-2. * rotations)
-    g2srot = g1sub * np.sin(-2. * rotations) + g2sub * np.cos(-2. * rotations)
-    # Load the truth
-    _, g1truth, g2truth = get_generate_const_truth(
-        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
-    # Rotate the truth in the same sense, then use the g3metrics.fitline routine to
-    # perform simple linear regression
-    g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
-    g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
-    Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx = g3metrics.metricQZ1_const_shear(
-        g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
-    Q_c *= normalization
+    try: # Put this in a try except block to handle funky submissions better
+        rotations = get_generate_const_rotations(
+            experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
+        g1srot = g1sub * np.cos(-2. * rotations) - g2sub * np.sin(-2. * rotations)
+        g2srot = g1sub * np.sin(-2. * rotations) + g2sub * np.cos(-2. * rotations)
+        # Load the truth
+        _, g1truth, g2truth = get_generate_const_truth(
+             experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
+        # Rotate the truth in the same sense, then use the g3metrics.fitline routine to
+        # perform simple linear regression
+        g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
+        g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
+        Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx = g3metrics.metricQZ1_const_shear(
+            g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
+        Q_c *= normalization
+    except exception as err:
+        # Something went wrong... We'll handle this silently setting all outputs to zero, but warn
+        # the user via any supplied logger
+        Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx = 0, 0, 0, 0, 0, 0, 0, 0, 0
+        if logger is not None:
+            logger.warn(err.message)
+
     return Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx
 
+
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=8.41e-5:
+               logger=None, normalization=8.408e-5:
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -625,12 +634,16 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     data = np.loadtxt(submission_file)
     field, theta, map_E, _, _, _ = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
-    try:
+    try: # Put this in a try except block to handle funky submissions better
+        np.testing.assert_array_equal(
+            data[:, 0].astype(int), field, err_msg="User field array does not match truth.")
         np.testing.assert_array_almost_equal(
-            data[:, 1], theta, decimal=5, err_msg="User theta array does not match desired.")
-    # The definition of Q_v is so simple there is no need to use the g3metrics version
-    Q_v = normalization / np.mean(np.abs(data - map_E))
-    return
- 
+            data[:, 1], theta, decimal=5, err_msg="User theta array does not match truth.")
+        # The definition of Q_v is so simple there is no need to use the g3metrics version
+        Q_v = normalization / np.mean(np.abs(data - map_E))
+    except exception as err:
+        Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
+        if logger is not None:
+            logger.warn(err.message) # ...But let's warn if there's a logger!
 
-
+    return Q_v
