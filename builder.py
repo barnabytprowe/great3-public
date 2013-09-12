@@ -315,12 +315,18 @@ class SimBuilder(object):
             # (not subfield).  We also have to write x, y entries that are used to place the objects
             # on an image grid, the parameters of which are to be defined here.  Finally, let's
             # define a DistDeviate to use to draw random values of S/N.  I decided on the function
-            # to use via the super-duper-scientific method of reading points off of Chihway's
-            # dN/dmag plot for the range of magnitudes where that function is roughly linear on a 
-            # log-log plot (i.e., excluding the bits where it's not linear since stars are often 
-            # saturated and not used for PSF estimation), then converting dN/dmag to dN/d(S/N) by 
-            # assuming that we have a constant sky level so only the star fluxes change, and that 
-            # S/N(mag=25)=25.
+            # to use via the super-duper-scientific method of reading points off of Chihway's second
+            # dN/dmag plot in
+            # https://github.com/rmandelb/great3-private/issues/2#issuecomment-20482730 for the
+            # range of magnitudes where that function is roughly linear (i.e., excluding the bits
+            # where it's not linear since stars are often saturated and not used for PSF
+            # estimation).  On this plot, dN/dmag ~ 1000 (mag - 18).  To get dN/d(S/N), I used
+            # dN/d(S/N) ~ dN/dmag dmag/d(S/N),
+            # plus the fact that at fixed sky level, we can say
+            # mag = -2.5 log10(S/N) + A.
+            # I assumed S/N(mag=25)=25, so A=28.5.  Putting this together, we have
+            # dN/d(S/N) ~ (mag - 18) / S/N
+            #           ~ (-2.5 log10(S/N) + 10.5) / S/N.
             dist_deviate = galsim.DistDeviate(
                 rng,
                 function = lambda x : (-2.5*numpy.log10(x)+10.5)/x, x_min=25., x_max=400.)
