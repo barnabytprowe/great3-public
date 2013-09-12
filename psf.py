@@ -711,11 +711,11 @@ class VariablePSFBuilder(PSFBuilder):
         self.atmos_ps_dir = atmos_ps_dir
 
         if self.obs_type == "space":
-            self.n_tiles = 400 # 20 x 20 tiles, each 0.5 x 0.5 degrees
+            self.n_tile_linear = 20 # 20 x 20 tiles, each 0.5 x 0.5 degrees
         else:
-            self.n_tiles = 25 # 5 x 5 tiles, each 2 x 2 degrees
+            self.n_tile_linear = 5 # 5 x 5 tiles, each 2 x 2 degrees
+        self.n_tiles = self.n_tile_linear**2
         # Define coordinates for tiles, in degrees, without any subfield offset
-        self.n_tile_linear = int(np.sqrt(self.n_tiles))
         self.tile_size_deg = constants.image_size_deg / self.n_tile_linear
         self.tile_x_min = []
         self.tile_y_min = []
