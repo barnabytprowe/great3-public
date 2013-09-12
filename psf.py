@@ -941,13 +941,14 @@ class VariablePSFBuilder(PSFBuilder):
             for i_tile in range(self.n_tiles):
                 if self.obs_type == "ground":
                     new_model = \
+                        # Note: strut information is not needed, given that we don't actually make
+                        # the PSFs, we just get the level of aberrations.
                         ground_optical_psf.OpticalPSFModel(
                             position_list_filename = \
                             '../psfs/ground_optical_psf_zernike_coefficients_41x41/ZEMAXInput.dat',
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
-                            nstruts = self.n_struts[self.obs_type],
                             pad_factor = self.pad_factor,
                             dz = psf_parameters["dz"][i_tile],
                             dx = psf_parameters["x_decenter"][i_tile],
@@ -956,13 +957,14 @@ class VariablePSFBuilder(PSFBuilder):
                             ty = psf_parameters["y_tilt"][i_tile])
                 else:
                     new_model = \
+                        # Note: strut information is not needed, given that we don't actually make
+                        # the PSFs, we just get the level of aberrations.
                         space_optical_psf.OpticalPSFModel(
                             filename = \
                             '../psfs/afta_wfirst_example_psf_exaggerated.fields_and_coefs.fits',
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
-                            nstruts = self.n_struts[self.obs_type],
                             pad_factor = self.pad_factor,
                             rms = self.space_rms_additional_aber,
                             seed = int(psf_parameters["additional_aber_seed"][i_tile]))
