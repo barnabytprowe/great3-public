@@ -98,136 +98,6 @@ class PSFBuilder(object):
         """
         raise NotImplementedError("PSFBuilder is abstract.")
 
-class PlaceholderFixedGroundPSFBuilder(PSFBuilder):
-    """Placeholder PSFBuilder for ground-based observations; just makes a Kolmogorov with a
-    per-subfield and per-epoch FWHM drawn randomly from a uniform distribution.
-    """
-
-    min_fwhm = 0.6
-    max_fwhm = 1.2
-
-    def __init__(self, obs_type, multiepoch, shear_type):
-        self.obs_type = obs_type
-        self.multiepoch = multiepoch
-        self.shear_type = shear_type
-
-    def generateFieldParameters(self, rng, field_index):
-        uniform = galsim.UniformDeviate(rng)
-        if self.multiepoch:
-            n_epochs = constants.n_epochs
-        else:
-            n_epochs = 1
-        n_subfields = constants.n_subfields_per_field[self.shear_type][False]
-
-        fwhm = np.zeros((n_subfields, n_epochs))
-        for i_subfield in range(n_subfields):
-            for i_epoch in range(n_epochs):
-                fwhm[i_subfield, i_epoch] = uniform()*(self.max_fwhm - self.min_fwhm) \
-                    + self.min_fwhm
-        return dict(schema=[("psf_fwhm", float)], fwhm=fwhm)
-
-    def generateEpochParameters(self, rng, subfield_index, epoch_index, field_parameters):
-        # At the field level we already pre-determined the results for the different epochs,
-        # so just return the result for this epoch.  i.e., field_parameters is a list or array
-        # that can be indexed by epoch_index.  Note: we will soon implement spatial offsets between
-        # the subfields in a field, so once that is done, the results will also depend on
-        # subfield_index.
-        this_subfield_index = \
-            subfield_index % constants.n_subfields_per_field[self.shear_type][False]
-        return dict(fwhm=field_parameters["fwhm"][this_subfield_index, epoch_index], \
-                        schema=field_parameters["schema"])
-
-    def generateCatalog(self, rng, catalog, parameters, offsets, normalized):
-        # no catalog parameters, so nothing to do here
-        for record in catalog:
-            record["psf_fwhm"] = parameters["fwhm"]
-
-    def makeConfigDict(self):
-        d = {
-            'type' : 'Kolmogorov',
-            'fwhm' : { 'type' : 'Catalog', 'col' : 'psf_fwhm' }
-        }
-        return d
-
-    def makeGalSimObject(self, record, parameters):
-        # Size is specified in arcsec.
-        fwhm = record["psf_fwhm"]
-        return galsim.Kolmogorov(fwhm=fwhm)
-
-class PlaceholderVariableGroundPSFBuilder(PlaceholderFixedGroundPSFBuilder):
-    """Placeholder PSFBuilder for variable_psf ground-based observations; just
-    applies a linearly-varying ellipticity to a Kolmogorov.
-
-    The ellipticity variation is completely artificial, and is just enough
-    to test the bookkeeping: e1 increases linearly with x, and e2 increases
-    linearly with y, using a random location in the field as circular.
-    """
-
-    max_e = 0.2  # maximum possible per-component ellipticity
-
-    # Not actually needed now, but eventually probably yes
-    def __init__(self, obs_type, multiepoch, shear_type):
-        self.obs_type = obs_type
-        self.multiepoch = multiepoch
-        self.shear_type = shear_type
-
-    def generateFieldParameters(self, rng, field_index):
-        p = PlaceholderFixedGroundPSFBuilder.generateFieldParameters(self, rng, field_index)
-        if self.multiepoch:
-            n_epochs = constants.n_epochs
-        else:
-            n_epochs = 1
-        e_slope_x = self.max_e / (constants.ncols * constants.xsize[self.obs_type][self.multiepoch])
-        e_slope_y = self.max_e / (constants.nrows * constants.ysize[self.obs_type][self.multiepoch])
-        dict_list = []
-        for i_epoch in range(n_epochs):
-            center_x = rng() * constants.ncols * constants.xsize[self.obs_type][self.multiepoch]
-            center_y = rng() * constants.nrows * constants.ysize[self.obs_type][self.multiepoch]
-            this_dict = dict(schema=p["schema"], fwhm=p["fwhm"])
-            this_dict["center_x"] = center_x
-            this_dict["center_y"] = center_y
-            this_dict["e_slope_x"] = e_slope_x
-            this_dict["e_slope_y"] = e_slope_y
-            # Note: does not include psf_fwhm only because it ends up calling the place-holder for
-            # constant PSF which adds that entry to the schema.
-            if i_epoch == 0:
-                this_dict["schema"] += [("psf_e1", float), ("psf_e2", float)]
-            dict_list.append(this_dict)
-        return dict_list
-
-    def generateEpochParameters(self, rng, subfield_index, epoch_index, field_parameters):
-        # At the field level we already pre-determined the results for the different epochs,
-        # so just return the result for this epoch.  i.e., field_parameters is a list or array
-        # that can be indexed by epoch.  Note: we will soon implement spatial offsets between
-        # the subfields in a field, so once that is done, the results will also depend on
-        # subfield_index.
-        return field_parameters[epoch_index]
-
-    def generateCatalog(self, rng, catalog, parameters, offsets, normalized):
-        for record in catalog:
-            # convert offset value to pixels on our image
-            x_off = float(offsets[0]) * constants.xsize[self.obs_type][self.multiepoch]
-            y_off = float(offsets[1]) * constants.ysize[self.obs_type][self.multiepoch]
-            record["psf_e1"] = \
-                (record["x"] + x_off - parameters["center_x"]) * parameters["e_slope_x"]
-            record["psf_e2"] = \
-                (record["y"] + y_off - parameters["center_y"]) * parameters["e_slope_y"]
-            record["psf_fwhm"] = parameters["fwhm"]
-
-    def makeConfigDict(self):
-        d = PlaceholderFixedGroundPSFBuilder.makeConfigDict(self)
-        d['ellip'] = {
-            'type' : 'E1E2', 
-            'e1' : { 'type' : 'Catalog', 'col' : 'psf_e1' },
-            'e2' : { 'type' : 'Catalog', 'col' : 'psf_e2' }
-        }
-        return d
-
-    def makeGalSimObject(self, record, parameters):
-        obj = PlaceholderFixedGroundPSFBuilder.makeGalSimObject(self, record, parameters)
-        obj.applyShear(e1=record["psf_e1"], e2=record["psf_e2"])
-        return obj
-
 # A quick helper function that sets any Catalog entries in a dict to use index=0
 def UseZeroIndex(d):
     if 'type' in d and d['type'] == 'Catalog':
@@ -236,8 +106,7 @@ def UseZeroIndex(d):
     else:
         # Else recurse onto all sub-dicts.
         for key in d:
-            if isinstance(key,dict): UseZeroIndex(key)
-            elif isinstance(d[key],dict): UseZeroIndex(d[key])
+            if isinstance(d[key],dict): UseZeroIndex(d[key])
             elif isinstance(d[key],list): UseZeroIndex(d[key])
 
 
@@ -388,7 +257,7 @@ class ConstPSFBuilder(PSFBuilder):
             n_fields = (constants.n_subfields - constants.n_deep_subfields) / n_subfields_per_field
             self.dpercentile = (1./float(n_fields))
             self.force_distribution = True
-            self.used_percentile = np.zeros(n_fields)
+            self.used_percentile = np.zeros(n_fields).astype(bool)
         else:
             self.force_distribution = False
 
@@ -433,7 +302,7 @@ class ConstPSFBuilder(PSFBuilder):
         # Get numbers for various parameters that will be used to make an OpticalPSF:
         # * We choose a range of lam_over_diam motivated by upcoming telescopes and stored within
         #   the class.
-        # * We make draw random aberrations according to some overall RMS for the total over all
+        # * We draw random aberrations according to some overall RMS for the total over all
         #   aberrations, assuming they are independent.
         # * We choose a reasonable range of obscuration, using min/max defined in class.
         # * We choose a reasonable range of struts, using the list of options defined in class.
@@ -461,10 +330,7 @@ class ConstPSFBuilder(PSFBuilder):
             n_struts[i_epoch] = tmp_n_struts
 
             if tmp_n_struts > 0:
-                min_strut_angle = -0.5*360./tmp_n_struts
-                max_strut_angle = 0.5*360./tmp_n_struts
-                strut_angle[i_epoch] = \
-                    uniform_deviate()*(max_strut_angle-min_strut_angle) + min_strut_angle
+                strut_angle[i_epoch] = 360.*uniform_deviate()
             else:
                 strut_angle[i_epoch] = 0.
 
@@ -491,12 +357,11 @@ class ConstPSFBuilder(PSFBuilder):
                         # Note, the code below will only work for single epoch sims, but we should
                         # have taken care of that logically, above, when setting the value of
                         # self.force_distribution.
-                        test_val = 1
-                        while test_val == 1:
+                        while True:
                             test_rand = uniform_deviate()
                             test_bin = int(test_rand/self.dpercentile)
-                            test_val = self.used_percentile[test_bin]
-                        self.used_percentile[test_bin] = 1
+                            if not self.used_percentile[test_bin]: break
+                        self.used_percentile[test_bin] = True
                         atmos_psf_fwhm[i_epoch] = dist_deviate.val(test_rand)
                     else:
                         test_rand = 0.4 + 0.2 * uniform_deviate()
@@ -843,11 +708,11 @@ class VariablePSFBuilder(PSFBuilder):
         self.atmos_ps_dir = atmos_ps_dir
 
         if self.obs_type == "space":
-            self.n_tiles = 400 # 20 x 20 tiles, each 0.5 x 0.5 degrees
+            self.n_tile_linear = 20 # 20 x 20 tiles, each 0.5 x 0.5 degrees
         else:
-            self.n_tiles = 25 # 5 x 5 tiles, each 2 x 2 degrees
+            self.n_tile_linear = 5 # 5 x 5 tiles, each 2 x 2 degrees
+        self.n_tiles = self.n_tile_linear**2
         # Define coordinates for tiles, in degrees, without any subfield offset
-        self.n_tile_linear = int(np.sqrt(self.n_tiles))
         self.tile_size_deg = constants.image_size_deg / self.n_tile_linear
         self.tile_x_min = []
         self.tile_y_min = []
@@ -1076,13 +941,14 @@ class VariablePSFBuilder(PSFBuilder):
             for i_tile in range(self.n_tiles):
                 if self.obs_type == "ground":
                     new_model = \
+                        # Note: strut information is not needed, given that we don't actually make
+                        # the PSFs, we just get the level of aberrations.
                         ground_optical_psf.OpticalPSFModel(
                             position_list_filename = \
                             '../psfs/ground_optical_psf_zernike_coefficients_41x41/ZEMAXInput.dat',
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
-                            nstruts = self.n_struts[self.obs_type],
                             pad_factor = self.pad_factor,
                             dz = psf_parameters["dz"][i_tile],
                             dx = psf_parameters["x_decenter"][i_tile],
@@ -1091,13 +957,14 @@ class VariablePSFBuilder(PSFBuilder):
                             ty = psf_parameters["y_tilt"][i_tile])
                 else:
                     new_model = \
+                        # Note: strut information is not needed, given that we don't actually make
+                        # the PSFs, we just get the level of aberrations.
                         space_optical_psf.OpticalPSFModel(
                             filename = \
                             '../psfs/afta_wfirst_example_psf_exaggerated.fields_and_coefs.fits',
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
-                            nstruts = self.n_struts[self.obs_type],
                             pad_factor = self.pad_factor,
                             rms = self.space_rms_additional_aber,
                             seed = int(psf_parameters["additional_aber_seed"][i_tile]))
@@ -1123,9 +990,7 @@ class VariablePSFBuilder(PSFBuilder):
                     log_theta_0 = np.log10(atmos_psf_pk_theta0[i_tile])
                     theta_0_index = \
                         int(round((log_theta_0 - self.log_min_theta_0)/self.dlog_theta_0))
-                    theta_0_str = str(int(self.theta_0_grid[theta_0_index]))
-                    # fudge something because of rounding error, sigh
-                    if theta_0_str == "485": theta_0_str = "486"
+                    theta_0_str = str(int(round(self.theta_0_grid[theta_0_index])))
                     infile = os.path.join(self.atmos_ps_dir, 'Pk'+theta_0_str+'.dat')
                     dat = np.loadtxt(infile).transpose()
                     # get k, P(k) in 1/arcsec, arcsec^2.  The latter should be used for both the E
@@ -1139,7 +1004,7 @@ class VariablePSFBuilder(PSFBuilder):
                     # We just have an additional parameter, tile_fac, that accounts for the fact
                     # that each tile is some fraction of the overall FOV.
                     tile_fac = 1. / self.n_tile_linear
-                    n_grid = int(constants.subfield_grid_subsampling * constants.nrows * tile_fac)
+                    n_grid = int(ceil(constants.subfield_grid_subsampling * constants.nrows * tile_fac))
                     grid_spacing = self.tile_size_deg / n_grid
                     grid_center_zerod = 0.5 * self.tile_size_deg
                     ps.buildGrid(grid_spacing = grid_spacing,
