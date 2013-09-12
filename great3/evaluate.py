@@ -489,6 +489,18 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                                 logger=None):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
 
+    If the map_E truth file has already been built for this variable shear branch, loads and returns
+    the saved copies.
+
+    If the array of truth values has not been built, or is older than the first entry in the set of
+    galaxy_catalog files, the arrays are built first, saved to file, then returned.
+
+    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy',
+                          'variable_psf', 'multiepoch', 'full'
+    @param obs_type       Observation type for this branch, one of 'ground' or 'space'
+    @param storage_dir    Directory from/into which to load/store rotation files
+    @param truth_dir      Root directory in which the truth information for the challenge is stored
+    @param logger         Python logging.Logger instance, for message logging
     @return field, theta, map_E, map_B, maperr
     """
     # Build basic x and y grids to use for coord positions: note we do this here rather than as
