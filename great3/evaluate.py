@@ -377,8 +377,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
             np.savetxt(fout, np.array((np.arange(NSUBFIELDS), rotations)).T, fmt=" %4d %+.18f")
     return rotations
 
-def Q_const(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-            logger=None):
+def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
+               logger=None):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -600,4 +600,28 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                 fout, np.array((field, theta, map_E, map_B, maperr)).T,
                 fmt=" %2d %.18e %.18e %.18e %.18e")
     # Then return
-    return field, theta, map_E, map_B, maperr 
+    return field, theta, map_E, map_B, maperr
+
+def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
+               logger=None):
+    """Calculate the Q_v for a variable shear branch submission.
+
+    @param submission_file  File containing the user submission.
+    @param experiment       Experiment for this branch, one of 'control', 'real_galaxy',
+                            'variable_psf', 'multiepoch', 'full'
+    @param obs_type         Observation type for this branch, one of 'ground' or 'space'
+    @param storage_dir      Directory from/into which to load/store rotation files
+    @param truth_dir        Root directory in which the truth information for the challenge is
+                            stored
+    @return The metric Q_var
+    """
+    if not os.path.isfile(submission_file):
+        raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
+    # Load the submission and label the slices we're interested in
+    if logger is not None:
+        logger.info("Calculating Q_v metric for "+submission_file)
+    data = np.loadtxt(submission_file)
+    return
+ 
+
+
