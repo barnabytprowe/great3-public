@@ -23,8 +23,7 @@ def makeBuilder(real_galaxy, obs_type, shear_type, multiepoch, gal_dir):
     @param[in] gal_dir     Directory with galaxy catalog information.
     """
     if real_galaxy:
-        return PlaceholderGalaxyBuilder(radius=0.5, flux=50.0, obs_type=obs_type,
-                                        multiepoch=multiepoch)
+        raise NotImplementedError("No real galaxies yet!")
     else:
         return COSMOSGalaxyBuilder(real_galaxy=real_galaxy, obs_type=obs_type,
                                    shear_type=shear_type, multiepoch=multiepoch,
@@ -106,63 +105,6 @@ class GalaxyBuilder(object):
         section of a config file.
         """
         raise NotImplementedError("GalaxyBuilder is abstract.")
-
-class PlaceholderGalaxyBuilder(GalaxyBuilder):
-    """A placeholder GalaxyBuilder subclass we can use to test the rest of
-    the simulation framework before the final GalaxyBuilders are implemented.
-
-    The placeholder currently creates exponential-profile galaxies with a
-    fixed radius and flux, and e1,e2 drawn from a truncated Gaussian distribution.
-    """
-
-    max_e = 0.7
-    sigma_e = 0.3
-
-    def __init__(self, radius, flux, obs_type, multiepoch):
-        """Construct with the given half-light radius (in arcseconds) and flux.
-        """
-        self.radius = radius
-        self.flux = flux
-        self.obs_type = obs_type
-        self.multiepoch = multiepoch
-
-    def generateSubfieldParameters(self, rng, subfield_index):
-        if self.multiepoch:
-            n_epochs = constants.n_epochs
-        else:
-            n_epochs = 1
-        return dict(radius=self.radius, flux=self.flux/n_epochs,
-                    schema=[("galaxy_e1", float), ("galaxy_e2", float)])
-
-    def generateCatalog(self, rng, catalog, parameters, variance, noise_mult=None, seeing=None):
-        gaussian = galsim.GaussianDeviate(rng, sigma=self.sigma_e)
-        def draw():
-            v = gaussian()
-            while v > self.max_e or v < -self.max_e:
-                v = gaussian()
-            return v
-        for record in catalog:
-            record["galaxy_e1"] = draw()
-            record["galaxy_e2"] = draw()
-
-    def makeConfigDict(self):
-        d = {
-            'type' : 'Exponential',
-            'half_light_radius' : { 'type' : 'Catalog', 'col' : 'radius' },
-            'flux' : { 'type' : 'Catalog', 'col' : 'flux' },
-            'ellip' : { 'type' : 'E1E2', 
-                        'e1' : { 'type' : 'Catalog', 'col' : 'galaxy_e1' },
-                        'e2' : { 'type' : 'Catalog', 'col' : 'galaxy_e2' }
-                      }
-        }
-        return d
-
-    def makeGalSimObject(self, record, parameters, xsize, ysize, rng):
-        # Specify sizes in arcsec.
-        radius = parameters['radius']
-        obj = galsim.Exponential(half_light_radius=radius, flux=parameters['flux'])
-        obj.applyShear(e1=record['galaxy_e1'], e2=record['galaxy_e2'])
-        return obj, None
 
 def _gammafn(x):
     """The gamma function is present in python2.7's math module, but not 2.6.
