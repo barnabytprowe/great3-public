@@ -908,9 +908,7 @@ class SimBuilder(object):
                                                   "deep_galaxy_catalog-%(deep_subfield_index)03d")
             tar.add(outfile)
             # ... and also copy to text file that gets added
-            outfile_bits = outfile.split('.')
-            outfile_bits.remove('fits')
-            outfile_no_ext = '.'.join(outfile_bits)
+            outfile_no_ext = os.path.splitext(outfile)[0]
             great3sims.mapper.fitsToTextCatalog(outfile_no_ext)
             tar.add(outfile_no_ext + '.txt')
 
@@ -937,9 +935,7 @@ class SimBuilder(object):
                     sub_mapper, 'star_catalog', tmp_dict, star_use_cols,
                     new_template="deep_star_catalog-%(deep_subfield_index)03d")
             # ... and also copy to text file that gets added 
-            outfile_bits = outfile.split('.')
-            outfile_bits.remove('fits')
-            outfile_no_ext = '.'.join(outfile_bits)
+            outfile_no_ext = os.path.splitext(outfile)[0]
             great3sims.mapper.fitsToTextCatalog(outfile_no_ext)
             tar.add(outfile)
             tar.add(outfile_no_ext+'.txt')
