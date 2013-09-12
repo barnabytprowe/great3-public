@@ -964,9 +964,9 @@ class VariablePSFBuilder(PSFBuilder):
             tmp_list = []
             for i_tile in range(self.n_tiles):
                 if self.obs_type == "ground":
+                    # Note: strut information is not needed, given that we don't actually make
+                    # the PSFs, we just get the level of aberrations.
                     new_model = \
-                        # Note: strut information is not needed, given that we don't actually make
-                        # the PSFs, we just get the level of aberrations.
                         ground_optical_psf.OpticalPSFModel(
                             position_list_filename = \
                             '../psfs/ground_optical_psf_zernike_coefficients_41x41/ZEMAXInput.dat',
@@ -980,9 +980,9 @@ class VariablePSFBuilder(PSFBuilder):
                             tx = psf_parameters["x_tilt"][i_tile],
                             ty = psf_parameters["y_tilt"][i_tile])
                 else:
+                    # Note: strut information is not needed, given that we don't actually make
+                    # the PSFs, we just get the level of aberrations.
                     new_model = \
-                        # Note: strut information is not needed, given that we don't actually make
-                        # the PSFs, we just get the level of aberrations.
                         space_optical_psf.OpticalPSFModel(
                             filename = \
                             '../psfs/afta_wfirst_example_psf_exaggerated.fields_and_coefs.fits',
