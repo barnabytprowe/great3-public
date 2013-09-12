@@ -377,45 +377,6 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
             np.savetxt(fout, np.array((np.arange(NSUBFIELDS), rotations)).T, fmt=" %4d %+.18f")
     return rotations
 
-def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None):
-    """Calculate the Q_c for a constant shear branch submission.
-
-    @param submission_file  File containing the user submission.
-    @param experiment       Experiment for this branch, one of 'control', 'real_galaxy',
-                            'variable_psf', 'multiepoch', 'full'
-    @param obs_type         Observation type for this branch, one of 'ground' or 'space'
-    @param storage_dir      Directory from/into which to load/store rotation files
-    @param truth_dir        Root directory in which the truth information for the challenge is
-                            stored
-    @return The metric Q_const, & best fitting c+, m+, cx, mx, sigc+, sigcm+, sigcx, sigmx
-    """
-    if not os.path.isfile(submission_file):
-        raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
-    # Load the submission and label the slices we're interested in
-    if logger is not None:
-        logger.info("Calculating Q_c metric for "+submission_file)
-    data = np.loadtxt(submission_file)
-    subfield = data[:, 0]  
-    g1sub = data[:, 1]
-    g2sub = data[:, 2]
-    # Load up the rotations, then rotate g1 & g2 in the correct sense.
-    # NOTE THE MINUS SIGNS!  This is because we need to rotated the coordinates back into a frame
-    # in which the primary direction of the PSF is g1, and the orthogonal is g2
-    rotations = get_generate_const_rotations(
-        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
-    g1srot = g1sub * np.cos(-2. * rotations) - g2sub * np.sin(-2. * rotations)
-    g2srot = g1sub * np.sin(-2. * rotations) + g2sub * np.cos(-2. * rotations)
-    # Load the truth
-    _, g1truth, g2truth = get_generate_const_truth(
-        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
-    # Rotate the truth in the same sense, then use the g3metrics.fitline routine to
-    # perform simple linear regression
-    g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
-    g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
-    Q_c = g3metrics.metricQZ1_const_shear(g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
-    return Q_c
-
 def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
                                   truth_dir=TRUTH_DIR, logger=None):
     """Get or generate arrays of subfield_index, offset_deg_x, offset_deg_y, each of length
@@ -601,6 +562,45 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                 fmt=" %2d %.18e %.18e %.18e %.18e")
     # Then return
     return field, theta, map_E, map_B, maperr
+
+def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
+               logger=None):
+    """Calculate the Q_c for a constant shear branch submission.
+
+    @param submission_file  File containing the user submission.
+    @param experiment       Experiment for this branch, one of 'control', 'real_galaxy',
+                            'variable_psf', 'multiepoch', 'full'
+    @param obs_type         Observation type for this branch, one of 'ground' or 'space'
+    @param storage_dir      Directory from/into which to load/store rotation files
+    @param truth_dir        Root directory in which the truth information for the challenge is
+                            stored
+    @return The metric Q_const, & best fitting c+, m+, cx, mx, sigc+, sigcm+, sigcx, sigmx
+    """
+    if not os.path.isfile(submission_file):
+        raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
+    # Load the submission and label the slices we're interested in
+    if logger is not None:
+        logger.info("Calculating Q_c metric for "+submission_file)
+    data = np.loadtxt(submission_file)
+    subfield = data[:, 0]  
+    g1sub = data[:, 1]
+    g2sub = data[:, 2]
+    # Load up the rotations, then rotate g1 & g2 in the correct sense.
+    # NOTE THE MINUS SIGNS!  This is because we need to rotated the coordinates back into a frame
+    # in which the primary direction of the PSF is g1, and the orthogonal is g2
+    rotations = get_generate_const_rotations(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
+    g1srot = g1sub * np.cos(-2. * rotations) - g2sub * np.sin(-2. * rotations)
+    g2srot = g1sub * np.sin(-2. * rotations) + g2sub * np.cos(-2. * rotations)
+    # Load the truth
+    _, g1truth, g2truth = get_generate_const_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
+    # Rotate the truth in the same sense, then use the g3metrics.fitline routine to
+    # perform simple linear regression
+    g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
+    g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
+    Q_c = g3metrics.metricQZ1_const_shear(g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
+    return Q_c
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
                logger=None):
