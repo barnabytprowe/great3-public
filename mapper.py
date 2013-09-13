@@ -142,6 +142,8 @@ class Mapper(object):
             ("epoch_catalog-%(subfield_index)03d-%(epoch_index)1d", readCatalog, writeCatalog),
         "star_catalog": \
             ("star_catalog-%(subfield_index)03d-%(epoch_index)1d", readCatalog, writeCatalog),
+        "star_test_catalog": \
+            ("star_test_catalog", readCatalog, writeCatalog),
         "image": ("image-%(subfield_index)03d-%(epoch_index)1d.fits",
                              galsim.fits.read, galsim.fits.write),
         "starfield_image" : ("starfield_image-%(subfield_index)03d-%(epoch_index)1d.fits",

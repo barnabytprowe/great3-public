@@ -150,6 +150,7 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
                 builder.writeSubfieldCatalog(subfield_index)
                 for epoch_index in xrange(builder.n_epochs):
                     builder.writeEpochCatalog(subfield_index, epoch_index)
+            builder.writeStarTestCatalog(subfield_min, subfield_max)
             sys.stderr.write("\n")
 
     if 'config' in steps:

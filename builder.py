@@ -420,6 +420,44 @@ class SimBuilder(object):
                                          epoch_parameters["epoch_offset"], normalized=False)
         self.mapper.write(star_catalog, "star_catalog", epoch_parameters)
 
+    def writeStarTestCatalog(self, subfield_min, subfield_max):
+        """Given a range of subfield and epoch indices, write a test catalog for generating star
+        images to check for oddities."""
+        n_subfields = subfield_max + 1 - subfield_min
+
+        # First check what type of experiment this is.  It will affect how the catalog is built.
+        if not self.variable_psf:
+            # Define a final catalog with some additional information about subfield / epoch.  That
+            # way if we find a problematic star image in the data cube, we know where it came from.
+            epoch_parameters = self.mapper.read('epoch_parameters', subfield_index=subfield_min,
+                                                epoch_index=0)
+            test_schema = epoch_parameters["star_schema"]
+            test_schema.append(("subfield", int))
+            test_schema.append(("epoch", int))
+            test_catalog = numpy.zeros(n_subfields * self.n_epochs, dtype=numpy.dtype(test_schema))
+
+            # Now loop over subfields and epochs
+            test_ind = 0
+            for subfield_index in xrange(subfield_min, subfield_max+1):
+                for epoch_index in xrange(self.n_epochs):
+                    # Read in star catalog
+                    epoch_parameters = self.mapper.read('epoch_parameters',
+                                                        subfield_index=subfield_index,
+                                                        epoch_index=epoch_index)
+                    star_catalog = self.mapper.read("star_catalog", epoch_parameters)
+                    # Transfer first entry (non-offset one) to test_catalog.  We cannot just do
+                    #   test_catalog[test_ind] = star_catalog[0]
+                    # because the schema are not identical.  Instead we loop over the schema entries
+                    # for star_catalog, and transfer the information for each one over to
+                    # test_catalog.
+                    for schema_entry in epoch_parameters["star_schema"]:
+                        test_catalog[schema_entry[0]][test_ind] = star_catalog[schema_entry[0]][0]
+                    test_catalog["subfield"][test_ind] = subfield_index
+                    test_catalog["epoch"][test_ind] = epoch_index
+                    test_ind += 1
+            # Write to file.
+            self.mapper.write(test_catalog, "star_test_catalog", epoch_parameters)
+        # TODO: something for variable PSF case.
 
     def writeConfig(self, experiment, obs_type, shear_type, subfield_min, subfield_max):
 
@@ -523,7 +561,6 @@ class SimBuilder(object):
 
         # Set up the file name for the yaml config file:
         experiment_letter = experiment[0]
-        if experiment_letter == 'r': experiment_letter = experiment[5]
         obs_letter = obs_type[0]
         shear_letter = shear_type[0]
 
@@ -1040,6 +1077,17 @@ class SimBuilder(object):
         saved_path = os.getcwd()
         os.chdir(self.truth_dir)
         sub_mapper = great3sims.mapper.Mapper('.', self.experiment, self.obs_type, self.shear_type)
+
+        # First, we copy over the star test catalog and (eventually) images.
+        if not self.variable_psf:
+            # Make the old, new target filenames for the star test catalog:
+            template, reader, writer = root_rel_mapper.mappings['star_test_catalog']
+            infile = os.path.join(root_rel_mapper.full_dir, template % {}) + '.fits'
+            outfile = os.path.join(sub_mapper.full_dir, template % {}) + '.fits'
+            shutil.copy2(infile, outfile)
+            tar.add(outfile)
+
+        # Now do all the per-subfield stuff.
         for subfield_index in xrange(subfield_min, subfield_max+1):
             tmp_dict = {"subfield_index" : subfield_index}
 
