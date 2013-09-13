@@ -479,7 +479,7 @@ class ConstPSFBuilder(PSFBuilder):
                 record["opt_psf_charge_sigma"] = psf_parameters["charge_sigma"]
                 record["opt_psf_charge_e1"] = psf_parameters["charge_e1"]
 
-    def makeConfigDict(self):
+    def makeConfigDict(self, use_zero_index=True):
         d = {
             'type' : 'OpticalPSF',
             'lam_over_diam' : { 'type' : 'Catalog', 'col' : 'opt_psf_lam_over_diam' },
@@ -544,8 +544,11 @@ class ConstPSFBuilder(PSFBuilder):
                 ]
             } 
 
-        # The parameters here are constant, so set index=0 for all Catalog entries:
-        UseZeroIndex(d)
+        # The parameters here are constant, so set index=0 for all Catalog entries.
+        # However, when we are building the star_test version, we don't want to zero out the 
+        # index, since in that case, the index refers to which field, instead of which star 
+        # in one field.  Hence in that case, we use use_zero_index=False.
+        if use_zero_index: UseZeroIndex(d)
 
         return d
 
@@ -1170,7 +1173,7 @@ class VariablePSFBuilder(PSFBuilder):
             record["opt_psf_strut_angle"] = psf_parameters["strut_angle"]
             record["opt_psf_pad_factor"] = psf_parameters["pad_factor"]
 
-    def makeConfigDict(self):
+    def makeConfigDict(self, use_zero_index=False):
         d = {
             'type' : 'OpticalPSF',
             'lam_over_diam' : { 'type' : 'Catalog', 'col' : 'opt_psf_lam_over_diam' },

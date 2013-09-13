@@ -475,6 +475,10 @@ class SimBuilder(object):
             { 'type' : 'Sequence', 'nitems' : self.n_epochs } 
         ]
 
+        #
+        # (1) First make the config files that will create the PSF images.
+        #
+
         # The input field:
         d['input'] = {
             'catalog' : {
@@ -579,7 +583,11 @@ class SimBuilder(object):
         yaml.dump(d, f, indent=4, Dumper=Dumper)
         f.close()
 
-        # Now make the appropriate changes for the gal images:
+        # 
+        # (2) Make config files for the galaxy images
+        #
+
+        # Start with the above dict and make appropriate changes as necessary.
         if self.variable_psf:
             del d['psf']['signal_to_noise']
         else:
@@ -623,6 +631,54 @@ class SimBuilder(object):
         file_name = os.path.join(self.mapper.root,
                                  experiment_letter + obs_letter + shear_letter + '.yaml')
         print 'Write gal config dict to ',file_name
+
+        f = open(file_name,'w')
+        yaml.dump(d, f, indent=4, Dumper=Dumper)
+        f.close()
+
+        #
+        # (3) Finally, make a config file for the "StarTest" images
+        #
+
+        # Easiest to just start over here.
+        d = {}
+
+        # The input field:
+        d['input'] = {
+            'catalog' : {
+                'file_name' : 'star_test_catalog.fits',
+                'dir' : self.mapper.dir
+            },
+        }
+
+        # The output field:
+        d['output'] = {
+            'type' : 'DataCube',
+            'file_name' : 'star_test_images.fits',
+            'dir' : self.mapper.dir,
+            'nimages' : self.n_epochs*(subfield_max - subfield_min + 1),
+            'nproc' : self.nproc
+        }
+
+        # The image field:
+        d['image'] = {
+            # Make them 2x the normal size.
+            'xsize' : 2 * constants.xsize[self.obs_type][self.multiepoch],
+            'ysize' : 2 * constants.ysize[self.obs_type][self.multiepoch],
+            'pixel_scale' : constants.pixel_scale[self.obs_type][self.multiepoch],
+        }
+
+        # Delegate the basic 'psf' dict to psf_builder
+        d['psf'] = self.psf_builder.makeConfigDict(use_zero_index=False)
+
+        # Set up the file name for the yaml config file:
+        experiment_letter = experiment[0]
+        obs_letter = obs_type[0]
+        shear_letter = shear_type[0]
+
+        file_name = os.path.join(self.mapper.root,
+                                 experiment_letter + obs_letter + shear_letter + '_star_test.yaml')
+        print 'Write star test config dict to ',file_name
 
         f = open(file_name,'w')
         yaml.dump(d, f, indent=4, Dumper=Dumper)
