@@ -762,9 +762,9 @@ class SimBuilder(object):
         # For variable PSF, choose a random subset of the stars to measure.  We can just use the
         # first N in the catalog, since they correspond to completely random positions in the field.
         if self.variable_psf:
-            # Barney suggested using 1% of the stars.  Use np.ceil() to make sure that we don't end
+            # Barney suggested using 1% of the stars.  Use ceil() to make sure that we don't end
             # up with zero for test runs with few stars.
-            n_star_use = int(np.ceil(0.01*len(star_catalog)))
+            n_star_use = int(numpy.ceil(0.01*len(star_catalog)))
             sub_catalog = star_catalog[0:n_star_use]
             for record in sub_catalog:
                 bbox = galsim.BoundsI(
