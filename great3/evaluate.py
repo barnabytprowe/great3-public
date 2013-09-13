@@ -583,7 +583,7 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param just_q           Set `just_q = True` (default is `False) to only return Q_c rather than
                             the default behaviour of returning a tuple including best fitting c+,
                             m+, cx, mx, etc.
-    @return The metric Q_const, & best fitting c+, m+, cx, mx, sigc+, sigcm+, sigcx, sigmx
+    @return The metric Q_c, & optionally best fitting c+, m+, cx, mx, sigc+, sigcm+, sigcx, sigmx.
     """
     if not os.path.isfile(submission_file):
         raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
@@ -609,20 +609,20 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         # perform simple linear regression
         g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
         g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
-        Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx = g3metrics.metricQZ1_const_shear(
+        Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = g3metrics.metricQZ1_const_shear(
             g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
         Q_c *= normalization
     except exception as err:
         # Something went wrong... We'll handle this silently setting all outputs to zero, but warn
         # the user via any supplied logger
-        Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx = 0, 0, 0, 0, 0, 0, 0, 0, 0
+        Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = 0, 0, 0, 0, 0, 0, 0, 0, 0
         if logger is not None:
             logger.warn(err.message)
     # Then return
     if just_q:
         ret = Q_c
     else:
-        ret =  (Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx)
+        ret = (Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2)
     return ret
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
@@ -647,7 +647,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     if logger is not None:
         logger.info("Calculating Q_v metric for "+submission_file)
     data = np.loadtxt(submission_file)
-    field, theta, map_E, _, _, _ = get_generate_variable_truth(
+    field, theta, map_E, _, _ = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
         corr2_exec=corr2_exec, corr2_params=corr2_params)
     try: # Put this in a try except block to handle funky submissions better
