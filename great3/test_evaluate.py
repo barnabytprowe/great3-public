@@ -1,3 +1,10 @@
+"""@file test_evaluate.py
+
+This file started off as a simple testbed for the functions in the evaluate.py module, but has
+morphed into that plus a calculation of the appropriate normalization for variable shear branches
+given the new geometry. 
+"""
+
 import sys
 import os
 import logging
@@ -109,14 +116,14 @@ def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, nois
         np.savetxt(
             fout, np.array((field, theta, map_E, map_B, maperr)).T,
             fmt=" %2d %.18e %.18e %.18e %.18e")
-
+    # Job done, return
     return
 
 
 if __name__ == "__main__":
 
     experiment = 'control'
-    obs_type = 'ground'
+    obs_type = 'space'
 
     logger = logging.getLogger("test")
     logger.setLevel(logging.DEBUG)
@@ -153,7 +160,7 @@ if __name__ == "__main__":
 
     # Then try making a fake submission ourselves
     x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
-    result = make_variable_submission(x, y, g1true, g2true, 0., 2.e-4, 0.01, -0.01,
+    result = make_variable_submission(x, y, g1true, g2true, 5.e-3, 2.e-4, 0.01, -0.01,
         outfile="junk_test.asc")
     q_biased = evaluate.q_variable("junk_test.asc", experiment, obs_type)
     print "Q_v (from own biased submission simulator) = "+str(q_biased)
@@ -167,7 +174,8 @@ if __name__ == "__main__":
     for i in range(99):
     
         result = make_variable_submission(
-            x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID, outfile="junk_test.asc")
+            x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
+            outfile="junk_test.asc")
 
         q_v2 = evaluate.q_variable("junk_test.asc", experiment, obs_type)
         print "Q_v (from own fiducial submission simulator: "+str(i + 2)+"/100) = "+str(q_v2)
