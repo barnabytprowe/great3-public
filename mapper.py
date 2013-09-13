@@ -148,6 +148,7 @@ class Mapper(object):
                              galsim.fits.read, galsim.fits.write),
         "starfield_image" : ("starfield_image-%(subfield_index)03d-%(epoch_index)1d.fits",
                              galsim.fits.read, galsim.fits.write),
+        "star_test_images" : ("star_test_images", galsim.fits.readCube, galsim.fits.writeCube),
         "starshape_parameters" : ("starshape_parameters-%(subfield_index)03d-%(epoch_index)1d",
                                   readDict, writeDict)
     }

@@ -1145,9 +1145,14 @@ class SimBuilder(object):
         os.chdir(self.truth_dir)
         sub_mapper = great3sims.mapper.Mapper('.', self.experiment, self.obs_type, self.shear_type)
 
-        # First, we copy over the star test catalog and (eventually) images.
+        # First, we copy over the star test catalog and images.
         # Make the old, new target filenames for the star test catalog:
         template, reader, writer = root_rel_mapper.mappings['star_test_catalog']
+        infile = os.path.join(root_rel_mapper.full_dir, template % {}) + '.fits'
+        outfile = os.path.join(sub_mapper.full_dir, template % {}) + '.fits'
+        shutil.copy2(infile, outfile)
+        tar.add(outfile)
+        template, reader, writer = root_rel_mapper.mappings['star_test_images']
         infile = os.path.join(root_rel_mapper.full_dir, template % {}) + '.fits'
         outfile = os.path.join(sub_mapper.full_dir, template % {}) + '.fits'
         shutil.copy2(infile, outfile)
