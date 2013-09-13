@@ -7,7 +7,7 @@ path, module = os.path.split(__file__)
 sys.path.append(os.path.join(path, "..", "..", "metrics")) # Appends the great3-private/metrics
                                                            # folder to path
 import g3metrics
-sys.path.append("..", "..")
+sys.path.append(("..", ".."))
 import great3sims.mapper
 
 
@@ -16,7 +16,7 @@ def get_variable_gtrue(experiment, obs_type):
 
     @return x, y, g1, g2
     """
-    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable")
+    mapper = great3sims.mapper.Mapper(evaluate.TRUTH_DIR, experiment, obs_type, "variable")
     g1true = np.empty(
         (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS))
     g2true = np.empty(
@@ -26,20 +26,30 @@ def get_variable_gtrue(experiment, obs_type):
     yy = np.empty(
         (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS))
     # Load the offsets
-    subfield_indices, offset_deg_x, offset_deg_y = get_generate_variable_offsets(
+    subfield_indices, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
         experiment, obs_type, storage_dir=evaluate.STORAGE_DIR, truth_dir=evaluate.TRUTH_DIR,
         logger=logger)
+    # Build basic x and y grids to use for coord positions
+    xgrid_deg, ygrid_deg = np.meshgrid(
+        np.arange(0., evaluate.XMAX_GRID_DEG, evaluate.DX_GRID_DEG),
+        np.arange(0., evaluate.XMAX_GRID_DEG, evaluate.DX_GRID_DEG))
+    xgrid_deg = xgrid_deg.flatten() # Flatten these - the default C ordering corresponds to the way
+    ygrid_deg = ygrid_deg.flatten() # the true shears are ordered too, which is handy
+    if len(xgrid_deg) != evaluate.NGALS_PER_SUBFIELD:
+        raise ValueError(
+            "Dimensions of xgrid_deg and ygrid_deg do not match NGALS_PER_SUBFIELD.  Please check "+
+            "the values of XMAX_GRID_DEG and DX_GRID_DEG in evaluate.py.")
     # Then loop over the fields and subfields getting the galaxy catalogues
     import pyfits
-    for ifield in range(NFIELDS):
+    for ifield in range(evaluate.NFIELDS):
 
         # Read in all the shears in this field and store
-        for jsub in range(NSUBFIELDS_PER_FIELD):
+        for jsub in range(evaluate.NSUBFIELDS_PER_FIELD):
 
             # Build the x,y grid using the subfield offsets
-            isubfield_index = jsub + ifield * NSUBFIELDS_PER_FIELD
+            isubfield_index = jsub + ifield * evaluate.NSUBFIELDS_PER_FIELD
             xx[:, jsub, ifield] = xgrid_deg + offset_deg_x[isubfield_index]
-            yx[:, jsub, ifield] = ygrid_deg + offset_deg_y[isubfield_index]
+            yy[:, jsub, ifield] = ygrid_deg + offset_deg_y[isubfield_index]
             galcatfile = os.path.join(
                 mapper.full_dir, ("galaxy_catalog-%03d.fits" % isubfield_index))
             truedata = pyfits.getdata(galcatfile)
@@ -52,11 +62,60 @@ def get_variable_gtrue(experiment, obs_type):
     # Then return
     return xx, yy, g1true, g2true
 
+def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, noise_sigma=0.05):
+    """Make a fake submission based on input x, y, true shears, bias and noise parameters.
+
+    Saves to outfile.
+    """
+    # Some sanity checks to start
+    if x.shape != (
+        evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS):
+        raise ValueError("x.shape does not match required dimensions.")
+    if y.shape != x.shape: raise ValueError("y.shape does not match x.shape.")
+    if g1true.shape != x.shape: raise ValueError("g1true.shape does not match x.shape.")
+    if g2true.shape !=  x.shape: raise ValueError("g2true.shape does not match x.shape.")
+    # Then apply the chosen biases 
+    g1sub = g1true * (1. + m1) + c1 + np.random.randn(*g1true.shape) * noise_sigma 
+    g2sub = g2true * (1. + m2) + c2 + np.random.randn(*g2true.shape) * noise_sigma
+    # Define the field array, then theta and map arrays in which we'll store the results
+    field = np.arange(evaluate.NBINS_THETA * evaluate.NFIELDS) / evaluate.NBINS_THETA
+    theta = np.empty(evaluate.NBINS_THETA * evaluate.NFIELDS)
+    map_E = np.empty(evaluate.NBINS_THETA * evaluate.NFIELDS)
+    map_B = np.empty(evaluate.NBINS_THETA * evaluate.NFIELDS)
+    maperr = np.empty(evaluate.NBINS_THETA * evaluate.NFIELDS)
+    for ifield in range(evaluate.NFIELDS):
+
+        # Extracting the x, y and g1, g2 for all the subfields in this field, flatten and use
+        # to calculate the map_E
+        map_results = g3metrics.run_corr2(
+            x[:, :, ifield].flatten(), y[:, :, ifield].flatten(), g1sub[:, :, ifield].flatten(),
+            g2sub[:, :, ifield].flatten(), min_sep=evaluate.THETA_MIN_DEG,
+            max_sep=evaluate.THETA_MAX_DEG, nbins=evaluate.NBINS_THETA,
+            params_file="./corr2.params", xy_units="degrees", sep_units="degrees")
+        theta[ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA] = \
+            map_results[:, 0]
+        map_E[ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA] = \
+            map_results[:, 1]
+        map_B[ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA] = \
+            map_results[:, 2]
+        maperr[ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA] = \
+            map_results[:, 5]
+
+    # Finally save in ASCII format
+    with open(outfile, "wb") as fout:
+        fout.write(
+            "# Simulated aperture mass statistics for "+experiment+"-"+obs_type+"-variable\n")
+        fout.write("# field_index  theta [deg]  map_E  map_B  maperr\n")
+        np.savetxt(
+            fout, np.array((field, theta, map_E, map_B, maperr)).T,
+            fmt=" %2d %.18e %.18e %.18e %.18e")
+
+    return
 
 
 if __name__ == "__main__":
 
-    experiment = 'contaol'
+    experiment = 'control'
     obs_type = 'ground'
 
     logger = logging.getLogger("test")
@@ -90,6 +149,28 @@ if __name__ == "__main__":
     # Try a basically random variable shear submission from Melanie's code!
     q_v = evaluate.q_variable(
         "../../public-scripts/csv_test.asc", experiment, obs_type, logger=None)
-    print "Q_v = "+str(q_v)
+    print "Q_v (from presubmission) = "+str(q_v)
 
-    # Then try making
+    # Then try making a fake submission ourselves
+    x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
+    result = make_variable_submission(x, y, g1true, g2true, 0., 0.05, 0.01, 0.,
+        outfile="junk_test.asc")
+    q_biased = evaluate.q_variable("junk_test.asc", experiment, obs_type)
+    print "Q_v (from own biased submission simulator) = "+str(q_biased)
+
+    result = make_variable_submission(x, y, g1true, g2true, 0., 0., 0., 0., outfile="junk_test.asc")
+    q_v2 = evaluate.q_variable("junk_test.asc", experiment, obs_type)
+    print "Q_v (from own unbiased submission simulator) = "+str(q_v2)
+
+    qlist = []
+    for i in range(100):
+    
+        result = make_variable_submission(
+            x, y, g1true, g2true, 0., 0., 0., 0., outfile="junk_test.asc")
+
+        q_v2 = evaluate.q_variable("junk_test.asc", experiment, obs_type)
+        print "Q_v (from own unbiased submission simulator: "+str(i+1)+"/100) = "+str(q_v2)
+        qlist.append(q_v2)
+
+    qarr = np.asarray(qlist)
+    print "Mean of Q_v values = "+str(np.mean(qarr))+"+/-"+str(np.std(qarr) / np.sqrt(len(qarr)))
