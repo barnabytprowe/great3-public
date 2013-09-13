@@ -612,7 +612,7 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = g3metrics.metricQZ1_const_shear(
             g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
         Q_c *= normalization
-    except exception as err:
+    except Exception as err:
         # Something went wrong... We'll handle this silently setting all outputs to zero, but warn
         # the user via any supplied logger
         Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -657,7 +657,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
             data[:, 1], theta, decimal=3, err_msg="User theta array does not match truth.")
         # The definition of Q_v is so simple there is no need to use the g3metrics version
         Q_v = normalization / np.mean(np.abs(data - map_E))
-    except exception as err:
+    except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
             logger.warn(err.message) # ...But let's warn if there's a logger!
