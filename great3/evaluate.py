@@ -451,7 +451,7 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
     return (offsets[:, 0]).astype(int), offsets[:, 1], offsets[:, 2]
 
 def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
-                                logger=None):
+                                logger=None, corr2_exec="corr2", corr2_params="corr2.params"):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
 
     If the map_E truth file has already been built for this variable shear branch, loads and returns
@@ -466,6 +466,8 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     @param storage_dir    Directory from/into which to load/store rotation files
     @param truth_dir      Root directory in which the truth information for the challenge is stored
     @param logger         Python logging.Logger instance, for message logging
+    @param corr2_exec     Path to Mike Jarvis' corr2 exectuable
+    @param corr2_params   Path to parameter file for Mike Jarvis' corr2 exectuable
     @return field, theta, map_E, map_B, maperr
     """
     # Build basic x and y grids to use for coord positions: note we do this here rather than as
@@ -568,7 +570,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     return field, theta, map_E, map_B, maperr
 
 def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=NORMALIZATION_CONSTANT):
+               logger=None, normalization=NORMALIZATION_CONSTANT, just_q=False):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -578,6 +580,9 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param storage_dir      Directory from/into which to load/store rotation files
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
+    @param just_q           Set `just_q = True` (default is `False) to only return Q_c rather than
+                            the default behaviour of returning a tuple including best fitting c+,
+                            m+, cx, mx, etc.
     @return The metric Q_const, & best fitting c+, m+, cx, mx, sigc+, sigcm+, sigcx, sigmx
     """
     if not os.path.isfile(submission_file):
@@ -613,12 +618,16 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx = 0, 0, 0, 0, 0, 0, 0, 0, 0
         if logger is not None:
             logger.warn(err.message)
-
-    return Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx
-
+    # Then return
+    if just_q:
+        ret = Q_c
+    else:
+        ret =  (Q_c, c+, m+, cx, mx, sigc+, sigm+, sigcx, sigmx)
+    return ret
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=NORMALIZATION_VARIABLE):
+               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2", 
+               corr2_params="corr2.params"):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -628,6 +637,8 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param storage_dir      Directory from/into which to load/store rotation files
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
+    @param corr2_exec     Path to Mike Jarvis' corr2 exectuable
+    @param corr2_params   Path to parameter file for Mike Jarvis' corr2 exectuable
     @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
@@ -637,7 +648,8 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         logger.info("Calculating Q_v metric for "+submission_file)
     data = np.loadtxt(submission_file)
     field, theta, map_E, _, _, _ = get_generate_variable_truth(
-        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger)
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
+        corr2_exec=corr2_exec, corr2_params=corr2_params)
     try: # Put this in a try except block to handle funky submissions better
         np.testing.assert_array_equal(
             data[:, 0].astype(int), field, err_msg="User field array does not match truth.")
@@ -649,5 +661,5 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
             logger.warn(err.message) # ...But let's warn if there's a logger!
-
+    # Then return Q_v
     return Q_v
