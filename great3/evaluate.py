@@ -110,8 +110,7 @@ OFFSETS_FILE_PREFIX = "offsets_"
 MAPETRUTH_FILE_PREFIX = "mapEtruth_"
 
 NORMALIZATION_CONSTANT = 1.089 
-NORMALIZATION_VARIABLE = 8.408e-5 * 2.106 # Factor comes from tests with new geometry 
-
+NORMALIZATION_VARIABLE = 1.264803e-4 # Factor comes from tests with new geometry (good to \pm 1%) 
 
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
