@@ -110,7 +110,7 @@ OFFSETS_FILE_PREFIX = "offsets_"
 MAPETRUTH_FILE_PREFIX = "mapEtruth_"
 
 NORMALIZATION_CONSTANT = 1.089 
-NORMALIZATION_VARIABLE = 8.408e-5 
+NORMALIZATION_VARIABLE = 8.408e-5 * 2.106 # Factor comes from tests with new geometry 
 
 
 
