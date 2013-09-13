@@ -109,6 +109,10 @@ ROTATIONS_FILE_PREFIX = "rotations_"
 OFFSETS_FILE_PREFIX = "offsets_"
 MAPETRUTH_FILE_PREFIX = "mapEtruth_"
 
+NORMALIZATION_CONSTANT = 1.089 
+NORMALIZATION_VARIABLE = 8.408e-5 
+
+
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
                              logger=None):
@@ -564,7 +568,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     return field, theta, map_E, map_B, maperr
 
 def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=1.089):
+               logger=None, normalization=NORMALIZATION_CONSTANT):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -614,7 +618,7 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
 
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=8.408e-5:
+               logger=None, normalization=NORMALIZATION_VARIABLE):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -638,7 +642,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         np.testing.assert_array_equal(
             data[:, 0].astype(int), field, err_msg="User field array does not match truth.")
         np.testing.assert_array_almost_equal(
-            data[:, 1], theta, decimal=5, err_msg="User theta array does not match truth.")
+            data[:, 1], theta, decimal=3, err_msg="User theta array does not match truth.")
         # The definition of Q_v is so simple there is no need to use the g3metrics version
         Q_v = normalization / np.mean(np.abs(data - map_E))
     except exception as err:
