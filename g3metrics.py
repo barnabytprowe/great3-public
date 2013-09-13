@@ -320,7 +320,7 @@ def run_corr2_ascii(x, y, e1, e2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='t
 
 def run_corr2(x, y, g1, g2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='temp.cat',
               params_file='corr2.params', m2_file_name='temp.m2', xy_units='degrees',
-              sep_units='degrees'):
+              sep_units='degrees', corr2_exec='corr2'):
     import os
     import subprocess
     import tempfile
@@ -342,7 +342,7 @@ def run_corr2(x, y, g1, g2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='temp.ca
     hdus = pyfits.HDUList([phdu,table])
     hdus.writeto(catfile,clobber=True)
     subprocess.Popen([
-        'corr2', params_file, 'file_name='+str(catfile), 'm2_file_name='+str(m2file),
+        corr2_exec, params_file, 'file_name='+str(catfile), 'm2_file_name='+str(m2file),
         'file_type=FITS',
         'min_sep=%f'%min_sep, 'max_sep=%f'%max_sep, 'nbins=%f'%nbins,
         'x_units='+str(xy_units), 'y_units='+str(xy_units), 'sep_units='+str(sep_units)]).wait()
