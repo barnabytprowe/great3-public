@@ -66,6 +66,7 @@ dirs = []
 n_epochs = []
 config_names = []
 psf_config_names = []
+star_test_config_names = []
 for exp in experiments:
     e = exp[0]
     for obs in obs_type:
@@ -75,6 +76,7 @@ for exp in experiments:
             dirs.append( os.path.join(root,exp,obs,shear) )
             config_names.append(e + o + s + '.yaml')
             psf_config_names.append(e + o + s + '_psf.yaml')
+            star_test_config_names.append(e + o + s + '_star_test.yaml')
             if exp == "multiepoch" or exp == "full":
                 n_epochs.append(great3sims.constants.n_epochs)
             else:
@@ -85,6 +87,7 @@ if do_config:
     t1 = time.time()
     new_config_names = []
     new_psf_config_names = []
+    new_star_test_config_names = []
     for i in range(n_config):
         first = subfield_min + (subfield_max-subfield_min+1)/n_config * i
         last = subfield_min + (subfield_max-subfield_min+1)/n_config * (i+1) - 1
@@ -93,18 +96,15 @@ if do_config:
                        gal_dir=data_dir, ps_dir=ps_dir,
                        seed=seed, steps=['config']
                        )
-        for config_name in config_names:
-            name, ext = os.path.splitext(config_name)
-            new_name = '%s_%02d.yaml'%(name,i)
-            print config_name,'->',new_name
-            new_config_names.append(new_name)
-            shutil.copy(os.path.join(root,config_name),os.path.join(root,new_name))
-        for config_name in psf_config_names:
-            name, ext = os.path.splitext(config_name)
-            new_name = '%s_%02d.yaml'%(name,i)
-            print config_name,'->',new_name
-            new_psf_config_names.append(new_name)
-            shutil.copy(os.path.join(root,config_name),os.path.join(root,new_name))
+        for (old_names, new_names) in [ (config_names, new_config_names) ,
+                                        (psf_config_names, new_psf_config_names) ,
+                                        (star_test_config_names, new_star_test_config_names) ]:
+            for old_name in old_names:
+                base, ext = os.path.splitext(old_name)
+                new_name = '%s_%02d.yaml'%(base,i)
+                print old_name,'->',new_name
+                new_names.append(new_name)
+                shutil.copy(os.path.join(root,old_name),os.path.join(root,new_name))
     t2 = time.time()
     print
     print 'Time for great3sims.run config = ',t2-t1
@@ -113,20 +113,14 @@ if do_config:
     # build images using galsim executable
     t1 = time.time()
     os.chdir(root)
-    for config_name in new_config_names:
-        t3 = time.time()
-        p = subprocess.Popen(['galsim',config_name,'-v1'])
-        p.communicate() # wait until done
-        t4 = time.time()
-        print 'Time for galsim',config_name,'= ',t4-t3
-        print
-    for config_name in new_psf_config_names:
-        t3 = time.time()
-        p = subprocess.Popen(['galsim',config_name,'-v1'])
-        p.communicate() # wait until done
-        t4 = time.time()
-        print 'Time for galsim',config_name,'= ',t4-t3
-        print
+    for new_names in [ new_config_names, new_psf_config_names, new_star_test_config_names ]:
+        for name in new_names:
+            t3 = time.time()
+            p = subprocess.Popen(['galsim',name,'-v1'])
+            p.communicate() # wait until done
+            t4 = time.time()
+            print 'Time for galsim',name,'= ',t4-t3
+            print
     os.chdir('..')
     t2 = time.time()
     print 'Total time for galsim = ',t2-t1
