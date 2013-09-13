@@ -89,9 +89,9 @@ MFID = 2.e-3
 XMAX_GRID_DEG = 10.0 # Maximum image spatial extent in degrees
 DX_GRID_DEG = 0.1    # Grid spacing in degrees
 
-THETA_MIN_DEG = 0.01 # Minimum and maximum angular scales for logarithmic bins used to calculate the
+THETA_MIN_DEG = 0.02 # Minimum and maximum angular scales for logarithmic bins used to calculate the
 THETA_MAX_DEG = 10.0 # aperture mass disp. - MUST match specs given to participants - in degrees
-NBINS_THETA = 15 # Number of logarithmic bins theta for the aperture mass dispersion
+NBINS_THETA = 15     # Number of logarithmic bins theta for the aperture mass dispersion
 
 TRUTH_SUBFIELD_DICT = {} # A dictionary containing the mapping between subfields containing the
                          # same applied shear [one of NFIELDS pairs of independent (g1, g2) values]
@@ -570,7 +570,8 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     return field, theta, map_E, map_B, maperr
 
 def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=NORMALIZATION_CONSTANT, just_q=False):
+               logger=None, normalization=NORMALIZATION_CONSTANT, just_q=False, cfid=CFID,
+               mfid=MFID):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -610,7 +611,7 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
         g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
         Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = g3metrics.metricQZ1_const_shear(
-            g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
+            g1srot, g2srot, g1trot, g2trot, cfid=cfid, mfid=mfid)
         Q_c *= normalization
     except Exception as err:
         # Something went wrong... We'll handle this silently setting all outputs to zero but warn
@@ -629,7 +630,7 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
                logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2", 
-               corr2_params="corr2.params"):
+               corr2_params="corr2.params", cfid=CFID, mfid=MFID):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
