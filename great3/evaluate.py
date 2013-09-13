@@ -613,11 +613,13 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
             g1srot, g2srot, g1trot, g2trot, cfid=CFID, mfid=MFID)
         Q_c *= normalization
     except Exception as err:
-        # Something went wrong... We'll handle this silently setting all outputs to zero, but warn
-        # the user via any supplied logger
+        # Something went wrong... We'll handle this silently setting all outputs to zero but warn
+        # the user via any supplied logger; else raise
         Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = 0, 0, 0, 0, 0, 0, 0, 0, 0
         if logger is not None:
             logger.warn(err.message)
+        else:
+            raise err # ...Raise excpetion if there is no logger
     # Then return
     if just_q:
         ret = Q_c
@@ -637,8 +639,8 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param storage_dir      Directory from/into which to load/store rotation files
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
-    @param corr2_exec     Path to Mike Jarvis' corr2 exectuable
-    @param corr2_params   Path to parameter file for Mike Jarvis' corr2 exectuable
+    @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
+    @param corr2_params     Path to parameter file for Mike Jarvis' corr2 exectuable
     @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
@@ -647,19 +649,26 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     if logger is not None:
         logger.info("Calculating Q_v metric for "+submission_file)
     data = np.loadtxt(submission_file)
+    # Extract the salient parts of the submission from data
+    field_sub = data[:, 0].astype(int)
+    theta_sub = data[:, 1]
+    map_E_sub = data[:, 2]
+    # Load/generate the truth
     field, theta, map_E, _, _ = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
         corr2_exec=corr2_exec, corr2_params=corr2_params)
     try: # Put this in a try except block to handle funky submissions better
         np.testing.assert_array_equal(
-            data[:, 0].astype(int), field, err_msg="User field array does not match truth.")
+            field_sub, field, err_msg="User field array does not match truth.")
         np.testing.assert_array_almost_equal(
-            data[:, 1], theta, decimal=3, err_msg="User theta array does not match truth.")
+            theta_sub, theta, decimal=3, err_msg="User theta array does not match truth.")
         # The definition of Q_v is so simple there is no need to use the g3metrics version
-        Q_v = normalization / np.mean(np.abs(data - map_E))
+        Q_v = normalization / np.mean(np.abs(data[:, 2] - map_E))
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
             logger.warn(err.message) # ...But let's warn if there's a logger!
+        else:                        # ...And raise the exception if not
+            raise err
     # Then return Q_v
     return Q_v
