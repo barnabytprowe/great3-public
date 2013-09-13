@@ -147,29 +147,30 @@ if __name__ == "__main__":
         experiment, obs_type, logger=logger)
 
     # Try a basically random variable shear submission from Melanie's code!
-    q_v = evaluate.q_variable(
-        "../../public-scripts/csv_test.asc", experiment, obs_type, logger=None)
-    print "Q_v (from presubmission) = "+str(q_v)
+    #q_v = evaluate.q_variable(
+    #    "../../public-scripts/csv_test.asc", experiment, obs_type, logger=None)
+    #print "Q_v (from presubmission) = "+str(q_v)
 
     # Then try making a fake submission ourselves
     x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
-    result = make_variable_submission(x, y, g1true, g2true, 0., 0.05, 0.01, 0.,
+    result = make_variable_submission(x, y, g1true, g2true, 0., 2.e-4, 0.01, -0.01,
         outfile="junk_test.asc")
     q_biased = evaluate.q_variable("junk_test.asc", experiment, obs_type)
     print "Q_v (from own biased submission simulator) = "+str(q_biased)
 
-    result = make_variable_submission(x, y, g1true, g2true, 0., 0., 0., 0., outfile="junk_test.asc")
+    result = make_variable_submission(
+        x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID, outfile="junk_test.asc")
     q_v2 = evaluate.q_variable("junk_test.asc", experiment, obs_type)
-    print "Q_v (from own unbiased submission simulator) = "+str(q_v2)
+    print "Q_v (from own fiducial submission simulator) = "+str(q_v2)
 
-    qlist = []
-    for i in range(100):
+    qlist = [q_v2]
+    for i in range(99):
     
         result = make_variable_submission(
-            x, y, g1true, g2true, 0., 0., 0., 0., outfile="junk_test.asc")
+            x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID, outfile="junk_test.asc")
 
         q_v2 = evaluate.q_variable("junk_test.asc", experiment, obs_type)
-        print "Q_v (from own unbiased submission simulator: "+str(i+1)+"/100) = "+str(q_v2)
+        print "Q_v (from own fiducial submission simulator: "+str(i + 2)+"/100) = "+str(q_v2)
         qlist.append(q_v2)
 
     qarr = np.asarray(qlist)
