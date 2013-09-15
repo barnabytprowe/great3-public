@@ -16,7 +16,11 @@ EXPERIMENTS = (
     "full",
     )
 
+
 SCORE_LOG_FILE = os.path.join(installation_base, "results", "results.log")
+
+CORR2_EXEC = "/usr/local/bin/corr2"
+CORR2_PARAMS = os.path.join(installation_base, "server", "corr2.params")
 
 
 class Command(BaseCommand):
