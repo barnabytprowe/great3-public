@@ -33,15 +33,14 @@ Each submission file (one per branch) should take the format of an ASCII catalog
 3 columns as in the following example:
 
     # FIELD_INDEX  THETA [degrees]  MAP_E
-    0   0.0126   2.424e-09
-    0   0.0200   1.429e-06
-    0   0.0316   1.442e-06
-    ...    
+    0  0.0246  4.5650e-06
+    0  0.0372  8.1300e-06
+    ...
 
-The FIELD_INDEX will be an integer between 0 and 9.  THETA should be a sequence of floats giving
+The `FIELD_INDEX` will be an integer between 0 and 9.  `THETA` should be a sequence of floats giving
 the annular bin centres in degrees; these are logarithmically spaced between the minimum separation
-considered (0.01 degrees) and the maximum (10.0 degrees).  MAP_E is the E-mode aperture mass
-dispersion.  FIELD, THETA (and the thus corresponding MAP_E entries) must be ordered as in the
+considered (0.01 degrees) and the maximum (10.0 degrees).  `MAP_E` is the E-mode aperture mass
+dispersion.  `FIELD`, `THETA` (and the thus corresponding `MAP_E` entries) must be ordered as in the
 output of `presubmission.py`.
 
 The hashed header/comment can be ommitted.  Additional columns can be present provided that the
@@ -195,7 +194,7 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
     @param storage_dir    Directory from/into which to load/store rotation files
     @param truth_dir      Root directory in which the truth information for the challenge is stored
     @param logger         Python logging.Logger instance, for message logging
-    @return               The subfield_dict (see code below for details)
+    @return subfield_dict The subfield_dict (see code below for details)
     """
     import cPickle
     subfield_dict_file = os.path.join(
@@ -289,7 +288,8 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
     @param obs_type       Observation type for this branch, one of 'ground' or 'space'
     @param storage_dir    Directory from/into which to load/store rotation files
     @param truth_dir      Root directory in which the truth information for the challenge is stored
-    @return               An array containing all the rotation angles, in radians
+    @param logger         Python logging.Logger instance, for message logging
+    @return rotations     An array containing all the rotation angles, in radians
     """
     import great3sims
     rotfile = os.path.join(storage_dir, ROTATIONS_FILE_PREFIX+experiment[0]+obs_type[0]+"c.asc")
@@ -553,6 +553,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             map_E[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 1]     
             map_B[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 2]
             maperr[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 5]
+
         # Save these in ASCII format
         if logger is not None:
             logger.info("Saving truth map_E file to "+mapEtruefile)
@@ -565,7 +566,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     # Then return
     return field, theta, map_E, map_B, maperr
 
-def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
+def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                logger=None, normalization=NORMALIZATION_CONSTANT, just_q=False, cfid=CFID,
                mfid=MFID):
     """Calculate the Q_c for a constant shear branch submission.
@@ -577,9 +578,13 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param storage_dir      Directory from/into which to load/store rotation files
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
-    @param just_q           Set `just_q = True` (default is `False) to only return Q_c rather than
+    @param logger           Python logging.Logger instance, for message logging
+    @param normalization    Normalization factor for the metric
+    @param just_q           Set `just_q = True` (default is `False`) to only return Q_c rather than
                             the default behaviour of returning a tuple including best fitting c+,
                             m+, cx, mx, etc.
+    @param cfid             Fiducial, target c value
+    @param mfid             Fiducial, target m value 
     @return The metric Q_c, & optionally best fitting c+, m+, cx, mx, sigc+, sigcm+, sigcx, sigmx.
     """
     if not os.path.isfile(submission_file):
@@ -626,7 +631,7 @@ def q_constant(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
                logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2", 
-               corr2_params="corr2.params", cfid=CFID, mfid=MFID):
+               corr2_params="corr2.params"):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -636,6 +641,8 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param storage_dir      Directory from/into which to load/store rotation files
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
+    @param logger           Python logging.Logger instance, for message logging
+    @param normalization    Normalization factor for the metric
     @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
     @param corr2_params     Path to parameter file for Mike Jarvis' corr2 exectuable
     @return The metric Q_v
