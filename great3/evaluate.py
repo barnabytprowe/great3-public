@@ -8,8 +8,8 @@ Constant shear branches
 Each submission file (one per branch) should take the format of a 3-column ASCII catalog, e.g.:
 
     #  SUBFIELD_INDEX  G1  G2
-    0   -.25424  0.23111
-    1   -.05111  0.37123
+    0   -.26664  0.11230
+    1   -.13004  0.48103
     ...
 
 or similar.  The hashed header/comment can be omitted, and almost all formats for the numbers are
@@ -33,8 +33,8 @@ Each submission file (one per branch) should take the format of an ASCII catalog
 3 columns as in the following example:
 
     # FIELD_INDEX  THETA [degrees]  MAP_E
-    0  0.0246  4.5650e-06
-    0  0.0372  8.1300e-06
+    0  0.0246  2.5650e-06
+    0  0.0372  4.1300e-06
     ...
 
 The `FIELD_INDEX` will be an integer between 0 and 9.  `THETA` should be a sequence of floats giving
