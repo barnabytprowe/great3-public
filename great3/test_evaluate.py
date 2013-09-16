@@ -72,7 +72,7 @@ def get_variable_gtrue(experiment, obs_type):
 def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, noise_sigma=0.05):
     """Make a fake submission based on input x, y, true shears, bias and noise parameters.
 
-    Saves to outfile.
+    Saves to outfile in the format of Melanie's presubmission.py output.
     """
     # Some sanity checks to start
     if x.shape != (
@@ -122,34 +122,40 @@ def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, nois
 
 if __name__ == "__main__":
 
+    # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
-    obs_type = 'space'
+    obs_type = 'ground'
 
+    # Setup the logger
+    logging.basicConfig(stream=sys.stderr)
     logger = logging.getLogger("test")
     logger.setLevel(logging.DEBUG)
 
     # Just try getting / building the intermediate products for this branch first
-    #sind, g1t, g2t = evaluate.get_generate_const_truth(experiment, obs_type, logger=logger)
-    #gdict = evaluate.get_generate_const_subfield_dict(experiment, obs_type, logger=logger)
-    #grot = evaluate.get_generate_const_rotations(experiment, obs_type, logger=logger)
+    sind, g1t, g2t = evaluate.get_generate_const_truth(experiment, obs_type, logger=logger)
+    gdict = evaluate.get_generate_const_subfield_dict(experiment, obs_type, logger=logger)
+    grot = evaluate.get_generate_const_rotations(experiment, obs_type, logger=logger)
 
     # Try a simple submission, no biases, and see what Q I get
-    #label = "sub1"
-    #g1sub, g2sub = g3metrics.make_submission_const_shear(
-    #   0.001, 0., 0., -0.01, g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
-    #subfile = "./g3subs/g3_const_shear_sub."+label+".dat"
+    label = "sub1"
+    g1sub, g2sub = g3metrics.make_submission_const_shear(
+       0.001, 0., 0., -0.01, g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
+    subfile = "./g3subs/g3_const_shear_sub."+label+".dat"
 
-    #q, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2  = evaluate.q_constant(
-    #    subfile, 'control', 'ground')
-    #print "Q_c = "+str(q)
-    #print "c+ = "+str(c1)+" ("+str(sigc1)+")"
-    #print "m+ = "+str(m1)+" ("+str(sigm1)+")"
-    #print "cx = "+str(c2)+" ("+str(sigc2)+")"
-    #print "mx = "+str(m2)+" ("+str(sigm2)+")"
+    q, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2  = evaluate.q_constant(
+        subfile, 'control', 'ground')
+    print "Q_c = "+str(q)
+    print "c+ = "+str(c1)+" +/- "+str(sigc1)
+    print "m+ = "+str(m1)+" +/- "+str(sigm1)
+    print "cx = "+str(c2)+" +/- "+str(sigc2)
+    print "mx = "+str(m2)+" +/- "+str(sigm2)
+    os.remove(subfile)
 
+    # Try getting the offsets
     #subfield_index, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
     #    experiment, obs_type, logger=logger)
 
+    # Try getting / generating the map_E truth for the variable shear branches
     field, theta, map_E, map_B, maperr = evaluate.get_generate_variable_truth(
         experiment, obs_type, logger=logger)
 
@@ -165,21 +171,25 @@ if __name__ == "__main__":
     q_biased = evaluate.q_variable("junk_test.asc", experiment, obs_type)
     print "Q_v (from own biased submission simulator) = "+str(q_biased)
 
+    # Then perform a fiducial simualtion, and do up to NTEST trials, so as to help find an updated
+    # normalization factor
+    NTEST = 300
     result = make_variable_submission(
-        x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID, outfile="junk_test.asc")
-    q_v2 = evaluate.q_variable("junk_test.asc", experiment, obs_type)
-    print "Q_v (from own fiducial submission simulator) = "+str(q_v2)
-
-    qlist = [q_v2]
-    for i in range(99):
+        x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
+        outfile="junk_test.asc")
+    q = evaluate.q_variable("junk_test.asc", experiment, obs_type)
+    print "Q_v (from own fiducial submission simulator) = "+str(q)
+    qlist = [q]
+    for i in range(NTEST - 1):
     
         result = make_variable_submission(
             x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
             outfile="junk_test.asc")
 
-        q_v2 = evaluate.q_variable("junk_test.asc", experiment, obs_type)
-        print "Q_v (from own fiducial submission simulator: "+str(i + 2)+"/100) = "+str(q_v2)
-        qlist.append(q_v2)
+        q = evaluate.q_variable("junk_test.asc", experiment, obs_type)
+        print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
+        qlist.append(q)
 
+    # Collate and print results
     qarr = np.asarray(qlist)
     print "Mean of Q_v values = "+str(np.mean(qarr))+"+/-"+str(np.std(qarr) / np.sqrt(len(qarr)))
