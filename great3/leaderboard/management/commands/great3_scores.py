@@ -72,7 +72,7 @@ class Command(BaseCommand):
                 entry.score = evaluate.q_variable(
                     filename, experiment, obs_type, 
                     normalization=evaluate.NORMALIZATION_VARIABLE, truth_dir=TRUTH_DIR,
-                    storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_exec,
+                    storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_EXEC,
                     corr2_params=CORR2_PARAMS)
             else:
                 shear_type = "constant"

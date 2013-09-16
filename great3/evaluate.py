@@ -548,6 +548,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             map_results = g3metrics.run_corr2(
                 xfield.flatten(), yfield.flatten(), g1true.flatten(), g2true.flatten(),
                 min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbins=NBINS_THETA,
+                corr2_exec=corr2_exec, 
                 params_file="./corr2.params", xy_units="degrees", sep_units="degrees")
             theta[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 0] 
             map_E[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 1]     
