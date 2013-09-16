@@ -93,9 +93,6 @@ THETA_MIN_DEG = 0.02 # Minimum and maximum angular scales for logarithmic bins u
 THETA_MAX_DEG = 10.0 # aperture mass disp. - MUST match specs given to participants - in degrees
 NBINS_THETA = 15     # Number of logarithmic bins theta for the aperture mass dispersion
 
-TRUTH_SUBFIELD_DICT = {} # A dictionary containing the mapping between subfields containing the
-                         # same applied shear [one of NFIELDS pairs of independent (g1, g2) values]
-
 STORAGE_DIR = "./metric_calculation_products" # Folder into which to store useful intermediate
                                               # outputs of metric calculations (e.g. rotation files,
                                               # dicts, mapE tables) which need be calculated only
