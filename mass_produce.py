@@ -61,9 +61,9 @@ if not package_only:
     prefix1 = 'g3_step1_'
     all_config_names = []
     all_psf_config_names = []
+    all_star_test_config_names = []
     for experiment, obs_type, shear_type in branches:
         e = experiment[0]
-        if e == 'r': e = exp[5]
         o = obs_type[0]
         s = shear_type[0]
 
@@ -73,7 +73,7 @@ if not package_only:
 
         # Write out some scripts.
         mass_produce_utils.pbs_script_python(pbs_file, pbs_name)
-        new_config_names, new_psf_config_names = \
+        new_config_names, new_psf_config_names, new_star_test_config_names = \
             mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max,
                                              experiment, obs_type, shear_type, gal_dir, ps_dir,
                                              seed, n_config_per_branch, my_step=1)
@@ -81,6 +81,8 @@ if not package_only:
             all_config_names.append(config_name)
         for psf_config_name in new_psf_config_names:
             all_psf_config_names.append(psf_config_name)
+        for star_test_config_name in new_star_test_config_names:
+            all_star_test_config_names.append(star_test_config_name)
         seed += delta_seed
 
     print "Wrote files necessary to carry out metaparameters, catalogs, and config steps"
@@ -132,13 +134,26 @@ if not package_only:
     print
     print "Time for generation of PSF images = ",t2-t1
     print
+    t1 = time.time()
+    prefix2 = 'g3_step2_'
+    for config_name in all_star_test_config_names:
+        type, _ = os.path.splitext(config_name)
+        pbs_file = prefix2 + type+'.sh'
+        mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
+        command_str = 'qsub '+pbs_file
+        p = subprocess.Popen(command_str, shell=True)
+    mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+    t2 = time.time()
+    # Times are approximate since check_done only checks every N seconds for some N
+    print
+    print "Time for generation of star test images = ",t2-t1
+    print
 
 # Finally, we go back to a process per branch for the final steps: star_params and packages.
 t1 = time.time()
 prefix3 = 'g3_step3_'
 for experiment, obs_type, shear_type in branches:
     e = experiment[0]
-    if e == 'r': e = exp[5]
     o = obs_type[0]
     s = shear_type[0]
 

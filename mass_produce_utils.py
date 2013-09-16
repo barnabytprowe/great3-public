@@ -53,15 +53,16 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
         f.write(command_str)
 
         e = experiment[0]
-        if e == 'r': e = exp[5]
         o = obs_type[0]
         s = shear_type[0]
         dir = os.path.join(root, experiment, obs_type, shear_type)
         config_pref = e + o + s
         psf_config_pref = e + o + s + '_psf'
+        star_test_config_pref = e + o + s + '_star_test'
 
         new_config_names = []
         new_psf_config_names = []
+        new_star_test_config_names = []
         for i in range(n_config_per_branch):
             first = subfield_min + (subfield_max-subfield_min+1)/n_config_per_branch * i
             last = subfield_min + (subfield_max-subfield_min+1)/n_config_per_branch * (i+1) - 1
@@ -82,8 +83,23 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
             f.write("shutil.move('"+os.path.join(root,config_pref+'.yaml')+"', '"+os.path.join(root,new_name)+"')\n")
             f.write("shutil.move('"+os.path.join(root,psf_config_pref+'.yaml')+"', '" \
                         +os.path.join(root,new_psf_name)+"')\n")
+
+        # But don't make multiple star test configs, just one.  We have to rerun great3.run for this
+        # to get the config file for everything.  It will also remake config files for galaxy and
+        # starfield images, but since we won't add their names to our list of config files to run,
+        # they just get ignored, and it's all good.
+        command_str = "great3.run('" + root + "', subfield_min=" + str(subfield_min) + \
+            ", subfield_max=" + str(subfield_max) + ", experiments=['" + experiment + \
+            "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
+            "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
+            ", public_dir='" + os.path.join(root, 'public') + \
+            "', truth_dir='" + os.path.join(root, 'truth') + \
+            "', steps = ['config'])\n"
+        f.write(command_str)
+        new_star_test_name = '%s.yaml'%(star_test_config_pref)
+        new_star_test_config_names.append(new_star_test_name)
         f.close()
-        return new_config_names, new_psf_config_names
+        return new_config_names, new_psf_config_names, new_star_test_config_names
     elif my_step == 3:
         f = open(filename, "w")
         f.write("import sys\n")
