@@ -161,14 +161,14 @@ if __name__ == "__main__":
 
     # Try a basically random variable shear submission from Melanie's code!
     #q_v = evaluate.q_variable(
-    #    "../../public-scripts/csv_test.asc", experiment, obs_type, logger=None)
+    #    "../../public-scripts/csv_test.dat", experiment, obs_type, logger=None)
     #print "Q_v (from presubmission) = "+str(q_v)
 
     # Then try making a fake submission ourselves
     x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
     result = make_variable_submission(x, y, g1true, g2true, 5.e-3, 2.e-4, 0.01, -0.01,
-        outfile="./g3subs/junk_map_test.asc")
-    q_biased = evaluate.q_variable("./g3subs/junk_map_test.asc", experiment, obs_type)
+        outfile="./g3subs/junk_map_test.dat")
+    q_biased = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type)
     print "Q_v (from own biased submission simulator) = "+str(q_biased)
 
     # Then perform a fiducial simualtion, and do up to NTEST trials, so as to help find an updated
@@ -176,17 +176,18 @@ if __name__ == "__main__":
     NTEST = 300
     result = make_variable_submission(
         x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-        outfile="./g3subs/junk_map_test.asc")
-    q = evaluate.q_variable("./g3subs/junk_map_test.asc", experiment, obs_type)
+        outfile="./g3subs/junk_map_test.dat")
+    q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type)
     print "Q_v (from own fiducial submission simulator) = "+str(q)
+
     qlist = [q]
     for i in range(NTEST - 1):
     
         result = make_variable_submission(
             x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-            outfile="./g3subs/junk_map_test.asc")
+            outfile="./g3subs/junk_map_test.dat")
 
-        q = evaluate.q_variable("./g3subs/junk_map_test.asc", experiment, obs_type)
+        q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type)
         print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
         qlist.append(q)
 
