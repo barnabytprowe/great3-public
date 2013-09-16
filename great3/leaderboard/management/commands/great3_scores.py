@@ -7,6 +7,8 @@ import os
 import datetime
 import pytz
 import codecs
+import sys
+sys.path.append("/home/jaz/great3-private")
 import evaluate
 
 EXPERIMENTS_DICT = { # A dictionary for translating between Joe's experiment names and Rachel's
@@ -68,14 +70,14 @@ class Command(BaseCommand):
             if entry.board.varying:
                 shear_type = "variable"
                 entry.score = evaluate.q_variable(
-                    filename, experiment, obs_type, shear_type,
+                    filename, experiment, obs_type, 
                     normalization=evaluate.NORMALIZATION_VARIABLE, truth_dir=TRUTH_DIR,
                     storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_exec,
                     corr2_params=CORR2_PARAMS)
             else:
                 shear_type = "constant"
                 entry.score = evaluate.q_constant(
-                    filename, experiment, obs_type, shear_type, cfid=evaluate.CFID,
+                    filename, experiment, obs_type,  cfid=evaluate.CFID,
                     mfid=evaluate.MFID, normalization=evaluate.NORMALIZATION_CONSTANT, just_q=True,
                     truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR, logger=logger)
             datestamp = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
