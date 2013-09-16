@@ -618,6 +618,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
         # Something went wrong... We'll handle this silently setting all outputs to zero but warn
         # the user via any supplied logger; else raise
         Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = 0, 0, 0, 0, 0, 0, 0, 0, 0
+        print err
         if logger is not None:
             logger.warn(err.message)
         else:
