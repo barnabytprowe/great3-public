@@ -143,13 +143,13 @@ if __name__ == "__main__":
     subfile = "./g3subs/g3_const_shear_sub."+label+".dat"
 
     q, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2  = evaluate.q_constant(
-        subfile, 'control', 'ground')
+        subfile, 'control', 'ground', logger=logger)
     print "Q_c = "+str(q)
     print "c+ = "+str(c1)+" +/- "+str(sigc1)
     print "m+ = "+str(m1)+" +/- "+str(sigm1)
     print "cx = "+str(c2)+" +/- "+str(sigc2)
     print "mx = "+str(m2)+" +/- "+str(sigm2)
-    os.remove(subfile)
+    #os.remove(subfile)
 
     # Try getting the offsets
     #subfield_index, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
@@ -167,8 +167,8 @@ if __name__ == "__main__":
     # Then try making a fake submission ourselves
     x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
     result = make_variable_submission(x, y, g1true, g2true, 5.e-3, 2.e-4, 0.01, -0.01,
-        outfile="junk_test.asc")
-    q_biased = evaluate.q_variable("junk_test.asc", experiment, obs_type)
+        outfile="./g3subs/junk_map_test.asc")
+    q_biased = evaluate.q_variable("./g3subs/junk_map_test.asc", experiment, obs_type)
     print "Q_v (from own biased submission simulator) = "+str(q_biased)
 
     # Then perform a fiducial simualtion, and do up to NTEST trials, so as to help find an updated
@@ -176,17 +176,17 @@ if __name__ == "__main__":
     NTEST = 300
     result = make_variable_submission(
         x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-        outfile="junk_test.asc")
-    q = evaluate.q_variable("junk_test.asc", experiment, obs_type)
+        outfile="./g3subs/junk_map_test.asc")
+    q = evaluate.q_variable("./g3subs/junk_map_test.asc", experiment, obs_type)
     print "Q_v (from own fiducial submission simulator) = "+str(q)
     qlist = [q]
     for i in range(NTEST - 1):
     
         result = make_variable_submission(
             x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-            outfile="junk_test.asc")
+            outfile="./g3subs/junk_map_test.asc")
 
-        q = evaluate.q_variable("junk_test.asc", experiment, obs_type)
+        q = evaluate.q_variable("./g3subs/junk_map_test.asc", experiment, obs_type)
         print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
         qlist.append(q)
 
