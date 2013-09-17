@@ -465,9 +465,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
 
     def makeConfigDict(self):
         if self.real_galaxy:
-            return self.makeConfigDictParametric(self)
+            return self.makeConfigDictParametric()
         else:
-            return self.makeConfigDictReal(self)
+            return self.makeConfigDictReal()
 
     def makeConfigDictParametric(self):
         d = {
@@ -570,6 +570,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         gal *= record['flux_rescale']
         # Rotate.
         gal.applyRotation(record['rot_angle_radians']*galsim.radians)
-        # When we return the final noise object, we have to rescale its variance as well, since the
-        # entire postage stamp (including the noise in the original image) just got rescaled.
-        return gal, gal.noise*record['flux_rescale']
+        # When we return the final noise object, we don't have to explicitly rescale its variance,
+        # since the internal workings of this class take care of it for us.
+        return gal, gal.noise
