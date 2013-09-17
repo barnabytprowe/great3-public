@@ -761,9 +761,7 @@ class SimBuilder(object):
                 xmax=int(record['xmax']), ymax=int(record['ymax']),
             )
             stamp = galaxy_image.subImage(bbox)
-            # Note from RM: the use of 'sb' normalization necessary for noise whitening.
-            # But for now let's use flux normalization after correcting input fluxes to account for
-            # this and get something like HST.
+            # Draw into the postage stamp.
             final.draw(stamp, normalization='f', dx=pixel_scale, offset=offset)
             # The lines below are commented out because they are just diagnostics that can be used
             # to check that the actual S/N is fairly consistent with the estimated one.
