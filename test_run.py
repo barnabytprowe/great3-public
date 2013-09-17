@@ -13,14 +13,14 @@ import great3sims
 # Set which branches to test...
 experiments = [
     'variable_psf',
-#    'control',
-#    'multiepoch',
+    'control',
+    'multiepoch',
     #'real_gal',
     #'full',
 ]
 obs_type = [
     'ground',
-#    'space',
+    'space',
 ]
 shear_type = [
     'constant',
