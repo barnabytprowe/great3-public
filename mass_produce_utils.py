@@ -42,7 +42,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
         f.write("import sys\n")
         f.write("import shutil\n")
         f.write("sys.path.append('/home/rmandelb/git/great3-private')\n")
-        f.write("import great3\n")
+        f.write("import great3sims\n")
         command_str = "great3.run('" + root + "', subfield_min=" + str(subfield_min) + \
             ", subfield_max=" + str(subfield_max) + ", experiments=['" + experiment + \
             "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
@@ -104,7 +104,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
         f = open(filename, "w")
         f.write("import sys\n")
         f.write("sys.path.append('/home/rmandelb/git/great3-private')\n")
-        f.write("import great3\n")
+        f.write("import great3sims\n")
         command_str = "great3.run('" + root + "', subfield_min=" + str(subfield_min) + \
             ", subfield_max=" + str(subfield_max) + ", experiments=['" + experiment + \
             "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
