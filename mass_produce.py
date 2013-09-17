@@ -16,7 +16,7 @@ import great3sims
 # output.
 # Note about root dir: this is set for the backed-up server that has limited space.  Once more
 # branches are ready, this will have to change to /lustre/rmandelb/great3 since that has more space.
-root = '/lustre/rmandelb/great3-v4'
+root = '/home/rmandelb.proj/data-shared/great3-v4'
 n_config_per_branch = 5 # Number of config files to be run per branch.
 subfield_min = 180 # NOTE CHANGE: SHOULD BE ZERO TO DO AN ENTIRE BRANCH.
 subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
@@ -98,7 +98,7 @@ if not package_only:
         p = subprocess.Popen(command_str,shell=True)
     # The above command just submitted all the files to the queue.  We have to periodically poll the
     # queue to see if they are still running.
-    mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
@@ -114,7 +114,7 @@ if not package_only:
         mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
         command_str = 'qsub '+pbs_file
         p = subprocess.Popen(command_str, shell=True)
-    mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
@@ -128,7 +128,7 @@ if not package_only:
         mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
         command_str = 'qsub '+pbs_file
         p = subprocess.Popen(command_str, shell=True)
-    mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
@@ -142,7 +142,7 @@ if not package_only:
         mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
         command_str = 'qsub '+pbs_file
         p = subprocess.Popen(command_str, shell=True)
-    mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
@@ -171,7 +171,7 @@ for experiment, obs_type, shear_type in branches:
     p = subprocess.Popen(command_str,shell=True)
 # The above command just submitted all the files to the queue.  We have to periodically poll the
 # queue to see if they are still running.
-mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+mass_produce_utils.check_done('g3', sleep_time=sleep_time)
 t2 = time.time()
 # Times are approximate since check_done only checks every N seconds for some N
 print
