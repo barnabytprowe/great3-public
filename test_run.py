@@ -12,10 +12,10 @@ import great3sims
 
 # Set which branches to test...
 experiments = [
-    'variable_psf',
-    'control',
-    'multiepoch',
-    #'real_gal',
+    #'variable_psf',
+    #'control',
+    #'multiepoch',
+    'real_galaxy',
     #'full',
 ]
 obs_type = [
@@ -31,12 +31,13 @@ root = 'test_run'
 n_config = 3        # Build 3 separate config files to be run separately.
 subfield_min = 0
 subfield_max = 5    # Total of 3x2 sub-fields  (2 per config file)
-data_dir = 'great3_fit_data'    # This should be set up as a sim-link to your Dropbox folder.
+data_dir = './great3_data'    # This should be set up as a sim-link to the folder
+                                                 # containing the catalogs, fits, and actual images.
 ps_dir = '../inputs/ps/tables' 
 seed = 12345                    # Whatever.  (But not zero.)
 do_catalogs = True  # Remake the catalogs?
 do_images = True    # Make the images in great3 builder code?
-do_config = True    # Do config-related steps?  
+do_config = False    # Do config-related steps?
 do_final = True     # Do final packaging steps?
 
 # Build catalogs, etc.
