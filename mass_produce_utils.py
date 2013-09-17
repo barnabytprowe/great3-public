@@ -43,7 +43,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
         f.write("import shutil\n")
         f.write("sys.path.append('/home/rmandelb/git/great3-private')\n")
         f.write("import great3sims\n")
-        command_str = "great3.run('" + root + "', subfield_min=" + str(subfield_min) + \
+        command_str = "great3sims.run('" + root + "', subfield_min=" + str(subfield_min) + \
             ", subfield_max=" + str(subfield_max) + ", experiments=['" + experiment + \
             "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
             "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
@@ -68,7 +68,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
             last = subfield_min + (subfield_max-subfield_min+1)/n_config_per_branch * (i+1) - 1
             # Could put nproc setting here.  However, for now we just want to use as many processors
             # as we have on that node.  This could get interesting for RealGalaxy branches.
-            command_str = "great3.run('" + root + "', subfield_min=" + str(first) + \
+            command_str = "great3sims.run('" + root + "', subfield_min=" + str(first) + \
                 ", subfield_max=" + str(last) + ", experiments=['" + experiment + \
                 "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
                 "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
@@ -84,11 +84,11 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
             f.write("shutil.move('"+os.path.join(root,psf_config_pref+'.yaml')+"', '" \
                         +os.path.join(root,new_psf_name)+"')\n")
 
-        # But don't make multiple star test configs, just one.  We have to rerun great3.run for this
+        # But don't make multiple star test configs, just one.  We have to rerun great3sims.run for this
         # to get the config file for everything.  It will also remake config files for galaxy and
         # starfield images, but since we won't add their names to our list of config files to run,
         # they just get ignored, and it's all good.
-        command_str = "great3.run('" + root + "', subfield_min=" + str(subfield_min) + \
+        command_str = "great3sims.run('" + root + "', subfield_min=" + str(subfield_min) + \
             ", subfield_max=" + str(subfield_max) + ", experiments=['" + experiment + \
             "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
             "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
@@ -105,7 +105,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
         f.write("import sys\n")
         f.write("sys.path.append('/home/rmandelb/git/great3-private')\n")
         f.write("import great3sims\n")
-        command_str = "great3.run('" + root + "', subfield_min=" + str(subfield_min) + \
+        command_str = "great3sims.run('" + root + "', subfield_min=" + str(subfield_min) + \
             ", subfield_max=" + str(subfield_max) + ", experiments=['" + experiment + \
             "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
             "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
