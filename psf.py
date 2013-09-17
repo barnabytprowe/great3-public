@@ -342,7 +342,7 @@ class ConstPSFBuilder(PSFBuilder):
                 strut_angle[i_epoch] = 0.
 
             # This is the default.  But option here to go larger if desired.
-            pad_factor[i_epoch] = 1.5
+            pad_factor[i_epoch] = 1.5 * 2.
 
             if self.obs_type == "ground":
                 # for seeing values, check whether we need to force them to follow the distribution
@@ -667,7 +667,7 @@ class VariablePSFBuilder(PSFBuilder):
         }
 
     # This is the default.  But option here to go larger if desired.
-    pad_factor = 1.5
+    pad_factor = 1.5 * 2.
 
     # For space-based PSFs only: include jitter and charge diffusion.  The plan as stated on #42,
     # based on discussion with Lance Miller and several WFIRST people, is to make jitter a Gaussian
