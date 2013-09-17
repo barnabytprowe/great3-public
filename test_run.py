@@ -40,18 +40,21 @@ do_images = True    # Make the images in great3 builder code?
 do_config = False    # Do config-related steps?
 do_final = True     # Do final packaging steps?
 
+# Note: these definitions have to happen up front.  They affect image generation in addition to
+# catalog generation.
+# Reduce number of galaxies so it won't take so long
+great3sims.constants.nrows = 10
+great3sims.constants.ncols = 10
+# Reduce number of stars so it won't take so long
+great3sims.constants.min_star_density = 0.01 # per arcmin^2
+great3sims.constants.max_star_density = 0.03
+
 # Build catalogs, etc.
 if do_catalogs:
     # Clean up possible residue from previous runs.
     shutil.rmtree(root, ignore_errors=True)
 
     t1 = time.time()
-    # Reduce number of galaxies so it won't take so long
-    great3sims.constants.nrows = 10
-    great3sims.constants.ncols = 10
-    # Reduce number of stars so it won't take so long
-    great3sims.constants.min_star_density = 0.01 # per arcmin^2
-    great3sims.constants.max_star_density = 0.03
     great3sims.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
                 experiments=experiments, obs_type=obs_type, shear_type=shear_type,
                 gal_dir=data_dir, ps_dir=ps_dir,
