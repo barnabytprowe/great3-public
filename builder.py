@@ -467,8 +467,8 @@ class SimBuilder(object):
                 test_catalog["epoch"][test_ind] = epoch_index
                 test_catalog["star_catalog_entry"][test_ind] = star_cat_ind
                 test_ind += 1
-            # Write to file.
-            self.mapper.write(test_catalog, "star_test_catalog", epoch_parameters)
+        # Write to file.
+        self.mapper.write(test_catalog, "star_test_catalog", epoch_parameters)
 
     def writeConfig(self, experiment, obs_type, shear_type, subfield_min, subfield_max):
 
@@ -639,6 +639,21 @@ class SimBuilder(object):
         }
         d['gal']['magnification'] = { 'type' : 'Catalog', 'col' : 'mu' }
 
+        if self.real_galaxy:
+            # Normally, it is better to parallelize at the file level.  But with RealGalaxy
+            # we parallelize at the postage stamp level to make the preloading more 
+            # efficient.
+            d['image']['nproc'] = self.nproc
+            del d['output']['nproc']
+
+            # Also need to add the RealGalaxyCatalog to input
+            d['input']['real_catalog'] = {
+                'dir' : os.path.abspath(self.galaxy_builder.gal_dir),
+                'file_name' : self.galaxy_builder.rgc_file,
+                'preload' : True
+            }
+
+
         file_name = os.path.join(self.mapper.root,
                                  experiment_letter + obs_letter + shear_letter + '.yaml')
         print 'Write gal config dict to ',file_name
@@ -761,9 +776,7 @@ class SimBuilder(object):
                 xmax=int(record['xmax']), ymax=int(record['ymax']),
             )
             stamp = galaxy_image.subImage(bbox)
-            # Note from RM: the use of 'sb' normalization necessary for noise whitening.
-            # But for now let's use flux normalization after correcting input fluxes to account for
-            # this and get something like HST.
+            # Draw into the postage stamp.
             final.draw(stamp, normalization='f', dx=pixel_scale, offset=offset)
             # The lines below are commented out because they are just diagnostics that can be used
             # to check that the actual S/N is fairly consistent with the estimated one.

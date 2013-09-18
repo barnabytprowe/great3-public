@@ -22,12 +22,9 @@ def makeBuilder(real_galaxy, obs_type, shear_type, multiepoch, gal_dir):
                            constants.n_epochs epochs
     @param[in] gal_dir     Directory with galaxy catalog information.
     """
-    if real_galaxy:
-        raise NotImplementedError("No real galaxies yet!")
-    else:
-        return COSMOSGalaxyBuilder(real_galaxy=real_galaxy, obs_type=obs_type,
-                                   shear_type=shear_type, multiepoch=multiepoch,
-                                   gal_dir=gal_dir)
+    return COSMOSGalaxyBuilder(real_galaxy=real_galaxy, obs_type=obs_type,
+                               shear_type=shear_type, multiepoch=multiepoch,
+                               gal_dir=gal_dir)
 
 class GalaxyBuilder(object):
 
@@ -135,10 +132,6 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
  
 class COSMOSGalaxyBuilder(GalaxyBuilder):
     """A GalaxyBuilder subclass for making COSMOS-based galaxies.
-
-    This is either going to be split into a FitGalaxyBuilder and a RealGalaxyBuilder, or the
-    difference between real_galaxy vs. not will be handled by calling different subroutines.  For
-    now, it is only used for control experiment (i.e., parametric galaxies).
     """
     ## Decide on some meta-parameters.
     # What fraction of flux should we require there to be in the postage stamp?
@@ -177,19 +170,22 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         self.gal_dir = gal_dir
 
     def generateSubfieldParameters(self, rng, subfield_index):
-        # I think that at this point, we only want to generate schema.  Everything else happens when
-        # making the catalog.
+        # At this point, we only want to generate schema.  Everything else happens when making the
+        # catalog.  The schema are different for real_galaxy and parametric galaxy branches.
+
         # We can only get here for the parametric galaxy case, so for now, just return schema for
         # that case.  Eventually we will have different ones based on the value of self.real_galaxy.
-        # TODO: I want to have a schema entry that is a string, but it keeps vanishing.  For now,
-        # assume that bulge = Sersic and disk = Exponential.
         # We'll also make a place-holder for approximate S/N value per galaxy based on pre-computed
         # numbers.  We will want to access this in our tests of the catalog.
-        gal_schema=[("bulge_n", float), ("bulge_hlr", float),
-                    ("bulge_q", float), ("bulge_beta_radians", float), ("bulge_flux", float),
-                    ("disk_hlr", float), ("disk_q", float),
-                    ("disk_beta_radians", float), ("disk_flux", float), ("gal_sn", float),
-                    ("cosmos_ident", int)]
+        if self.real_galaxy:
+            gal_schema = [("rot_angle_radians", float), ("gal_sn", float), ("cosmos_ident", int),
+                          ("size_rescale", float), ("flux_rescale", float)]
+        else:
+            gal_schema=[("bulge_n", float), ("bulge_hlr", float),
+                        ("bulge_q", float), ("bulge_beta_radians", float), ("bulge_flux", float),
+                        ("disk_hlr", float), ("disk_q", float),
+                        ("disk_beta_radians", float), ("disk_flux", float), ("gal_sn", float),
+                        ("cosmos_ident", int)]
         return dict(schema=gal_schema)
 
     def generateCatalog(self, rng, catalog, parameters, variance, noise_mult, seeing=None):
@@ -210,13 +206,11 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
 
         # If we haven't set up the catalog and such yet, do so now:
         if not hasattr(self,'rgc'):
-            # Read in RealGalaxyCatalog; only preload image headers if it's a real galaxy branch
-            # If necessary (i.e., non-real galaxy branch), read in fits
-            if self.real_galaxy:
-                self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir, preload=True)
-            else:
-                self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir)
-                self.fit_catalog = pyfits.getdata(os.path.join(self.gal_dir, self.rgc_fits_file))
+            # Read in RealGalaxyCatalog, fits.
+            # TODO: The question of preloading vs. not should be investigated once this branch
+            # basically works.
+            self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir)
+            self.fit_catalog = pyfits.getdata(os.path.join(self.gal_dir, self.rgc_fits_file))
 
             # Read in shapes file, to use for B-mode shape noise and for overall selection
             self.shapes_catalog = pyfits.getdata(os.path.join(self.gal_dir,
@@ -401,66 +395,81 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             n_epochs = 1
 
         # Now that we know which galaxies to use in which order, and with what rotation angles, we
-        # will populate the catalog from the fits.  This again will have to change when we have real
-        # galaxy experiments set up.  We need to apply the size rescaling to mimic a deeper sample.
+        # will populate the catalog.  The next bit of code depends quite a bit on whether it is a
+        # real_galaxy or parametric galaxy experiment.  This is also where we specify flux and size
+        # rescalings to mimic the deeper sample.
         ind = 0
         for record in catalog:
             record["cosmos_ident"] = self.fit_catalog[all_indices[ind]].field('ident')
-            if self.use_bulgefit[all_indices[ind]] == 1.:
-                params = self.fit_catalog[all_indices[ind]].field('bulgefit')
-
-                bulge_q = params[11]
-                bulge_beta = params[15]*galsim.radians + rot_angle[ind]*galsim.radians
-                bulge_hlr = 0.03*self.size_rescale*np.sqrt(bulge_q)*params[9] # arcsec 
-                # factor of 0.03^2 in line below is because of Claire's normalization conventions 
-                # when fitting.
-                # It is needed if we're drawing with 'flux' normalization convention.
-                bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*params[8]/self.size_rescale**2/(0.03**2)
-
-                disk_q = params[3]
-                disk_beta = params[7]*galsim.radians + rot_angle[ind]*galsim.radians
-                disk_hlr = 0.03*self.size_rescale*np.sqrt(disk_q)*params[1] # arcsec
-                disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*params[0]/self.size_rescale**2/(0.03**2)
-
+            if self.real_galaxy:
                 record["gal_sn"] = approx_sn_gal[all_indices[ind]]
-                bulge_frac = bulge_flux / (bulge_flux + disk_flux)
-                record["bulge_n"] = 4.0
-                record["bulge_hlr"] = bulge_hlr
-                record["bulge_q"] = bulge_q
-                record["bulge_beta_radians"] = bulge_beta/galsim.radians
-                record["bulge_flux"] = bulge_flux / n_epochs
-                record["disk_hlr"] = disk_hlr
-                record["disk_q"] = disk_q
-                record["disk_beta_radians"] = disk_beta/galsim.radians
-                record["disk_flux"] = disk_flux / n_epochs
+                record["rot_angle_radians"] = rot_angle[ind]
+                record["size_rescale"] = self.size_rescale
+                record["flux_rescale"] = 1. / n_epochs
             else:
-                # Make a single Sersic model instead
-                params = self.fit_catalog[all_indices[ind]].field('sersicfit')
-                gal_n = params[2]
-                # Fudge this if it is at the edge.  Now that GalSim #325 and #449 allow Sersic n in
-                # the range 0.3<=n<=6, the only problem is that Claire occasionally goes as low as
-                # n=0.2.
-                if gal_n < 0.3: gal_n = 0.3
-                gal_q = params[3]
-                gal_beta = params[7]*galsim.radians + rot_angle[ind]*galsim.radians
-                gal_hlr = 0.03*self.size_rescale*np.sqrt(gal_q)*params[1]
-                tmp_ser = galsim.Sersic(gal_n, half_light_radius=1.)
-                gal_bn = (1./tmp_ser.getScaleRadius())**(1./gal_n)
-                prefactor = gal_n * _gammafn(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
-                gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*params[0]/self.size_rescale**2/0.03**2
-                record["gal_sn"] = approx_sn_gal[all_indices[ind]]
-                record["bulge_n"] = gal_n
-                record["bulge_hlr"] = gal_hlr
-                record["bulge_q"] = gal_q
-                record["bulge_beta_radians"] = gal_beta/galsim.radians
-                record["bulge_flux"] = gal_flux / n_epochs
-                record["disk_hlr"] = 1.0
-                record["disk_q"] = 1.0
-                record["disk_beta_radians"] = 0.0
-                record["disk_flux"] = 0.0
+                if self.use_bulgefit[all_indices[ind]] == 1.:
+                    params = self.fit_catalog[all_indices[ind]].field('bulgefit')
+
+                    bulge_q = params[11]
+                    bulge_beta = params[15]*galsim.radians + rot_angle[ind]*galsim.radians
+                    bulge_hlr = 0.03*self.size_rescale*np.sqrt(bulge_q)*params[9] # arcsec
+                    # Factor of 0.03^2 in line below is because of Claire's normalization
+                    # conventions when fitting.
+                    # It is needed if we're drawing with 'flux' normalization convention.
+                    bulge_flux = \
+                        2.0*np.pi*3.607*(bulge_hlr**2)*params[8]/self.size_rescale**2/(0.03**2) 
+
+                    disk_q = params[3]
+                    disk_beta = params[7]*galsim.radians + rot_angle[ind]*galsim.radians
+                    disk_hlr = 0.03*self.size_rescale*np.sqrt(disk_q)*params[1] # arcsec
+                    disk_flux = \
+                        2.0*np.pi*1.901*(disk_hlr**2)*params[0]/self.size_rescale**2/(0.03**2)
+
+                    record["gal_sn"] = approx_sn_gal[all_indices[ind]]
+                    bulge_frac = bulge_flux / (bulge_flux + disk_flux)
+                    record["bulge_n"] = 4.0
+                    record["bulge_hlr"] = bulge_hlr
+                    record["bulge_q"] = bulge_q
+                    record["bulge_beta_radians"] = bulge_beta/galsim.radians
+                    record["bulge_flux"] = bulge_flux / n_epochs
+                    record["disk_hlr"] = disk_hlr
+                    record["disk_q"] = disk_q
+                    record["disk_beta_radians"] = disk_beta/galsim.radians
+                    record["disk_flux"] = disk_flux / n_epochs
+                else:
+                    # Make a single Sersic model instead
+                    params = self.fit_catalog[all_indices[ind]].field('sersicfit')
+                    gal_n = params[2]
+                    # Fudge this if it is at the edge.  Now that GalSim #325 and #449 allow Sersic n
+                    # in the range 0.3<=n<=6, the only problem is that Claire occasionally goes as
+                    # low as n=0.2.
+                    if gal_n < 0.3: gal_n = 0.3
+                    gal_q = params[3]
+                    gal_beta = params[7]*galsim.radians + rot_angle[ind]*galsim.radians
+                    gal_hlr = 0.03*self.size_rescale*np.sqrt(gal_q)*params[1]
+                    tmp_ser = galsim.Sersic(gal_n, half_light_radius=1.)
+                    gal_bn = (1./tmp_ser.getScaleRadius())**(1./gal_n)
+                    prefactor = gal_n * _gammafn(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
+                    gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*params[0]/self.size_rescale**2/0.03**2
+                    record["gal_sn"] = approx_sn_gal[all_indices[ind]]
+                    record["bulge_n"] = gal_n
+                    record["bulge_hlr"] = gal_hlr
+                    record["bulge_q"] = gal_q
+                    record["bulge_beta_radians"] = gal_beta/galsim.radians
+                    record["bulge_flux"] = gal_flux / n_epochs
+                    record["disk_hlr"] = 1.0
+                    record["disk_q"] = 1.0
+                    record["disk_beta_radians"] = 0.0
+                    record["disk_flux"] = 0.0
             ind += 1
 
     def makeConfigDict(self):
+        if self.real_galaxy:
+            return self.makeConfigDictReal()
+        else:
+            return self.makeConfigDictParametric()
+
+    def makeConfigDictParametric(self):
         d = {
             'type' : 'Sum',
             'items' : [
@@ -493,7 +502,30 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         }
         return d
 
+    def makeConfigDictReal(self):
+        noise_pad_size = int(np.ceil(constants.xsize[self.obs_type][self.multiepoch] *
+                                     np.sqrt(2.) * 
+                                     constants.pixel_scale[self.obs_type][self.multiepoch]))
+        d = {
+            'type' : 'RealGalaxy',
+            'id' : { 'type' : 'Catalog', 'col' : 'cosmos_ident' },
+            'noise_pad_size' : noise_pad_size,
+            'dilate' : { 'type' : 'Catalog', 'col' : 'size_rescale' },
+            'scale_flux' : { 'type' : 'Catalog', 'col' : 'flux_rescale' },
+            'rotate' : { 'type' : 'Rad',
+                         'theta' : { 'type' : 'Catalog', 'col' : 'rot_angle_radians' } 
+                       },
+            'whiten' : True
+        }
+        return d
+
     def makeGalSimObject(self, record, parameters, xsize, ysize, rng):
+        if self.real_galaxy:
+            return self.makeGalSimObjectReal(record, parameters, xsize, ysize, rng)
+        else:
+            return self.makeGalSimObjectParametric(record, parameters, xsize, ysize, rng)
+
+    def makeGalSimObjectParametric(self, record, parameters, xsize, ysize, rng):
         # Specify sizes in arcsec.
         if record['bulge_flux'] > 0.:
             # First make a bulge
@@ -517,3 +549,30 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         else:
             return bulge, None
 
+    def makeGalSimObjectReal(self, record, parameters, xsize, ysize, rng):
+        # First set up the basic RealGalaxy.  But actually, to do that, we need to check that we
+        # have a RealGalaxyCatalog already read in.  This happens in the generateCatalog step, but
+        # if we are running great3.run() only for later steps in the analysis process, then
+        # generateCatalog isn't run, so the galaxy builder won't have a stored RealGalaxyCatalog
+        # attribute.  Check and read it in if necessary, before trying to make a RealGalaxy.
+        if not hasattr(self,'rgc'):
+            # Read in RealGalaxyCatalog, fits.
+            # TODO: The question of preloading vs. not should be investigated once this branch
+            # basically works.
+            self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir)
+        noise_pad_size = np.ceil(
+            constants.xsize[self.obs_type][self.multiepoch] * np.sqrt(2.) * \
+                constants.pixel_scale[self.obs_type][self.multiepoch]
+            )
+        gal = galsim.RealGalaxy(self.rgc, rng=rng, id=record['cosmos_ident'],
+                                noise_pad_size=noise_pad_size)
+        
+        # Rescale its size.
+        gal.applyDilation(record['size_rescale'])
+        # Rescale its flux.
+        gal *= record['flux_rescale']
+        # Rotate.
+        gal.applyRotation(record['rot_angle_radians']*galsim.radians)
+        # When we return the final noise object, we don't have to explicitly rescale its variance,
+        # since the internal workings of this class take care of it for us.
+        return gal, gal.noise
