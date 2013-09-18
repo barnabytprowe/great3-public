@@ -467,8 +467,8 @@ class SimBuilder(object):
                 test_catalog["epoch"][test_ind] = epoch_index
                 test_catalog["star_catalog_entry"][test_ind] = star_cat_ind
                 test_ind += 1
-            # Write to file.
-            self.mapper.write(test_catalog, "star_test_catalog", epoch_parameters)
+        # Write to file.
+        self.mapper.write(test_catalog, "star_test_catalog", epoch_parameters)
 
     def writeConfig(self, experiment, obs_type, shear_type, subfield_min, subfield_max):
 
