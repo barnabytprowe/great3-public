@@ -85,7 +85,7 @@ def check_all(root_dir, experiments=constants.experiments, obs_types=constants.o
     return retlist
 
 
-if __name__ is "__main__":
+if __name__ == "__main__":
 
     good_truth = check_all(constants.truth_dir)
     good_public = check_all(constants.public_dir)
