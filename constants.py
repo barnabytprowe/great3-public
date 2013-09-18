@@ -1,8 +1,8 @@
-
 truth_dir = "/Users/browe/great3/truth"
-public_dir = "/Users/browe/great3/great3-private/tests/test_run"
-#public_dir = "/Users/browe/great3/public"
+#public_dir = "/Users/browe/great3/great3-private/tests/test_run"
+public_dir = "/Users/browe/great3/public"
 
+# Experiments, obs_types and shear_types to validate
 experiments = [
     "control",
     "real_gal",
@@ -20,3 +20,17 @@ shear_types = [
     "constant",
     "variable"
 ]
+
+# Information about pipeline location, and tags and column layouts
+pipeline_dir = "/Users/browe/great3/validation"  # Directory in which the pipeline output is stored
+pipeline_columns = { 
+    "imcat": {
+        "id": 0, "g1": 3, "g2": 4},
+    "hsm_regauss": {
+        "id": 0, "g1": 3, "g2": 4},
+    "im3shape": {
+        "id": 0, "g1": 3, "g2": 4},
+}
+
+# Directory into which to put submissions
+submission_dir = "./submissions"
