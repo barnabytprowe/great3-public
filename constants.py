@@ -1,7 +1,7 @@
 
 truth_dir = "/Users/browe/great3/truth"
-#public_dir = "/Users/browe/great3/great3-private/tests/test_run"
-public_dir = "/Users/browe/great3/public"
+public_dir = "/Users/browe/great3/great3-private/tests/test_run"
+#public_dir = "/Users/browe/great3/public"
 
 experiments = [
     "control",
