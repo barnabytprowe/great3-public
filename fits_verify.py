@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+
 import os
 import sys
 import glob
 import constants
 sys.path.append("..")
 import great3sims.mapper
+
 
 def file_good(filename, fitsverify_exec="fitsverify", silent=True):
     """Run fitsverify on the given `filename`.
