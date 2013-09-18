@@ -11,14 +11,12 @@ experiments = [
     "full"
 ]
 
-obs_type = [
+obs_types = [
     "ground",
     "space"
 ]
 
-shear_type = [
-    "control",
+shear_types = [
+    "constant",
     "variable"
 ]
-
-
