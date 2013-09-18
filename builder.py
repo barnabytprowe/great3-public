@@ -639,6 +639,21 @@ class SimBuilder(object):
         }
         d['gal']['magnification'] = { 'type' : 'Catalog', 'col' : 'mu' }
 
+        if self.real_galaxy:
+            # Normally, it is better to parallelize at the file level.  But with RealGalaxy
+            # we parallelize at the postage stamp level to make the preloading more 
+            # efficient.
+            d['image']['nproc'] = self.nproc
+            del d['output']['nproc']
+
+            # Also need to add the RealGalaxyCatalog to input
+            d['input']['real_catalog'] = {
+                'dir' : os.path.abspath(self.galaxy_builder.gal_dir),
+                'file_name' : self.galaxy_builder.rgc_file,
+                'preload' : True
+            }
+
+
         file_name = os.path.join(self.mapper.root,
                                  experiment_letter + obs_letter + shear_letter + '.yaml')
         print 'Write gal config dict to ',file_name

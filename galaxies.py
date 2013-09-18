@@ -465,9 +465,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
 
     def makeConfigDict(self):
         if self.real_galaxy:
-            return self.makeConfigDictParametric()
-        else:
             return self.makeConfigDictReal()
+        else:
+            return self.makeConfigDictParametric()
 
     def makeConfigDictParametric(self):
         d = {
@@ -503,17 +503,20 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         return d
 
     def makeConfigDictReal(self):
-        # TODO: set up the config dict to do all of the following:
-        # (1) select the galaxy based on its ID, which is stored in our catalog as 'cosmos_ident'
-        # (2) tell it that we want to whiten the noise
-        # (3) apply the flux rescaling factor specified in the catalog as 'flux_rescale'
-        # (4) apply the rotation specified in the catalog as 'rot_angle_radians'
-        # (5) apply the size rescaling specified in the catalog as 'size_rescale'
-        # Did I need to set up some number to use for noise_pad_size?  Let's say it's typically 
-        # xsize * sqrt(2) * pixel_scale and perhaps it can be determined in this function rather than
-        # set in the catalog?
-        # [the other stuff like shearing is set up in builder.py]
-        d = {}
+        noise_pad_size = int(np.ceil(constants.xsize[self.obs_type][self.multiepoch] *
+                                     np.sqrt(2.) * 
+                                     constants.pixel_scale[self.obs_type][self.multiepoch]))
+        d = {
+            'type' : 'RealGalaxy',
+            'id' : { 'type' : 'Catalog', 'col' : 'cosmos_ident' },
+            'noise_pad_size' : noise_pad_size,
+            'dilate' : { 'type' : 'Catalog', 'col' : 'size_rescale' },
+            'scale_flux' : { 'type' : 'Catalog', 'col' : 'flux_rescale' },
+            'rotate' : { 'type' : 'Rad',
+                         'theta' : { 'type' : 'Catalog', 'col' : 'rot_angle_radians' } 
+                       },
+            'whiten' : True
+        }
         return d
 
     def makeGalSimObject(self, record, parameters, xsize, ysize, rng):
