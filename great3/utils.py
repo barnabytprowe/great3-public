@@ -38,18 +38,30 @@ def load_variable_submission(filename):
     return field_index, theta, map_E, map_B, maperr
 
 def verify_subfield_indices(subfield_index):
-    """@return `True` if input subfield indices match expectation.
+    """Returns `True` if input subfield indices match expectation.
     """
     reference = range(evaluate.NSUBFIELDS)
     checklist = [subitem == refitem for subitem, refitem in zip(subfield_index, reference)]
     return all(checklist)
 
 def verify_field_indices(field_index):
-    """@return `True` if input field indices match expectation.
+    """Returns `True` if input field indices match expectation.
     """
     reference = np.arange(evaluate.NBINS_THETA * evaluate.NFIELDS, dtype=int) / evaluate.NBINS_THETA
     checklist = [fielditem == refitem for fielditem, refitem in zip(field_index, reference)]
     return all(checklist)
+
+def verify_theta(theta, decimal=3):
+    """Returns `True` if input theta array matches expectation to within `decimal` decimal places.
+    """
+    try:
+        np.testing.assert_array_almost_equal(
+            np.asarray(theta), evaluate.EXPECTED_THETA, decimal=decimal)
+    except AssertionError as err:
+        retval = False
+    else:
+        retval = True 
+    return retval
 
 def get_verify_submission_basics(filename):
     """Check the basics of a submission: i) file exists; ii) numpy.loadtxt(filename) is a 2D array.
@@ -137,11 +149,79 @@ def verify_constant_submission(filename, verbose=False, raise_exception_on_fail=
     # Return 
     return constant
 
-def verify_variable_submission(filename, verbose, raise_exception_on_total_fail):
-    return True
+def verify_variable_submission(filename, verbose=False, raise_exception_on_fail=True):
+    """Check whether a given submission (stored in `filename`) conforms to variable shear type
+    submission expectations.
+
+    Returns `True` if the submission looks like a valid variable shear submission, `False`
+    otherwise.
+    """
+    # Start off assuming that this is not a valid variable submission, set True only after all hoops
+    # leapt through
+    variable = False 
+    error = False  # Gets set if this looks like neither a variable or constant submission
+
+    try: # Try just loading the submission
+        data = get_verify_submission_basics(filename)
+    except Exception as err:
+        if raise_exception_on_total_fail:
+            raise err
+        elif verbose:
+            print err.message
+    else: # If successfully loaded, process the resultant 2D array and check its dimensions and
+          # content 
+        nrows = data.shape[0]
+        ncols = data.shape[1]
+        # Check the number of rows first, as this *must* be NBINS_THETA * NFIELDS
+        if nrows == evaluate.NBINS_THETA * evaluate.NFIELDS:
+            if (ncols >= 3) and (ncols <= 5):
+                field_index = data[:, 0].astype(int)
+                if verify_field_indices(field_index):
+                    if verify_theta(theta):
+                        variable = True # If ncols, nrows, field_index, theta are right, we're good
+                    else:
+                        error = True
+                        err_msg = "Submission "+str(filename)+" has the correct number of rows "+\
+                            "and columns, and the correct field indices, for a variable shear "+\
+                            "branch submission but the theta values (second column) are wrong at "+\
+                            "at 3 decimal places."
+                else:
+                    error = True
+                    err_msg = "Submission "+str(filename)+" has the correct number of rows and "+\
+                        "columns a for a variable shear branch submission but the field "+\
+                        "indices (first column) are wrong." 
+            else:
+                error = True
+                err_msg = "Submission "+str(filename)+" has correct number of rows but the wrong "+\
+                    "number of columns (ncols="+str(ncols)+") to be a valid variable shear "+\
+                    "branch submission!"
+        else:
+            constant = verify_variable_submission(
+                filename, verbose=False, raise_exception_on_fail=False)
+            if constant:
+                if verbose:
+                    print "Submission ("+str(filename)+") looks like a valid constant shear "+\
+                        "branch submission."
+            else:
+                error = True
+                err_msg = "Submission ("+str(filename)+") looks like neither a constant nor "+\
+                    "a variable shear branch submission!"
+    if error:
+        if raise_exception_on_fail:
+            raise TypeError(err_msg)
+        elif verbose:
+            print err_msg
+    elif variable:
+        if verbose:
+            print "Submission ("+str(filename)+") looks like a valid variable shear branch "+\
+                "submission."
+    # Return 
+    return variable
+
 
 if __name__ == "__main__":
 
     from sys import argv
     result = verify_constant_submission(argv[1], verbose=True, raise_exception_on_total_fail=False)
     print result
+    result = verify_variable_submission(argv[1], verbose=True, raise_exception_on_total_fail=False)
