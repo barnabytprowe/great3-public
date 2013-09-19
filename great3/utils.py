@@ -177,7 +177,7 @@ def verify_variable_submission(filename, verbose=False, raise_exception_on_fail=
             if (ncols >= 3) and (ncols <= 5):
                 field_index = data[:, 0].astype(int)
                 if verify_field_indices(field_index):
-                    if verify_theta(theta):
+                    if verify_theta(data[:, 1]):
                         variable = True # If ncols, nrows, field_index, theta are right, we're good
                     else:
                         error = True
@@ -196,7 +196,7 @@ def verify_variable_submission(filename, verbose=False, raise_exception_on_fail=
                     "number of columns (ncols="+str(ncols)+") to be a valid variable shear "+\
                     "branch submission!"
         else:
-            constant = verify_variable_submission(
+            constant = verify_constant_submission(
                 filename, verbose=False, raise_exception_on_fail=False)
             if constant:
                 if verbose:
@@ -225,3 +225,4 @@ if __name__ == "__main__":
     result = verify_constant_submission(argv[1], verbose=True, raise_exception_on_fail=False)
     print result
     result = verify_variable_submission(argv[1], verbose=True, raise_exception_on_fail=False)
+    print result
