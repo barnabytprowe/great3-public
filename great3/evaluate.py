@@ -92,6 +92,10 @@ THETA_MIN_DEG = 0.02 # Minimum and maximum angular scales for logarithmic bins u
 THETA_MAX_DEG = 10.0 # aperture mass disp. - MUST match specs given to participants - in degrees
 NBINS_THETA = 15     # Number of logarithmic bins theta for the aperture mass dispersion
 
+EXPECTED_THETA = np.array([ # Array of theta values expected in submissions, good to 3 d.p.
+    0.0246, 0.0372,  0.0563,  0.0853,  0.129 ,  0.1953,  0.2955, 0.4472,  0.6768,  1.0242,  1.5499,
+    2.3455,  3.5495,  5.3716, 8.1289] * NFIELDS)
+
 STORAGE_DIR = "./metric_calculation_products" # Folder into which to store useful intermediate
                                               # outputs of metric calculations (e.g. rotation files,
                                               # dicts, mapE tables) which need be calculated only
