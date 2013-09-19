@@ -102,7 +102,7 @@ def verify_constant_submission(filename, verbose=False, raise_exception_on_fail=
     try: # Try just loading the submission
         data = get_verify_submission_basics(filename)
     except Exception as err:
-        if raise_exception_on_total_fail:
+        if raise_exception_on_fail:
             raise err
         elif verbose:
             print err.message
@@ -164,7 +164,7 @@ def verify_variable_submission(filename, verbose=False, raise_exception_on_fail=
     try: # Try just loading the submission
         data = get_verify_submission_basics(filename)
     except Exception as err:
-        if raise_exception_on_total_fail:
+        if raise_exception_on_fail:
             raise err
         elif verbose:
             print err.message
@@ -222,6 +222,6 @@ def verify_variable_submission(filename, verbose=False, raise_exception_on_fail=
 if __name__ == "__main__":
 
     from sys import argv
-    result = verify_constant_submission(argv[1], verbose=True, raise_exception_on_total_fail=False)
+    result = verify_constant_submission(argv[1], verbose=True, raise_exception_on_fail=False)
     print result
-    result = verify_variable_submission(argv[1], verbose=True, raise_exception_on_total_fail=False)
+    result = verify_variable_submission(argv[1], verbose=True, raise_exception_on_fail=False)
