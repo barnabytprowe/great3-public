@@ -87,7 +87,8 @@ def get_verify_submission_basics(filename):
             "dimension = "+str(ndim))
     return data 
 
-def verify_constant_submission(filename, verbose=False, raise_exception_on_fail=True):
+def verify_constant_submission(filename, verbose=False, raise_exception_on_fail=True,
+                               check_variable=False):
     """Check whether a given submission (stored in `filename`) conforms to constant shear type
     submission expectations.
 
@@ -119,7 +120,7 @@ def verify_constant_submission(filename, verbose=False, raise_exception_on_fail=
                 else:
                     error = True
                     err_msg = "Submission "+str(filename)+" has the correct number of rows and "+\
-                        "columns a for a constant shear branch submission but the subfield "+\
+                        "columns for a constant shear branch submission but the subfield "+\
                         "indices (first column) are wrong."
             else:
                 error = True
@@ -127,16 +128,24 @@ def verify_constant_submission(filename, verbose=False, raise_exception_on_fail=
                     "number of columns (ncols="+str(ncols)+") to be a valid constant shear "+\
                     "branch submission!"
         else:
-            variable = verify_variable_submission(
-                filename, verbose=False, raise_exception_on_fail=False)
-            if variable:
+            if check_variable:
                 if verbose:
-                    print "Submission ("+str(filename)+") looks like a valid variable shear "+\
-                        "branch submission."
+                    print "Submission ("+str(filename)+") is not constant, checking whether "+\
+                        "variable instead."
+                variable = verify_variable_submission(
+                    filename, verbose=verbose, raise_exception_on_fail=False, check_constant=False)
+                if variable:
+                    if verbose:
+                        print "Submission ("+str(filename)+") looks like a valid variable shear "+\
+                            "branch submission."
+                else:
+                    error = True
+                    err_msg = "Submission ("+str(filename)+") looks like neither a constant nor "+\
+                        "a variable shear branch submission!"
             else:
                 error = True
-                err_msg = "Submission ("+str(filename)+") looks like neither a constant nor "+\
-                    "a variable shear branch submission!"
+                err_msg = "Submission ("+str(filename)+") does not look like a "+\
+                    "a constant shear branch submission!"
     if error:
         if raise_exception_on_fail:
             raise TypeError(err_msg)
@@ -149,7 +158,8 @@ def verify_constant_submission(filename, verbose=False, raise_exception_on_fail=
     # Return 
     return constant
 
-def verify_variable_submission(filename, verbose=False, raise_exception_on_fail=True):
+def verify_variable_submission(filename, verbose=False, raise_exception_on_fail=True,
+                               check_constant=False):
     """Check whether a given submission (stored in `filename`) conforms to variable shear type
     submission expectations.
 
@@ -196,15 +206,23 @@ def verify_variable_submission(filename, verbose=False, raise_exception_on_fail=
                     "number of columns (ncols="+str(ncols)+") to be a valid variable shear "+\
                     "branch submission!"
         else:
-            constant = verify_constant_submission(
-                filename, verbose=False, raise_exception_on_fail=False)
-            if constant:
+            if check_constant:
                 if verbose:
-                    print "Submission ("+str(filename)+") looks like a valid constant shear "+\
-                        "branch submission."
+                    print "Submission ("+str(filename)+") is not variable, checking whether "+\
+                        "constant instead."
+                constant = verify_constant_submission(
+                    filename, verbose=verbose, raise_exception_on_fail=False, check_variable=False)
+                if constant:
+                    if verbose:
+                        print "Submission ("+str(filename)+") looks like a valid constant shear "+\
+                            "branch submission."
+                else:
+                    error = True
+                    err_msg = "Submission ("+str(filename)+") looks like neither a constant nor "+\
+                        "a variable shear branch submission!"
             else:
                 error = True
-                err_msg = "Submission ("+str(filename)+") looks like neither a constant nor "+\
+                err_msg = "Submission ("+str(filename)+") does not look like a "+\
                     "a variable shear branch submission!"
     if error:
         if raise_exception_on_fail:
@@ -222,7 +240,9 @@ def verify_variable_submission(filename, verbose=False, raise_exception_on_fail=
 if __name__ == "__main__":
 
     from sys import argv
-    result = verify_constant_submission(argv[1], verbose=True, raise_exception_on_fail=False)
+    result = verify_constant_submission(argv[1], verbose=True, raise_exception_on_fail=True,
+        check_variable=True)
     print result
-    result = verify_variable_submission(argv[1], verbose=True, raise_exception_on_fail=False)
+    result = verify_variable_submission(argv[1], verbose=True, raise_exception_on_fail=True,
+        check_constant=True)
     print result
