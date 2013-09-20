@@ -447,7 +447,8 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
     return (offsets[:, 0]).astype(int), offsets[:, 1], offsets[:, 2]
 
 def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
-                                logger=None, corr2_exec="corr2", corr2_params="corr2.params"):
+                                logger=None, corr2_exec="corr2", corr2_params="corr2.params",
+                                make_plots=True):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
 
     If the map_E truth file has already been built for this variable shear branch, loads and returns
@@ -564,6 +565,34 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             np.savetxt(
                 fout, np.array((field, theta, map_E, map_B, maperr)).T,
                 fmt=" %2d %.18e %.18e %.18e %.18e")
+    if make_plots:
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(10, 8))
+        plt.subplot(211)
+        for ifield in range(NFIELDS):
+            plt.semilogx(
+                theta[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA],
+                map_E[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA], label="Field "+str(ifield))
+        plt.ylim(-2.e-5, 2.e-5)
+        plt.title(mapEtruefile+" E-mode")
+        plt.ylabel("Ap. Mass Dispersion")
+        plt.axhline(ls="--", color="k")
+        plt.legend()
+        plt.subplot(212)
+        for ifield in range(NFIELDS):
+            plt.semilogx(
+                theta[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA],
+                map_B[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA], label="Field "+str(ifield))
+        plt.ylim(-2.e-5, 2.e-5)
+        plt.title(mapEtruefile+" B-mode")
+        plt.xlabel("Theta [degrees]")
+        plt.ylabel("Ap. Mass Dispersion")
+        plt.axhline(ls="--", color="k")
+        plt.legend()
+        plotfile = mapEtruefile.rstrip("asc")+"png"
+        if logger is not None:
+            logger.info("Saving plot output to "+plotfile)
+        plt.savefig(plotfile)
     # Then return
     return field, theta, map_E, map_B, maperr
 
