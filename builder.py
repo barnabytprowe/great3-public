@@ -1053,7 +1053,7 @@ class SimBuilder(object):
                     new_template="star_catalog-%(subfield_index)03d")
             else:
                 tmp_dict["deep_subfield_index"] = subfield_index - n_reg_subfields
-                tmp_dict["epoch_index" : 0]
+                tmp_dict["epoch_index"] = 0
                 outfile = root_rel_mapper.copySub(
                     sub_mapper, 'star_catalog', tmp_dict, star_use_cols,
                     new_template="deep_star_catalog-%(deep_subfield_index)03d")
