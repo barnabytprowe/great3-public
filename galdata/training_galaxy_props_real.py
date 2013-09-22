@@ -14,6 +14,7 @@ def training_galaxy_props_real(psf,
                                pix_scale = 0.03,
                                size_factor = 0.6,
                                ps_size = 48,
+                               do_orig = False,
                                n_use = None): # change to None!
     """
     A routine for estimating the properties of the training sample galaxies in different imaging
@@ -34,6 +35,7 @@ def training_galaxy_props_real(psf,
     @params size_factor   Multiplicative factor by which to modify galaxy sizes to represent a deeper
                           sample.
     @params ps_size       Number of pixels per side for postage stamp into which to draw image
+    @params do_orig       Measure original PS?  Or just simulated.
     @params n_use         Number of galaxies to use; =None for using whole catalog
 """
 
@@ -62,13 +64,14 @@ def training_galaxy_props_real(psf,
         rg = galsim.RealGalaxy(rgc, index=i)
 
         # First do the test of S/N for original image:
-        orig_var = rgc.variance[i] / 0.316 # fudge factor for correlated noise
-        try:
-            res = rg.original_image.draw(dx=0.03).FindAdaptiveMom()
-            aperture_noise = np.sqrt(orig_var*2.*np.pi*(res.moments_sigma**2))
-            sn_ellip_gauss[i] = res.moments_amp / aperture_noise
-        except:
-            sn_ellip_gauss[i] = -10.
+        if do_orig:
+            orig_var = rgc.variance[i] / 0.316 # fudge factor for correlated noise
+            try:
+                res = rg.original_image.draw(dx=0.03).FindAdaptiveMom()
+                aperture_noise = np.sqrt(orig_var*2.*np.pi*(res.moments_sigma**2))
+                sn_ellip_gauss[i] = res.moments_amp / aperture_noise
+            except:
+                sn_ellip_gauss[i] = -10.
         
         # Now make the simulated object, and check the minimum noise variance after whitening.
         # First we rescale the size of the object - could significantly change noise properties.
