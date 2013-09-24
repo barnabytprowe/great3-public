@@ -6,7 +6,7 @@ import math
 
 from . import constants
 
-def makeBuilder(real_galaxy, obs_type, shear_type, multiepoch, gal_dir):
+def makeBuilder(real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload):
     """Return a GalaxyBuilder appropriate for the given options.
 
     @param[in] real_galaxy If True, we should use real galaxy images
@@ -21,10 +21,11 @@ def makeBuilder(real_galaxy, obs_type, shear_type, multiepoch, gal_dir):
                            the PSF should be that of a coadd with
                            constants.n_epochs epochs
     @param[in] gal_dir     Directory with galaxy catalog information.
+    @param[in] preload     Preload the RealGalaxyCatalog for realistic galaxy branches?
     """
     return COSMOSGalaxyBuilder(real_galaxy=real_galaxy, obs_type=obs_type,
                                shear_type=shear_type, multiepoch=multiepoch,
-                               gal_dir=gal_dir)
+                               gal_dir=gal_dir, preload=preload)
 
 class GalaxyBuilder(object):
 
@@ -160,7 +161,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
     ground_nfwhm = 4 # number of FWHM values for ground
     noise_fail_val = 1.e-10 # number to assign for negative noise variance values, then discard
 
-    def __init__(self, real_galaxy, obs_type, shear_type, multiepoch, gal_dir):
+    def __init__(self, real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload):
         """Construct for this type of branch.
         """
         # Basic parameters used by GalaxyBuilder to make decisions about galaxy population
@@ -169,6 +170,10 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         self.shear_type = shear_type
         self.multiepoch = multiepoch
         self.gal_dir = gal_dir
+        if self.real_galaxy == True:
+            self.preload = preload
+        else:
+            self.preload = False
 
     def generateSubfieldParameters(self, rng, subfield_index):
         # At this point, we only want to generate schema.  Everything else happens when making the
@@ -210,7 +215,8 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # Read in RealGalaxyCatalog, fits.
             # TODO: The question of preloading vs. not should be investigated once this branch
             # basically works.
-            self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir)
+            self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir,
+                                                preload=self.preload)
             self.fit_catalog = pyfits.getdata(os.path.join(self.gal_dir, self.rgc_fits_file))
 
             # Read in shapes file, to use for B-mode shape noise and for overall selection
@@ -609,7 +615,8 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # Read in RealGalaxyCatalog, fits.
             # TODO: The question of preloading vs. not should be investigated once this branch
             # basically works.
-            self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir)
+            self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir,
+                                                preload=self.preload)
         noise_pad_size = np.ceil(
             constants.xsize[self.obs_type][self.multiepoch] * np.sqrt(2.) * \
                 constants.pixel_scale[self.obs_type][self.multiepoch]

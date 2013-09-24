@@ -35,7 +35,7 @@ class SimBuilder(object):
         return cls
 
     def __init__(self, root, obs_type, shear_type, gal_dir, ps_dir, atmos_ps_dir, public_dir,
-                 truth_dir, nproc=-1):
+                 truth_dir, preload, nproc=-1):
         """Initialize a builder for the given obs_type and shear_type.
 
         @param[in] root         Root directory for generated files
@@ -46,12 +46,16 @@ class SimBuilder(object):
         @param[in] atmos_ps_dir Directory with tabulated atmospheric PSF anisotropy power spectra.
         @param[in] public_dir   Directory for placing files to be distributed publicly.
         @param[in] truth_dir    Directory containing files used for metric evaluation.
+        @param[in] preload      Preload the RealGalaxyCatalog images to speed up generation of large
+                                numbers of real galaxies?  Note that for parametric galaxy branches,
+                                the catalog is never preloaded.
         @param[in] nproc        How many processes to use in the config file.  (default = -1)
         """
         self.obs_type = obs_type
         self.shear_type = shear_type
         self.public_dir = public_dir
         self.truth_dir = truth_dir
+        self.preload = preload
         self.psf_builder = great3sims.psf.makeBuilder(obs_type=obs_type,
                                                       variable_psf=self.variable_psf,
                                                       multiepoch=self.multiepoch,
@@ -63,7 +67,8 @@ class SimBuilder(object):
                                                               obs_type=obs_type,
                                                               shear_type=shear_type,
                                                               multiepoch=self.multiepoch,
-                                                              gal_dir=gal_dir)
+                                                              gal_dir=gal_dir,
+                                                              preload=preload)
         self.noise_builder = great3sims.noise.makeBuilder(obs_type=obs_type,
                                                           multiepoch=self.multiepoch,
                                                           variable_psf = self.variable_psf)
@@ -650,7 +655,7 @@ class SimBuilder(object):
             d['input']['real_catalog'] = {
                 'dir' : os.path.abspath(self.galaxy_builder.gal_dir),
                 'file_name' : self.galaxy_builder.rgc_file,
-                'preload' : True
+                'preload' : self.preload
             }
 
 
