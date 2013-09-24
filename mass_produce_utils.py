@@ -19,7 +19,7 @@ def pbs_script_yaml(filename, configname, rootname):
     """A utility to write a PBS script to filename, to use the given yaml configname."""
     f = open(filename, "w")
     import os
-    jobname, _ = os.path.splitext(configname)
+    jobname, _ = 'g3_'+os.path.splitext(configname)
 
     f.write("#!/bin/sh\n")
     f.write("#PBS -l nodes=1:ppn=8\n")
