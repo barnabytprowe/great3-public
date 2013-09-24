@@ -39,6 +39,7 @@ do_catalogs = True  # Remake the catalogs?
 do_images = True    # Make the images in great3 builder code?
 do_config = False    # Do config-related steps?
 do_final = True     # Do final packaging steps?
+preload_real = False  # preload images for RealGalaxy branches?  [always False for parametric branches]
 
 # Note: these definitions have to happen up front.  They affect image generation in addition to
 # catalog generation.
@@ -56,9 +57,10 @@ if do_catalogs:
 
     t1 = time.time()
     great3sims.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
-                experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-                gal_dir=data_dir, ps_dir=ps_dir,
-                seed=seed, steps=['metaparameters', 'catalogs']
+                   experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+                   gal_dir=data_dir, ps_dir=ps_dir,
+                   seed=seed, steps=['metaparameters', 'catalogs'],
+                   preload=preload_real
     )
     t2 = time.time()
     print
@@ -98,7 +100,8 @@ if do_config:
         great3sims.run(root, subfield_min=first, subfield_max=last,
                        experiments=experiments, obs_type=obs_type, shear_type=shear_type,
                        gal_dir=data_dir, ps_dir=ps_dir,
-                       seed=seed, steps=['config']
+                       seed=seed, steps=['config'],
+                       preload=preload_real
                        )
         for (old_names, new_names) in [ (config_names, new_config_names) ,
                                         (psf_config_names, new_psf_config_names) ,
@@ -149,9 +152,10 @@ if do_config:
 if do_images:
     t1 = time.time()
     great3sims.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
-                experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-                gal_dir=data_dir, ps_dir=ps_dir,
-                seed=seed, steps=['gal_images', 'psf_images']
+                   experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+                   gal_dir=data_dir, ps_dir=ps_dir,
+                   seed=seed, steps=['gal_images', 'psf_images'],
+                   preload=preload_real
     )
     t2 = time.time()
     print
@@ -182,9 +186,10 @@ if do_final:
     # Measure star parameters required for metric
     t1 = time.time()
     great3sims.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
-                experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-                gal_dir=data_dir, ps_dir=ps_dir,
-                seed=seed, steps=['star_params']
+                   experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+                   gal_dir=data_dir, ps_dir=ps_dir,
+                   seed=seed, steps=['star_params'],
+                   preload=preload_real
     )
     t2 = time.time()
     print
@@ -195,8 +200,9 @@ if do_final:
     # Now package up the data that should be public, and truth tables
     t1 = time.time()
     great3sims.run(root, subfield_min=subfield_min, subfield_max=subfield_max,
-                experiments=experiments, obs_type=obs_type, shear_type=shear_type,
-                gal_dir=data_dir, seed=seed, steps=['packages']
+                   experiments=experiments, obs_type=obs_type, shear_type=shear_type,
+                   gal_dir=data_dir, seed=seed, steps=['packages'],
+                   preload=preload_real
     )
     t2 = time.time()
     print
