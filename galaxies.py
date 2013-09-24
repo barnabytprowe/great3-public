@@ -143,6 +143,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
     # Name for RealGalaxyCatalog files
     rgc_file = 'real_galaxy_catalog_23.5.fits'
     rgc_fits_file = 'real_galaxy_catalog_23.5_fits.fits'
+    rgc_im_sel_file = 'real_galaxy_image_selection_info.fits'
     rgc_sel_file = 'real_galaxy_selection_info.fits'
     rgc_shapes_file = 'real_galaxy_23.5_shapes.fits'
     rgc_dmag_file = 'real_galaxy_deltamag_info.fits'
@@ -221,6 +222,31 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # This vector is just a predetermined choice of whether to use bulgefit or sersicfit.
             self.use_bulgefit = self.selection_catalog.field('use_bulgefit')[:,0]
 
+            # Read in selection flags based on the images:
+            # Note: technically this isn't necessary for parametric fit branches, but in reality
+            # these remove objects that we probably don't want in either place (e.g., too-low
+            # surface brightness objects that show up as UFOs) and keep object selection consistent.
+            self.im_selection_catalog = pyfits.getdata(os.path.join(self.gal_dir,
+                                                                    self.rgc_im_sel_file))
+            # Get the S/N in the original image, measured with an elliptical Gaussian filter
+            # function.
+            self.original_sn = self.im_selection_catalog.field('sn_ellip_gauss')
+            # If it's a ground-based catalog, set up LookupTables to interpolate the minimum
+            # variance post-whitening between FWHM values:
+            if self.obs_type == "ground":
+                fwhm_arr = self.min_ground_fwhm + self.ground_dfwhm*np.arange(self.ground_nfwhm)
+                self.noise_min_var = []
+                for obj in self.im_selection_catalog:
+                    tmp_min_var = obj.field('min_var_white')[2:]
+                    self.noise_min_var.append(galsim.LookupTable(fwhm_arr,tmp_min_var,f_log=True))
+            # Otherwise, for space, save a single set of results depending on whether it's single
+            # epoch (smaller pixels) or multiepoch (bigger pixels).
+            else:
+                if self.multiepoch:
+                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,0]
+                else:
+                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,1]
+
             # Read in catalog that tells us how the galaxy magnitude from Claire's fits differs from
             # that in the COSMOS catalog.  This can be used to exclude total screwiness, objects
             # overly affected by blends, UFOs, and other junk like that.
@@ -230,7 +256,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # If this is a ground-based calculation, then set up LookupTables to interpolate
             # max_variance and resolutions between FWHM values.
             if self.obs_type == "ground":
-                fwhm_arr = self.min_ground_fwhm + self.ground_dfwhm*np.arange(self.ground_nfwhm)
                 self.noise_max_var = []
                 self.flux_frac = []
                 self.resolution = []
@@ -248,28 +273,33 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 self.flux_frac = self.selection_catalog.field('flux_frac')[:,0]
                 self.resolution = self.selection_catalog.field('resolution')[:,0]
  
-        # First we apply basic selection:
+        # First we set up the quantities that we need to apply basic selection, and that depend on
+        # the type of simulation (ground / space, and ground-based seeing):
         #   able to measure shapes for basic tests of catalog
         #   fraction of flux in our postage stamp size [given seeing]
         #   resolution [given seeing]
+        #   min noise variance post-whitening
         indices = np.arange(self.rgc.nobjects)
         if self.obs_type == "space":
             noise_max_var = self.noise_max_var
             flux_frac = self.flux_frac
             resolution = self.resolution
+            noise_min_var = self.noise_min_var
         else:
             noise_max_var = np.zeros(self.rgc.nobjects)
             flux_frac = np.zeros(self.rgc.nobjects)
             resolution = np.zeros(self.rgc.nobjects)
+            noise_min_var = np.zeros(self.rgc.nobjects)
             for gal_ind in range(self.rgc.nobjects):
                 noise_max_var[gal_ind] = self.noise_max_var[gal_ind](tmp_seeing)
                 flux_frac[gal_ind] = self.flux_frac[gal_ind](tmp_seeing)
                 resolution[gal_ind] = self.resolution[gal_ind](tmp_seeing)
+                noise_min_var[gal_ind] = self.noise_min_var[gal_ind](tmp_seeing)
 
         # We need to estimate approximate S/N values for each object, by comparing with a
-        #   precalculated noise variance for S/N=20.  Some of the values are junk for galaxies that
-        #   have failure flags, so we will only do the calculation for those with useful values of
-        #   noise_max_var.
+        #   precalculated noise variance for S/N=20 that comes from using the fits.  Some of the
+        #   values are junk for galaxies that have failure flags, so we will only do the calculation
+        #   for those with useful values of noise_max_var.
         approx_sn_gal = np.zeros(self.rgc.nobjects)
         approx_sn_gal[noise_max_var > self.noise_fail_val] = \
             20.0*np.sqrt(noise_max_var[noise_max_var > self.noise_fail_val] / variance)
@@ -281,6 +311,12 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # And for variable shear, we need to require a shape to be used for B-mode shape noise.
         # This means proper flags, and |e| < 1.  However, for uniformity of selection we will also
         # impose this cut on constant shear sims.
+        # In addition, for realistic galaxies, we require (a) that the S/N in the original image be
+        # >=20 [really we want higher since we're adding noise, but mostly we're using this as a
+        # loose filter to get rid of junk], and (b) that the requested noise variance in the sims
+        # should be >= the minimum noise variance that is possible post-whitening.  We impose these
+        # even for parametric fits, just because the failures tend to be ones with problematic fits
+        # as well.
         e1 = self.shapes_catalog.field('e1')
         e2 = self.shapes_catalog.field('e2')
         e_test = np.sqrt(e1**2 + e2**2)
@@ -293,9 +329,23 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              approx_sn_gal <= self.sn_max,
              noise_max_var > self.noise_fail_val,
              self.shapes_catalog.field('do_meas') > -0.5,
-             e_test < 1.
+             e_test < 1.,
+             self.original_sn >= 20.,
+             noise_min_var <= variance
              ])
         useful_indices = indices[cond]
+        print len(useful_indices)," useful objects with original set of cuts"
+        if self.obs_type == "ground": print "seeing = ",tmp_seeing
+        # Note on final two cuts: without them, for some example run, we kept the following numbers
+        # of galaxies -
+        # ground (seeing 0.82): 11122
+        # space: 34577
+        # After imposing them, we kept the following numbers - 
+        # ground: 10222 (cut 900, or 8%)
+        # space: 33402 (cut 1175, or 4%)
+        # Note that ~2400 objects out of 56k have S/N in the original image that is below our
+        # threshold, but some of those must be eliminated by other cuts we're already making, which
+        # is what I would have expected.
 
         # In the next bit, we choose a random selection of objects to use out of the above
         # candidates.  Note that this part depends on const vs. variable shear, since the number to
