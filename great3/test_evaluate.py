@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
-    obs_type = 'ground'
+    obs_type = 'space'
 
     # Setup the logger
     logging.basicConfig(stream=sys.stderr)
