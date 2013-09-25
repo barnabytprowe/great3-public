@@ -26,6 +26,7 @@ seed = 123
 delta_seed = 1000 # amount to increment seed for each successive branch
 sleep_time = 10 # seconds between checks for programs to be done
 package_only = False # only do the packaging and nothing else
+preload = False # preloading for real galaxy branches
 
 # Set which branches to test.  For now we do the control experiment (all four branches), but nothing
 # else.
@@ -76,7 +77,7 @@ if not package_only:
         new_config_names, new_psf_config_names, new_star_test_config_names = \
             mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max,
                                              experiment, obs_type, shear_type, gal_dir, ps_dir,
-                                             seed, n_config_per_branch, my_step=1)
+                                             seed, n_config_per_branch, my_step=1, preload)
         for config_name in new_config_names:
             all_config_names.append(config_name)
         for psf_config_name in new_psf_config_names:
