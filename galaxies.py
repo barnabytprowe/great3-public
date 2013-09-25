@@ -191,7 +191,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                         ("bulge_q", float), ("bulge_beta_radians", float), ("bulge_flux", float),
                         ("disk_hlr", float), ("disk_q", float),
                         ("disk_beta_radians", float), ("disk_flux", float), ("gal_sn", float),
-                        ("cosmos_ident", int)]
+                        ("cosmos_ident", int), ("g1_intrinsic", float), ("g2_intrinsic", float)]
         return dict(schema=gal_schema)
 
     def generateCatalog(self, rng, catalog, parameters, variance, noise_mult, seeing=None):
@@ -470,6 +470,12 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 record["size_rescale"] = self.size_rescale
                 record["flux_rescale"] = 1. / n_epochs
             else:
+                # First save intrinsic shape information.
+                final_g = galsim.Shear(g = gmag[all_indices[ind]],
+                                       beta=target_beta[ind]*galsim.radians)
+                record["g1_intrinsic"] = final_g.g1
+                record["g2_intrinsic"] = final_g.g2
+                # Then save information that depends on whether we use 1- or 2-component fits.
                 if self.use_bulgefit[all_indices[ind]] == 1.:
                     params = self.fit_catalog[all_indices[ind]].field('bulgefit')
 
