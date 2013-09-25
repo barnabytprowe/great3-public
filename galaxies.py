@@ -322,12 +322,14 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # In addition, for realistic galaxies, we require (a) that the S/N in the original image be
         # >=20 [really we want higher since we're adding noise, but mostly we're using this as a
         # loose filter to get rid of junk], and (b) that the requested noise variance in the sims
-        # should be >= the minimum noise variance that is possible post-whitening.  We impose these
+        # should be > the minimum noise variance that is possible post-whitening.  We impose these
         # even for parametric fits, just because the failures tend to be ones with problematic fits
         # as well.  Just for cut (b), we need to use the actual noise variance, which means
         # including a factor of decrease in the requested noise for deep subfields.  We don't
         # include any change in variance for multiepoch because the original noise gets decreased by
-        # some factor as well.
+        # some factor as well.  We include a 10% fudge factor here because the minimum noise
+        # variance post-whitening was estimated in a preprocessing step that didn't include some
+        # details of the real simulations.
         e1 = self.shapes_catalog.field('e1')
         e2 = self.shapes_catalog.field('e2')
         e_test = np.sqrt(e1**2 + e2**2)
@@ -342,7 +344,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              self.shapes_catalog.field('do_meas') > -0.5,
              e_test < 1.,
              self.original_sn >= 20.,
-             noise_min_var <= variance*noise_mult
+             noise_min_var <= 0.9*variance*noise_mult
              ])
         useful_indices = indices[cond]
         # Note on final two cuts: without them, for some example run, we kept the following numbers
