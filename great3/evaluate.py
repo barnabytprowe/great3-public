@@ -598,7 +598,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
 
 def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                logger=None, normalization=NORMALIZATION_CONSTANT, just_q=False, cfid=CFID,
-               mfid=MFID):
+               mfid=MFID, pretty_print=False, flip_g1=False, flip_g2=False):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -626,6 +626,8 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     subfield = data[:, 0]  
     g1sub = data[:, 1]
     g2sub = data[:, 2]
+    if flip_g1: g1sub = -g1sub
+    if flip_g2: g2sub = -g2sub
     # Load up the rotations, then rotate g1 & g2 in the correct sense.
     # NOTE THE MINUS SIGNS!  This is because we need to rotated the coordinates back into a frame
     # in which the primary direction of the PSF is g1, and the orthogonal is g2
@@ -657,6 +659,16 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     if just_q:
         ret = Q_c
     else:
+        if pretty_print:
+            print
+            print "Evaluated results for submission "+str(submission_file)
+            print
+            print "Q_c =  %.4f" % Q_c
+            print "c+  = %+.5f +/- %.5f" % (c1, sigc1)
+            print "cx  = %+.5f +/- %.5f" % (c2, sigc2)
+            print "m+  = %+.5f +/- %.5f" % (m1, sigm1)
+            print "mx  = %+.5f +/- %.5f" % (m2, sigm2)
+            print
         ret = (Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2)
     return ret
 
