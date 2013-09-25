@@ -305,7 +305,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # We need to estimate approximate S/N values for each object, by comparing with a
         #   precalculated noise variance for S/N=20 that comes from using the fits.  Some of the
         #   values are junk for galaxies that have failure flags, so we will only do the calculation
-        #   for those with useful values of noise_max_var.
+        #   for those with useful values of noise_max_var.  Here we use the variance that isn't for
+        #   deep fields even if we're in a deep field, because we want to require that the object
+        #   would be seen at S/N>=20 if the field weren't deep.
         approx_sn_gal = np.zeros(self.rgc.nobjects)
         approx_sn_gal[noise_max_var > self.noise_fail_val] = \
             20.0*np.sqrt(noise_max_var[noise_max_var > self.noise_fail_val] / variance)
@@ -322,7 +324,10 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # loose filter to get rid of junk], and (b) that the requested noise variance in the sims
         # should be >= the minimum noise variance that is possible post-whitening.  We impose these
         # even for parametric fits, just because the failures tend to be ones with problematic fits
-        # as well.
+        # as well.  Just for cut (b), we need to use the actual noise variance, which means
+        # including a factor of decrease in the requested noise for deep subfields.  We don't
+        # include any change in variance for multiepoch because the original noise gets decreased by
+        # some factor as well.
         e1 = self.shapes_catalog.field('e1')
         e2 = self.shapes_catalog.field('e2')
         e_test = np.sqrt(e1**2 + e2**2)
@@ -337,11 +342,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              self.shapes_catalog.field('do_meas') > -0.5,
              e_test < 1.,
              self.original_sn >= 20.,
-             noise_min_var <= variance
+             noise_min_var <= variance*noise_mult
              ])
         useful_indices = indices[cond]
-        print len(useful_indices)," useful objects with original set of cuts"
-        if self.obs_type == "ground": print "seeing = ",tmp_seeing
         # Note on final two cuts: without them, for some example run, we kept the following numbers
         # of galaxies -
         # ground (seeing 0.82): 11122
@@ -351,7 +354,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # space: 33402 (cut 1175, or 4%)
         # Note that ~2400 objects out of 56k have S/N in the original image that is below our
         # threshold, but some of those must be eliminated by other cuts we're already making, which
-        # is what I would have expected.
+        # is what I would have expected.  The S/N cut seems to be dominating over the minimum
+        # variance cut by a lot, but I'm leaving the latter in for now in case it becomes more
+        # important later if we change other things.
 
         # In the next bit, we choose a random selection of objects to use out of the above
         # candidates.  Note that this part depends on const vs. variable shear, since the number to
