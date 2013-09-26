@@ -51,11 +51,9 @@ great3sims.constants.ncols = 10
 great3sims.constants.min_star_density = 0.01 # per arcmin^2
 great3sims.constants.max_star_density = 0.03
 
-# All kwargs for the run command, except for 'steps' which will change each time below:
+# All kwargs for the run command that don't need to change below.
 kwargs = {
     'root' : root,
-    'subfield_min' : subfield_min,
-    'subfield_max' : subfield_max,
     'experiments' : experiments,
     'obs_type' : obs_type,
     'shear_type' : shear_type,
@@ -72,7 +70,8 @@ if do_catalogs:
     shutil.rmtree(root, ignore_errors=True)
 
     t1 = time.time()
-    great3sims.run(steps=['metaparameters', 'catalogs'], **kwargs)
+    great3sims.run(steps=['metaparameters', 'catalogs'], 
+                   subfield_min=subfield_min, subfield_max=subfield_max, **kwargs)
     t2 = time.time()
     print
     print 'Time for great3sims.run up to catalogs = ',t2-t1
@@ -108,7 +107,8 @@ if do_config:
     for i in range(n_config):
         first = subfield_min + (subfield_max-subfield_min+1)/n_config * i
         last = subfield_min + (subfield_max-subfield_min+1)/n_config * (i+1) - 1
-        great3sims.run(steps=['config'], **kwargs)
+        great3sims.run(steps=['config'], 
+                       subfield_min=first, subfield_max=last, **kwargs)
         for (old_names, new_names) in [ (config_names, new_config_names) ,
                                         (psf_config_names, new_psf_config_names) ,
                                         (star_test_config_names, new_star_test_config_names) ]:
@@ -157,7 +157,8 @@ if do_config:
 # Build images using great3sims.run
 if do_images:
     t1 = time.time()
-    great3sims.run(steps=['gal_images', 'psf_images'], **kwargs)
+    great3sims.run(steps=['gal_images', 'psf_images'],
+                   subfield_min=subfield_min, subfield_max=subfield_max, **kwargs)
     t2 = time.time()
     print
     print 'Time for great3sims.run images = ',t2-t1
@@ -186,7 +187,8 @@ if do_images and do_config:
 if do_final:
     # Measure star parameters required for metric
     t1 = time.time()
-    great3sims.run(steps=['star_params'], **kwargs)
+    great3sims.run(steps=['star_params'],
+                   subfield_min=subfield_min, subfield_max=subfield_max, **kwargs)
     t2 = time.time()
     print
     print 'Time for great3sims.run star_params = ',t2-t1
@@ -195,7 +197,8 @@ if do_final:
 
     # Now package up the data that should be public, and truth tables
     t1 = time.time()
-    great3sims.run(steps=['packages'], **kwargs)
+    great3sims.run(steps=['packages'],
+                   subfield_min=subfield_min, subfield_max=subfield_max, **kwargs)
     t2 = time.time()
     print
     print 'Time for great3sims.run packages = ',t2-t1
