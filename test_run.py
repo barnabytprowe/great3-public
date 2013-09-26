@@ -162,6 +162,23 @@ if do_images:
     print 'Time for great3sims.run images = ',t2-t1
     print
 
+# Helper function to show what the difference is between two image files
+def showdiff(f1,f2):
+    import pyfits
+    import numpy
+    a1 = pyfits.open(f1)
+    a2 = pyfits.open(f2)
+    d1 = a1[0].data
+    d2 = a2[0].data
+    diff = numpy.where(d1 != d2)
+    ndiff = len(diff[0])
+    if ndiff > 0:
+        print '    The images differ at %d pixel%s.'%(ndiff, ('s' if ndiff>1 else ''))
+        maxdiff = numpy.max( d1[diff] - d2[diff] )
+        print '    The maximum pixel difference is %e.'%maxdiff
+    else:
+        print '    Weird.  The images have identical pixel values.'
+
 # Check that images are the same.
 if do_images and do_config:
     print 'Checking diffs: (No output means success)'
@@ -175,10 +192,12 @@ if do_images and do_config:
                 f2 = os.path.join(dir,'yaml_image-%03d-%1d.fits'%(i,j))
                 p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
                 p.communicate()
+                if p.returncode != 0: showdiff(f1,f2)
                 f1 = os.path.join(dir,'starfield_image-%03d-%1d.fits'%(i,j))
                 f2 = os.path.join(dir,'yaml_starfield_image-%03d-%1d.fits'%(i,j))
                 p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
                 p.communicate()
+                if p.returncode != 0: showdiff(f1,f2)
     print 'End diffs.'
     print
 
