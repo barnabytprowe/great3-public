@@ -761,15 +761,10 @@ class SimBuilder(object):
                 psf = self.psf_builder.makeGalSimObject(record, epoch_parameters["psf"])
 
             # Build galaxy
-            galaxy, noise = self.galaxy_builder.makeGalSimObject(
+            galaxy = self.galaxy_builder.makeGalSimObject(
                 record, epoch_parameters["galaxy"], xsize=max_xsize, ysize=max_ysize, rng=rng)
             galaxy.applyLensing(g1=record['g1'], g2=record['g2'], mu=record['mu'])
             final = galsim.Convolve([psf, pixel, galaxy], gsparams=params)
-
-            # Apply the same shear, convolution to noise if necessary
-            if noise is not None:
-                noise.applyLensing(g1=record['g1'], g2=record['g2'], mu=record['mu'])
-                noise.convolveWith(galsim.Convolve([psf, pixel], gsparams=params))
 
             # Apply both offsets
             offset = galsim.PositionD(epoch_parameters['xdither'] + record['xshift'],
@@ -783,11 +778,18 @@ class SimBuilder(object):
             stamp = galaxy_image.subImage(bbox)
             # Draw into the postage stamp.
             final.draw(stamp, normalization='f', dx=pixel_scale, offset=offset)
+
+            # Apply whitening if necessary:
+            if hasattr(final, 'noise'):
+                current_var = final.noise.applyWhiteningTo(stamp)
+            else:
+                current_var = 0.
+
             # The lines below are commented out because they are just diagnostics that can be used
             # to check that the actual S/N is fairly consistent with the estimated one.
             #print 'Claimed, actual SN: ',record['gal_sn'], \
             #    numpy.sqrt((stamp.array**2).sum() / epoch_parameters['noise']['variance'])
-            self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, noise)
+            self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, current_var)
 
         self.mapper.write(galaxy_image, "image", epoch_parameters)
 

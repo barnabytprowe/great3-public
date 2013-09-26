@@ -627,11 +627,11 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 disk.applyShear(q=record['disk_q'],
                                 beta=record['disk_beta_radians']*galsim.radians)
             if record['bulge_flux'] > 0.:
-                return bulge+disk, None
+                return bulge+disk
             else:
-                return disk, None
+                return disk
         else:
-            return bulge, None
+            return bulge
 
     def makeGalSimObjectReal(self, record, parameters, xsize, ysize, rng):
         # First set up the basic RealGalaxy.  But actually, to do that, we need to check that we
@@ -645,19 +645,18 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # basically works.
             self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir,
                                                 preload=self.preload)
-        noise_pad_size = np.ceil(
-            constants.xsize[self.obs_type][self.multiepoch] * np.sqrt(2.) * \
-                constants.pixel_scale[self.obs_type][self.multiepoch]
-            )
+        noise_pad_size = int(np.ceil(constants.xsize[self.obs_type][self.multiepoch] *
+                                     np.sqrt(2.) * 
+                                     constants.pixel_scale[self.obs_type][self.multiepoch]))
         gal = galsim.RealGalaxy(self.rgc, rng=rng, id=record['cosmos_ident'],
                                 noise_pad_size=noise_pad_size)
         
         # Rescale its size.
         gal.applyDilation(record['size_rescale'])
-        # Rescale its flux.
-        gal *= record['flux_rescale']
         # Rotate.
         gal.applyRotation(record['rot_angle_radians']*galsim.radians)
+        # Rescale its flux.
+        gal *= record['flux_rescale']
         # When we return the final noise object, we don't have to explicitly rescale its variance,
         # since the internal workings of this class take care of it for us.
-        return gal, gal.noise
+        return gal
