@@ -103,15 +103,13 @@ if do_config:
     t1 = time.time()
     new_config_names = []
     new_psf_config_names = []
-    new_star_test_config_names = []
     for i in range(n_config):
         first = subfield_min + (subfield_max-subfield_min+1)/n_config * i
         last = subfield_min + (subfield_max-subfield_min+1)/n_config * (i+1) - 1
         great3sims.run(steps=['config'], 
                        subfield_min=first, subfield_max=last, **kwargs)
         for (old_names, new_names) in [ (config_names, new_config_names) ,
-                                        (psf_config_names, new_psf_config_names) ,
-                                        (star_test_config_names, new_star_test_config_names) ]:
+                                        (psf_config_names, new_psf_config_names) ]:
             for old_name in old_names:
                 base, ext = os.path.splitext(old_name)
                 new_name = '%s_%02d.yaml'%(base,i)
@@ -126,7 +124,7 @@ if do_config:
     # build images using galsim executable
     t1 = time.time()
     os.chdir(root)
-    for new_names in [ new_config_names, new_psf_config_names, new_star_test_config_names ]:
+    for new_names in [ new_config_names, new_psf_config_names, star_test_config_names ]:
         for name in new_names:
             t3 = time.time()
             p = subprocess.Popen(['galsim',name,'-v1'])
