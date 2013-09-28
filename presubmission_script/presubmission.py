@@ -522,13 +522,7 @@ def generate_submission_files(args):
         raise RuntimeError('Unexpected galaxy IDs found.  Please check that your galaxy IDS are '
                            'the same as the catalogs distributed with the Great3 simulations, '
                            'and that you have passed the correct branch name.')
-    if 'variable' in args.branch:               # These lines are for the ALPHA RELEASE ONLY, where
-        galaxy_id = [                           # offsets were missing from the galaxy IDs
-            '%09i'%(
-                 int(galaxy_id[i]) + 1000 * branch_id.x_offset[args.branch][field_id[i]] +
-                 branch_id.y_offset[args.branch][field_id[i]]
-             ) for i in range(len(galaxy_id))
-        ]  
+
     # See the comments in count_items for a description of what defaultdict does
     # This makes a set of dicts x, y, etc.; the keys are the field IDs, and the values are a list of
     # the quantity x, y, etc for the galaxies in that field. 
