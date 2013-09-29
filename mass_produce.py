@@ -16,10 +16,10 @@ import great3sims
 # output.
 # Note about root dir: this is set for the backed-up server that has limited space.  Once more
 # branches are ready, this will have to change to /lustre/rmandelb/great3 since that has more space.
-root = '/home/rmandelb.proj/data-shared/great3-v4'
-n_config_per_branch = 5 # Number of config files to be run per branch.
-subfield_min = 180 # NOTE CHANGE: SHOULD BE ZERO TO DO AN ENTIRE BRANCH.
-subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
+root = '/home/rmandelb.proj/data-shared/great3-test-nopreload'
+n_config_per_branch = 1 # Number of config files to be run per branch.
+subfield_min = 0 # NOTE CHANGE: SHOULD BE ZERO TO DO AN ENTIRE BRANCH.
+subfield_max = 39 # The total number of subfields is split up into n_config_per_branch config files.
 gal_dir = '/home/rmandelb.proj/data-shared/great3_fit_data'
 ps_dir = '/home/rmandelb/git/great3-private/inputs/ps/tables'
 seed = 123
@@ -31,19 +31,19 @@ preload = False # preloading for real galaxy branches
 # Set which branches to test.  For now we do the control experiment (all four branches), but nothing
 # else.
 experiments = [
-    #'control',
-    #'real_gal',
-    'variable_psf',
-    'multiepoch',
+    'control',
+    'real_gal',
+    #'variable_psf',
+    #'multiepoch',
     #'full',
 ]
 obs_types = [
-    'ground',
+    #'ground',
     'space',
 ]
 shear_types = [
     'constant',
-    'variable',
+    #'variable',
 ]
 branches = [ (experiment, obs_type, shear_type)
              for experiment in experiments

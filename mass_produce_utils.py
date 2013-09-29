@@ -74,7 +74,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
                 "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
                 ", public_dir='" + os.path.join(root, 'public') + \
                 "', truth_dir='" + os.path.join(root, 'truth') + \
-                "', steps = ['config']), preload=" + preload + "\n"
+                "', steps = ['config']), nproc=8, preload=" + preload + "\n"
             f.write(command_str)
             new_name = '%s_%02d.yaml'%(config_pref,i)
             new_psf_name = '%s_%02d.yaml'%(psf_config_pref,i)
