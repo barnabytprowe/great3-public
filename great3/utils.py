@@ -13,7 +13,8 @@ def load_constant_submission(filename):
     @return subfield_index, g1, g2
     """
     data = np.loadtxt(filename)
-    return data[:, 0].astype(int), data[:, 1], data[:, 2]
+    subfield_index, g1, g2 = data[:, 0].astype(int), data[:, 1], data[:, 2]
+    return subfield_index, g1, g2
 
 def load_variable_submission(filename):
     """Load a variable shear branch submission from `filename`.
