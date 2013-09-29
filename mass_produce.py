@@ -77,7 +77,7 @@ if not package_only:
         new_config_names, new_psf_config_names, new_star_test_config_names = \
             mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max,
                                              experiment, obs_type, shear_type, gal_dir, ps_dir,
-                                             seed, n_config_per_branch, my_step=1, preload)
+                                             seed, n_config_per_branch, preload, my_step=1)
         for config_name in new_config_names:
             all_config_names.append(config_name)
         for psf_config_name in new_psf_config_names:
