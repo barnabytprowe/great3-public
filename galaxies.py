@@ -408,6 +408,13 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # method of doing this depends on the shear type.
         all_indices = np.zeros(constants.nrows*constants.ncols)
         rot_angle = np.zeros(constants.nrows*constants.ncols)
+        # However, we first get some basic information about the galaxies which will be necessary
+        # for tests of shape noise cancellation, whether for constant or variable shear.
+        e1 = self.shapes_catalog.field('e1')
+        e2 = self.shapes_catalog.field('e2')
+        emag = np.sqrt(e1**2 + e2**2)
+        ephi = 0.5 * np.arctan2(e2, e1)
+        gmag = np.zeros_like(emag)
         if self.shear_type == "constant":
             # Make an array containing all indices (each repeated twice) but with rotation angle of
             # pi/2 for the second set.  Include a random rotation to get rid of any coherent shear
@@ -429,11 +436,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         else:
             # First, generate a B-mode shape noise field.  We have to choose a variance based on the
             # p(|g|) for the galaxies that we're actually using.
-            e1 = self.shapes_catalog.field('e1')
-            e2 = self.shapes_catalog.field('e2')
-            emag = np.sqrt(e1**2 + e2**2)
-            ephi = 0.5 * np.arctan2(e2, e1)
-            gmag = np.zeros_like(emag)
             # Only do e->g conversion for those with |e|<1; those that violate that condition should
             # already have been excluded.
             gmag[emag<1.] = emag[emag<1.] / (1.0+np.sqrt(1.0 - emag[emag<1.]**2))
@@ -486,8 +488,14 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 record["flux_rescale"] = 1. / n_epochs
             else:
                 # First save intrinsic shape information.
-                final_g = galsim.Shear(g = gmag[all_indices[ind]],
-                                       beta=target_beta[ind]*galsim.radians)
+                if self.shear_type == "variable":
+                    final_g = galsim.Shear(g = gmag[all_indices[ind]],
+                                           beta=target_beta[ind]*galsim.radians)
+                else:
+                    final_g = galsim.Shear(
+                        g = gmag[all_indices[ind]],
+                        beta=(ephi[all_indices[ind]]+rot_angle[ind])*galsim.radians
+                        )
                 record["g1_intrinsic"] = final_g.g1
                 record["g2_intrinsic"] = final_g.g2
                 # Then save information that depends on whether we use 1- or 2-component fits.
