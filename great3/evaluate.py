@@ -696,6 +696,9 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     if logger is not None:
         logger.info("Calculating Q_v metric for "+submission_file)
     data = np.loadtxt(submission_file)
+    # We are stating that we want at least 4 and up to 5 columns, so check for this
+    if data.shape not in ((NBINS_THETA * NFIELDS, 4), (NBINS_THETA * NFIELDS, 5)):
+        raise ValueError("Submission "+str(submission_file)+" is not the correct shape!")
     # Extract the salient parts of the submission from data
     field_sub = data[:, 0].astype(int)
     theta_sub = data[:, 1]
