@@ -452,7 +452,7 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
 
 def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                                 logger=None, corr2_exec="corr2", corr2_params="corr2.params",
-                                make_plots=True):
+                                make_plots=True, output_xy_prefix=None):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
 
     If the map_E truth file has already been built for this variable shear branch, loads and returns
@@ -548,13 +548,20 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                 g1true[:, jsub] = truedata["g1"]
                 g2true[:, jsub] = truedata["g2"] 
 
+            # If requested (by setting output_xy_prefix) then write these xy out for diagnostic
+            if output_xy_prefix is not None:
+                output_xy_filename = output_xy_prefix+("-%03d" % ifield)+".asc"
+                with open(output_xy_filename, 'wb') as fout:
+                    fout.write("# x  y\n")
+                    np.savetxt(fout, np.array((xfield.flatten(), yfield.flatten())).T)
+
             # Having got the x,y and g1, g2 for all the subfields in this field, flatten and use
             # to calculate the map_E
             map_results = g3metrics.run_corr2(
                 xfield.flatten(), yfield.flatten(), g1true.flatten(), g2true.flatten(),
                 min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbins=NBINS_THETA,
-                corr2_exec=corr2_exec, 
-                params_file="./corr2.params", xy_units="degrees", sep_units="degrees")
+                corr2_exec=corr2_exec, params_file=corr2_params, xy_units="degrees",
+                sep_units="degrees")
             theta[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 0] 
             map_E[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 1]     
             map_B[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 2]
