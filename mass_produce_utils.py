@@ -19,7 +19,8 @@ def pbs_script_yaml(filename, configname, rootname):
     """A utility to write a PBS script to filename, to use the given yaml configname."""
     f = open(filename, "w")
     import os
-    jobname, _ = 'g3_'+os.path.splitext(configname)
+    jobname, _ = os.path.splitext(configname)
+    jobname = 'g3_'+jobname
 
     f.write("#!/bin/sh\n")
     f.write("#PBS -l nodes=1:ppn=8\n")
@@ -33,7 +34,7 @@ def pbs_script_yaml(filename, configname, rootname):
     f.close()
 
 def python_script(filename, root, subfield_min, subfield_max, experiment, obs_type, shear_type,
-                  gal_dir, ps_dir, seed, n_config_per_branch, my_step, preload):
+                  gal_dir, ps_dir, seed, n_config_per_branch, preload, my_step):
     """A utility to write a python script that just imports GREAT3 and does some steps of simulation
     generation."""
     import os
@@ -49,7 +50,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
             "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
             ", public_dir='" + os.path.join(root, 'public') + \
             "', truth_dir='" + os.path.join(root, 'truth') + \
-            "', steps = ['metaparameters', 'catalogs']), preload=" + preload + "\n"
+            "', steps = ['metaparameters', 'catalogs'], preload=" + str(preload) + ")\n"
         f.write(command_str)
 
         e = experiment[0]
@@ -74,7 +75,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
                 "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
                 ", public_dir='" + os.path.join(root, 'public') + \
                 "', truth_dir='" + os.path.join(root, 'truth') + \
-                "', steps = ['config']), nproc=8, preload=" + preload + "\n"
+                "', steps = ['config'], nproc=8, preload=" + str(preload) + ")\n"
             f.write(command_str)
             new_name = '%s_%02d.yaml'%(config_pref,i)
             new_psf_name = '%s_%02d.yaml'%(psf_config_pref,i)
@@ -94,7 +95,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
             "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
             ", public_dir='" + os.path.join(root, 'public') + \
             "', truth_dir='" + os.path.join(root, 'truth') + \
-            "', steps = ['config']), preload=" + preload + "\n"
+            "', steps = ['config'], preload=" + str(preload) + ")\n"
         f.write(command_str)
         new_star_test_name = '%s.yaml'%(star_test_config_pref)
         new_star_test_config_names.append(new_star_test_name)
@@ -111,7 +112,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
             "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
             ", public_dir='" + os.path.join(root, 'public') + \
             "', truth_dir='" + os.path.join(root, 'truth') + \
-            "', steps = ['star_params', 'packages']), preload=" + preload + "\n"
+            "', steps = ['star_params', 'packages'], preload=" + str(preload) + ")\n"
         f.write(command_str)
         f.close()
     else:

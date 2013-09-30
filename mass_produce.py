@@ -32,7 +32,7 @@ preload = False # preloading for real galaxy branches
 # else.
 experiments = [
     'control',
-    'real_gal',
+    'real_galaxy',
     #'variable_psf',
     #'multiepoch',
     #'full',
@@ -166,7 +166,7 @@ for experiment, obs_type, shear_type in branches:
     mass_produce_utils.pbs_script_python(pbs_file, pbs_name)
     mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max, experiment,
                                      obs_type, shear_type, gal_dir, ps_dir, seed,
-                                     n_config_per_branch, my_step=3)
+                                     n_config_per_branch, preload, my_step=3)
     # And then submit them
     command_str = 'qsub '+pbs_file
     p = subprocess.Popen(command_str,shell=True)
