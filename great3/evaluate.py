@@ -538,6 +538,13 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                 isubfield_index = jsub + ifield * NSUBFIELDS_PER_FIELD
                 xfield[:, jsub] = xgrid_deg + offset_deg_x[isubfield_index]
                 yfield[:, jsub] = ygrid_deg + offset_deg_y[isubfield_index]
+                # If requested (by setting output_xy_prefix) then write these xy out for diagnostic
+                if output_xy_prefix is not None:
+                    output_xy_filename = output_xy_prefix+("-sub%03d" % isubfield_index)+".asc"
+                    print "Writing "+output_xy_filename+" as requested..."
+                    with open(output_xy_filename, 'wb') as fout:
+                        fout.write("# x  y\n")
+                        np.savetxt(fout, np.array((xfield[:, jsub], yfield[:, jsub])).T)
                 galcatfile = os.path.join(
                     mapper.full_dir, ("galaxy_catalog-%03d.fits" % isubfield_index))
                 truedata = pyfits.getdata(galcatfile)
