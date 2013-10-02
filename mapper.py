@@ -94,7 +94,7 @@ def writeCatalog(catalog, path, type = 'fits', comment_pref = '#', format = None
     elif type == 'txt':
         import tempfile
         # First print lines with column names.  This goes into a separate file for now.
-        tmp_1 = tempfile.mkstemp(dir='.')[1]
+        f1, tmp_1 = tempfile.mkstemp(dir='.')
         f = open(tmp_1, 'w')
         name_list = catalog.names
         for name in name_list:
@@ -102,7 +102,7 @@ def writeCatalog(catalog, path, type = 'fits', comment_pref = '#', format = None
         f.close()
 
         # Then save catalog itself.
-        tmp_2 = tempfile.mkstemp(dir='.')[1]
+        f2, tmp_2 = tempfile.mkstemp(dir='.')
         if format is not None:
             np.savetxt(tmp_2, catalog, fmt=format)
         else:
@@ -113,6 +113,10 @@ def writeCatalog(catalog, path, type = 'fits', comment_pref = '#', format = None
         shutil.copyfileobj(open(tmp_1, 'rb'), destination)
         shutil.copyfileobj(open(tmp_2, 'rb'), destination)
         destination.close()
+        # Need to close the tempfiles opened by mkstemp.  cf:
+        # http://stackoverflow.com/questions/9944135/how-do-i-close-the-files-from-tempfile-mkstemp
+        os.close(f1)
+        os.close(f2)
         os.remove(tmp_1)
         os.remove(tmp_2)
     else:
