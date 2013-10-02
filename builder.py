@@ -35,7 +35,7 @@ class SimBuilder(object):
         return cls
 
     def __init__(self, root, obs_type, shear_type, gal_dir, ps_dir, atmos_ps_dir, public_dir,
-                 truth_dir, nproc=-1):
+                 truth_dir, preload, nproc=-1):
         """Initialize a builder for the given obs_type and shear_type.
 
         @param[in] root         Root directory for generated files
@@ -46,12 +46,16 @@ class SimBuilder(object):
         @param[in] atmos_ps_dir Directory with tabulated atmospheric PSF anisotropy power spectra.
         @param[in] public_dir   Directory for placing files to be distributed publicly.
         @param[in] truth_dir    Directory containing files used for metric evaluation.
+        @param[in] preload      Preload the RealGalaxyCatalog images to speed up generation of large
+                                numbers of real galaxies?  Note that for parametric galaxy branches,
+                                the catalog is never preloaded.
         @param[in] nproc        How many processes to use in the config file.  (default = -1)
         """
         self.obs_type = obs_type
         self.shear_type = shear_type
         self.public_dir = public_dir
         self.truth_dir = truth_dir
+        self.preload = preload
         self.psf_builder = great3sims.psf.makeBuilder(obs_type=obs_type,
                                                       variable_psf=self.variable_psf,
                                                       multiepoch=self.multiepoch,
@@ -63,7 +67,8 @@ class SimBuilder(object):
                                                               obs_type=obs_type,
                                                               shear_type=shear_type,
                                                               multiepoch=self.multiepoch,
-                                                              gal_dir=gal_dir)
+                                                              gal_dir=gal_dir,
+                                                              preload=preload)
         self.noise_builder = great3sims.noise.makeBuilder(obs_type=obs_type,
                                                           multiepoch=self.multiepoch,
                                                           variable_psf = self.variable_psf)
@@ -639,6 +644,21 @@ class SimBuilder(object):
         }
         d['gal']['magnification'] = { 'type' : 'Catalog', 'col' : 'mu' }
 
+        if self.real_galaxy:
+            # Normally, it is better to parallelize at the file level.  But with RealGalaxy
+            # we parallelize at the postage stamp level to make the preloading more 
+            # efficient.
+            d['image']['nproc'] = self.nproc
+            del d['output']['nproc']
+
+            # Also need to add the RealGalaxyCatalog to input
+            d['input']['real_catalog'] = {
+                'dir' : os.path.abspath(self.galaxy_builder.gal_dir),
+                'file_name' : self.galaxy_builder.rgc_file,
+                'preload' : self.preload
+            }
+
+
         file_name = os.path.join(self.mapper.root,
                                  experiment_letter + obs_letter + shear_letter + '.yaml')
         print 'Write gal config dict to ',file_name
@@ -741,15 +761,10 @@ class SimBuilder(object):
                 psf = self.psf_builder.makeGalSimObject(record, epoch_parameters["psf"])
 
             # Build galaxy
-            galaxy, noise = self.galaxy_builder.makeGalSimObject(
+            galaxy = self.galaxy_builder.makeGalSimObject(
                 record, epoch_parameters["galaxy"], xsize=max_xsize, ysize=max_ysize, rng=rng)
             galaxy.applyLensing(g1=record['g1'], g2=record['g2'], mu=record['mu'])
             final = galsim.Convolve([psf, pixel, galaxy], gsparams=params)
-
-            # Apply the same shear, convolution to noise if necessary
-            if noise is not None:
-                noise.applyLensing(g1=record['g1'], g2=record['g2'], mu=record['mu'])
-                noise.convolveWith(galsim.Convolve([psf, pixel], gsparams=params))
 
             # Apply both offsets
             offset = galsim.PositionD(epoch_parameters['xdither'] + record['xshift'],
@@ -761,15 +776,20 @@ class SimBuilder(object):
                 xmax=int(record['xmax']), ymax=int(record['ymax']),
             )
             stamp = galaxy_image.subImage(bbox)
-            # Note from RM: the use of 'sb' normalization necessary for noise whitening.
-            # But for now let's use flux normalization after correcting input fluxes to account for
-            # this and get something like HST.
+            # Draw into the postage stamp.
             final.draw(stamp, normalization='f', dx=pixel_scale, offset=offset)
+
+            # Apply whitening if necessary:
+            if hasattr(final, 'noise'):
+                current_var = final.noise.applyWhiteningTo(stamp)
+            else:
+                current_var = 0.
+
             # The lines below are commented out because they are just diagnostics that can be used
             # to check that the actual S/N is fairly consistent with the estimated one.
             #print 'Claimed, actual SN: ',record['gal_sn'], \
             #    numpy.sqrt((stamp.array**2).sum() / epoch_parameters['noise']['variance'])
-            self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, noise)
+            self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, current_var)
 
         self.mapper.write(galaxy_image, "image", epoch_parameters)
 
@@ -1040,7 +1060,7 @@ class SimBuilder(object):
                     new_template="star_catalog-%(subfield_index)03d")
             else:
                 tmp_dict["deep_subfield_index"] = subfield_index - n_reg_subfields
-                tmp_dict["epoch_index" : 0]
+                tmp_dict["epoch_index"] = 0
                 outfile = root_rel_mapper.copySub(
                     sub_mapper, 'star_catalog', tmp_dict, star_use_cols,
                     new_template="deep_star_catalog-%(deep_subfield_index)03d")
@@ -1165,7 +1185,11 @@ class SimBuilder(object):
             # If variable shear, then loop over subfield catalogs and copy over just the ID and the
             # per-galaxy reduced shear.
             if self.shear_type == 'variable':
-                use_cols = [('ID', int), ('g1', float), ('g2', float)]
+                if self.real_galaxy:
+                    use_cols = [('ID', int), ('g1', float), ('g2', float)]
+                else:
+                    use_cols = [('ID', int), ('g1', float), ('g2', float),
+                                ('g1_intrinsic', float), ('g2_intrinsic', float)]
                 outfile = root_rel_mapper.copySub(sub_mapper, 'subfield_catalog', tmp_dict,
                                                   use_cols,
                                                   new_template =

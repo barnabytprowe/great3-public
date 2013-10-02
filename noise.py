@@ -39,17 +39,14 @@ class NoiseBuilder(object):
         """
         raise NotImplementedError("NoiseBuilder is abstract.")
 
-    def addNoise(self, rng, parameters, image, noise):
+    def addNoise(self, rng, parameters, image, current_var):
         """Add noise to a postage stamp image.
 
         @param[in] rng         A galsim.UniformDeviate to be used for any random numbers.
         @param[in] parameters  A dict of metaparameters, as returned by the
                                generateEpochParameters() method.
         @param[in,out] image   Postage stamp image to add noise to.
-        @param[in] noise       A galsim.CorrelatedNoise instance that specifies the noise already in
-                               the image, and can be used to whiten it or otherwise modify it before
-                               adding the desired noise. May be None to indicate there is no noise
-                               already in the image.
+        @param[in] current_var The current variance of noise already applied to the image, if any.
         """
         raise NotImplementedError("NoiseBuilder is abstract.")
 
@@ -118,14 +115,13 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
         variance = rng() * (self.max_variance - self.min_variance) + self.min_variance
         return dict(variance=variance*self.noise_mult)
 
-    def addNoise(self, rng, parameters, image, noise):
+    def addNoise(self, rng, parameters, image, current_var):
         # Depending on the path we've taken here, this could be an array of length 1, or a scalar.
         # Make sure it's just a scalar so galsim doesn't barf later on.
         variance = parameters['variance']
         if isinstance(variance, numpy.ndarray):
             variance = variance[0]
-        if noise is not None:
-            variance -= noise.applyWhiteningTo(image)
+        variance -= current_var
         if variance < 0.0:
             raise ValueError("After whitening, desired noise level cannot be achieved")
         new_noise = galsim.GaussianNoise(rng, sigma=variance**0.5)

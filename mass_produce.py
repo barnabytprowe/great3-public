@@ -16,33 +16,34 @@ import great3sims
 # output.
 # Note about root dir: this is set for the backed-up server that has limited space.  Once more
 # branches are ready, this will have to change to /lustre/rmandelb/great3 since that has more space.
-root = '/lustre/rmandelb/great3-v4'
-n_config_per_branch = 5 # Number of config files to be run per branch.
-subfield_min = 180 # NOTE CHANGE: SHOULD BE ZERO TO DO AN ENTIRE BRANCH.
-subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
+root = '/home/rmandelb.proj/data-shared/great3-test-nopreload'
+n_config_per_branch = 1 # Number of config files to be run per branch.
+subfield_min = 0 # NOTE CHANGE: SHOULD BE ZERO TO DO AN ENTIRE BRANCH.
+subfield_max = 39 # The total number of subfields is split up into n_config_per_branch config files.
 gal_dir = '/home/rmandelb.proj/data-shared/great3_fit_data'
 ps_dir = '/home/rmandelb/git/great3-private/inputs/ps/tables'
 seed = 123
 delta_seed = 1000 # amount to increment seed for each successive branch
 sleep_time = 10 # seconds between checks for programs to be done
 package_only = False # only do the packaging and nothing else
+preload = False # preloading for real galaxy branches
 
 # Set which branches to test.  For now we do the control experiment (all four branches), but nothing
 # else.
 experiments = [
-    #'control',
-    #'real_gal',
-    'variable_psf',
-    'multiepoch',
+    'control',
+    'real_galaxy',
+    #'variable_psf',
+    #'multiepoch',
     #'full',
 ]
 obs_types = [
-    'ground',
+    #'ground',
     'space',
 ]
 shear_types = [
     'constant',
-    'variable',
+    #'variable',
 ]
 branches = [ (experiment, obs_type, shear_type)
              for experiment in experiments
@@ -76,7 +77,7 @@ if not package_only:
         new_config_names, new_psf_config_names, new_star_test_config_names = \
             mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max,
                                              experiment, obs_type, shear_type, gal_dir, ps_dir,
-                                             seed, n_config_per_branch, my_step=1)
+                                             seed, n_config_per_branch, preload, my_step=1)
         for config_name in new_config_names:
             all_config_names.append(config_name)
         for psf_config_name in new_psf_config_names:
@@ -98,7 +99,7 @@ if not package_only:
         p = subprocess.Popen(command_str,shell=True)
     # The above command just submitted all the files to the queue.  We have to periodically poll the
     # queue to see if they are still running.
-    mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
@@ -114,7 +115,7 @@ if not package_only:
         mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
         command_str = 'qsub '+pbs_file
         p = subprocess.Popen(command_str, shell=True)
-    mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
@@ -128,7 +129,7 @@ if not package_only:
         mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
         command_str = 'qsub '+pbs_file
         p = subprocess.Popen(command_str, shell=True)
-    mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
@@ -142,7 +143,7 @@ if not package_only:
         mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
         command_str = 'qsub '+pbs_file
         p = subprocess.Popen(command_str, shell=True)
-    mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
@@ -165,13 +166,13 @@ for experiment, obs_type, shear_type in branches:
     mass_produce_utils.pbs_script_python(pbs_file, pbs_name)
     mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max, experiment,
                                      obs_type, shear_type, gal_dir, ps_dir, seed,
-                                     n_config_per_branch, my_step=3)
+                                     n_config_per_branch, preload, my_step=3)
     # And then submit them
     command_str = 'qsub '+pbs_file
     p = subprocess.Popen(command_str,shell=True)
 # The above command just submitted all the files to the queue.  We have to periodically poll the
 # queue to see if they are still running.
-mass_produce_utils.check_done(getpass.getuser(), sleep_time=sleep_time)
+mass_produce_utils.check_done('g3', sleep_time=sleep_time)
 t2 = time.time()
 # Times are approximate since check_done only checks every N seconds for some N
 print

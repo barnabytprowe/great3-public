@@ -92,26 +92,33 @@ def writeCatalog(catalog, path, type = 'fits', comment_pref = '#', format = None
         with open(path + ".p", 'w') as stream:
             cPickle.dump(catalog, stream, protocol=2)
     elif type == 'txt':
+        import tempfile
         # First print lines with column names.  This goes into a separate file for now.
-        f = open("tmp_1.txt", 'w')
+        f1, tmp_1 = tempfile.mkstemp(dir='.')
+        f = open(tmp_1, 'w')
         name_list = catalog.names
         for name in name_list:
             f.write(comment_pref + " " + name + "\n")
         f.close()
 
         # Then save catalog itself.
+        f2, tmp_2 = tempfile.mkstemp(dir='.')
         if format is not None:
-            np.savetxt('tmp_2.txt', catalog, fmt=format)
+            np.savetxt(tmp_2, catalog, fmt=format)
         else:
-            np.savetxt('tmp_2.txt', catalog)
+            np.savetxt(tmp_2, catalog)
 
         # Finally, concatenate, and remove tmp files
         destination = open(path + '.txt', 'wb')
-        shutil.copyfileobj(open("tmp_1.txt", 'rb'), destination)
-        shutil.copyfileobj(open("tmp_2.txt", 'rb'), destination)
+        shutil.copyfileobj(open(tmp_1, 'rb'), destination)
+        shutil.copyfileobj(open(tmp_2, 'rb'), destination)
         destination.close()
-        os.remove("tmp_1.txt")
-        os.remove("tmp_2.txt")
+        # Need to close the tempfiles opened by mkstemp.  cf:
+        # http://stackoverflow.com/questions/9944135/how-do-i-close-the-files-from-tempfile-mkstemp
+        os.close(f1)
+        os.close(f2)
+        os.remove(tmp_1)
+        os.remove(tmp_2)
     else:
         raise ValueError("Invalid catalog type requested!  Options are fits, p, txt.")
 
