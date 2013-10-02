@@ -351,8 +351,8 @@ class ConstPSFBuilder(PSFBuilder):
                     0.005 * 0.5 * np.pi * np.pi * (1.-obscuration[i_epoch]) )
             # This is the size in arcsec that OpticalPSF wants to create its image.
             # If this is larger than the postage stamp size, we can trim it down.
-            image_size = np.max(constants.xsize[self.obs_type][self.multiepoch],
-                                constants.ysize[self.obs_type][self.multiepoch])
+            image_size = max(constants.xsize[self.obs_type][self.multiepoch],
+                             constants.ysize[self.obs_type][self.multiepoch])
             pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
             image_size_arcsec = image_size * pixel_scale
             if image_size_arcsec < twoR * pad_factor[i_epoch]:
@@ -823,8 +823,8 @@ class VariablePSFBuilder(PSFBuilder):
                 0.005 * 0.5 * np.pi * np.pi * (1.-self.obscuration[self.obs_type]) )
         # This is the size in arcsec that OpticalPSF wants to create its image.
         # If this is larger than the postage stamp size, we can trim it down.
-        image_size = np.max(constants.xsize[self.obs_type][self.multiepoch],
-                constants.ysize[self.obs_type][self.multiepoch])
+        image_size = max(constants.xsize[self.obs_type][self.multiepoch],
+                         constants.ysize[self.obs_type][self.multiepoch])
         pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
         image_size_arcsec = image_size * pixel_scale
         if image_size_arcsec < twoR * pad_factor:
