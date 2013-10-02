@@ -525,8 +525,8 @@ def generate_submission_files(args):
     if 'variable' in args.branch:               # These lines are for the ALPHA RELEASE ONLY, where
         galaxy_id = [                           # offsets were missing from the galaxy IDs
             '%09i'%(
-                 int(galaxy_id[i]) + 1000 * branch_id.x_offset[args.branch][field_id[i]] +
-                 branch_id.y_offset[args.branch][field_id[i]]
+                 int(galaxy_id[i]) + 1000 * branch_id.x_offset[args.branch][subfield_id[i]] +
+                 branch_id.y_offset[args.branch][subfield_id[i]]
              ) for i in range(len(galaxy_id))
         ]  
     # See the comments in count_items for a description of what defaultdict does
