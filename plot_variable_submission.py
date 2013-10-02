@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 
 NFIELDS = 10
 NBINS_THETA = 15
+YLIM_EMODE = 2.e-5
+YLIM_BMODE = 2.e-5
 
 if __name__ == "__main__":
 
@@ -30,7 +32,7 @@ if __name__ == "__main__":
             theta[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA],
             map_E[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA], label="Field "+str(ifield))
 
-    plt.ylim(-2.e-5, 2.e-5)
+    plt.ylim(-YLIM_EMODE, YLIM_EMODE)
     plt.title(submission_filename+" E-mode")
     plt.ylabel("Ap. Mass Dispersion")
     plt.axhline(ls="--", color="k")
@@ -41,7 +43,7 @@ if __name__ == "__main__":
             theta[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA],
             map_B[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA], label="Field "+str(ifield))
 
-    plt.ylim(-2.e-5, 2.e-5)
+    plt.ylim(-YLIM_BMODE, YLIM_BMODE)
     plt.title(submission_filename+" B-mode")
     plt.xlabel("Theta [degrees]")
     plt.ylabel("Ap. Mass Dispersion")
