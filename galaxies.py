@@ -247,12 +247,15 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                     tmp_min_var = obj.field('min_var_white')[2:]
                     self.noise_min_var.append(galsim.LookupTable(fwhm_arr,tmp_min_var,f_log=True))
             # Otherwise, for space, save a single set of results depending on whether it's single
-            # epoch (smaller pixels) or multiepoch (bigger pixels).
+            # epoch (smaller pixels) or multiepoch (bigger pixels).  It turns out that the PSF used
+            # in the precomputation was not close enough to the ones used in these sims, so there's
+            # a fudge factor in here that was determined empirically by comparing the tabulated
+            # value to the noise variance post-whitening (i.e., during image generation process).
             else:
                 if self.multiepoch:
-                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,0]
+                    self.noise_min_var = 3.8*self.im_selection_catalog.field('min_var_white')[:,0]
                 else:
-                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,1]
+                    self.noise_min_var = 3.8*self.im_selection_catalog.field('min_var_white')[:,1]
 
             # Read in catalog that tells us how the galaxy magnitude from Claire's fits differs from
             # that in the COSMOS catalog.  This can be used to exclude total screwiness, objects
@@ -361,7 +364,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              ])
         useful_indices = indices[cond]
         # Note on the two image-based cuts: without them, for some example run, we kept the following numbers
-        # of galaxies -
+        # of galaxies in regular (not deep) fields -
         # ground (seeing 0.82): 11122
         # space: 34577
         # After imposing them, we kept the following numbers - 
