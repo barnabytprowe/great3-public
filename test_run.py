@@ -12,9 +12,9 @@ import great3sims
 
 # Set which branches to test...
 experiments = [
-    'variable_psf',
+#    'variable_psf',
     'control',
-    'multiepoch',
+#    'multiepoch',
     #'real_gal',
     #'full',
 ]
@@ -23,14 +23,14 @@ obs_type = [
     'space',
 ]
 shear_type = [
-    'constant',
+#    'constant',
     'variable',
 ]
 
 root = 'test_run'
 n_config = 3        # Build 3 separate config files to be run separately.
 subfield_min = 0
-subfield_max = 5    # Total of 3x2 sub-fields  (2 per config file)
+subfield_max = 19    # Total of 3x2 sub-fields  (2 per config file)
 data_dir = 'great3_fit_data'    # This should be set up as a sim-link to your Dropbox folder.
 ps_dir = '../inputs/ps/tables' 
 seed = 12345                    # Whatever.  (But not zero.)
@@ -46,8 +46,8 @@ if do_catalogs:
 
     t1 = time.time()
     # Reduce number of galaxies so it won't take so long
-    great3sims.constants.nrows = 10
-    great3sims.constants.ncols = 10
+    great3sims.constants.nrows = 100
+    great3sims.constants.ncols = 100
     # Reduce number of stars so it won't take so long
     great3sims.constants.min_star_density = 0.01 # per arcmin^2
     great3sims.constants.max_star_density = 0.03
