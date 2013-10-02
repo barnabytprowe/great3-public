@@ -341,8 +341,26 @@ class ConstPSFBuilder(PSFBuilder):
             else:
                 strut_angle[i_epoch] = 0.
 
-            # This is the default.  But option here to go larger if desired.
+            # Start with the default pad_factor, and maybe go smaller.
             pad_factor[i_epoch] = 1.5
+            # Figure out how large a pad_factor will make the Optical PSF image size be no larger
+            # than the size of the postage stamp onto which we will eventually draw it.
+            # First repeat some of the calculations that OpticalPSF does to determine its
+            # image size.
+            twoR = 2. * lam_over_diam[i_epoch] / (
+                    0.005 * 0.5 * np.pi * np.pi * (1.-obscuration[i_epoch]) )
+            # This is the size in arcsec that OpticalPSF wants to create its image.
+            # If this is larger than the postage stamp size, we can trim it down.
+            image_size = np.max(constants.xsize[self.obs_type][self.multiepoch],
+                                constants.ysize[self.obs_type][self.multiepoch])
+            pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
+            image_size_arcsec = image_size * pixel_scale
+            if image_size_arcsec < twoR * pad_factor[i_epoch]:
+                pad_factor[i_epoch] = image_size_arcsec / twoR
+                #print 'image_size = ',image_size
+                #print 'image_size_arcsec = ',image_size_arcsec
+                #print 'twoR = ',twoR
+                #print 'pad_factor = ',pad_factor[i_epoch]
 
             if self.obs_type == "ground":
                 # for seeing values, check whether we need to force them to follow the distribution
@@ -666,9 +684,6 @@ class VariablePSFBuilder(PSFBuilder):
         "ground" : 0,
         }
 
-    # This is the default.  But option here to go larger if desired.
-    pad_factor = 1.5
-
     # For space-based PSFs only: include jitter and charge diffusion.  The plan as stated on #42,
     # based on discussion with Lance Miller and several WFIRST people, is to make jitter a Gaussian
     # with RMS of 0.005-0.015" per axis, e=0-0.3 (uniform distribution), and a random direction.  So
@@ -798,9 +813,27 @@ class VariablePSFBuilder(PSFBuilder):
             # Define exposure time for those exposures in this entire field, not per tile
             t_exp = uniform_deviate() * (self.max_t_exp - self.min_t_exp) + self.min_t_exp
 
+        # Start with the default pad_factor, and maybe go smaller.
+        pad_factor = 1.5
+        # Figure out how large a pad_factor will make the Optical PSF image size be no larger
+        # than the size of the postage stamp onto which we will eventually draw it.
+        # First repeat some of the calculations that OpticalPSF does to determine its
+        # image size.
+        twoR = 2. * self.lam_over_diam[self.obs_type] / (
+                0.005 * 0.5 * np.pi * np.pi * (1.-self.obscuration[self.obs_type]) )
+        # This is the size in arcsec that OpticalPSF wants to create its image.
+        # If this is larger than the postage stamp size, we can trim it down.
+        image_size = np.max(constants.xsize[self.obs_type][self.multiepoch],
+                constants.ysize[self.obs_type][self.multiepoch])
+        pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
+        image_size_arcsec = image_size * pixel_scale
+        if image_size_arcsec < twoR * pad_factor:
+            pad_factor = image_size_arcsec / twoR
+
         # Get numbers for various parameters that will be used to make a variable OpticalPSFModel
         # that is different per tile and epoch:
         for i_epoch in range(n_epochs):
+
             for i_tile in range(self.n_tiles):
 
                 if self.obs_type == "ground":
@@ -877,7 +910,7 @@ class VariablePSFBuilder(PSFBuilder):
         psf_dict = dict(schema=schema, lam_over_diam=self.lam_over_diam[self.obs_type],
                         obscuration=self.obscuration[self.obs_type],
                         n_struts=self.n_struts[self.obs_type], strut_angle=0.,
-                        pad_factor=self.pad_factor,
+                        pad_factor=pad_factor,
                         star_density=star_density, n_star_linear=n_star_linear)
         if self.obs_type == "ground":
             psf_dict["atmos_psf_fwhm"]=atmos_psf_fwhm
