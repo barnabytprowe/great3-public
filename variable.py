@@ -19,8 +19,8 @@ def make_fits_cats(idarray, g1array, g2array, dir="./cats", prefix="vartest"):
     """Make a whole series of FITS catalogues of the sort expected by Melanie's presubmission.py
     script.
     
-    Writes a whole series of catalogues named <prefix>-000.fits, <prefix>-001.fits etc. to the folder
-    specified as `dir`.
+    Writes a whole series of catalogues named <prefix>-000.fits, <prefix>-001.fits etc. to the
+    folder specified as `dir`.
     """
     import pyfits
     if g1array.shape != g2array.shape:
