@@ -13,9 +13,9 @@ import great3sims
 # Set which branches to test...
 experiments = [
     #'variable_psf',
-    #'control',
+    'control',
     #'multiepoch',
-    'real_galaxy',
+#    'real_galaxy',
     #'full',
 ]
 obs_type = [
@@ -23,20 +23,20 @@ obs_type = [
     'space',
 ]
 shear_type = [
-    'constant',
+    #'constant',
     'variable',
 ]
 
 root = 'test_run'
 n_config = 3        # Build 3 separate config files to be run separately.
 subfield_min = 0
-subfield_max = 5    # Total of 3x2 sub-fields  (2 per config file)
+subfield_max = 19    # Total of 3x6 + 2 sub-fields  (2 per config file)
 data_dir = './great3_data'    # This should be set up as a sim-link to the folder
                                                  # containing the catalogs, fits, and actual images.
 ps_dir = '../inputs/ps/tables' 
 seed = 12345                    # Whatever.  (But not zero.)
 do_catalogs = True  # Remake the catalogs?
-do_images = True    # Make the images in great3 builder code?
+do_images = False    # Make the images in great3 builder code?
 do_config = True    # Do config-related steps?
 do_final = True     # Do final packaging steps?
 preload_real = False  # preload images for RealGalaxy branches?  [always False for parametric branches]
@@ -45,8 +45,8 @@ nproc = -1
 # Note: these definitions have to happen up front.  They affect image generation in addition to
 # catalog generation.
 # Reduce number of galaxies so it won't take so long
-great3sims.constants.nrows = 10
-great3sims.constants.ncols = 10
+great3sims.constants.nrows = 100
+great3sims.constants.ncols = 100
 # Reduce number of stars so it won't take so long
 great3sims.constants.min_star_density = 0.01 # per arcmin^2
 great3sims.constants.max_star_density = 0.03
