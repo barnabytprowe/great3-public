@@ -28,9 +28,9 @@ shear_type = [
 ]
 
 root = 'test_run'
-n_config = 3        # Build 3 separate config files to be run separately.
+n_config = 50        # Build 50 separate config files to be run separately.
 subfield_min = 0
-subfield_max = 199    # Total of 3x6 + 2 sub-fields  (2 per config file)
+subfield_max = 199    # Total of 4x50 sub-fields  (4 per config file)
 data_dir = './great3_data'    # This should be set up as a sim-link to the folder
                                                  # containing the catalogs, fits, and actual images.
 ps_dir = '../inputs/ps/tables' 
