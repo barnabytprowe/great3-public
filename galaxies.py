@@ -269,6 +269,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             self.average_mask_adjacent_pixel_count = \
                 mask_catalog['average_mask_adjacent_pixel_count']
             self.peak_image_pixel_count = mask_catalog['peak_image_pixel_count']
+            self.peak_image_pixel_count[self.peak_image_pixel_count == 0.] = 1.e-4
             self.min_mask_dist_pixels = mask_catalog['min_mask_dist_pixels']
 
             # If this is a ground-based calculation, then set up LookupTables to interpolate
