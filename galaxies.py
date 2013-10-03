@@ -266,7 +266,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # Read in the catalog that tells us which galaxies might have masking issues that make
             # the postage stamps too funky to use.
             mask_catalog = pyfits.getdata(os.path.join(self.gal_dir, self.rgc_mask_file))
-            self.min_mask_dist_fraction = mask_catalog['min_mask_dist_fraction']
+            self.average_mask_adjacent_pixel_count = \
+                mask_catalog['average_mask_adjacent_pixel_count']
+            self.peak_image_pixel_count = mask_catalog['peak_image_pixel_count']
             self.min_mask_dist_pixels = mask_catalog['min_mask_dist_pixels']
 
             # If this is a ground-based calculation, then set up LookupTables to interpolate
@@ -341,12 +343,16 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # variance post-whitening was estimated in a preprocessing step that didn't include some
         # details of the real simulations.
         # And yet another set of cuts: to avoid postage stamps with poor masking of nearby objects /
-        # shredding of the central object, we apply two cuts on the minimum distance from the center
-        # of the image to a masked pixel (absolute value, in pixels, and fractional distance in
-        # terms of the postage stamp size).
+        # shredding of the central object, we apply cuts on the minimum distance from the center
+        # of the image to a masked pixel in pixels, and on the flux in the nearest masked region
+        # compared to the peak image flux.
         e1 = self.shapes_catalog.field('e1')
         e2 = self.shapes_catalog.field('e2')
         e_test = np.sqrt(e1**2 + e2**2)
+        mask_cond = np.logical_or.reduce(
+            [self.min_mask_dist_pixels > 11,
+            self.average_mask_adjacent_pixel_count/self.peak_image_pixel_count < 0.2
+             ])
         cond = np.logical_and.reduce(
             [self.selection_catalog.field('to_use') == 1,
              np.abs(self.dmag) < 0.8,
@@ -359,8 +365,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              e_test < 1.,
              self.original_sn >= 20.,
              noise_min_var <= 0.96*variance*noise_mult,
-             self.min_mask_dist_fraction > 0.075,
-             self.min_mask_dist_pixels > 8
+             mask_cond
              ])
         useful_indices = indices[cond]
         # Note on the two image-based cuts: without them, for some example run, we kept the following numbers
@@ -376,7 +381,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # variance cut by a lot, but I'm leaving the latter in for now in case it becomes more
         # important later if we change other things.
         # Note on the two mask cuts: when we impose these, the sample for space-based sims decreases
-        # to 32966, another 4.5% decrease.
+        # to 33078, another 1% decrease.
 
         # In the next bit, we choose a random selection of objects to use out of the above
         # candidates.  Note that this part depends on const vs. variable shear, since the number to
