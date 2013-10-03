@@ -30,15 +30,15 @@ shear_type = [
 root = 'test_run'
 n_config = 3        # Build 3 separate config files to be run separately.
 subfield_min = 0
-subfield_max = 19    # Total of 3x6 + 2 sub-fields  (2 per config file)
+subfield_max = 199    # Total of 3x6 + 2 sub-fields  (2 per config file)
 data_dir = './great3_data'    # This should be set up as a sim-link to the folder
                                                  # containing the catalogs, fits, and actual images.
 ps_dir = '../inputs/ps/tables' 
 seed = 12345                    # Whatever.  (But not zero.)
 do_catalogs = True  # Remake the catalogs?
 do_images = False    # Make the images in great3 builder code?
-do_config = True    # Do config-related steps?
-do_final = True     # Do final packaging steps?
+do_config = False    # Do config-related steps?
+do_final = False     # Do final packaging steps?
 preload_real = False  # preload images for RealGalaxy branches?  [always False for parametric branches]
 nproc = -1
 
