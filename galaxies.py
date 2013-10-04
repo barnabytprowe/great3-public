@@ -424,6 +424,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         emag = np.sqrt(e1**2 + e2**2)
         ephi = 0.5 * np.arctan2(e2, e1)
         gmag = np.zeros_like(emag)
+        gmag[emag<1.] = emag[emag<1.] / (1.0+np.sqrt(1.0 - emag[emag<1.]**2))
         if self.shear_type == "constant":
             # Make an array containing all indices (each repeated twice) but with rotation angle of
             # pi/2 for the second set.  Include a random rotation to get rid of any coherent shear
@@ -447,7 +448,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # p(|g|) for the galaxies that we're actually using.
             # Only do e->g conversion for those with |e|<1; those that violate that condition should
             # already have been excluded.
-            gmag[emag<1.] = emag[emag<1.] / (1.0+np.sqrt(1.0 - emag[emag<1.]**2))
             g1 = gmag[use_indices.astype(int)] * np.cos(2.*ephi[use_indices.astype(int)])
             g2 = gmag[use_indices.astype(int)] * np.sin(2.*ephi[use_indices.astype(int)])
             gvar = g1.var() + g2.var()
