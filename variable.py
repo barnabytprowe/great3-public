@@ -142,8 +142,32 @@ def subtract_submissions(sub1file, sub2file, outfile):
 
 if __name__ == "__main__":
 
+    # Make intermediate catalogues for control space variable
     idt, xt, yt, g1t, g2t = test_evaluate.get_variable_gtrue("control", "space")
     idi, xi, yi, g1i, g2i = get_variable_gintrinsic("control", "space")
-    ret = make_fits_cats(idt, g1t, g2t)
+    ret = make_fits_cats(idt, g1t, g2t, prefix="gtrue")
     ret = make_fits_cats(idi, g1i, g2i, prefix="gintrinsic")
+    # Make a test set with gtrue plus gintrinsic, will be used for a later test
+    # TODO: SHOULD I USE THE PROPER SHEAR TRANSFORMATION?  I THINK YES...
     ret = make_fits_cats(idi, g1i + g1t, g2i + g2t, prefix="gtrue_intrinsic")
+    # Now we run the presubmission script via presubmisions-alpha-2 (hacked to not do ID checks)
+    import subprocess
+    import glob
+    gtruesubfile = "./submissions/gtrue_csv.asc"
+    call_list = [
+        "./presubmission_alpha-1", "-b", "control-space-variable",
+        "-o", gtruesubfile, ]+glob.glob("./cats/gtrue-*")
+    subprocess.check_call(call_list)
+    gintsubfile = "./submissions/gintrinsic_x16_csv.asc"
+    call_list = [
+        "./presubmission_alpha-2", "-b", "control-space-variable",
+        "-o", gintsubfile, ]+glob.glob("./cats/gintrinsic-*")
+    subprocess.check_call(call_list)
+    gtrueintsubfile = "./submissions/gtrue_intrinsic_x16_csv.asc"
+    call_list = [
+        "./presubmission_alpha-2", "-b", "control-space-variable",
+        "-o", gtrueintsubfile, ]+glob.glob("./cats/gtrue_intrinsic-*")
+    subprocess.check_call(call_list)
+
+    # Create a "corrected" submission by subtracting off the difference
+    subtract_submissions(gtrueintsubfile, gintsubfile, "./submissions/gcorrected_x16_csv.asc") 
