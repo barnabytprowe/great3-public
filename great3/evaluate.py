@@ -43,11 +43,11 @@ considered (0.01 degrees) and the maximum (10.0 degrees).  `MAP_E` is the E-mode
 dispersion.  `FIELD`, `THETA` (and the thus corresponding `MAP_E` entries) must be ordered as in the
 output of `presubmission.py`.
 
-The hashed header/comment can be ommitted.  Additional columns can be present provided that the
+The hashed header/comment can be omitted.  Additional columns can be present provided that the
 location and order of the three described above  Additional columns can be present provided that the
 location and order of the three described above.  An example of this is the output of 
 `presubmission.py` for variable shear branches, which also append columns for the B-mode aperture
-mass dispersion and a (shot  noise only) error estimate.
+mass dispersion and a (shot noise only) error estimate.
 
 After
 
@@ -654,7 +654,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
         if logger is not None:
             logger.warn(err.message)
         else:
-            raise err # ...Raise excpetion if there is no logger
+            raise err # ...Raise exception if there is no logger
     # Then return
     if just_q:
         ret = Q_c
