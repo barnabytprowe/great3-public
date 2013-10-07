@@ -11,6 +11,7 @@ plot_vals = ["e", "sn", "hlr", "mag", "bt", "zphot", "flux_radius"]
 plot_min_val = [0, 0, 0, 18, 0, 0, 0]
 plot_max_val = [1, 6, 2, 23.5, 1, 2, 2]
 obs_type = "space"
+is_deep = True # deep field?
 n_vals = len(plot_vals)
 gal_dir = "./great3_data"
 rgc_file = 'real_galaxy_catalog_23.5.fits'
@@ -74,6 +75,7 @@ mask_cond = np.logical_or.reduce(
     [min_mask_dist_pixels > 11,
      average_mask_adjacent_pixel_count/peak_image_pixel_count < 0.2
      ])
+if is_deep: variance *= 0.0625
 cuts = [selection_catalog.field('to_use') == 1,
         np.abs(dmag) < 0.8,
         flux_frac >= min_flux_frac,
@@ -124,6 +126,9 @@ for plot_val_ind in range(len(plot_vals)):
                 alpha=0.5
                 )
     plt.legend()
-    outfile = "galaxy_props_"+obs_type+"_"+plot_vals[plot_val_ind]+".png"
+    if not is_deep:
+        outfile = "galaxy_props_"+obs_type+"_"+plot_vals[plot_val_ind]+".png"
+    else:
+        outfile = "galaxy_props_"+obs_type+"_deep_"+plot_vals[plot_val_ind]+".png"
     print "Saving figure to file ",outfile
     plt.savefig(outfile)
