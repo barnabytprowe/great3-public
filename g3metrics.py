@@ -243,7 +243,7 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
     nims = len(g1true)
     if len(g2true) != nims:
         raise ValueError("Supplied g1true, g2true not matching length.")
-    
+
     # Then ready some arrays for the output submission
     g1sub = np.empty(nims)
     g2sub = np.empty(nims)
