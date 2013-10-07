@@ -445,8 +445,12 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             g1 = gmag[use_indices.astype(int)] * np.cos(2.*ephi[use_indices.astype(int)])
             g2 = gmag[use_indices.astype(int)] * np.sin(2.*ephi[use_indices.astype(int)])
             gvar = g1.var() + g2.var()
-            ps = galsim.PowerSpectrum(b_power_function=lambda k_arr : gvar*np.ones_like(k_arr))
-            g1_b, g2_b = ps.buildGrid(grid_spacing=1., ngrid=constants.nrows, rng=rng)
+            # Increase kmax_factor based on leakage discovery
+            kmax_factor = 16
+            ps = galsim.PowerSpectrum(
+                b_power_function=lambda k_arr : gvar * np.ones_like(k_arr) / float(kmax_factor**2))
+            g1_b, g2_b = ps.buildGrid(
+                grid_spacing=1., ngrid=constants.nrows, rng=rng, kmax_factor=kmax_factor)
             gmag_b = np.sqrt(g1_b**2 + g2_b**2)
             if np.any(gmag_b > 1.):
                 # The shear field generated with this B-mode power function is not limited to
