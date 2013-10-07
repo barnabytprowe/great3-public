@@ -142,8 +142,8 @@ def subtract_submissions(sub1file, sub2file, outfile):
 if __name__ == "__main__":
 
     # Make intermediate catalogues for control space variable
-    idt, xt, yt, g1t, g2t = test_evaluate.get_variable_gtrue("control", "space")
-    idi, xi, yi, g1i, g2i = get_variable_gintrinsic("control", "space")
+    idt, xt, yt, g1t, g2t = get_variable_gsuffix("control", "space", suffix="") # True = g1/g2 only
+    idi, xi, yi, g1i, g2i = get_variable_gsuffix("control", "space", suffix="_intrinsic")
     ret = make_fits_cats(idt, g1t, g2t, prefix="gtrue")
     ret = make_fits_cats(idi, g1i, g2i, prefix="gintrinsic")
     # Make a test set with gtrue plus gintrinsic, will be used for a later test
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     import glob
     gtruesubfile = "./submissions/gtrue_csv.asc"
     call_list = [
-        "./presubmission_alpha-1", "-b", "control-space-variable",
+        "./presubmission_alpha-2", "-b", "control-space-variable",
         "-o", gtruesubfile, ]+glob.glob("./cats/gtrue-*")
     subprocess.check_call(call_list)
     gintsubfile = "./submissions/gintrinsic_x16_csv.asc"
@@ -169,4 +169,13 @@ if __name__ == "__main__":
     subprocess.check_call(call_list)
 
     # Create a "corrected" submission by subtracting off the difference
-    subtract_submissions(gtrueintsubfile, gintsubfile, "./submissions/gcorrected_x16_csv.asc") 
+    subtract_submissions(gtrueintsubfile, gintsubfile, "./submissions/gcorrected_x16_csv.asc")
+
+    # Plot
+    import plot_variable_submission
+    plot_variable_submission(gtruesubfile, gtruesubfile.strip(".asc")+".png")
+    plot_variable_submission(gintsubfile, gintsubfile.strip(".asc")+".png")
+    plot_variable_submission(gtrueintsubfile, gtrueintsubfile.strip(".asc")+".png")
+    plot_variable_submission(
+        "./submissions/gcorrected_x16_csv.asc","./submissions/gcorrected_x16_csv.png")
+
