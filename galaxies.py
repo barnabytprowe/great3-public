@@ -253,9 +253,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # value to the noise variance post-whitening (i.e., during image generation process).
             else:
                 if self.multiepoch:
-                    self.noise_min_var = 3.8*self.im_selection_catalog.field('min_var_white')[:,0]
-                else:
                     self.noise_min_var = 3.8*self.im_selection_catalog.field('min_var_white')[:,1]
+                else:
+                    self.noise_min_var = 3.8*self.im_selection_catalog.field('min_var_white')[:,0]
 
             # Read in catalog that tells us how the galaxy magnitude from Claire's fits differs from
             # that in the COSMOS catalog.  This can be used to exclude total screwiness, objects
