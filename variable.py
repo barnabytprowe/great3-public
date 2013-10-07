@@ -115,3 +115,4 @@ if __name__ == "__main__":
     idi, xi, yi, g1i, g2i = get_variable_gintrinsic("control", "space")
     ret = make_fits_cats(idt, g1t, g2t)
     ret = make_fits_cats(idi, g1i, g2i, prefix="gintrinsic")
+    ret = make_fits_cats(idi, g1i + g1t, g2i + g2t, prefix="gtrue_intrinsic")
