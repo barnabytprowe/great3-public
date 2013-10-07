@@ -113,9 +113,8 @@ def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", logger=None,
 def add_submissions(sub1file, sub2file, outfile):
     """Add two submissions.  Error is arithmetic mean of both.
     """
-
     print "Adding "+sub2file+" to "+sub1file
-    sub1 = np.loadtxt(sub1file) 
+    sub1 = np.loadtxt(sub1file)
     sub2 = np.loadtxt(sub2file)
     field = sub1[:, 0]
     theta = sub1[:, 1]
@@ -130,7 +129,7 @@ def subtract_submissions(sub1file, sub2file, outfile):
     both.
     """
     print "Subtracting "+sub2file+" from "+sub1file
-    sub1 = np.loadtxt(sub1file) 
+    sub1 = np.loadtxt(sub1file)
     sub2 = np.loadtxt(sub2file)
     field = sub1[:, 0]
     theta = sub1[:, 1]
