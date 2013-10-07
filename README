@@ -1,7 +1,7 @@
 Pre-requisites
 
 Django 1.4 (available in pip) 
-Numpy, probably, for scoring
+NumPy for scoring
 
 Running on a local machine
 --------------------------
@@ -58,4 +58,3 @@ Things to do before deploying (not complete!):
    values (settings.py)
  - change the email backend (settings.py)
  - update the site settings in the admin controls
- 
