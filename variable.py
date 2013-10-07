@@ -53,8 +53,10 @@ def make_fits_cats(idarray, g1array, g2array, dir="./cats", prefix="vartest"):
        thdulist.writeto(outfile, clobber=True)
     return
 
-def get_variable_gintrinsic(experiment, obs_type, logger=None, test_dir=TEST_DIR):
+def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", logger=None, test_dir=TEST_DIR):
     """Get the full catalog of intrinsic "shears" and positions for all fields.
+
+    Gets "g1"+suffix and "g2"+suffix from the subfield_catalog files.
 
     @return id, x, y, g1, g2
     """
@@ -101,8 +103,8 @@ def get_variable_gintrinsic(experiment, obs_type, logger=None, test_dir=TEST_DIR
                 raise ValueError(
                     "Number of records in "+galcatfile+" (="+str(len(truedata))+") is not "+
                     "equal to NGALS_PER_SUBFIELD (="+str(evaluate.NGALS_PER_SUBFIELD)+")")
-            g1int[:, jsub, ifield] = truedata["g1_intrinsic"]
-            g2int[:, jsub, ifield] = truedata["g2_intrinsic"]
+            g1int[:, jsub, ifield] = truedata["g1"+suffix]
+            g2int[:, jsub, ifield] = truedata["g2"+suffix]
             identifier[:, jsub, ifield] = truedata["ID"]
 
     # Then return
