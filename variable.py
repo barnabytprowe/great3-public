@@ -173,9 +173,9 @@ if __name__ == "__main__":
 
     # Plot
     import plot_variable_submission
-    plot_variable_submission(gtruesubfile, gtruesubfile.strip(".asc")+".png")
-    plot_variable_submission(gintsubfile, gintsubfile.strip(".asc")+".png")
-    plot_variable_submission(gtrueintsubfile, gtrueintsubfile.strip(".asc")+".png")
-    plot_variable_submission(
+    plot_variable_submission.plot(gtruesubfile, gtruesubfile.strip(".asc")+".png")
+    plot_variable_submission.plot(gintsubfile, gintsubfile.strip(".asc")+".png")
+    plot_variable_submission.plot(gtrueintsubfile, gtrueintsubfile.strip(".asc")+".png")
+    plot_variable_submission.plot(
         "./submissions/gcorrected_x16_csv.asc","./submissions/gcorrected_x16_csv.png")
 
