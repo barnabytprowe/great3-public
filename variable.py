@@ -109,7 +109,36 @@ def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", logger=None,
 
     # Then return
     return identifier, xx, yy, g1int, g2int
- 
+
+def add_submissions(sub1file, sub2file, outfile):
+    """Add two submissions.  Error is arithmetic mean of both.
+    """
+
+    print "Adding "+sub2file+" to "+sub1file
+    sub1 = np.loadtxt(sub1file) 
+    sub2 = np.loadtxt(sub2file)
+    field = sub1[:, 0]
+    theta = sub1[:, 1]
+    mapE = sub1[:, 2] + sub2[:, 2]
+    mapB = sub1[:, 3] + sub2[:, 3]
+    maperr = .5 * (sub1[:, 4] + sub2[:, 4])
+    np.savetxt(outfile, np.array((field, theta, mapE, mapB, maperr)).T, fmt="%d %f %e %e %e")
+    return
+
+def subtract_submissions(sub1file, sub2file, outfile):
+    """Subtract submission 2 from submission 1 and save to outfile.  Error is arithmetic mean of
+    both.
+    """
+    print "Subtracting "+sub2file+" from "+sub1file
+    sub1 = np.loadtxt(sub1file) 
+    sub2 = np.loadtxt(sub2file)
+    field = sub1[:, 0]
+    theta = sub1[:, 1]
+    mapE = sub1[:, 2] - sub2[:, 2]
+    mapB = sub1[:, 3] - sub2[:, 3]
+    maperr = .5 * (sub1[:, 4] + sub2[:, 4])
+    np.savetxt(outfile, np.array((field, theta, mapE, mapB, maperr)).T, fmt="%d %f %e %e %e")
+    return
 
 if __name__ == "__main__":
 
