@@ -27,7 +27,7 @@ def plot(submission_filename, output_filename, nfields=NFIELDS, nbins_theta=NBIN
             theta[ifield * nbins_theta: (ifield + 1) * nbins_theta],
             map_E[ifield * nbins_theta: (ifield + 1) * nbins_theta], label="Field "+str(ifield))
 
-    plt.ylim(-ylim_emode, ylmin_emode)
+    plt.ylim(-ylim_emode, ylim_emode)
     plt.title(submission_filename+" E-mode")
     plt.ylabel("Ap. Mass Dispersion")
     plt.axhline(ls="--", color="k")
