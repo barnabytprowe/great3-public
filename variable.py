@@ -178,4 +178,5 @@ if __name__ == "__main__":
     plot_variable_submission.plot(gtrueintsubfile, gtrueintsubfile.rstrip(".asc")+".png")
     plot_variable_submission.plot(
         "./submissions/gcorrected_x16_csv.asc","./submissions/gcorrected_x16_csv.png")
-
+    # Move all the pngs to plots/
+    subprocess.check_call(["mv",]+glob.glob("./submissions/*.png")+["./plots/"])
