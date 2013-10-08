@@ -337,8 +337,8 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # loose filter to get rid of junk], and (b) that the requested noise variance in the sims
         # should be > the minimum noise variance that is possible post-whitening.  We impose these
         # even for parametric fits, just because the failures tend to be ones with problematic fits
-        # as well.  Just for cut (b), we need to use the actual noise variance, which means
-        # including a factor of decrease in the requested noise for deep subfields.  We don't
+        # as well, and impose the cut for the variance in the deep fields since we want to represent
+        # the same variance in both deep and wide.  We don't
         # include any change in variance for multiepoch because the original noise gets decreased by
         # some factor as well.  We include a 4% fudge factor here because the minimum noise
         # variance post-whitening was estimated in a preprocessing step that didn't include some
@@ -365,24 +365,16 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              self.shapes_catalog.field('do_meas') > -0.5,
              e_test < 1.,
              self.original_sn >= 20.,
-             noise_min_var <= 0.96*variance*noise_mult,
+             noise_min_var <= 0.96*variance*constants.deep_variance_mult,
              mask_cond
              ])
         useful_indices = indices[cond]
-        # Note on the two image-based cuts: without them, for some example run, we kept the following numbers
-        # of galaxies in regular (not deep) fields -
-        # ground (seeing 0.82): 11122
-        # space: 34577
-        # After imposing them, we kept the following numbers - 
-        # ground: 10222 (cut 900, or 8%)
-        # space: 33402 (cut 1175, or 4%)
-        # Note that ~2400 objects out of 56k have S/N in the original image that is below our
-        # threshold, but some of those must be eliminated by other cuts we're already making, which
-        # is what I would have expected.  The S/N cut seems to be dominating over the minimum
-        # variance cut by a lot, but I'm leaving the latter in for now in case it becomes more
-        # important later if we change other things.
+        # Note on the two image-based cuts: without them, for some example run, we lost a few %
+        # (ground) and ~20% (space) of the sample.  For the latter, the change is driven by the fact
+        # that more noise has to be added to whiten, so it's harder to pass the minimum-variance cut
+        # for the deep fields.
         # Note on the two mask cuts: when we impose these, the sample for space-based sims decreases
-        # to 33078, another 1% decrease.
+        # by another 1%.
 
         # In the next bit, we choose a random selection of objects to use out of the above
         # candidates.  Note that this part depends on const vs. variable shear, since the number to
