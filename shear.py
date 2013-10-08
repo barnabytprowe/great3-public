@@ -198,8 +198,6 @@ class VariableShearBuilder(ShearBuilder):
             # Now make a geometric mean to get the cosmological power spectrum.
             p_cos = (p1**(1.-residual))*(p2**residual)
             p_cos *= self.mult_factor
-            # DEBUG: Print min and max ell
-            print "Min ell = "+str(min(ell))+", Max ell = "+str(max(ell))
             # Construct the shapelets nuisance functions
             x = np.log10(ell/self.ell_piv)
             n_ell = len(ell)
@@ -244,7 +242,8 @@ class VariableShearBuilder(ShearBuilder):
                                      units = galsim.degrees,
                                      rng = rng,
                                      center = (grid_center, grid_center),
-                                     kmin_factor = 3)
+                                     kmin_factor=3,
+                                     kmax_factor=2)
             # Now that our cached PS has a grid of shears / convergences, we can use getLensing() to
             # get the quantities we need for a lensing measurement at any position, so this part of
             # the calculation is done.
