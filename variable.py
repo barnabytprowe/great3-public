@@ -147,8 +147,10 @@ if __name__ == "__main__":
     ret = make_fits_cats(idt, g1t, g2t, prefix="gtrue")
     ret = make_fits_cats(idi, g1i, g2i, prefix="gintrinsic")
     # Make a test set with gtrue plus gintrinsic, will be used for a later test
-    # TODO: SHOULD I USE THE PROPER SHEAR TRANSFORMATION?  I THINK YES...
-    ret = make_fits_cats(idi, g1i + g1t, g2i + g2t, prefix="gtrue_intrinsic")
+    gintc = g1i + g2i*1j   # Use complex notation, see e.g. Schneider 2006, eq 12
+    gtruec = g1t + g2t*1j  #
+    gfinalc = (gintc + gtruec) / (1. + gtruec.conj() * gintc)
+    ret = make_fits_cats(idi, gfinalc.real, gfinalc.imag, prefix="gtrue_intrinsic")
     # Now we run the presubmission script via presubmisions-alpha-2 (hacked to not do ID checks)
     import subprocess
     import glob
