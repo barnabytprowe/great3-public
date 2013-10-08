@@ -413,6 +413,8 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         e2 = self.shapes_catalog.field('e2')
         emag = np.sqrt(e1**2 + e2**2)
         ephi = 0.5 * np.arctan2(e2, e1)
+        # Only do e->g conversion for those with |e|<1; those that violate that condition should
+        # already have been excluded using flags.
         gmag = np.zeros_like(emag)
         gmag[emag<1.] = emag[emag<1.] / (1.0+np.sqrt(1.0 - emag[emag<1.]**2))
         if self.shear_type == "constant":
@@ -436,8 +438,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         else:
             # First, generate a B-mode shape noise field.  We have to choose a variance based on the
             # p(|g|) for the galaxies that we're actually using.
-            # Only do e->g conversion for those with |e|<1; those that violate that condition should
-            # already have been excluded.
             g1 = gmag[use_indices.astype(int)] * np.cos(2.*ephi[use_indices.astype(int)])
             g2 = gmag[use_indices.astype(int)] * np.sin(2.*ephi[use_indices.astype(int)])
             gvar = g1.var() + g2.var()
@@ -664,6 +664,4 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         gal.applyRotation(record['rot_angle_radians']*galsim.radians)
         # Rescale its flux.
         gal *= record['flux_rescale']
-        # When we return the final noise object, we don't have to explicitly rescale its variance,
-        # since the internal workings of this class take care of it for us.
         return gal
