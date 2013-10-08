@@ -363,8 +363,8 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              self.min_mask_dist_pixels > 8
              ])
         useful_indices = indices[cond]
-        # Note on the two image-based cuts: without them, for some example run, we kept the following numbers
-        # of galaxies in regular (not deep) fields -
+        # Note on the two image-based cuts: without them, for some example run, we kept the
+        # following numbers of galaxies in regular (not deep) fields -
         # ground (seeing 0.82): 11122
         # space: 34577
         # After imposing them, we kept the following numbers - 
