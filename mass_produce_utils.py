@@ -5,7 +5,7 @@ def pbs_script_python(filename, jobname):
     f = open(filename, "w")
 
     f.write("#!/bin/sh\n")
-    f.write("#PBS -l nodes=1:ppn=8\n")
+    f.write("#PBS -l nodes=1:ppn=16\n")
     f.write("#PBS -q physics\n")
     f.write("#PBS -j oe\n")
     f.write("#PBS -N "+jobname+"\n")
@@ -23,7 +23,7 @@ def pbs_script_yaml(filename, configname, rootname):
     jobname = 'g3_'+jobname
 
     f.write("#!/bin/sh\n")
-    f.write("#PBS -l nodes=1:ppn=8\n")
+    f.write("#PBS -l nodes=1:ppn=16\n")
     f.write("#PBS -q physics\n")
     f.write("#PBS -j oe\n")
     f.write("#PBS -N "+jobname+"\n")
