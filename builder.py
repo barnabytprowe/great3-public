@@ -290,7 +290,7 @@ class SimBuilder(object):
                 # This is a 1d numpy array of length n_epochs.
                 seeing = field_parameters["psf"]["atmos_psf_fwhm"]
                 effective_seeing = 1. / numpy.mean(1./seeing)
-        self.galaxy_builder.generateCatalog(rng, catalog, subfield_parameters["galaxy"],
+        self.galaxy_builder.generateCatalog(rng, catalog, subfield_parameters,
                                             self.noise_builder.typical_variance, noise_mult,
                                             effective_seeing)
         self.shear_builder.generateCatalog(rng, catalog, subfield_parameters["shear"],

@@ -161,6 +161,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
     ground_dfwhm = 0.15 # spacing between tabulated FWHM values
     ground_nfwhm = 4 # number of FWHM values for ground
     noise_fail_val = 1.e-10 # number to assign for negative noise variance values, then discard
+    # Set up empty cache for B-mode shape noise galsim.PowerSpectrum object (will only use if
+    # variable shear)
+    cached_ps = None
 
     def __init__(self, real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload):
         """Construct for this type of branch.
@@ -193,7 +196,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                         ("disk_hlr", float), ("disk_q", float),
                         ("disk_beta_radians", float), ("disk_flux", float), ("gal_sn", float),
                         ("cosmos_ident", int), ("g1_intrinsic", float), ("g2_intrinsic", float)]
-        return dict(schema=gal_schema)
+        return dict(schema=gal_schema, subfield_index=subfield_index)
 
     def generateCatalog(self, rng, catalog, parameters, variance, noise_mult, seeing=None):
         # Set up basic selection.
@@ -436,13 +439,77 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             all_indices = all_indices[perm_array]
             rot_angle = rot_angle[perm_array]
         else:
-            # First, generate a B-mode shape noise field.  We have to choose a variance based on the
-            # p(|g|) for the galaxies that we're actually using.
             g1 = gmag[use_indices.astype(int)] * np.cos(2.*ephi[use_indices.astype(int)])
             g2 = gmag[use_indices.astype(int)] * np.sin(2.*ephi[use_indices.astype(int)])
             gvar = g1.var() + g2.var()
-            ps = galsim.PowerSpectrum(b_power_function=lambda k_arr : gvar*np.ones_like(k_arr))
-            g1_b, g2_b = ps.buildGrid(grid_spacing=1., ngrid=constants.nrows, rng=rng)
+            # First, generate a B-mode shape noise field, or use the tabulated one if we're not the
+            # first subfield in a field.  We have to choose a variance based on the p(|g|) for the
+            # galaxies that we're actually using (will assume this is basically constant across
+            # subfields, which should be true when selecting ~10k galaxies).
+            # First check if cache is empty or if this is the first subfield in a field, so we know
+            # whether to use cached shape noise field (we use n_subfields_per_field based on
+            # variable shear, which is the same for const or variable PSF, so fudge this since
+            # galaxy builders don't have a variable_psf attribute).  Much of the code below comes
+            # from shear.py, which does operationally the same thing to the cosmological shear
+            # field.
+            n_subfields_per_field = constants.n_subfields_per_field[self.shear_type][True]
+            if self.cached_ps is None or \
+                    parameters["galaxy"]["subfield_index"] % n_subfields_per_field == 0:
+                # Make the power spectrum object
+                self.cached_ps = galsim.PowerSpectrum(
+                    b_power_function=lambda k_arr : gvar*np.ones_like(k_arr)
+                    )
+
+                # Define the grid on which we want to get shears.
+                # This is a little tricky: we have a setup for subfield locations within the field
+                # that is defined in builder.py function generateSubfieldOffsets.  The first
+                # subfield is located at the origin, and to represent it alone, we would need a
+                # constants.nrows x constants.ncols grid of shears.  But since we subsample by a
+                # parameter given as constants.subfield_grid_subsampling, each grid dimension must
+                # be larger by that amount.
+                if constants.nrows != constants.ncols:
+                    raise NotImplementedError("Currently variable shear grids require nrows=ncols")
+                n_grid = constants.subfield_grid_subsampling * constants.nrows
+                grid_spacing = constants.image_size_deg / n_grid
+
+                # Run buildGrid() to get the shears and convergences on this grid.  However, we also
+                # want to effectively change the value of k_min that is used for the calculation, to
+                # get a reasonable shear correlation function on large scales without excessive
+                # truncation.  TODO: check that this value of kmin_factor is adequate!  We also
+                # define a grid center such that the position of the first pixel is (0,0).
+                grid_center = 0.5 * (constants.image_size_deg - grid_spacing)
+                self.cached_ps.buildGrid(grid_spacing = grid_spacing,
+                                         ngrid = n_grid,
+                                         units = galsim.degrees,
+                                         rng = rng,
+                                         center = (grid_center, grid_center),
+                                         kmin_factor = 3)
+
+            # Now we either built up a new cached B-mode shape noise field, or ascertained that we
+            # should use a cached one.  We can now obtain g1 and g2 values for this B-mode shape
+            # noise field at the positions of the galaxies in this particular subfield.  This is
+            # fastest if done all at once, with one call to getLensing.  And this is actually
+            # slightly tricky, because we have to take into account:
+            #    (1) The position of the galaxy within the subfield.
+            #    (2) The offset of the subfield with respect to the field.
+            # And make sure we've gotten the units right for both of these.  We are ignoring
+            # centroid shifts of order 1 pixel (max 0.2" for ground data) which can occur within an
+            # image.
+            #
+            # We can define object indices in x, y directions - i.e., make indices that range
+            # from 0 to constants.nrows-1.
+            xsize = constants.xsize[self.obs_type][self.multiepoch]
+            ysize = constants.ysize[self.obs_type][self.multiepoch]
+            x_ind = (catalog["x"]+1+0.5*xsize)/xsize-1
+            y_ind = (catalog["y"]+1+0.5*ysize)/ysize-1
+            # Turn this into (x, y) positions within the subfield, in degrees.
+            x_pos = x_ind * constants.image_size_deg / constants.nrows
+            y_pos = y_ind * constants.image_size_deg / constants.ncols
+            # But now we have to add the subfield offset.  These are calculated as a fraction of the
+            # separation between galaxies, so we have to convert to degrees.
+            x_pos += parameters["subfield_offset"][0] * constants.image_size_deg / constants.nrows
+            y_pos += parameters["subfield_offset"][1] * constants.image_size_deg / constants.ncols
+            g1_b, g2_b = self.cached_ps.getShear(pos=(x_pos, y_pos), units=galsim.degrees)
             gmag_b = np.sqrt(g1_b**2 + g2_b**2)
             if np.any(gmag_b > 1.):
                 # The shear field generated with this B-mode power function is not limited to
