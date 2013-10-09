@@ -456,8 +456,17 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             if self.cached_ps is None or \
                     parameters["galaxy"]["subfield_index"] % n_subfields_per_field == 0:
                 # Make the power spectrum object
+                kmin_factor = 1  # TODO: Should these be made constant.galaxies_kmin_factor etc.?
+                kmax_factor = 12 #
+                # Calculate the grid_spacing as this impacts the scaling of the PS
+                n_grid = constants.subfield_grid_subsampling * constants.nrows
+                grid_spacing = constants.image_size_deg / n_grid
+                # Then build PS
                 self.cached_ps = galsim.PowerSpectrum(
-                    b_power_function=lambda k_arr : gvar*np.ones_like(k_arr)
+                    b_power_function=lambda k_arr : (
+                        gvar * np.ones_like(k_arr) * grid_spacing**2
+                        / (float(kmax_factor**2) - 1. / (kmin_factor**2))), # Get the right variance
+                    units=galsim.degrees
                     )
 
                 # Define the grid on which we want to get shears.
@@ -469,21 +478,19 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 # be larger by that amount.
                 if constants.nrows != constants.ncols:
                     raise NotImplementedError("Currently variable shear grids require nrows=ncols")
-                n_grid = constants.subfield_grid_subsampling * constants.nrows
-                grid_spacing = constants.image_size_deg / n_grid
 
                 # Run buildGrid() to get the shears and convergences on this grid.  However, we also
                 # want to effectively change the value of k_min that is used for the calculation, to
                 # get a reasonable shear correlation function on large scales without excessive
-                # truncation.  TODO: check that this value of kmin_factor is adequate!  We also
-                # define a grid center such that the position of the first pixel is (0,0).
+                # truncation. 
                 grid_center = 0.5 * (constants.image_size_deg - grid_spacing)
                 self.cached_ps.buildGrid(grid_spacing = grid_spacing,
                                          ngrid = n_grid,
                                          units = galsim.degrees,
                                          rng = rng,
                                          center = (grid_center, grid_center),
-                                         kmin_factor = 3)
+                                         kmin_factor = kmin_factor, 
+                                         kmax_factor = kmax_factor)
 
             # Now we either built up a new cached B-mode shape noise field, or ascertained that we
             # should use a cached one.  We can now obtain g1 and g2 values for this B-mode shape
@@ -511,6 +518,10 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             y_pos += parameters["subfield_offset"][1] * constants.image_size_deg / constants.ncols
             g1_b, g2_b = self.cached_ps.getShear(pos=(x_pos, y_pos), units=galsim.degrees)
             gmag_b = np.sqrt(g1_b**2 + g2_b**2)
+            # DEBUG: Plot the histogram of gmag to check it is reasonable
+            #import matplotlib.pyplot as plt
+            #print "Mean, median gmag_b = "+str(gmag_b.mean())+", "+str(np.median(gmag_b))
+            #plt.hist(gmag_b, range=(0, 1), bins=50); plt.show()
             if np.any(gmag_b > 1.):
                 # The shear field generated with this B-mode power function is not limited to
                 # |g|<1.  We have to fix these:
