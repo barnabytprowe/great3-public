@@ -161,6 +161,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
     ground_dfwhm = 0.15 # spacing between tabulated FWHM values
     ground_nfwhm = 4 # number of FWHM values for ground
     noise_fail_val = 1.e-10 # number to assign for negative noise variance values, then discard
+    # Set up empty cache for B-mode shape noise galsim.PowerSpectrum object (will only use if
+    # variable shear)
+    cached_ps = None
 
     def __init__(self, real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload):
         """Construct for this type of branch.
@@ -193,7 +196,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                         ("disk_hlr", float), ("disk_q", float),
                         ("disk_beta_radians", float), ("disk_flux", float), ("gal_sn", float),
                         ("cosmos_ident", int), ("g1_intrinsic", float), ("g2_intrinsic", float)]
-        return dict(schema=gal_schema)
+        return dict(schema=gal_schema, subfield_index=subfield_index)
 
     def generateCatalog(self, rng, catalog, parameters, variance, noise_mult, seeing=None):
         # Set up basic selection.
@@ -247,15 +250,12 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                     tmp_min_var = obj.field('min_var_white')[2:]
                     self.noise_min_var.append(galsim.LookupTable(fwhm_arr,tmp_min_var,f_log=True))
             # Otherwise, for space, save a single set of results depending on whether it's single
-            # epoch (smaller pixels) or multiepoch (bigger pixels).  It turns out that the PSF used
-            # in the precomputation was not close enough to the ones used in these sims, so there's
-            # a fudge factor in here that was determined empirically by comparing the tabulated
-            # value to the noise variance post-whitening (i.e., during image generation process).
+            # epoch (smaller pixels) or multiepoch (bigger pixels).
             else:
                 if self.multiepoch:
-                    self.noise_min_var = 3.8*self.im_selection_catalog.field('min_var_white')[:,0]
+                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,1]
                 else:
-                    self.noise_min_var = 3.8*self.im_selection_catalog.field('min_var_white')[:,1]
+                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,0]
 
             # Read in catalog that tells us how the galaxy magnitude from Claire's fits differs from
             # that in the COSMOS catalog.  This can be used to exclude total screwiness, objects
@@ -266,7 +266,10 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # Read in the catalog that tells us which galaxies might have masking issues that make
             # the postage stamps too funky to use.
             mask_catalog = pyfits.getdata(os.path.join(self.gal_dir, self.rgc_mask_file))
-            self.min_mask_dist_fraction = mask_catalog['min_mask_dist_fraction']
+            self.average_mask_adjacent_pixel_count = \
+                mask_catalog['average_mask_adjacent_pixel_count']
+            self.peak_image_pixel_count = mask_catalog['peak_image_pixel_count']
+            self.peak_image_pixel_count[self.peak_image_pixel_count == 0.] = 1.e-4
             self.min_mask_dist_pixels = mask_catalog['min_mask_dist_pixels']
 
             # If this is a ground-based calculation, then set up LookupTables to interpolate
@@ -334,19 +337,23 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # loose filter to get rid of junk], and (b) that the requested noise variance in the sims
         # should be > the minimum noise variance that is possible post-whitening.  We impose these
         # even for parametric fits, just because the failures tend to be ones with problematic fits
-        # as well.  Just for cut (b), we need to use the actual noise variance, which means
-        # including a factor of decrease in the requested noise for deep subfields.  We don't
+        # as well, and impose the cut for the variance in the deep fields since we want to represent
+        # the same variance in both deep and wide.  We don't
         # include any change in variance for multiepoch because the original noise gets decreased by
-        # some factor as well.  We include a 10% fudge factor here because the minimum noise
+        # some factor as well.  We include a 4% fudge factor here because the minimum noise
         # variance post-whitening was estimated in a preprocessing step that didn't include some
         # details of the real simulations.
         # And yet another set of cuts: to avoid postage stamps with poor masking of nearby objects /
-        # shredding of the central object, we apply two cuts on the minimum distance from the center
-        # of the image to a masked pixel (absolute value, in pixels, and fractional distance in
-        # terms of the postage stamp size).
+        # shredding of the central object, we apply cuts on the minimum distance from the center
+        # of the image to a masked pixel in pixels, and on the flux in the nearest masked region
+        # compared to the peak image flux.
         e1 = self.shapes_catalog.field('e1')
         e2 = self.shapes_catalog.field('e2')
         e_test = np.sqrt(e1**2 + e2**2)
+        mask_cond = np.logical_or.reduce(
+            [self.min_mask_dist_pixels > 11,
+            self.average_mask_adjacent_pixel_count/self.peak_image_pixel_count < 0.2
+             ])
         cond = np.logical_and.reduce(
             [self.selection_catalog.field('to_use') == 1,
              np.abs(self.dmag) < 0.8,
@@ -358,25 +365,17 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              self.shapes_catalog.field('do_meas') > -0.5,
              e_test < 1.,
              self.original_sn >= 20.,
-             noise_min_var <= 0.9*variance*noise_mult,
-             self.min_mask_dist_fraction > 0.075,
-             self.min_mask_dist_pixels > 8
+             noise_min_var <= 0.96*variance*constants.deep_variance_mult,
+             mask_cond
              ])
         useful_indices = indices[cond]
-        # Note on the two image-based cuts: without them, for some example run, we kept the
-        # following numbers of galaxies in regular (not deep) fields -
-        # ground (seeing 0.82): 11122
-        # space: 34577
-        # After imposing them, we kept the following numbers - 
-        # ground: 10222 (cut 900, or 8%)
-        # space: 33402 (cut 1175, or 4%)
-        # Note that ~2400 objects out of 56k have S/N in the original image that is below our
-        # threshold, but some of those must be eliminated by other cuts we're already making, which
-        # is what I would have expected.  The S/N cut seems to be dominating over the minimum
-        # variance cut by a lot, but I'm leaving the latter in for now in case it becomes more
-        # important later if we change other things.
+        print "Possible galaxies: ",len(useful_indices)
+        # Note on the two image-based cuts: without them, for some example run, we lost a few %
+        # (ground) and ~20% (space) of the sample.  For the latter, the change is driven by the fact
+        # that more noise has to be added to whiten, so it's harder to pass the minimum-variance cut
+        # for the deep fields.
         # Note on the two mask cuts: when we impose these, the sample for space-based sims decreases
-        # to 32966, another 4.5% decrease.
+        # by another 1%.
 
         # In the next bit, we choose a random selection of objects to use out of the above
         # candidates.  Note that this part depends on const vs. variable shear, since the number to
@@ -417,7 +416,10 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         e2 = self.shapes_catalog.field('e2')
         emag = np.sqrt(e1**2 + e2**2)
         ephi = 0.5 * np.arctan2(e2, e1)
+        # Only do e->g conversion for those with |e|<1; those that violate that condition should
+        # already have been excluded using flags.
         gmag = np.zeros_like(emag)
+        gmag[emag<1.] = emag[emag<1.] / (1.0+np.sqrt(1.0 - emag[emag<1.]**2))
         if self.shear_type == "constant":
             # Make an array containing all indices (each repeated twice) but with rotation angle of
             # pi/2 for the second set.  Include a random rotation to get rid of any coherent shear
@@ -437,20 +439,77 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             all_indices = all_indices[perm_array]
             rot_angle = rot_angle[perm_array]
         else:
-            # First, generate a B-mode shape noise field.  We have to choose a variance based on the
-            # p(|g|) for the galaxies that we're actually using.
-            # Only do e->g conversion for those with |e|<1; those that violate that condition should
-            # already have been excluded.
-            gmag[emag<1.] = emag[emag<1.] / (1.0+np.sqrt(1.0 - emag[emag<1.]**2))
             g1 = gmag[use_indices.astype(int)] * np.cos(2.*ephi[use_indices.astype(int)])
             g2 = gmag[use_indices.astype(int)] * np.sin(2.*ephi[use_indices.astype(int)])
             gvar = g1.var() + g2.var()
-            # Increase kmax_factor based on leakage discovery
-            kmax_factor = 16
-            ps = galsim.PowerSpectrum(
-                b_power_function=lambda k_arr : gvar * np.ones_like(k_arr) / float(kmax_factor**2))
-            g1_b, g2_b = ps.buildGrid(
-                grid_spacing=1., ngrid=constants.nrows, rng=rng, kmax_factor=kmax_factor)
+            # First, generate a B-mode shape noise field, or use the tabulated one if we're not the
+            # first subfield in a field.  We have to choose a variance based on the p(|g|) for the
+            # galaxies that we're actually using (will assume this is basically constant across
+            # subfields, which should be true when selecting ~10k galaxies).
+            # First check if cache is empty or if this is the first subfield in a field, so we know
+            # whether to use cached shape noise field (we use n_subfields_per_field based on
+            # variable shear, which is the same for const or variable PSF, so fudge this since
+            # galaxy builders don't have a variable_psf attribute).  Much of the code below comes
+            # from shear.py, which does operationally the same thing to the cosmological shear
+            # field.
+            n_subfields_per_field = constants.n_subfields_per_field[self.shear_type][True]
+            if self.cached_ps is None or \
+                    parameters["galaxy"]["subfield_index"] % n_subfields_per_field == 0:
+                # Make the power spectrum object
+                self.cached_ps = galsim.PowerSpectrum(
+                    b_power_function=lambda k_arr : gvar*np.ones_like(k_arr)
+                    )
+
+                # Define the grid on which we want to get shears.
+                # This is a little tricky: we have a setup for subfield locations within the field
+                # that is defined in builder.py function generateSubfieldOffsets.  The first
+                # subfield is located at the origin, and to represent it alone, we would need a
+                # constants.nrows x constants.ncols grid of shears.  But since we subsample by a
+                # parameter given as constants.subfield_grid_subsampling, each grid dimension must
+                # be larger by that amount.
+                if constants.nrows != constants.ncols:
+                    raise NotImplementedError("Currently variable shear grids require nrows=ncols")
+                n_grid = constants.subfield_grid_subsampling * constants.nrows
+                grid_spacing = constants.image_size_deg / n_grid
+
+                # Run buildGrid() to get the shears and convergences on this grid.  However, we also
+                # want to effectively change the value of k_min that is used for the calculation, to
+                # get a reasonable shear correlation function on large scales without excessive
+                # truncation.  TODO: check that this value of kmin_factor is adequate!  We also
+                # define a grid center such that the position of the first pixel is (0,0).
+                grid_center = 0.5 * (constants.image_size_deg - grid_spacing)
+                self.cached_ps.buildGrid(grid_spacing = grid_spacing,
+                                         ngrid = n_grid,
+                                         units = galsim.degrees,
+                                         rng = rng,
+                                         center = (grid_center, grid_center),
+                                         kmin_factor = 3)
+
+            # Now we either built up a new cached B-mode shape noise field, or ascertained that we
+            # should use a cached one.  We can now obtain g1 and g2 values for this B-mode shape
+            # noise field at the positions of the galaxies in this particular subfield.  This is
+            # fastest if done all at once, with one call to getLensing.  And this is actually
+            # slightly tricky, because we have to take into account:
+            #    (1) The position of the galaxy within the subfield.
+            #    (2) The offset of the subfield with respect to the field.
+            # And make sure we've gotten the units right for both of these.  We are ignoring
+            # centroid shifts of order 1 pixel (max 0.2" for ground data) which can occur within an
+            # image.
+            #
+            # We can define object indices in x, y directions - i.e., make indices that range
+            # from 0 to constants.nrows-1.
+            xsize = constants.xsize[self.obs_type][self.multiepoch]
+            ysize = constants.ysize[self.obs_type][self.multiepoch]
+            x_ind = (catalog["x"]+1+0.5*xsize)/xsize-1
+            y_ind = (catalog["y"]+1+0.5*ysize)/ysize-1
+            # Turn this into (x, y) positions within the subfield, in degrees.
+            x_pos = x_ind * constants.image_size_deg / constants.nrows
+            y_pos = y_ind * constants.image_size_deg / constants.ncols
+            # But now we have to add the subfield offset.  These are calculated as a fraction of the
+            # separation between galaxies, so we have to convert to degrees.
+            x_pos += parameters["subfield_offset"][0] * constants.image_size_deg / constants.nrows
+            y_pos += parameters["subfield_offset"][1] * constants.image_size_deg / constants.ncols
+            g1_b, g2_b = self.cached_ps.getShear(pos=(x_pos, y_pos), units=galsim.degrees)
             gmag_b = np.sqrt(g1_b**2 + g2_b**2)
             if np.any(gmag_b > 1.):
                 # The shear field generated with this B-mode power function is not limited to
@@ -672,6 +731,4 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         gal.applyRotation(record['rot_angle_radians']*galsim.radians)
         # Rescale its flux.
         gal *= record['flux_rescale']
-        # When we return the final noise object, we don't have to explicitly rescale its variance,
-        # since the internal workings of this class take care of it for us.
         return gal

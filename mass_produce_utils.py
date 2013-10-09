@@ -5,7 +5,7 @@ def pbs_script_python(filename, jobname):
     f = open(filename, "w")
 
     f.write("#!/bin/sh\n")
-    f.write("#PBS -l nodes=1:ppn=8\n")
+    f.write("#PBS -l nodes=1:ppn=16\n")
     f.write("#PBS -q physics\n")
     f.write("#PBS -j oe\n")
     f.write("#PBS -N "+jobname+"\n")
@@ -23,7 +23,7 @@ def pbs_script_yaml(filename, configname, rootname):
     jobname = 'g3_'+jobname
 
     f.write("#!/bin/sh\n")
-    f.write("#PBS -l nodes=1:ppn=8\n")
+    f.write("#PBS -l nodes=1:ppn=16\n")
     f.write("#PBS -q physics\n")
     f.write("#PBS -j oe\n")
     f.write("#PBS -N "+jobname+"\n")
@@ -75,7 +75,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
                 "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
                 ", public_dir='" + os.path.join(root, 'public') + \
                 "', truth_dir='" + os.path.join(root, 'truth') + \
-                "', steps = ['config'], nproc=8, preload=" + str(preload) + ")\n"
+                "', steps = ['config'], nproc=-1, preload=" + str(preload) + ")\n"
             f.write(command_str)
             new_name = '%s_%02d.yaml'%(config_pref,i)
             new_psf_name = '%s_%02d.yaml'%(psf_config_pref,i)
