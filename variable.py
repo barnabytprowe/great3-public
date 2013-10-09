@@ -159,19 +159,19 @@ if __name__ == "__main__":
         "./presubmission_alpha-2", "-b", "control-space-variable",
         "-o", gtruesubfile, ]+glob.glob("./cats/gtrue-*")
     subprocess.check_call(call_list)
-    gintsubfile = "./submissions/gintrinsic_kmin3kmax1_csv.asc"
+    gintsubfile = "./submissions/gintrinsic_kmin1kmax8_csv.asc"
     call_list = [
         "./presubmission_alpha-2", "-b", "control-space-variable",
         "-o", gintsubfile, ]+glob.glob("./cats/gintrinsic-*")
     subprocess.check_call(call_list)
-    gtrueintsubfile = "./submissions/gtrue_intrinsic_kmin3kmax1_csv.asc"
+    gtrueintsubfile = "./submissions/gtrue_intrinsic_kmin1kmax8_csv.asc"
     call_list = [
         "./presubmission_alpha-2", "-b", "control-space-variable",
         "-o", gtrueintsubfile, ]+glob.glob("./cats/gtrue_intrinsic-*")
     subprocess.check_call(call_list)
 
     # Create a "corrected" submission by subtracting off the difference
-    subtract_submissions(gtrueintsubfile, gintsubfile, "./submissions/gcorrected_kmin3kmax1_csv.asc")
+    subtract_submissions(gtrueintsubfile, gintsubfile, "./submissions/gcorrected_kmin1kmax8_csv.asc")
 
     # Plot
     import plot_variable_submission
@@ -179,6 +179,6 @@ if __name__ == "__main__":
     plot_variable_submission.plot(gintsubfile, gintsubfile.rstrip(".asc")+".png")
     plot_variable_submission.plot(gtrueintsubfile, gtrueintsubfile.rstrip(".asc")+".png")
     plot_variable_submission.plot(
-        "./submissions/gcorrected_kmin3kmax1_csv.asc","./submissions/gcorrected_kmin1kmax3_csv.png")
+        "./submissions/gcorrected_kmin1kmax8_csv.asc","./submissions/gcorrected_kmin1kmax8_csv.png")
     # Move all the pngs to plots/
     subprocess.check_call(["mv",]+glob.glob("./submissions/*.png")+["./plots/"])
