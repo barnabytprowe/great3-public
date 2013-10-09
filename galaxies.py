@@ -369,7 +369,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              mask_cond
              ])
         useful_indices = indices[cond]
-        print "Possible galaxies: ",len(useful_indices)
+        #print "Possible galaxies: ",len(useful_indices)
         # Note on the two image-based cuts: without them, for some example run, we lost a few %
         # (ground) and ~20% (space) of the sample.  For the latter, the change is driven by the fact
         # that more noise has to be added to whiten, so it's harder to pass the minimum-variance cut
