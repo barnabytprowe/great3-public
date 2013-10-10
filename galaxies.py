@@ -457,7 +457,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                     parameters["galaxy"]["subfield_index"] % n_subfields_per_field == 0:
                 # Make the power spectrum object
                 kmin_factor = 1  # TODO: Should these be made constant.galaxies_kmin_factor etc.?
-                kmax_factor = 12 #
+                kmax_factor = 16 #
                 # Calculate the grid_spacing as this impacts the scaling of the PS
                 n_grid = constants.subfield_grid_subsampling * constants.nrows
                 grid_spacing = constants.image_size_deg / n_grid
