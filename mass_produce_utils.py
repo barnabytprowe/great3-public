@@ -69,13 +69,17 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
             last = subfield_min + (subfield_max-subfield_min+1)/n_config_per_branch * (i+1) - 1
             # Could put nproc setting here.  However, for now we just want to use as many processors
             # as we have on that node.  This could get interesting for RealGalaxy branches.
+            if experiment != "variable_psf":
+                n_proc = -1
+            else:
+                n_proc = 4
             command_str = "great3sims.run('" + root + "', subfield_min=" + str(first) + \
                 ", subfield_max=" + str(last) + ", experiments=['" + experiment + \
                 "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
                 "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
                 ", public_dir='" + os.path.join(root, 'public') + \
                 "', truth_dir='" + os.path.join(root, 'truth') + \
-                "', steps = ['config'], nproc=-1, preload=" + str(preload) + ")\n"
+                "', steps = ['config'], nproc=" + str(n_proc) + ", preload=" + str(preload) + ")\n"
             f.write(command_str)
             new_name = '%s_%02d.yaml'%(config_pref,i)
             new_psf_name = '%s_%02d.yaml'%(psf_config_pref,i)
