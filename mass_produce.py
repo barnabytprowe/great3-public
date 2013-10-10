@@ -59,8 +59,6 @@ if not package_only:
     # juggling to do for config file names / dirs.
     prefix1 = 'g3_step1_'
     all_config_names = []
-    all_psf_config_names = []
-    all_star_test_config_names = []
     for experiment, obs_type, shear_type in branches:
         e = experiment[0]
         o = obs_type[0]
@@ -79,9 +77,9 @@ if not package_only:
         for config_name in new_config_names:
             all_config_names.append(config_name)
         for psf_config_name in new_psf_config_names:
-            all_psf_config_names.append(psf_config_name)
+            all_config_names.append(psf_config_name)
         for star_test_config_name in new_star_test_config_names:
-            all_star_test_config_names.append(star_test_config_name)
+            all_config_names.append(star_test_config_name)
         seed += delta_seed
 
     print "Wrote files necessary to carry out metaparameters, catalogs, and config steps"
@@ -104,7 +102,7 @@ if not package_only:
     print "Time for generation of metaparameters, catalogs, and config files = ",t2-t1
     print
 
-    # Then we split up into even more processes for gal_images and psf_images.
+    # Then we split up into even more processes for images.
     t1 = time.time()
     prefix2 = 'g3_step2_'
     for config_name in all_config_names:
@@ -117,35 +115,7 @@ if not package_only:
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
-    print "Time for generation of galaxy images = ",t2-t1
-    print
-    t1 = time.time()
-    prefix2 = 'g3_step2_'
-    for config_name in all_psf_config_names:
-        type, _ = os.path.splitext(config_name)
-        pbs_file = prefix2 + type+'.sh'
-        mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
-        command_str = 'qsub '+pbs_file
-        p = subprocess.Popen(command_str, shell=True)
-    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
-    t2 = time.time()
-    # Times are approximate since check_done only checks every N seconds for some N
-    print
-    print "Time for generation of PSF images = ",t2-t1
-    print
-    t1 = time.time()
-    prefix2 = 'g3_step2_'
-    for config_name in all_star_test_config_names:
-        type, _ = os.path.splitext(config_name)
-        pbs_file = prefix2 + type+'.sh'
-        mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
-        command_str = 'qsub '+pbs_file
-        p = subprocess.Popen(command_str, shell=True)
-    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
-    t2 = time.time()
-    # Times are approximate since check_done only checks every N seconds for some N
-    print
-    print "Time for generation of star test images = ",t2-t1
+    print "Time for generation of images = ",t2-t1
     print
 
 # Finally, we go back to a process per branch for the final steps: star_params and packages.
