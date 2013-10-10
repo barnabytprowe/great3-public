@@ -100,8 +100,8 @@ STORAGE_DIR = "./metric_calculation_products" # Folder into which to store usefu
                                               # outputs of metric calculations (e.g. rotation files,
                                               # dicts, mapE tables) which need be calculated only
                                               # once
-TRUTH_DIR = "/Users/browe/great3/truth"       # Root folder in which the truth values are unpacked
-                                              # (admin only)
+TRUTH_DIR = "/Users/browe/great3/truth-alpha-release-2" # Root folder in which the truth values are
+                                                        # unpacked (admin only)
 
 SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
@@ -519,6 +519,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         map_E = np.empty(NBINS_THETA * NFIELDS)
         map_B = np.empty(NBINS_THETA * NFIELDS)
         maperr = np.empty(NBINS_THETA * NFIELDS)
+        print truth_dir
         # Load the offsets
         subfield_indices, offset_deg_x, offset_deg_y = get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
