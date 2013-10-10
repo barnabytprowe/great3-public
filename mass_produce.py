@@ -14,7 +14,7 @@ import great3sims
 
 # Define some basic parameters.  This includes some system-dependent things like directories for
 # output.
-root = '/lustre/rmandelb/great3-v5'
+root = '/lustre/rmandelb/great3-v6'
 n_config_per_branch = 5 # Number of config files to be run per branch.
 subfield_min = 0 # NOTE CHANGE: SHOULD BE ZERO TO DO AN ENTIRE BRANCH.
 subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
@@ -40,8 +40,8 @@ obs_types = [
     'space',
 ]
 shear_types = [
-    'constant',
-    #'variable',
+    #'constant',
+    'variable',
 ]
 branches = [ (experiment, obs_type, shear_type)
              for experiment in experiments
