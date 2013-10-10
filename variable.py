@@ -53,14 +53,15 @@ def make_fits_cats(idarray, g1array, g2array, dir="./cats", prefix="vartest"):
        thdulist.writeto(outfile, clobber=True)
     return
 
-def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", logger=None, test_dir=TEST_DIR):
+def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", file_prefix="subfield_catalog",
+                         logger=None, test_dir=TEST_DIR):
     """Get the full catalog of intrinsic "shears" and positions for all fields.
 
     Gets "g1"+suffix and "g2"+suffix from the subfield_catalog files.
 
     @return id, x, y, g1, g2
     """
-    mapper = great3sims.mapper.Mapper(TEST_DIR, experiment, obs_type, "variable")
+    mapper = great3sims.mapper.Mapper(test_dir, experiment, obs_type, "variable")
     identifier = np.empty(
         (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS), dtype=int)
     g1int = np.empty(
@@ -97,7 +98,7 @@ def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", logger=None,
             xx[:, jsub, ifield] = xgrid_deg + offset_deg_x[isubfield_index]
             yy[:, jsub, ifield] = ygrid_deg + offset_deg_y[isubfield_index]
             galcatfile = os.path.join(
-                mapper.full_dir, ("subfield_catalog-%03d.fits" % isubfield_index))
+                mapper.full_dir, (file_prefix+"-%03d.fits" % isubfield_index))
             truedata = pyfits.getdata(galcatfile)
             if len(truedata) != evaluate.NGALS_PER_SUBFIELD:
                 raise ValueError(
