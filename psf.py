@@ -356,8 +356,7 @@ class ConstPSFBuilder(PSFBuilder):
             pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
             image_size_arcsec = image_size * pixel_scale
             if image_size_arcsec < twoR * pad_factor[i_epoch]:
-                # Line below includes a little bit of wiggle room, for safety.
-                pad_factor[i_epoch] = 1.05 * image_size_arcsec / twoR
+                pad_factor[i_epoch] = image_size_arcsec / twoR
                 #print 'image_size = ',image_size
                 #print 'image_size_arcsec = ',image_size_arcsec
                 #print 'twoR = ',twoR
@@ -829,8 +828,7 @@ class VariablePSFBuilder(PSFBuilder):
         pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
         image_size_arcsec = image_size * pixel_scale
         if image_size_arcsec < twoR * pad_factor:
-            # Line below includes a little bit of wiggle room, just for safety.
-            pad_factor = 1.05*image_size_arcsec / twoR
+            pad_factor = image_size_arcsec / twoR
 
         # Get numbers for various parameters that will be used to make a variable OpticalPSFModel
         # that is different per tile and epoch:
