@@ -194,7 +194,12 @@ if __name__ == "__main__":
     import glob
     import subprocess
 
-    # First get the submission truth
+    # First get the mapEtruth version
+    fieldt, thetat, map_Et, map_Bt, maperrt = evaluate.get_generate_variable_truth(
+        "control", "space", truth_dir="/Users/browe/great3/truth-alpha-release-2",
+        make_plots=False)
+
+    # Then get the submission truth
     idt, xt, yt, g1t, g2t = get_variable_gsuffix(
         "control", "space", suffix="", file_prefix="galaxy_catalog",
         test_dir="/Users/browe/great3/truth-alpha-release-2") # True = g1/g2 only
@@ -208,12 +213,7 @@ if __name__ == "__main__":
     fields, thetas, map_Es, map_Bs, maperrs = (
         subdata[:, 0], subdata[:, 1], subdata[:, 2], subdata[:, 3], subdata[:, 4])
 
-    # Then get the mapEtruth version and compare
-    fieldt, thetat, map_Et, map_Bt, maperrt = evaluate.get_generate_variable_truth(
-        "control", "space", truth_dir="/Users/browe/great3/truth-alpha-release-2",
-        corr2_params="../server/great3/corr2.params", make_plots=False)
-
-    print thetat - thetas
+#    print thetat - thetas
 
     print map_Et - map_Es
  
