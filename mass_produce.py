@@ -97,7 +97,7 @@ if not package_only:
         p = subprocess.Popen(command_str,shell=True)
     # The above command just submitted all the files to the queue.  We have to periodically poll the
     # queue to see if they are still running.
-    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
+    mass_produce_utils.check_done('g3_step1', sleep_time=sleep_time)
     t2 = time.time()
     # Times are approximate since check_done only checks every N seconds for some N
     print
