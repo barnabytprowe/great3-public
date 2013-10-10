@@ -27,7 +27,7 @@ def pbs_script_yaml(filename, configname, rootname):
     f.write("#PBS -q physics\n")
     f.write("#PBS -j oe\n")
     f.write("#PBS -N "+jobname+"\n")
-    f.write("#PBS -l walltime=30:00:00\n")
+    f.write("#PBS -l walltime=45:00:00\n")
     f.write("\n")
     f.write("cd "+rootname+"\n")
     f.write("/home/rmandelb/software/bin/galsim "+configname+" -v1\n")
