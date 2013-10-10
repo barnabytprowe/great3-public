@@ -469,7 +469,7 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
     # Use fits binary table for faster I/O. (Converting to/from strings is slow.)
     # First, make the data into np arrays
     x_array = np.asarray(x).flatten()
-    print np.sum(x_array)
+    #DEBUG: print np.sum(x_array)
     y_array = np.asarray(y).flatten()
     g1_array = np.asarray(e1).flatten()
     g2_array = np.asarray(e2).flatten()
@@ -477,7 +477,6 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
     # Then, mask out the >= 10 values
     use_mask = np.logical_and.reduce([g1_array<10.,g2_array<10.])
     # And finally make the FITS file
-    #print np.sort(x_array)[-403:-397]
     x_col = pyfits.Column(name='x', format='1D', array=x_array[use_mask])
     y_col = pyfits.Column(name='y', format='1D', array=y_array[use_mask])
     g1_col = pyfits.Column(name='g1', format='1D', array=g1_array[use_mask])
@@ -493,8 +492,7 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
         ]).wait()
     results = np.loadtxt(m2file)
     os.remove(paramsfile)
-    print catfile
-    #os.remove(catfile)
+    os.remove(catfile)
     os.remove(m2file)
     return results
 
