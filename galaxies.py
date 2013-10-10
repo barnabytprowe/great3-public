@@ -164,6 +164,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
     # Set up empty cache for B-mode shape noise galsim.PowerSpectrum object (will only use if
     # variable shear)
     cached_ps = None
+    # And define parameters needed for PS generation for B-mode intrinsic shear field
+    kmin_factor = 1
+    kmax_factor = 16
 
     def __init__(self, real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload):
         """Construct for this type of branch.
@@ -455,9 +458,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             n_subfields_per_field = constants.n_subfields_per_field[self.shear_type][True]
             if self.cached_ps is None or \
                     parameters["galaxy"]["subfield_index"] % n_subfields_per_field == 0:
-                # Make the power spectrum object
-                kmin_factor = 1  # TODO: Should these be made constant.galaxies_kmin_factor etc.?
-                kmax_factor = 12 #
                 # Calculate the grid_spacing as this impacts the scaling of the PS
                 n_grid = constants.subfield_grid_subsampling * constants.nrows
                 grid_spacing = constants.image_size_deg / n_grid
@@ -465,7 +465,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 self.cached_ps = galsim.PowerSpectrum(
                     b_power_function=lambda k_arr : (
                         gvar * np.ones_like(k_arr) * grid_spacing**2
-                        / (float(kmax_factor**2) - 1. / (kmin_factor**2))), # Get the right variance
+                        / (float(self.kmax_factor**2) - 1. / (self.kmin_factor**2))), # Get the right variance
                     units=galsim.degrees
                     )
 
@@ -489,8 +489,8 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                                          units = galsim.degrees,
                                          rng = rng,
                                          center = (grid_center, grid_center),
-                                         kmin_factor = kmin_factor, 
-                                         kmax_factor = kmax_factor)
+                                         kmin_factor = self.kmin_factor, 
+                                         kmax_factor = self.kmax_factor)
 
             # Now we either built up a new cached B-mode shape noise field, or ascertained that we
             # should use a cached one.  We can now obtain g1 and g2 values for this B-mode shape
