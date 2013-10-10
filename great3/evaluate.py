@@ -92,12 +92,16 @@ THETA_MIN_DEG = 0.02 # Minimum and maximum angular scales for logarithmic bins u
 THETA_MAX_DEG = 10.0 # aperture mass disp. - MUST match specs given to participants - in degrees
 NBINS_THETA = 15     # Number of logarithmic bins theta for the aperture mass dispersion
 
+EXPECTED_THETA = np.array([ # Array of theta values expected in submissions, good to 3 d.p.
+    0.0246, 0.0372,  0.0563,  0.0853,  0.129 ,  0.1953,  0.2955, 0.4472,  0.6768,  1.0242,  1.5499,
+    2.3455,  3.5495,  5.3716, 8.1289] * NFIELDS)
+
 STORAGE_DIR = "./metric_calculation_products" # Folder into which to store useful intermediate
                                               # outputs of metric calculations (e.g. rotation files,
                                               # dicts, mapE tables) which need be calculated only
                                               # once
-TRUTH_DIR = "/Users/browe/great3/truth"       # Root folder in which the truth values are unpacked
-                                              # (admin only)
+TRUTH_DIR = "/Users/browe/great3/truth-alpha-release-2" # Root folder in which the truth values are
+                                                        # unpacked (admin only)
 
 SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
@@ -446,9 +450,99 @@ def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
             np.savetxt(fout, offsets, fmt=" %4d %.18e %.18e")
     return (offsets[:, 0]).astype(int), offsets[:, 1], offsets[:, 2]
 
+def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbins=NBINS_THETA,
+              cat_file_suffix='_temp.fits', params_file_suffix='_corr2.params',
+              m2_file_suffix='_temp.m2', xy_units='degrees', sep_units='degrees',
+              corr2_executable='corr2'):
+    """Copied from presubmission.py
+    """
+    import pyfits
+    import subprocess
+    import tempfile
+    # Create temporary, unique files for I/O
+    catfile = tempfile.mktemp(suffix=cat_file_suffix)
+    paramsfile = tempfile.mktemp(suffix=params_file_suffix)
+    m2file = tempfile.mktemp(suffix=m2_file_suffix)
+    # Write the basic corr2.params to temp location
+    print_basic_corr2_params(paramsfile, min_sep=min_sep, max_sep=max_sep, nbins=nbins,
+                             xy_units=xy_units, sep_units=sep_units,fits_columns=True)
+    # Use fits binary table for faster I/O. (Converting to/from strings is slow.)
+    # First, make the data into np arrays
+    x_array = np.asarray(x).flatten()
+    print np.sum(x_array)
+    y_array = np.asarray(y).flatten()
+    g1_array = np.asarray(e1).flatten()
+    g2_array = np.asarray(e2).flatten()
+    w_array = np.asarray(w).flatten()
+    # Then, mask out the >= 10 values
+    use_mask = np.logical_and.reduce([g1_array<10.,g2_array<10.])
+    # And finally make the FITS file
+    #print np.sort(x_array)[-403:-397]
+    x_col = pyfits.Column(name='x', format='1D', array=x_array[use_mask])
+    y_col = pyfits.Column(name='y', format='1D', array=y_array[use_mask])
+    g1_col = pyfits.Column(name='g1', format='1D', array=g1_array[use_mask])
+    g2_col = pyfits.Column(name='g2', format='1D', array=g2_array[use_mask])
+    w_col = pyfits.Column(name='w', format='1D', array=w_array[use_mask])
+    cols = pyfits.ColDefs([x_col, y_col, g1_col, g2_col, w_col])
+    table = pyfits.new_table(cols)
+    phdu = pyfits.PrimaryHDU()
+    hdus = pyfits.HDUList([phdu, table])
+    hdus.writeto(catfile, clobber=True)
+    subprocess.Popen([
+        corr2_executable, str(paramsfile), 'file_name='+str(catfile), 'm2_file_name='+str(m2file)
+        ]).wait()
+    results = np.loadtxt(m2file)
+    os.remove(paramsfile)
+    print catfile
+    #os.remove(catfile)
+    os.remove(m2file)
+    return results
+
+def print_basic_corr2_params(outfile, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG,
+                             nbins=NBINS_THETA, xy_units='degrees', sep_units='degrees',
+                             fits_columns=False):
+    """Write a bare-bones corr2.params file (used by corr2) to the file named outfile.
+    """
+    with open(outfile, 'wb') as fout:
+        if fits_columns:
+            fout.write("# Column description\n")
+            fout.write("x_col = x\n")
+            fout.write("y_col = y\n")
+            fout.write("g1_col = g1\n")
+            fout.write("g2_col = g2\n")
+            fout.write("w_col = w\n")
+            fout.write("\n")
+            fout.write("# File info\n")
+            fout.write("file_type=FITS")
+        else:
+            fout.write("# Column description\n")
+            fout.write("x_col = 1\n")
+            fout.write("y_col = 2\n")
+            fout.write("g1_col = 3\n")
+            fout.write("g2_col = 4\n")
+            fout.write("w_col = 5\n")
+        fout.write("\n")
+        fout.write(
+            "# Assume sign conventions for gamma were correct in the catalog passed to "+
+            "presubmission.py\n")
+        fout.write("flip_g1 = false\n")
+        fout.write("flip_g2 = false\n")
+        fout.write("\n")
+        fout.write("# Describe the parameters of the requested correlation function\n")
+        fout.write('min_sep=%f\n'%min_sep)
+        fout.write('max_sep=%f\n'%max_sep)
+        fout.write('nbins=%f\n'%nbins)
+        fout.write('x_units='+str(xy_units)+'\n')
+        fout.write('y_units='+str(xy_units)+'\n')
+        fout.write('sep_units='+str(sep_units)+'\n')
+        fout.write('\n')
+        fout.write("# verbose specifies how much progress output the code should emit.\n")
+        fout.write("verbose = 0\n")
+        fout.write("\n")
+
 def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
-                                logger=None, corr2_exec="corr2", corr2_params="corr2.params",
-                                make_plots=True):
+                                logger=None, corr2_exec="corr2", make_plots=True,
+                                output_xy_prefix=None):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
 
     If the map_E truth file has already been built for this variable shear branch, loads and returns
@@ -457,14 +551,15 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     If the array of truth values has not been built, or is older than the first entry in the set of
     galaxy_catalog files, the arrays are built first, saved to file, then returned.
 
-    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy',
-                          'variable_psf', 'multiepoch', 'full'
-    @param obs_type       Observation type for this branch, one of 'ground' or 'space'
-    @param storage_dir    Directory from/into which to load/store rotation files
-    @param truth_dir      Root directory in which the truth information for the challenge is stored
-    @param logger         Python logging.Logger instance, for message logging
-    @param corr2_exec     Path to Mike Jarvis' corr2 exectuable
-    @param corr2_params   Path to parameter file for Mike Jarvis' corr2 exectuable
+    @param experiment        Experiment for this branch, one of 'control', 'real_galaxy',
+                             'variable_psf', 'multiepoch', 'full'
+    @param obs_type          Observation type for this branch, one of 'ground' or 'space'
+    @param storage_dir       Directory from/into which to load/store rotation files
+    @param truth_dir         Root directory in which the truth info for the challenge is stored
+    @param logger            Python logging.Logger instance, for message logging
+    @param corr2_exec        Path to Mike Jarvis' corr2 exectuable
+    @param make_plots        Generate plotting output
+    @param output_xy_prefix  Filename prefix (and switch if not None) for x-y position debug output
     @return field, theta, map_E, map_B, maperr
     """
     # Build basic x and y grids to use for coord positions: note we do this here rather than as
@@ -534,6 +629,13 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                 isubfield_index = jsub + ifield * NSUBFIELDS_PER_FIELD
                 xfield[:, jsub] = xgrid_deg + offset_deg_x[isubfield_index]
                 yfield[:, jsub] = ygrid_deg + offset_deg_y[isubfield_index]
+                # If requested (by setting output_xy_prefix) then write these xy out for diagnostic
+                if output_xy_prefix is not None:
+                    output_xy_filename = output_xy_prefix+("-sub%03d" % isubfield_index)+".asc"
+                    print "Writing "+output_xy_filename+" as requested..."
+                    with open(output_xy_filename, 'wb') as fout:
+                        fout.write("# x  y\n")
+                        np.savetxt(fout, np.array((xfield[:, jsub], yfield[:, jsub])).T)
                 galcatfile = os.path.join(
                     mapper.full_dir, ("galaxy_catalog-%03d.fits" % isubfield_index))
                 truedata = pyfits.getdata(galcatfile)
@@ -544,13 +646,20 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                 g1true[:, jsub] = truedata["g1"]
                 g2true[:, jsub] = truedata["g2"] 
 
+            # If requested (by setting output_xy_prefix) then write these xy out for diagnostic
+            if output_xy_prefix is not None:
+                output_xy_filename = output_xy_prefix+("-%03d" % ifield)+".asc"
+                with open(output_xy_filename, 'wb') as fout:
+                    fout.write("# x  y\n")
+                    np.savetxt(fout, np.array((xfield.flatten(), yfield.flatten())).T)
+
             # Having got the x,y and g1, g2 for all the subfields in this field, flatten and use
             # to calculate the map_E
-            map_results = g3metrics.run_corr2(
+            map_results = run_corr2(
                 xfield.flatten(), yfield.flatten(), g1true.flatten(), g2true.flatten(),
-                min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbins=NBINS_THETA,
-                corr2_exec=corr2_exec, 
-                params_file="./corr2.params", xy_units="degrees", sep_units="degrees")
+                np.ones(NGALS_PER_SUBFIELD * NSUBFIELDS_PER_FIELD), min_sep=THETA_MIN_DEG,
+                max_sep=THETA_MAX_DEG, nbins=NBINS_THETA, corr2_executable=corr2_exec,
+                xy_units="degrees", sep_units="degrees")
             theta[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 0] 
             map_E[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 1]     
             map_B[ifield * NBINS_THETA: (ifield + 1) * NBINS_THETA] = map_results[:, 2]
