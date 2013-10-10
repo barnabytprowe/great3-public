@@ -140,8 +140,9 @@ def subtract_submissions(sub1file, sub2file, outfile):
     np.savetxt(outfile, np.array((field, theta, mapE, mapB, maperr)).T, fmt="%d %f %e %e %e")
     return
 
-if __name__ == "__main__":
-
+def run_variable_tests():
+    """Run some variable shear tests.
+    """
     # Make intermediate catalogues for control space variable
     idt, xt, yt, g1t, g2t = get_variable_gsuffix("control", "space", suffix="") # True = g1/g2 only
     idi, xi, yi, g1i, g2i = get_variable_gsuffix("control", "space", suffix="_intrinsic")
@@ -172,7 +173,8 @@ if __name__ == "__main__":
     subprocess.check_call(call_list)
 
     # Create a "corrected" submission by subtracting off the difference
-    subtract_submissions(gtrueintsubfile, gintsubfile, "./submissions/gcorrected_kmin1kmax12_csv.asc")
+    subtract_submissions(
+        gtrueintsubfile, gintsubfile, "./submissions/gcorrected_kmin1kmax12_csv.asc")
 
     # Plot
     import plot_variable_submission
@@ -180,6 +182,38 @@ if __name__ == "__main__":
     plot_variable_submission.plot(gintsubfile, gintsubfile.rstrip(".asc")+".png")
     plot_variable_submission.plot(gtrueintsubfile, gtrueintsubfile.rstrip(".asc")+".png")
     plot_variable_submission.plot(
-        "./submissions/gcorrected_kmin1kmax12_csv.asc","./submissions/gcorrected_kmin1kmax12_csv.png")
+        "./submissions/gcorrected_kmin1kmax12_csv.asc",
+        "./submissions/gcorrected_kmin1kmax12_csv.png")
     # Move all the pngs to plots/
     subprocess.check_call(["mv",]+glob.glob("./submissions/*.png")+["./plots/"])
+
+
+if __name__ == "__main__":
+
+    #run_variable_tests()
+    import glob
+    import subprocess
+
+    # First get the submission truth
+    idt, xt, yt, g1t, g2t = get_variable_gsuffix(
+        "control", "space", suffix="", file_prefix="galaxy_catalog",
+        test_dir="/Users/browe/great3/truth-alpha-release-2") # True = g1/g2 only
+    ret = make_fits_cats(idt, g1t, g2t, prefix="gtrue_comparison")
+    gtruesubfile = "./submissions/gtrue_comparison_csv.asc"
+    call_list = [
+        "./presubmission_alpha-2", "-b", "control-space-variable",
+        "-o", gtruesubfile, ]+glob.glob("./cats/gtrue_comparison-*")
+    subprocess.check_call(call_list)
+    subdata = np.loadtxt(gtruesubfile)
+    fields, thetas, map_Es, map_Bs, maperrs = (
+        subdata[:, 0], subdata[:, 1], subdata[:, 2], subdata[:, 3], subdata[:, 4])
+
+    # Then get the mapEtruth version and compare
+    fieldt, thetat, map_Et, map_Bt, maperrt = evaluate.get_generate_variable_truth(
+        "control", "space", truth_dir="/Users/browe/great3/truth-alpha-release-2",
+        corr2_params="../server/great3/corr2.params", make_plots=False)
+
+    print thetat - thetas
+
+    print map_Et - map_Es
+ 
