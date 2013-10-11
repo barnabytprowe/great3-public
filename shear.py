@@ -278,6 +278,7 @@ class VariableShearBuilder(ShearBuilder):
         # constants.subfield_grid_subsampling multiplying both.
         catalog["x_field_pos"] = constants.subfield_grid_subsampling*(offsets[0] + x_ind)
         catalog["y_field_pos"] = constants.subfield_grid_subsampling*(offsets[1] + y_ind)
+        import pdb; pdb.set_trace()
         for record in catalog:
             record["ID"] = 1e6*subfield_index + 1e3*record["x_field_pos"] + record["y_field_pos"]
 
