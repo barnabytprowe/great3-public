@@ -728,7 +728,7 @@ class VariablePSFBuilder(PSFBuilder):
     # Set up empty cache for optical PSF and atmospheric PSF information, to be used for the entire
     # field.
     cached_atmos = None
-    cached_optics = None
+    cached_optics = []
     cached_field = None
     # set up grid needed to make filenames and interpolate
     log_min_theta_0 = np.log10(min_theta_0)
@@ -992,12 +992,19 @@ class VariablePSFBuilder(PSFBuilder):
         # within the field comes from the epoch index.  Once we access based on the list_index, then
         # we get a list of the results for each tile.
         list_index = epoch_index
-        if self.cached_field != field_index:
-            self.cached_field = field_index
+        if self.cached_field != field_index or len(self.cached_optics) < epoch_index+1:
+            # If it was the first option that triggered this 'if' statement, then we need to reset
+            # all caches to be empty, and change the cached_field to be this field.  Otherwise, the
+            # 'if' statement was triggered because we've hit another epoch for which we have to
+            # build up a cache, in which case none of those things should be done!
+            if self.cached_field != field_index:
+                self.cached_field = field_index
+                self.cached_optics = []
+                self.cached_atmos = []
+
             # First, do optical PSF stuff, which has to happen regardless of whether it's ground or
             # space.  Try to do this as much as possible in a way that is independent of observation
             # type, though at some point, different functions must be called.
-            self.cached_optics = []
             tmp_list = []
             for i_tile in range(self.n_tiles):
                 if self.obs_type == "ground":
@@ -1033,7 +1040,6 @@ class VariablePSFBuilder(PSFBuilder):
             # And now, for ground-based observations, we must build up the cache for the atmospheric
             # PSF galsim.PowerSpectrum objects.
             if self.obs_type == "ground":
-                self.cached_atmos = []
                 tmp_list = [] # list for galsim.PowerSpectrum instances
 
                 import os
