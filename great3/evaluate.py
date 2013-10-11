@@ -469,8 +469,8 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
     # Use fits binary table for faster I/O. (Converting to/from strings is slow.)
     # First, make the data into np arrays
     x_array = np.asarray(x).flatten()
-    print np.sum(x_array)
     y_array = np.asarray(y).flatten()
+    print np.sum(x_array), np.sum(y_array)
     g1_array = np.asarray(e1).flatten()
     g2_array = np.asarray(e2).flatten()
     w_array = np.asarray(w).flatten()
@@ -493,8 +493,7 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
         ]).wait()
     results = np.loadtxt(m2file)
     os.remove(paramsfile)
-    print catfile
-    #os.remove(catfile)
+    os.remove(catfile)
     os.remove(m2file)
     return results
 
@@ -610,7 +609,6 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         map_E = np.empty(NBINS_THETA * NFIELDS)
         map_B = np.empty(NBINS_THETA * NFIELDS)
         maperr = np.empty(NBINS_THETA * NFIELDS)
-        print truth_dir
         # Load the offsets
         subfield_indices, offset_deg_x, offset_deg_y = get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
