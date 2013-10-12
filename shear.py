@@ -276,8 +276,10 @@ class VariableShearBuilder(ShearBuilder):
         # Right now x_ind, y_ind are integers (spaced by 1) and offsets[0] and offsets[1] span the
         # range (0, 1/constants.subfield_grid_subsampling), so the line below has
         # constants.subfield_grid_subsampling multiplying both.
-        catalog["x_field_pos"] = constants.subfield_grid_subsampling*(offsets[0] + x_ind)
-        catalog["y_field_pos"] = constants.subfield_grid_subsampling*(offsets[1] + y_ind)
+        catalog["x_field_pos"] = np.round(
+            constants.subfield_grid_subsampling * (offsets[0] + x_ind)).astype(int)
+        catalog["y_field_pos"] = np.round(
+            constants.subfield_grid_subsampling * (offsets[1] + y_ind)).astype(int)
         for record in catalog:
             record["ID"] = 1e6*subfield_index + 1e3*record["x_field_pos"] + record["y_field_pos"]
 
