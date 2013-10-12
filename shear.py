@@ -278,7 +278,18 @@ class VariableShearBuilder(ShearBuilder):
         # constants.subfield_grid_subsampling multiplying both.
         catalog["x_field_pos"] = constants.subfield_grid_subsampling*(offsets[0] + x_ind)
         catalog["y_field_pos"] = constants.subfield_grid_subsampling*(offsets[1] + y_ind)
-        import pdb; pdb.set_trace()
+        xtest = np.round(constants.subfield_grid_subsampling * (offsets[0] + x_ind)).astype(int)
+        ytest = np.round(constants.subfield_grid_subsampling * (offsets[1] + y_ind)).astype(int)
+        if ((xtest - catalog["x_field_pos"]) != 0).any():
+            print "\n Ahah! Caught you!"
+            print "x position array section: "+str(xtest[(xtest - catalog["x_field_pos"]) != 0])+\
+                "\nis being stored as:"+str(
+                catalog["x_field_pos"][(xtest - catalog["x_field_pos"]) != 0])
+        if ((ytest - catalog["y_field_pos"]) != 0).any():
+            print "\n Ahah! Caught you!"
+            print "y position array section: "+str(ytest[(ytest - catalog["y_field_pos"]) != 0])+\
+                "\nis being stored as:"+str(
+                    catalog["y_field_pos"][(ytest - catalog["y_field_pos"]) != 0])
         for record in catalog:
             record["ID"] = 1e6*subfield_index + 1e3*record["x_field_pos"] + record["y_field_pos"]
 
