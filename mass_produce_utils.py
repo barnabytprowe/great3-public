@@ -9,7 +9,7 @@ def pbs_script_python(filename, jobname):
     f.write("#PBS -q physics\n")
     f.write("#PBS -j oe\n")
     f.write("#PBS -N "+jobname+"\n")
-    f.write("#PBS -l walltime=03:30:00\n")
+    f.write("#PBS -l walltime=12:00:00\n")
     f.write("\n")
     f.write("cd $PBS_O_WORKDIR\n")
     f.write("/opt/python27/bin/python2.7 "+jobname+".py\n")
