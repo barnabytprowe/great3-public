@@ -470,14 +470,12 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
     # First, make the data into np arrays
     x_array = np.asarray(x).flatten()
     y_array = np.asarray(y).flatten()
-    print np.sum(x_array), np.sum(y_array)
     g1_array = np.asarray(e1).flatten()
     g2_array = np.asarray(e2).flatten()
     w_array = np.asarray(w).flatten()
     # Then, mask out the >= 10 values
     use_mask = np.logical_and.reduce([g1_array<10.,g2_array<10.])
     # And finally make the FITS file
-    #print np.sort(x_array)[-403:-397]
     x_col = pyfits.Column(name='x', format='1D', array=x_array[use_mask])
     y_col = pyfits.Column(name='y', format='1D', array=y_array[use_mask])
     g1_col = pyfits.Column(name='g1', format='1D', array=g1_array[use_mask])
