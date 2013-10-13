@@ -197,7 +197,7 @@ if __name__ == "__main__":
     # First get the mapEtruth version
     fieldt, thetat, map_Et, map_Bt, maperrt = evaluate.get_generate_variable_truth(
         "control", "space", truth_dir="/Users/browe/great3/truth-alpha-release-2",
-        make_plots=False)
+        file_prefixes=("galaxy_catalog",), suffixes=("",), make_plots=False)
 
     # Then get the submission truth
     idt, xt, yt, g1t, g2t = get_variable_gsuffix(
