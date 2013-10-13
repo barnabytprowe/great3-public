@@ -24,6 +24,9 @@ seed = 397
 delta_seed = 1000 # amount to increment seed for each successive branch
 sleep_time = 10 # seconds between checks for programs to be done
 package_only = False # only do the packaging and nothing else
+do_images = False # Make images or not?  If False with package_only also False, then just skip the
+                  # image-making step: remake catalogs but do not delete files / dirs with images,
+                  # then package it all up.
 preload = False # preloading for real galaxy branches - irrelevant for others
 
 # Set which branches to test.  For now we do the control experiment (all four branches), but nothing
@@ -51,8 +54,9 @@ n_branches = len(branches)
 print "Producing images for ",n_branches," branches"
 
 if not package_only:
-    # Clean up from previous runs
-    shutil.rmtree(root, ignore_errors=True)
+    if do_images:
+        # Clean up from previous runs
+        shutil.rmtree(root, ignore_errors=True)
 
     # First we set up a process for each branch.  We use a different random seed for each, and we do
     # the following steps: metaparameters, catalogs, config.  For config, there is some additional
@@ -102,21 +106,22 @@ if not package_only:
     print "Time for generation of metaparameters, catalogs, and config files = ",t2-t1
     print
 
-    # Then we split up into even more processes for images.
-    t1 = time.time()
-    prefix2 = 'g3_step2_'
-    for config_name in all_config_names:
-        type, _ = os.path.splitext(config_name)
-        pbs_file = prefix2 + type+'.sh'
-        mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
-        command_str = 'qsub '+pbs_file
-        p = subprocess.Popen(command_str, shell=True)
-    mass_produce_utils.check_done('g3', sleep_time=sleep_time)
-    t2 = time.time()
-    # Times are approximate since check_done only checks every N seconds for some N
-    print
-    print "Time for generation of images = ",t2-t1
-    print
+    if do_images:
+        # Then we split up into even more processes for images.
+        t1 = time.time()
+        prefix2 = 'g3_step2_'
+        for config_name in all_config_names:
+            type, _ = os.path.splitext(config_name)
+            pbs_file = prefix2 + type+'.sh'
+            mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
+            command_str = 'qsub '+pbs_file
+            p = subprocess.Popen(command_str, shell=True)
+        mass_produce_utils.check_done('g3', sleep_time=sleep_time)
+        t2 = time.time()
+        # Times are approximate since check_done only checks every N seconds for some N
+        print
+        print "Time for generation of images = ",t2-t1
+        print
 
 # Finally, we go back to a process per branch for the final steps: star_params and packages.
 t1 = time.time()
@@ -140,7 +145,7 @@ for experiment, obs_type, shear_type in branches:
     p = subprocess.Popen(command_str,shell=True)
 # The above command just submitted all the files to the queue.  We have to periodically poll the
 # queue to see if they are still running.
-mass_produce_utils.check_done('g3', sleep_time=sleep_time)
+mass_produce_utils.check_done('g3_step3', sleep_time=sleep_time)
 t2 = time.time()
 # Times are approximate since check_done only checks every N seconds for some N
 print
