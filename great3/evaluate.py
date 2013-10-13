@@ -540,7 +540,8 @@ def print_basic_corr2_params(outfile, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_D
 
 def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                                 logger=None, corr2_exec="corr2", make_plots=True,
-                                output_xy_prefix=None):
+                                file_prefixes=("galaxy_catalog",), suffixes=("",),
+                                mapetruth_file_prefix=MAPETRUTH_FILE_PREFIX, output_xy_prefix=None):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
 
     If the map_E truth file has already been built for this variable shear branch, loads and returns
@@ -557,9 +558,20 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     @param logger            Python logging.Logger instance, for message logging
     @param corr2_exec        Path to Mike Jarvis' corr2 exectuable
     @param make_plots        Generate plotting output
+    @param file_prefixes     Tuple containing one or more prefixes for file type in which to load
+                             up shears, summing shears when `len(file_prefixes) >= 2`
+                             [default = `("galaxy_catalog",)`]
+    @param suffixes          Load up shear from entries "g1"+suffixes[0] and "g2"+suffixes[0] in the
+                             `file_prefixes[0]`-type files, then add "g1"+suffixes[1] from
+                             `file_prefixes[1]`-type files, etc.  Must be same length as 
+                             `file_prefixes` tuple [default = `("",)`]
+    @param mapetruth_file_prefix  Prefix for truth filename
     @param output_xy_prefix  Filename prefix (and switch if not None) for x-y position debug output
     @return field, theta, map_E, map_B, maperr
     """
+    # Sanity check on suffixes & prefixes
+    if len(suffixes) != len(file_prefixes):
+        raise ValueError("Input file_prefixes and suffixes kwargs must be same length.")
     # Build basic x and y grids to use for coord positions: note we do this here rather than as
     # needed later so as to check the dimensions (meshgrid is very quick anyway)
     xgrid_deg, ygrid_deg = np.meshgrid(
@@ -572,28 +584,33 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             "the values of XMAX_GRID_DEG and DX_GRID_DEG in evaluate.py.")
     # Define storage file and check for its existence and/or age
     mapEtruefile = os.path.join(
-        storage_dir, MAPETRUTH_FILE_PREFIX+experiment[0]+obs_type[0]+"v.asc")
+        storage_dir, mapetruth_file_prefix+experiment[0]+obs_type[0]+"v.asc")
     mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable") 
     use_stored = True
     if not os.path.isfile(mapEtruefile):
         use_stored = False
         if logger is not None:
             logger.info(
-                "First build of map_E truth file using galaxy_catalog files from "+
+                "First build of map_E truth file using "+str(file_prefixes)+" files from "+
                 mapper.full_dir)
     else:
-        # Then compare timestamps for the mapE file and the first galaxy_catalog file
+        # Then compare timestamps for the mapE file and the newest file_prefixes[:]-000.fits file
         # (subfield = 000) for this branch.  If the former is older than the latter, or
         # this file, force rebuild...
         mapEmtime = os.path.getmtime(mapEtruefile)
-        catalog_file = os.path.join(mapper.full_dir, "galaxy_catalog-000.fits")
-        catalogmtime = os.path.getmtime(catalog_file)
+        catalogmtime = 0 # Set earliest possible T
+        for prefix in file_prefixes:
+
+            catalog_file = os.path.join(mapper.full_dir, prefix+"-000.fits")
+            tmpmtime = os.path.getmtime(catalog_file)
+            if tmpmtime > catalogmtime: catalogmtime = tmpmtime
+
         if mapEmtime < catalogmtime or mapEmtime < os.path.getmtime(__file__):
             use_stored = False
             if logger is not None:
                 logger.info(
-                    "Updating out-of-date map_E file using newer galaxy_catalogs from "+
-                    mapper.full_dir)
+                    "Updating out-of-date map_E file using newer "+str(file_prefixes)+" files "+
+                    "from "+mapper.full_dir)
     # Then load / build as required 
     if use_stored is True:
         if logger is not None:
@@ -612,8 +629,8 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         subfield_indices, offset_deg_x, offset_deg_y = get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
         # Setup some storage arrays into which we'll write
-        g1true = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
-        g2true = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
+        g1true = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
+        g2true = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
         xfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
         yfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
         # Loop over fields
@@ -634,15 +651,18 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                     with open(output_xy_filename, 'wb') as fout:
                         fout.write("# x  y\n")
                         np.savetxt(fout, np.array((xfield[:, jsub], yfield[:, jsub])).T)
-                galcatfile = os.path.join(
-                    mapper.full_dir, ("galaxy_catalog-%03d.fits" % isubfield_index))
-                truedata = pyfits.getdata(galcatfile)
-                if len(truedata) != NGALS_PER_SUBFIELD:
-                    raise ValueError(
-                        "Number of records in "+galcatfile+" (="+str(len(truedata))+") is not "+
-                        "equal to NGALS_PER_SUBFIELD (="+str(NGALS_PER_SUBFIELD)+")")
-                g1true[:, jsub] = truedata["g1"]
-                g2true[:, jsub] = truedata["g2"] 
+                # Then loop over the supplied file_prefixes and g1/g2 suffixes, summing shears
+                for prefix, suffix in zip(file_prefixes, suffixes):
+
+                    galcatfile = os.path.join(
+                        mapper.full_dir, (prefix+"-%03d.fits" % isubfield_index))
+                    truedata = pyfits.getdata(galcatfile)
+                    if len(truedata) != NGALS_PER_SUBFIELD:
+                        raise ValueError(
+                            "Number of records in "+galcatfile+" (="+str(len(truedata))+") is not "+
+                            "equal to NGALS_PER_SUBFIELD (="+str(NGALS_PER_SUBFIELD)+")")
+                    g1true[:, jsub] += truedata["g1"+suffix]
+                    g2true[:, jsub] += truedata["g2"+suffix] 
 
             # If requested (by setting output_xy_prefix) then write these xy out for diagnostic
             if output_xy_prefix is not None:
