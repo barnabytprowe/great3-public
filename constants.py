@@ -31,7 +31,7 @@ pipeline_columns = {
     "im3shape-1": { # First gen. alpha data
         "id": 0, "g1": 3, "g2": 4},
     "hscpipe_shape_hsm_regauss-2": { # Second gen. alpha data with weight
-        "id": 0, "g1": 3, "g2": 4, "w": 5}, 
+        "id": 0, "g1": 3, "g2": 4, "w": 15}, 
 }
 
 # Directory into which to put submissions
