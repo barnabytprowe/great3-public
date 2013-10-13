@@ -799,8 +799,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     return ret
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2", 
-               corr2_params="corr2.params"):
+               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2"):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -813,7 +812,6 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param logger           Python logging.Logger instance, for message logging
     @param normalization    Normalization factor for the metric
     @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
-    @param corr2_params     Path to parameter file for Mike Jarvis' corr2 exectuable
     @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
@@ -832,7 +830,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     # Load/generate the truth
     field, theta, map_E, _, _ = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
-        corr2_exec=corr2_exec, corr2_params=corr2_params)
+        corr2_exec=corr2_exec)
     try: # Put this in a try except block to handle funky submissions better
         np.testing.assert_array_equal(
             field_sub, field, err_msg="User field array does not match truth.")
