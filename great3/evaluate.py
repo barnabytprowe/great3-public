@@ -111,7 +111,9 @@ SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
 ROTATIONS_FILE_PREFIX = "rotations_"
 OFFSETS_FILE_PREFIX = "offsets_"
-MAPETRUTH_FILE_PREFIX = "mapEtruth_"
+MAPESHEAR_FILE_PREFIX = "mapEshear_"
+MAPEINT_FILE_PREFIX = "mapEint_"
+MAPEOBS_FILE_PREFIX = "mapEobs_"
 
 NORMALIZATION_CONSTANT = 1.089 
 NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
@@ -545,7 +547,7 @@ def print_basic_corr2_params(outfile, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_D
 def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                                 logger=None, corr2_exec="corr2", make_plots=True,
                                 file_prefixes=("galaxy_catalog",), suffixes=("",),
-                                mapetruth_file_prefix=MAPETRUTH_FILE_PREFIX, output_xy_prefix=None):
+                                mape_file_prefix=MAPESHEAR_FILE_PREFIX, output_xy_prefix=None):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
 
     If the map_E truth file has already been built for this variable shear branch, loads and returns
@@ -569,7 +571,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                              `file_prefixes[0]`-type files, then add "g1"+suffixes[1] from
                              `file_prefixes[1]`-type files, etc.  Must be same length as 
                              `file_prefixes` tuple [default = `("",)`]
-    @param mapetruth_file_prefix  Prefix for truth filename
+    @param mape_file_prefix  Prefix for output filename
     @param output_xy_prefix  Filename prefix (and switch if not None) for x-y position debug output
     @return field, theta, map_E, map_B, maperr
     """
@@ -588,7 +590,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             "the values of XMAX_GRID_DEG and DX_GRID_DEG in evaluate.py.")
     # Define storage file and check for its existence and/or age
     mapEtruefile = os.path.join(
-        storage_dir, mapetruth_file_prefix+experiment[0]+obs_type[0]+"v.asc")
+        storage_dir, mape_file_prefix+experiment[0]+obs_type[0]+"v.asc")
     mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable") 
     use_stored = True
     if not os.path.isfile(mapEtruefile):
@@ -845,35 +847,49 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     field_sub = data[:, 0].astype(int)
     theta_sub = data[:, 1]
     map_E_sub = data[:, 2]
-    # Load/generate the truth shear signal, including the maperr (a good estimate of the relative
-    # Poisson errors per bin) which we will use to provide a weight
-    field_true, theta_true, map_E_true, _, maperr_true = get_generate_variable_truth(
+    # Load/generate the truth shear signal
+   field_shear, theta_shear, map_E_shear, _, maperr_shear = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
-        corr2_exec=corr2_exec, mapetruth_file_prefix=MAPETRUTH_FILE_PREFIX)
+        corr2_exec=corr2_exec, mape_file_prefix=MAPESHEAR_FILE_PREFIX, suffixes=("",),
+        make_plots=True)
+    # Then generate the intrinsic only map_E, useful for examinging plots, including the maperr
+    # (a good estimate of the relative Poisson errors per bin) which we will use to provide a weight
+    field_int, theta_int, map_E_int, _, maperr_int = get_generate_variable_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
+        corr2_exec=corr2_exec, mape_file_prefix=MAPEINT_FILE_PREFIX, suffixes=("_intrinsic",),
+        make_plots=True)
+    # Then generate the theory observed = int + shear combined map signals - these are our reference
+    # Note this uses the new functionality of get_generate_variable_truth for adding shears
+    field_ref, theta_ref, map_E_ref, _, maperr_ref = get_generate_variable_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
+        corr2_exec=corr2_exec, mape_file_prefix=MAPEOBS_FILE_PREFIX,
+        file_prefixes=("galaxy_catalog", "galaxy_catalog"), suffixes=("_intrinsic", ""),
+        make_plots=True)
     # Set up the weight
     if poisson_weight:
-        weight = 1. / maperr**2 # Inverse variance weight
+        weight = 1. / maperr_int**2 # Inverse variance weight
+        import pdb; pdb.set_trace()
     else:
-        weight = np.ones_like(map_E_true)
+        weight = np.ones_like(map_E_ref)
     # Set up the usebins to use if `usebins == None` (use all bins)
     if usebins is None:
         usebins = np.repeat(True, NBINS_THETA * NFIELDS)
     try: # Put this in a try except block to handle funky submissions better
         np.testing.assert_array_almost_equal( # Sanity check out truth / expected theta bins
-            theta_true, EXPECTED_THETA, decimal=3,
+            theta_shear, EXPECTED_THETA, decimal=3,
             err_msg="BIG SNAFU! Truth theta does not match the EXPECTED_THETA, failing...")
         np.testing.assert_array_equal(
-            field_sub, field_true, err_msg="User field array does not match truth.")
+            field_sub, field_ref, err_msg="User field array does not match truth.")
         np.testing.assert_array_almost_equal(
-            theta_sub, theta_true, decimal=3, err_msg="User theta array does not match truth.")
+            theta_sub, theta_ref, decimal=3, err_msg="User theta array does not match truth.")
         # The definition of Q_v is so simple there is no need to use the g3metrics version
         if not fractional_diff:
             Q_v = normalization * np.sum(weight[usebins]) / np.sum(
-                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_true[usebins]))
+                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_ref[usebins]))
         else:
             Q_v = normalization * np.sum(weight[usebins]) / np.sum(
                 weight[usebins] * np.abs(
-                    (map_E_sub[usebins] - map_E_true[usebins]) / map_E_true[usebins])
+                    (map_E_sub[usebins] - map_E_ref[usebins]) / map_E_ref[usebins])
                 ) 
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
