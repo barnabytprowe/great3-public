@@ -1,7 +1,7 @@
 Pre-requisites
 
 Django 1.4 (available in pip) 
-Numpy, probably, for scoring
+NumPy for scoring
 
 Running on a local machine
 --------------------------
@@ -45,11 +45,11 @@ server/great3 dir) is:
 
 python manage.py great3_scores
 
-At the moment the scores are random, until we have the metric code ready.
+Initially the scores were random, until the metric code was ready.
 
 Deployment
 ----------
-Things to do before deploying (not complete!):
+Things that were done before deploying:
  - remove the initial yaml data 
  - https://docs.djangoproject.com/en/1.4/howto/deployment/wsgi/modwsgi/
  - change the secret key (settings.py)
@@ -58,4 +58,3 @@ Things to do before deploying (not complete!):
    values (settings.py)
  - change the email backend (settings.py)
  - update the site settings in the admin controls
- 

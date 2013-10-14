@@ -34,8 +34,6 @@ STORAGE_DIR = os.path.join(installation_base, "results", "intermediates")
 # Some things required by corr2:
 CORR2_EXEC = "/usr/local/bin/corr2" # Path to executable for MJ's corr2 correlation function code
                                     # on the server
-CORR2_PARAMS = os.path.join(installation_base, "server", "great3", "corr2.params") # Path to corr2
-                                                                                   # params file
 
 # Note the Q scores for both the constant and variable shear branches are affected by
 # empricially-determined normalization factor, and (in the case of the constant branches) fiducial,
@@ -72,14 +70,13 @@ class Command(BaseCommand):
                 entry.score = evaluate.q_variable(
                     filename, experiment, obs_type, 
                     normalization=evaluate.NORMALIZATION_VARIABLE, truth_dir=TRUTH_DIR,
-                    storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_EXEC,
-                    corr2_params=CORR2_PARAMS)
+                    storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_EXEC)
             else:
                 shear_type = "constant"
                 entry.score = evaluate.q_constant(
-                    filename, experiment, obs_type,  cfid=evaluate.CFID,
-                    mfid=evaluate.MFID, normalization=evaluate.NORMALIZATION_CONSTANT, just_q=True,
-                    truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR, logger=logger)
+                    filename, experiment, obs_type,  cfid=evaluate.CFID, mfid=evaluate.MFID,
+                    normalization=evaluate.NORMALIZATION_CONSTANT, just_q=True, truth_dir=TRUTH_DIR,
+                    storage_dir=STORAGE_DIR, logger=logger)
             datestamp = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
             outfile.write('%s\t%s\t%r\t%s\n' % (entry.name,filename,entry.score,datestamp))
             entry.save()

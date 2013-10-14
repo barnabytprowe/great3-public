@@ -18,12 +18,14 @@ sys.path.append(("..", ".."))
 import great3sims.mapper
 
 
-def get_variable_gtrue(experiment, obs_type):
+def get_variable_gtrue(experiment, obs_type, logger=None):
     """Get the full catalog of shears and positions for all fields.
 
-    @return x, y, g1, g2
+    @return id, x, y, g1, g2
     """
     mapper = great3sims.mapper.Mapper(evaluate.TRUTH_DIR, experiment, obs_type, "variable")
+    identifier = np.empty(
+        (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS), dtype=int)
     g1true = np.empty(
         (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS))
     g2true = np.empty(
@@ -66,8 +68,9 @@ def get_variable_gtrue(experiment, obs_type):
                     "equal to NGALS_PER_SUBFIELD (="+str(evaluate.NGALS_PER_SUBFIELD)+")")
             g1true[:, jsub, ifield] = truedata["g1"]
             g2true[:, jsub, ifield] = truedata["g2"]
+            identifier[:, jsub, ifield] = truedata["ID"]
     # Then return
-    return xx, yy, g1true, g2true
+    return identifier, xx, yy, g1true, g2true
 
 def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, noise_sigma=0.05):
     """Make a fake submission based on input x, y, true shears, bias and noise parameters.
@@ -124,7 +127,7 @@ if __name__ == "__main__":
 
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
-    obs_type = 'ground'
+    obs_type = 'space'
 
     # Setup the logger
     logging.basicConfig(stream=sys.stderr)
@@ -165,7 +168,7 @@ if __name__ == "__main__":
     #print "Q_v (from presubmission) = "+str(q_v)
 
     # Then try making a fake submission ourselves
-    x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
+    _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
     result = make_variable_submission(x, y, g1true, g2true, 5.e-3, 2.e-4, 0.01, -0.01,
         outfile="./g3subs/junk_map_test.dat")
     q_biased = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type)
