@@ -848,7 +848,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     theta_sub = data[:, 1]
     map_E_sub = data[:, 2]
     # Load/generate the truth shear signal
-   field_shear, theta_shear, map_E_shear, _, maperr_shear = get_generate_variable_truth(
+    field_shear, theta_shear, map_E_shear, _, maperr_shear = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
         corr2_exec=corr2_exec, mape_file_prefix=MAPESHEAR_FILE_PREFIX, suffixes=("",),
         make_plots=True)
