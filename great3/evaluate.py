@@ -104,8 +104,8 @@ STORAGE_DIR = "./metric_calculation_products" # Folder into which to store usefu
                                               # outputs of metric calculations (e.g. rotation files,
                                               # dicts, mapE tables) which need be calculated only
                                               # once
-TRUTH_DIR = "/Users/browe/great3/truth-alpha-release-2" # Root folder in which the truth values are
-                                                        # unpacked (admin only)
+TRUTH_DIR = "/Users/browe/great3/beta/truth"  # Root folder in which the truth values are
+                                              # unpacked (admin only)
 
 SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
@@ -186,101 +186,6 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
             fout.write("# subfield_index  g1true  g2true\n")
             np.savetxt(fout, gtruedata, fmt=" %4d %+.18e %+.18e")
     return (gtruedata[:, 0]).astype(int), gtruedata[:, 1], gtruedata[:, 2]
-
-def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_DIR,
-                                     truth_dir=TRUTH_DIR, logger=None):
-    """Get or generate a dict mapping which subfields contain which of NFIELDS independent truth
-    shear values.
-
-    If the subfield_dict file has already been built for this constant shear branch, loads and
-    returns the saved copy.
-
-    If the subfield_dict has not been built, or is older than the first entry in the set of
-    shear_params files, the subfield_dict is built first, saved to file, then returned.
-
-    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy',
-                          'variable_psf', 'multiepoch', 'full'
-    @param obs_type       Observation type for this branch, one of 'ground' or 'space'
-    @param storage_dir    Directory from/into which to load/store rotation files
-    @param truth_dir      Root directory in which the truth information for the challenge is stored
-    @param logger         Python logging.Logger instance, for message logging
-    @return subfield_dict The subfield_dict (see code below for details)
-    """
-    import cPickle
-    subfield_dict_file = os.path.join(
-        storage_dir, SUBFIELD_DICT_FILE_PREFIX+experiment[0]+obs_type[0]+"c.pkl")
-    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "constant")
-    use_stored = True
-    if not os.path.isfile(subfield_dict_file):
-        use_stored = False
-        if logger is not None:
-            logger.info(
-                "First build of shear-subfield dictionary using values from "+
-                os.path.join(mapper.full_dir, "shear_params-*.yaml"))
-    else:
-        # Compare timestamps for the subfield_dict file and the first shear_params file
-        # (subfield = 000) for this branch.  If the former is older than the latter, or this file, 
-        # force rebuild...
-        dictmtime = os.path.getmtime(subfield_dict_file)
-        shear_params_file = os.path.join(mapper.full_dir, "shear_params-000.yaml")
-        shear_params_mtime = os.path.getmtime(shear_params_file)
-        if dictmtime < shear_params_mtime or dictmtime < os.path.getmtime(__file__):
-            use_stored = False 
-            if logger is not None:
-                logger.info(
-                    "Updating out-of-date shear-subfield dictionary using newer values from "+
-                    os.path.join(mapper.full_dir, "shear_params-*.yaml"))
-    # Then load or build (and save) the subfield_dict
-    if use_stored is True:
-        if logger is not None:
-            logger.info("Loading shear-subfield dictionary from "+subfield_dict_file)  
-        with open(subfield_dict_file, 'rb') as funit:
-            subfield_dict = cPickle.load(funit)
-    else:
-        _, g1true, g2true = get_generate_const_truth(experiment, obs_type, logger=logger)
-        # First of all get all the unique (g1, g2) values, in the order in which they first
-        # appear in the arrays (so as not to mess up pairs) as suggested in
-        # http://stackoverflow.com/questions/12926898/numpy-unique-without-sort
-        g1unique, g1unique_indices = np.unique(g1true, return_index=True) 
-        g2unique, g2unique_indices = np.unique(g2true, return_index=True)
-        # Put back into first-found order
-        g1unique_unsorted = [g1true[index] for index in sorted(g1unique_indices)]
-        g2unique_unsorted = [g2true[index] for index in sorted(g2unique_indices)]
-        # Sanity check
-        if len(g1unique_unsorted) != NFIELDS or len(g2unique_unsorted) != NFIELDS:
-            raise ValueError(
-                "Number of unique shear values != NFIELDS!\n"+
-                "NFIELDS = "+str(NFIELDS)+"; n_unique = "+str(len(g1unique_indices)))
-        # Then construct the subfield dict by looping over these unique values and saving the
-        # g1 and g2 values to an ordered list, along with a corresponding ordered list of
-        # NumPy arrays containing indices of the subfields this shear was applied to 
-        g1dict = {"value": g1unique_unsorted, "subfield_indices":[]}
-        g2dict = {"value": g2unique_unsorted, "subfield_indices":[]}
-        ifullset = np.arange(NSUBFIELDS, dtype=int)
-        for g1trueval, g2trueval in zip(g1dict["value"], g2dict["value"]):
-
-            ig1subset = ifullset[g1true == g1trueval]
-            ig2subset = ifullset[g2true == g2trueval]
-            if tuple(ig1subset) != tuple(ig2subset): # Tuple comparison
-                raise ValueError(
-                    "Unique values of truth g1 and g2 do not correspond pairwise!")
-            if len(ig1subset) != NSUBFIELDS_PER_FIELD:
-                raise ValueError(
-                    "Fields of truth shear values do not contain equal numbers of subfields!")
-            g1dict["subfield_indices"].append(ig1subset)
-            g2dict["subfield_indices"].append(ig2subset)
-
-        # Then put both g1 and g2 into the subfield_dict
-        subfield_dict = {"g1": g1dict, "g2": g2dict}
-        # Save the resulting subfield_dict
-        if logger is not None:
-            logger.info("Saving subfield_dict to "+subfield_dict_file)
-        if not os.path.isdir(storage_dir):
-            os.mkdir(storage_dir) 
-        with open(subfield_dict_file, 'wb') as fout:
-            cPickle.dump(subfield_dict, fout)
-    # Then return
-    return subfield_dict
 
 def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                                  logger=None):
