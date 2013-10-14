@@ -93,8 +93,12 @@ THETA_MAX_DEG = 10.0 # aperture mass disp. - MUST match specs given to participa
 NBINS_THETA = 15     # Number of logarithmic bins theta for the aperture mass dispersion
 
 EXPECTED_THETA = np.array([ # Array of theta values expected in submissions, good to 3 d.p.
-    0.0246, 0.0372,  0.0563,  0.0853,  0.129 ,  0.1953,  0.2955, 0.4472,  0.6768,  1.0242,  1.5499,
-    2.3455,  3.5495,  5.3716, 8.1289] * NFIELDS)
+    0.0246,  0.0372,  0.0563,  0.0853,  0.1290,  0.1953,  0.2955, 0.4472,  0.6768,  1.0242,  1.5499,
+    2.3455,  3.5495,  5.3716,  8.1289] * NFIELDS)
+
+USEBINS = np.array([ # Which of the theta bins above to actually use in calculating the metric?
+    False,   False,   False,   True,    True,    True,    True,   True,    True,    True,    True,
+    True,    True,    False,   False] * NFIELDS) # Note the *NFIELDS to match per-field theta layout
 
 STORAGE_DIR = "./metric_calculation_products" # Folder into which to store useful intermediate
                                               # outputs of metric calculations (e.g. rotation files,
@@ -234,7 +238,7 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
         _, g1true, g2true = get_generate_const_truth(experiment, obs_type, logger=logger)
         # First of all get all the unique (g1, g2) values, in the order in which they first
         # appear in the arrays (so as not to mess up pairs) as suggested in
-        # http://stackoverflow.com/questions/12926898/np-unique-without-sort
+        # http://stackoverflow.com/questions/12926898/numpy-unique-without-sort
         g1unique, g1unique_indices = np.unique(g1true, return_index=True) 
         g2unique, g2unique_indices = np.unique(g2true, return_index=True)
         # Put back into first-found order
@@ -276,8 +280,8 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
     # Then return
     return subfield_dict
 
-def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
-                                 truth_dir=TRUTH_DIR, logger=None):
+def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
+                                 logger=None):
     """Get or generate an array of rotation angles for Q_const calculation.
 
     If the rotation file has already been built for this constant shear branch, loads and returns an
@@ -465,10 +469,11 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
     m2file = tempfile.mktemp(suffix=m2_file_suffix)
     # Write the basic corr2.params to temp location
     print_basic_corr2_params(paramsfile, min_sep=min_sep, max_sep=max_sep, nbins=nbins,
-                             xy_units=xy_units, sep_units=sep_units,fits_columns=True)
+                             xy_units=xy_units, sep_units=sep_units, fits_columns=True)
     # Use fits binary table for faster I/O. (Converting to/from strings is slow.)
     # First, make the data into np arrays
     x_array = np.asarray(x).flatten()
+    #DEBUG: print np.sum(x_array)
     y_array = np.asarray(y).flatten()
     g1_array = np.asarray(e1).flatten()
     g2_array = np.asarray(e2).flatten()
@@ -755,7 +760,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     if flip_g1: g1sub = -g1sub
     if flip_g2: g2sub = -g2sub
     # Load up the rotations, then rotate g1 & g2 in the correct sense.
-    # NOTE THE MINUS SIGNS!  This is because we need to rotated the coordinates back into a frame
+    # NOTE THE MINUS SIGNS!  This is because we need to rotate the coordinates *back* into a frame
     # in which the primary direction of the PSF is g1, and the orthogonal is g2
     try: # Put this in a try except block to handle funky submissions better
         rotations = get_generate_const_rotations(
@@ -799,7 +804,8 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     return ret
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2"):
+               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2",
+               poisson_weight=False, usebins=USEBINS, fractional_diff=False):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -812,6 +818,13 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param logger           Python logging.Logger instance, for message logging
     @param normalization    Normalization factor for the metric
     @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
+    @param poisson_weight   If `True`, use the relative Poisson errors in each bin of map_E
+                            to form an inverse variance weight for the difference metric
+                            [default = `False`]
+    @param usebins          An array the same shape as EXPECTED_THETA specifying which bins to
+                            use in the calculation of Q_v [default = `USEBINS`].  If set to `None`,
+                            uses all bins
+    @param fractional_diff  Use a fractional, rather than absolute difference in metric
     @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
@@ -827,17 +840,36 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     field_sub = data[:, 0].astype(int)
     theta_sub = data[:, 1]
     map_E_sub = data[:, 2]
-    # Load/generate the truth
-    field, theta, map_E, _, _ = get_generate_variable_truth(
+    # Load/generate the truth shear signal, including the maperr (a good estimate of the relative
+    # Poisson errors per bin) which we will use to provide a weight
+    field_true, theta_true, map_E_true, _, maperr_true = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
-        corr2_exec=corr2_exec)
+        corr2_exec=corr2_exec, mapetruth_file_prefix=MAPETRUTH_FILE_PREFIX)
+    # Set up the weight
+    if poisson_weight:
+        weight = 1. / maperr**2 # Inverse variance weight
+    else:
+        weight = np.ones_like(map_E_true)
+    # Set up the usebins to use if `usebins == None` (use all bins)
+    if usebins is None:
+        usebins = np.repeat(True, NBINS_THETA * NFIELDS)
     try: # Put this in a try except block to handle funky submissions better
+        np.testing.assert_array_almost_equal( # Sanity check out truth / expected theta bins
+            theta_true, EXPECTED_THETA, decimal=3,
+            err_msg="BIG SNAFU! Truth theta does not match the EXPECTED_THETA, failing...")
         np.testing.assert_array_equal(
-            field_sub, field, err_msg="User field array does not match truth.")
+            field_sub, field_true, err_msg="User field array does not match truth.")
         np.testing.assert_array_almost_equal(
-            theta_sub, theta, decimal=3, err_msg="User theta array does not match truth.")
+            theta_sub, theta_true, decimal=3, err_msg="User theta array does not match truth.")
         # The definition of Q_v is so simple there is no need to use the g3metrics version
-        Q_v = normalization / np.mean(np.abs(data[:, 2] - map_E))
+        if not fractional_diff:
+            Q_v = normalization * np.sum(weight[usebins]) / np.sum(
+                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_true[usebins]))
+        else:
+            Q_v = normalization * np.sum(weight[usebins]) / np.sum(
+                weight[usebins] * np.abs(
+                    (map_E_sub[usebins] - map_E_true[usebins]) / map_E_true[usebins])
+                ) 
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
