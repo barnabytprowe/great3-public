@@ -97,11 +97,12 @@ def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, nois
 
         # Extracting the x, y and g1, g2 for all the subfields in this field, flatten and use
         # to calculate the map_E
-        map_results = g3metrics.run_corr2(
+        map_results = evaluate.run_corr2(
             x[:, :, ifield].flatten(), y[:, :, ifield].flatten(), g1sub[:, :, ifield].flatten(),
-            g2sub[:, :, ifield].flatten(), min_sep=evaluate.THETA_MIN_DEG,
-            max_sep=evaluate.THETA_MAX_DEG, nbins=evaluate.NBINS_THETA,
-            params_file="./corr2.params", xy_units="degrees", sep_units="degrees")
+            g2sub[:, :, ifield].flatten(), np.ones_like(x[:, :, ifield]).flatten(),
+            min_sep=evaluate.THETA_MIN_DEG,
+            max_sep=evaluate.THETA_MAX_DEG, nbins=evaluate.NBINS_THETA, xy_units="degrees",
+            sep_units="degrees")
         theta[ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA] = \
             map_results[:, 0]
         map_E[ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA] = \
@@ -136,7 +137,6 @@ if __name__ == "__main__":
 
     # Just try getting / building the intermediate products for this branch first
     sind, g1t, g2t = evaluate.get_generate_const_truth(experiment, obs_type, logger=logger)
-    gdict = evaluate.get_generate_const_subfield_dict(experiment, obs_type, logger=logger)
     grot = evaluate.get_generate_const_rotations(experiment, obs_type, logger=logger)
 
     # Try a simple submission, no biases, and see what Q I get
