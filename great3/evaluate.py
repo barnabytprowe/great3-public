@@ -804,7 +804,8 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     return ret
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2"):
+               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2",
+               poisson_weight=False):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -817,6 +818,9 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param logger           Python logging.Logger instance, for message logging
     @param normalization    Normalization factor for the metric
     @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
+    @param poisson_weight   If `True`, use the relative Poisson errors in each bin of map_E
+                            to form an inverse variance weight for the difference metric
+                            [default = `False`]
     @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
@@ -832,17 +836,22 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     field_sub = data[:, 0].astype(int)
     theta_sub = data[:, 1]
     map_E_sub = data[:, 2]
-    # Load/generate the truth
-    field, theta, map_E, _, _ = get_generate_variable_truth(
+    # Load/generate the truth shear signal, including the maperr (a good estimate of the relative
+    # Poisson errors per bin) which we will use to provide a weight
+    field_true, theta_true, map_E_true, _, maperr_true = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
         corr2_exec=corr2_exec)
+    if poisson_weight:
+        weight = 1. / maperr**2 # Inverse variance weight
+    else:
+        weight = np.ones_like(map_E_true)
     try: # Put this in a try except block to handle funky submissions better
         np.testing.assert_array_equal(
-            field_sub, field, err_msg="User field array does not match truth.")
+            field_sub, field_true, err_msg="User field array does not match truth.")
         np.testing.assert_array_almost_equal(
-            theta_sub, theta, decimal=3, err_msg="User theta array does not match truth.")
+            theta_sub, theta_true, decimal=3, err_msg="User theta array does not match truth.")
         # The definition of Q_v is so simple there is no need to use the g3metrics version
-        Q_v = normalization / np.mean(np.abs(data[:, 2] - map_E))
+        Q_v = normalization * np.sum(weight) / np.sum(weight * np.abs(map_E_sub - map_E_true))
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
