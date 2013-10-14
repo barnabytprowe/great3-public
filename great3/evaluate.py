@@ -633,8 +633,8 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         subfield_indices, offset_deg_x, offset_deg_y = get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
         # Setup some storage arrays into which we'll write
-        g1true = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
-        g2true = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
+        g1 = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
+        g2 = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
         xfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
         yfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
         # Loop over fields
@@ -665,8 +665,13 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                         raise ValueError(
                             "Number of records in "+galcatfile+" (="+str(len(truedata))+") is not "+
                             "equal to NGALS_PER_SUBFIELD (="+str(NGALS_PER_SUBFIELD)+")")
-                    g1true[:, jsub] += truedata["g1"+suffix]
-                    g2true[:, jsub] += truedata["g2"+suffix] 
+                    # Use the correct rule for shear addition, best (most safely) evaluated using
+                    # arrays of complex numbers, see Schneider 2006 eq 12
+                    gtoaddc = truedata["g1"+suffix] + truedata["g2"+suffix]*1j 
+                    gpriorc = g1[:, jsub] + g2[:, jsub]*1j
+                    gfinalc = (gpriorc + gtoaddc) / (1. + gtoaddc.conj() * gpriorc)
+                    g1[:, jsub] = gfinalc.real
+                    g2[:, jsub] = gfinalc.imag 
 
             # If requested (by setting output_xy_prefix) then write these xy out for diagnostic
             if output_xy_prefix is not None:
@@ -678,7 +683,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             # Having got the x,y and g1, g2 for all the subfields in this field, flatten and use
             # to calculate the map_E
             map_results = run_corr2(
-                xfield.flatten(), yfield.flatten(), g1true.flatten(), g2true.flatten(),
+                xfield.flatten(), yfield.flatten(), g1.flatten(), g2.flatten(),
                 np.ones(NGALS_PER_SUBFIELD * NSUBFIELDS_PER_FIELD), min_sep=THETA_MIN_DEG,
                 max_sep=THETA_MAX_DEG, nbins=NBINS_THETA, corr2_executable=corr2_exec,
                 xy_units="degrees", sep_units="degrees")
