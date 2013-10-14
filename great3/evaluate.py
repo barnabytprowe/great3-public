@@ -805,7 +805,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
                logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2",
-               poisson_weight=False, usebins=USEBINS):
+               poisson_weight=False, usebins=USEBINS, fractional_diff=False):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -824,6 +824,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param usebins          An array the same shape as EXPECTED_THETA specifying which bins to
                             use in the calculation of Q_v [default = `USEBINS`].  If set to `None`,
                             uses all bins
+    @param fractional_diff  Use a fractional, rather than absolute difference in metric
     @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
@@ -861,8 +862,14 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         np.testing.assert_array_almost_equal(
             theta_sub, theta_true, decimal=3, err_msg="User theta array does not match truth.")
         # The definition of Q_v is so simple there is no need to use the g3metrics version
-        Q_v = normalization * np.sum(weight[usebins]) / np.sum(
-            weight[usebins] * np.abs(map_E_sub[usebins] - map_E_true[usebins]))
+        if not fractional_diff:
+            Q_v = normalization * np.sum(weight[usebins]) / np.sum(
+                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_true[usebins]))
+        else:
+            Q_v = normalization * np.sum(weight[usebins]) / np.sum(
+                weight[usebins] * np.abs(
+                    (map_E_sub[usebins] - map_E_true[usebins]) / map_E_true[usebins])
+                ) 
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
