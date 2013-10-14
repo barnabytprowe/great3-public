@@ -280,8 +280,8 @@ def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_D
     # Then return
     return subfield_dict
 
-def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
-                                 truth_dir=TRUTH_DIR, logger=None):
+def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
+                                 logger=None):
     """Get or generate an array of rotation angles for Q_const calculation.
 
     If the rotation file has already been built for this constant shear branch, loads and returns an
@@ -469,7 +469,7 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
     m2file = tempfile.mktemp(suffix=m2_file_suffix)
     # Write the basic corr2.params to temp location
     print_basic_corr2_params(paramsfile, min_sep=min_sep, max_sep=max_sep, nbins=nbins,
-                             xy_units=xy_units, sep_units=sep_units,fits_columns=True)
+                             xy_units=xy_units, sep_units=sep_units, fits_columns=True)
     # Use fits binary table for faster I/O. (Converting to/from strings is slow.)
     # First, make the data into np arrays
     x_array = np.asarray(x).flatten()
@@ -760,7 +760,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     if flip_g1: g1sub = -g1sub
     if flip_g2: g2sub = -g2sub
     # Load up the rotations, then rotate g1 & g2 in the correct sense.
-    # NOTE THE MINUS SIGNS!  This is because we need to rotated the coordinates back into a frame
+    # NOTE THE MINUS SIGNS!  This is because we need to rotate the coordinates *back* into a frame
     # in which the primary direction of the PSF is g1, and the orthogonal is g2
     try: # Put this in a try except block to handle funky submissions better
         rotations = get_generate_const_rotations(
@@ -804,8 +804,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     return ret
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2", 
-               corr2_params="corr2.params"):
+               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2"):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -818,7 +817,6 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param logger           Python logging.Logger instance, for message logging
     @param normalization    Normalization factor for the metric
     @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
-    @param corr2_params     Path to parameter file for Mike Jarvis' corr2 exectuable
     @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
@@ -837,7 +835,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     # Load/generate the truth
     field, theta, map_E, _, _ = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
-        corr2_exec=corr2_exec, corr2_params=corr2_params)
+        corr2_exec=corr2_exec)
     try: # Put this in a try except block to handle funky submissions better
         np.testing.assert_array_equal(
             field_sub, field, err_msg="User field array does not match truth.")
