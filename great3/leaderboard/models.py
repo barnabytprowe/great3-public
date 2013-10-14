@@ -7,6 +7,19 @@ import os
 import hashlib
 import random
 import pytz
+import unicodedata
+import re
+
+
+# This function taken from django and slightly modified
+def slugify(value):
+    """
+    Normalizes string, converts to lowercase, removes non-alpha characters,
+    and converts spaces to hyphens.
+    """
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+    value = unicode(re.sub('[^\w\s-]', '', value).strip().lower())
+    return re.sub('[-\s]+', '-', value)
 
 
 # Create your models here.
@@ -256,7 +269,12 @@ class Entry(models.Model):
 
 
 	def get_filename(self):
-		return os.path.join(SUBMISSION_SAVE_PATH, str(self.id)) + '.g3_result'
+		team_name = slugify(self.team.name)
+		method_name = slugify(self.method.name)
+		entry_name = slugify(self.name)
+		date_text = self.date.isoformat()
+		filename = '%s-%s-%s-%s.g3' % (team_name, method_name, entry_name, date_text)
+		return os.path.join(SUBMISSION_SAVE_PATH, filename)
 
 	@classmethod
 	def assign_all_points_texts(cls):
