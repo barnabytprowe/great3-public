@@ -541,8 +541,6 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         subfield_indices, offset_deg_x, offset_deg_y = get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
         # Setup some storage arrays into which we'll write
-        g1 = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
-        g2 = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
         xfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
         yfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
         # Loop over fields
@@ -550,6 +548,8 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         for ifield in range(NFIELDS):
 
             # Read in all the shears in this field and store
+            g1 = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
+            g2 = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
             for jsub in range(NSUBFIELDS_PER_FIELD):
 
                 # Build the x,y grid using the subfield offsets
@@ -758,6 +758,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
         corr2_exec=corr2_exec, mape_file_prefix=MAPESHEAR_FILE_PREFIX, suffixes=("",),
         make_plots=True)
+    #print map_E_shear
     # Then generate the intrinsic only map_E, useful for examinging plots, including the maperr
     # (a good estimate of the relative Poisson errors per bin) which we will use to provide a weight
     field_int, theta_int, map_E_int, _, maperr_int = get_generate_variable_truth(
@@ -773,8 +774,7 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         make_plots=True)
     # Set up the weight
     if poisson_weight:
-        weight = 1. / maperr_int**2 # Inverse variance weight
-        import pdb; pdb.set_trace()
+        weight = max(maperr_int**2) / maperr_int**2 # Inverse variance weight
     else:
         weight = np.ones_like(map_E_ref)
     # Set up the usebins to use if `usebins == None` (use all bins)
@@ -791,11 +791,11 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         # The definition of Q_v is so simple there is no need to use the g3metrics version
         if not fractional_diff:
             Q_v = normalization * np.sum(weight[usebins]) / np.sum(
-                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_shear[usebins]))
+                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_ref[usebins]))
         else:
             Q_v = normalization * np.sum(weight[usebins]) / np.sum(
                 weight[usebins] * np.abs(
-                    (map_E_sub[usebins] - map_E_shear[usebins]) / map_E_shear[usebins])
+                    (map_E_sub[usebins] - map_E_ref[usebins]) / map_E_ref[usebins])
                 ) 
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
