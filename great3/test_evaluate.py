@@ -207,7 +207,7 @@ if __name__ == "__main__":
     logger = logging.getLogger("test")
     logger.setLevel(logging.DEBUG)
 
-    usebins = (evaluate.USEBINS, "subbins")
+    usebins = (evaluate.USEBINS, "subbins") #(evaluate.USEBINS, "subbins")
     poisson = (True, "poisson") 
     fractional = (False, "absdiffs")
 
