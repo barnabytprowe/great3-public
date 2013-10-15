@@ -609,7 +609,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             np.savetxt(
                 fout, np.array((field, theta, map_E, map_B, maperr)).T,
                 fmt=" %2d %.18e %.18e %.18e %.18e")
-    if make_plots:
+    if make_plots and not use_stored: # No point plotting if already built!
         import matplotlib.pyplot as plt
         plt.figure(figsize=(10, 8))
         plt.subplot(211)
