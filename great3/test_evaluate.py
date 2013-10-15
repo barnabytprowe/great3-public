@@ -147,7 +147,7 @@ def make_variable_submission(x, y, g1true, g2true, g1int, g2int, c1, c2, m1, m2,
     # First apply the chosen biases and some noise, use complex shears for easy addition 
     gbiasc = g1true * (1. + m1) + c1 + np.random.randn(*g1true.shape) * noise_sigma + \
         (g2true * (1. + m2) + c2 + np.random.randn(*g2true.shape) * noise_sigma) * 1j
-    gintc = g1int + g2int * 1j
+    gintc = g1int * (1. + m1) + g2int * (1. + m2) * 1j  # m biases also affect intrinsic part
     gsubc = (gintc + gbiasc) / (1. + gbiasc.conj() * gintc)
     g1sub = gsubc.real
     g2sub = gsubc.imag
