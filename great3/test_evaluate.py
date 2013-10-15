@@ -205,17 +205,17 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
     # Just try getting / building the intermediate products for this branch first
-    sind, g1t, g2t = evaluate.get_generate_const_truth(experiment, obs_type, logger=logger)
-    grot = evaluate.get_generate_const_rotations(experiment, obs_type, logger=logger)
+    #sind, g1t, g2t = evaluate.get_generate_const_truth(experiment, obs_type, logger=logger)
+    #grot = evaluate.get_generate_const_rotations(experiment, obs_type, logger=logger)
 
     # Try a simple submission, no biases, and see what Q I get
-    label = "sub1"
-    g1sub, g2sub = g3metrics.make_submission_const_shear(
-       0., 0., 0., 0., g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
-    subfile = "./g3subs/g3_const_shear_sub."+label+".dat"
+    #label = "sub1"
+    #g1sub, g2sub = g3metrics.make_submission_const_shear(
+    #   0., 0., 0., 0., g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
+    #subfile = "./g3subs/g3_const_shear_sub."+label+".dat"
 
-    q, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2  = evaluate.q_constant(
-        subfile, experiment, obs_type, logger=logger, pretty_print=True)
+    #q, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2  = evaluate.q_constant(
+    #    subfile, experiment, obs_type, logger=logger, pretty_print=True)
     #os.remove(subfile)
 
     # Try getting the offsets
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     #    "../../public-scripts/csv_test.dat", experiment, obs_type, logger=None)
     #print "Q_v (from presubmission) = "+str(q_v)
 
-    # Then try making a fake submission ourselves
+    # Try making a fake submission
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
     _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type)
 
@@ -239,11 +239,12 @@ if __name__ == "__main__":
     # normalization factor
     NTEST = 300
     result = make_variable_submission(
-        x, y, g1true, g2true, np.zeros_like(x), np.zeros_like(x),
+        x, y, g1true, g2true, g1int, g2int,
         evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-        outfile="./g3subs/junk_map_test.dat", noise_sigma=0.)
+        outfile="./g3subs/junk_map_test.dat", noise_sigma=0.05)
     q = evaluate.q_variable(
-        "./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger, usebins=None)
+        "./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger,
+        usebins=evaluate.USEBINS, poisson_weight=True)
     print "Q_v (from own fiducial submission simulator) = "+str(q)
 
     qlist = [q]
@@ -252,13 +253,15 @@ if __name__ == "__main__":
         result = make_variable_submission(
             x, y, g1true, g2true, g1int, g2int,
             evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-            outfile="./g3subs/junk_map_test.dat", noise_sigma=0.)
-
+            outfile="./g3subs/junk_map_test.dat", noise_sigma=0.05)
         q = evaluate.q_variable(
-            "./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger, usebins=None)
+            "./g3subs/junk_map_test.dat", experiment, obs_type, logger=None,
+            usebins=evaluate.USEBINS, poisson_weight=True)
         print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
         qlist.append(q)
 
     # Collate and print results
     qarr = np.asarray(qlist)
     print "Mean of Q_v values = "+str(np.mean(qarr))+"+/-"+str(np.std(qarr) / np.sqrt(len(qarr)))
+    print "Std of Q_v values = "+str(np.std(qarr))+"+/-"+str(
+        np.std(qarr) / np.sqrt(2 * (len(qarr) - 1)))
