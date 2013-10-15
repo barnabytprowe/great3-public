@@ -211,54 +211,69 @@ if __name__ == "__main__":
     poisson = (True, "poisson") 
     fractional = (False, "absdiffs")
 
-    print usebins
-    print poisson
-    print fractional
+    NTEST = 100
+    NOISE_SIGMA = 0.05
+    cvals = (evaluate.CFID, 10. * evaluate.CFID, 100. * evaluate.CFID) 
+    mvals = (evaluate.MFID, 10. * evaluate.MFID, 100. * evaluate.MFID) 
+    qarr = np.empty((NTEST, len(cvals), len(mvals)))
 
-    # Try making a fake submission
+    print usebins[1]
+    print poisson[1]
+    print fractional[1]
+
+    # Get the x,y, true intrinsic ellips and shears for making fake submissions
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
     _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type)
 
-    # Then perform a fiducial simualtion, and do up to NTEST trials, so as to help find an updated
-    # normalization factor
-    NTEST = 300
-    subfile = tempfile.mktemp(suffix=".dat")
-    result = make_variable_submission(
-        x, y, g1true, g2true, g1int, g2int,
-        evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-        outfile=subfile, noise_sigma=0.05)
-    q = evaluate.q_variable(
-        subfile, experiment, obs_type, logger=logger,
-        usebins=usebins[0], poisson_weight=poisson[0], fractional_diff=fractional[0])
-    os.remove(subfile)
-    print "Q_v (from own fiducial submission simulator) = "+str(q)
+    for ic in range(len(cvals)):
 
-    qlist = [q]
-    for i in range(NTEST - 1):
+        for jm in range(len(mvals)):
+
+            print
+            print "Running metric simulations for c = %.4f, m = %.4f" % (cvals[ic], mvals[jm])
+            # Perform a simualtion, and do up to NTEST trials, so as to help find an updated
+            # normalization factor (do one outside loop so I can check logger action)
+            subfile = tempfile.mktemp(suffix=".dat")
+            result = make_variable_submission(
+                x, y, g1true, g2true, g1int, g2int, cvals[ic], cvals[ic], mvals[jm], mvals[jm],
+                outfile=subfile, noise_sigma=NOISE_SIGMA)
+            q = evaluate.q_variable(
+                subfile, experiment, obs_type, logger=logger, usebins=usebins[0],
+                poisson_weight=poisson[0], fractional_diff=fractional[0])
+            os.remove(subfile)
+            print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (1, NTEST, cvals[ic], mvals[jm], q)
+
+            qlist = [q]
+            for i in range(NTEST - 1):
     
-        subfile = tempfile.mktemp(suffix=".dat")
-        result = make_variable_submission(
-            x, y, g1true, g2true, g1int, g2int,
-            evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-            outfile=subfile, noise_sigma=0.05)
-        q = evaluate.q_variable(
-            subfile, experiment, obs_type, logger=None,
-            usebins=usebins[0], poisson_weight=poisson[0], fractional_diff=fractional[0])
-        os.remove(subfile)
-        print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
-        qlist.append(q)
+                subfile = tempfile.mktemp(suffix=".dat")
+                result = make_variable_submission(
+                    x, y, g1true, g2true, g1int, g2int, cvals[ic], cvals[ic], mvals[jm], mvals[jm],
+                    outfile=subfile, noise_sigma=NOISE_SIGMA)
+                q = evaluate.q_variable(
+                    subfile, experiment, obs_type, logger=None, usebins=usebins[0],
+                    poisson_weight=poisson[0], fractional_diff=fractional[0])
+                os.remove(subfile)
+                print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (
+                    i + 2, NTEST, cvals[ic], mvals[jm], q)
+                qlist.append(q)
 
-    # Collate and print results
-    qarr = np.asarray(qlist)
-    print "Mean of fiducial Q_v values = "+str(np.mean(qarr))+"+/-"+str(
-        np.std(qarr) / np.sqrt(len(qarr)))
-    print "Std of fiducial Q_v values = "+str(np.std(qarr))+"+/-"+str(
-        np.std(qarr) / np.sqrt(2 * (len(qarr) - 1)))
-    print "Fractional uncertainty of fiducial Q_v values = "+str(np.std(qarr) / np.mean(qarr))+\
-        "+/-"+str(np.std(qarr) / np.sqrt((len(qarr) - 1)) / np.mean(qarr))
+            # Collate and print results
+            qarr[:, ic, jm] = np.asarray(qlist)
+            print "Mean of Q_v values = %.5e +/- %.5e" % (
+                np.mean(qarr[:, ic, jm]), np.std(qarr[:, ic, jm]) / np.sqrt(len(qarr[:, ic, jm])))
+            print "Std of Q_v values = %.5e +/- %.5e " % (
+                np.std(qarr[:, ic, jm]),
+                np.std(qarr[:, ic, jm]) / np.sqrt(2 * (len(qarr[:, ic, jm]) - 1)))
+            print "Fractional uncertainty on Q_v values = %.5e +/- %.5e " % (
+                np.std(qarr[:, ic, jm]) / np.mean(qarr[:, ic, jm]),
+                np.std(qarr[:, ic, jm]) / np.sqrt((len(qarr[:, ic, jm]) - 1))
+                / np.mean(qarr[:, ic, jm]))
+            #print "Best estimate of normalization factor = "+str(1. / np.mean(qarr[:, ic, jm]))
+
     # Save the arrays
     filename = os.path.join(
-        evaluate.STORAGE_DIR, "test_evaluate_"+usebins[1]+"_"+poisson[1]+"_"+fractional[1]+".npy")
+        evaluate.STORAGE_DIR,
+        "test_evaluate_"+usebins[1]+"_"+poisson[1]+"_"+fractional[1]+"_mc_N"+str(NTEST)+".npy")
     print "Saving to "+filename
     np.save(filename, qarr)
-
