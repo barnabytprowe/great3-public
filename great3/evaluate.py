@@ -105,6 +105,7 @@ STORAGE_DIR = "./metric_calculation_products" # Folder into which to store usefu
                                               # dicts, mapE tables) which need be calculated only
                                               # once
 TRUTH_DIR = "/Users/browe/great3/beta/truth"  # Root folder in which the truth values are
+#TRUTH_DIR = "/Users/browe/great3/truth-alpha-release-1"  # Root folder in which the truth values are
                                               # unpacked (admin only)
 
 SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
