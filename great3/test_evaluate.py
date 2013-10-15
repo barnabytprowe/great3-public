@@ -209,6 +209,7 @@ if __name__ == "__main__":
 
     usebins = (evaluate.USEBINS, "subbins")
     poisson = (True, "poisson") 
+    fractional = (False, "absdiffs")
 
     # Try making a fake submission
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
@@ -224,7 +225,7 @@ if __name__ == "__main__":
         outfile=subfile, noise_sigma=0.05)
     q = evaluate.q_variable(
         subfile, experiment, obs_type, logger=logger,
-        usebins=usebins[0], poisson_weight=poisson[0])
+        usebins=usebins[0], poisson_weight=poisson[0], fractional_diff=fractional[0])
     os.remove(subfile)
     print "Q_v (from own fiducial submission simulator) = "+str(q)
 
@@ -238,7 +239,7 @@ if __name__ == "__main__":
             outfile=subfile, noise_sigma=0.05)
         q = evaluate.q_variable(
             subfile, experiment, obs_type, logger=None,
-            usebins=usebins[0], poisson_weight=poisson[0])
+            usebins=usebins[0], poisson_weight=poisson[0], fractional_diff=fractional[0])
         os.remove(subfile)
         print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
         qlist.append(q)
@@ -252,7 +253,8 @@ if __name__ == "__main__":
     print "Fractional uncertainty of fiducial Q_v values = "+str(np.std(qarr) / np.mean(qarr))+\
         "+/-"+str(np.std(qarr) / np.sqrt((len(qarr) - 1)) / np.mean(qarr))
     # Save the arrays
-    np.save(
-        os.path.join(evaluate.STORAGE_DIR, "test_evaluate_"+usebins[1]+"_"+poisson[1]+".npy"),
-        qarr)
+    filename = os.path.join(
+        evaluate.STORAGE_DIR, "test_evaluate_"+usebins[1]+"_"+poisson[1]+"_"+fractional[1]+".npy")
+    print "Saving to "+filename
+    np.save(filename, qarr)
 
