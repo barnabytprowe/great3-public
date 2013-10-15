@@ -195,6 +195,9 @@ def make_variable_submission(x, y, g1true, g2true, g1int, g2int, c1, c2, m1, m2,
 
 if __name__ == "__main__":
 
+    import os
+    import tempfile
+
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
     obs_type = 'space'
@@ -204,32 +207,8 @@ if __name__ == "__main__":
     logger = logging.getLogger("test")
     logger.setLevel(logging.DEBUG)
 
-    # Just try getting / building the intermediate products for this branch first
-    #sind, g1t, g2t = evaluate.get_generate_const_truth(experiment, obs_type, logger=logger)
-    #grot = evaluate.get_generate_const_rotations(experiment, obs_type, logger=logger)
-
-    # Try a simple submission, no biases, and see what Q I get
-    #label = "sub1"
-    #g1sub, g2sub = g3metrics.make_submission_const_shear(
-    #   0., 0., 0., 0., g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
-    #subfile = "./g3subs/g3_const_shear_sub."+label+".dat"
-
-    #q, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2  = evaluate.q_constant(
-    #    subfile, experiment, obs_type, logger=logger, pretty_print=True)
-    #os.remove(subfile)
-
-    # Try getting the offsets
-    #subfield_index, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
-    #    experiment, obs_type, logger=logger)
-
-    # Try getting / generating the map_E truth for the variable shear branches
-    #field, theta, map_E, map_B, maperr = evaluate.get_generate_variable_truth(
-    #    experiment, obs_type, logger=logger)
-
-    # Try a basically random variable shear submission from Melanie's code!
-    #q_v = evaluate.q_variable(
-    #    "../../public-scripts/csv_test.dat", experiment, obs_type, logger=None)
-    #print "Q_v (from presubmission) = "+str(q_v)
+    usebins = (evaluate.USEBINS, "subbins")
+    poisson = (True, "poisson") 
 
     # Try making a fake submission
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
@@ -238,30 +217,42 @@ if __name__ == "__main__":
     # Then perform a fiducial simualtion, and do up to NTEST trials, so as to help find an updated
     # normalization factor
     NTEST = 300
+    subfile = tempfile.mktemp(suffix=".dat")
     result = make_variable_submission(
         x, y, g1true, g2true, g1int, g2int,
         evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-        outfile="./g3subs/junk_map_test.dat", noise_sigma=0.05)
+        outfile=subfile, noise_sigma=0.05)
     q = evaluate.q_variable(
-        "./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger,
-        usebins=evaluate.USEBINS, poisson_weight=True)
+        subfile, experiment, obs_type, logger=logger,
+        usebins=usebins[0], poisson_weight=poisson[0])
+    os.remove(subfile)
     print "Q_v (from own fiducial submission simulator) = "+str(q)
 
     qlist = [q]
     for i in range(NTEST - 1):
     
+        subfile = tempfile.mktemp(suffix=".dat")
         result = make_variable_submission(
             x, y, g1true, g2true, g1int, g2int,
             evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-            outfile="./g3subs/junk_map_test.dat", noise_sigma=0.05)
+            outfile=subfile, noise_sigma=0.05)
         q = evaluate.q_variable(
-            "./g3subs/junk_map_test.dat", experiment, obs_type, logger=None,
-            usebins=evaluate.USEBINS, poisson_weight=True)
+            subfile, experiment, obs_type, logger=None,
+            usebins=usebins[0], poisson_weight=poisson[0])
+        os.remove(subfile)
         print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
         qlist.append(q)
 
     # Collate and print results
     qarr = np.asarray(qlist)
-    print "Mean of Q_v values = "+str(np.mean(qarr))+"+/-"+str(np.std(qarr) / np.sqrt(len(qarr)))
-    print "Std of Q_v values = "+str(np.std(qarr))+"+/-"+str(
+    print "Mean of fiducial Q_v values = "+str(np.mean(qarr))+"+/-"+str(
+        np.std(qarr) / np.sqrt(len(qarr)))
+    print "Std of fiducial Q_v values = "+str(np.std(qarr))+"+/-"+str(
         np.std(qarr) / np.sqrt(2 * (len(qarr) - 1)))
+    print "Fractional uncertainty of fiducial Q_v values = "+str(np.std(qarr) / np.mean(qarr))+\
+        "+/-"+str(np.std(qarr) / np.sqrt((len(qarr) - 1)) / np.mean(qarr))
+    # Save the arrays
+    np.save(
+        os.path.join(evaluate.STORAGE_DIR, "test_evaluate_"+usebins[1]+"_"+poisson[1]+".npy"),
+        qarr)
+
