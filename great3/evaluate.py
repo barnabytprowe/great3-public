@@ -791,11 +791,11 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
         # The definition of Q_v is so simple there is no need to use the g3metrics version
         if not fractional_diff:
             Q_v = normalization * np.sum(weight[usebins]) / np.sum(
-                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_ref[usebins]))
+                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_shear[usebins]))
         else:
             Q_v = normalization * np.sum(weight[usebins]) / np.sum(
                 weight[usebins] * np.abs(
-                    (map_E_sub[usebins] - map_E_ref[usebins]) / map_E_ref[usebins])
+                    (map_E_sub[usebins] - map_E_shear[usebins]) / map_E_shear[usebins])
                 ) 
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...

@@ -239,10 +239,11 @@ if __name__ == "__main__":
     # normalization factor
     NTEST = 300
     result = make_variable_submission(
-        x, y, g1true, g2true, g1int, g2int,
+        x, y, g1true, g2true, np.zeros_like(x), np.zeros_like(x),
         evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-        outfile="./g3subs/junk_map_test.dat")
-    q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger)
+        outfile="./g3subs/junk_map_test.dat", noise_sigma=0.)
+    q = evaluate.q_variable(
+        "./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger, usebins=None)
     print "Q_v (from own fiducial submission simulator) = "+str(q)
 
     qlist = [q]
@@ -251,9 +252,10 @@ if __name__ == "__main__":
         result = make_variable_submission(
             x, y, g1true, g2true, g1int, g2int,
             evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-            outfile="./g3subs/junk_map_test.dat")
+            outfile="./g3subs/junk_map_test.dat", noise_sigma=0.)
 
-        q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger)
+        q = evaluate.q_variable(
+            "./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger, usebins=None)
         print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
         qlist.append(q)
 
