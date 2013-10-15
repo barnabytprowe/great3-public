@@ -211,7 +211,7 @@ if __name__ == "__main__":
     # Try a simple submission, no biases, and see what Q I get
     label = "sub1"
     g1sub, g2sub = g3metrics.make_submission_const_shear(
-       -1.e-3, 0., 0.03, 0., g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
+       0., 0., 0., 0., g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
     subfile = "./g3subs/g3_const_shear_sub."+label+".dat"
 
     q, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2  = evaluate.q_constant(
@@ -223,8 +223,8 @@ if __name__ == "__main__":
     #    experiment, obs_type, logger=logger)
 
     # Try getting / generating the map_E truth for the variable shear branches
-    field, theta, map_E, map_B, maperr = evaluate.get_generate_variable_truth(
-        experiment, obs_type, logger=logger)
+    #field, theta, map_E, map_B, maperr = evaluate.get_generate_variable_truth(
+    #    experiment, obs_type, logger=logger)
 
     # Try a basically random variable shear submission from Melanie's code!
     #q_v = evaluate.q_variable(
@@ -233,7 +233,7 @@ if __name__ == "__main__":
 
     # Then try making a fake submission ourselves
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
-    _, _, _, g1int, g2int = get_variable_suffix(experiment, obs_type)
+    _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type)
 
     # Then perform a fiducial simualtion, and do up to NTEST trials, so as to help find an updated
     # normalization factor
@@ -242,7 +242,7 @@ if __name__ == "__main__":
         x, y, g1true, g2true, g1int, g2int,
         evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
         outfile="./g3subs/junk_map_test.dat")
-    q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type)
+    q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger)
     print "Q_v (from own fiducial submission simulator) = "+str(q)
 
     qlist = [q]
@@ -253,7 +253,7 @@ if __name__ == "__main__":
             evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
             outfile="./g3subs/junk_map_test.dat")
 
-        q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type)
+        q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type, logger=logger)
         print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
         qlist.append(q)
 
