@@ -104,9 +104,9 @@ STORAGE_DIR = "./metric_calculation_products" # Folder into which to store usefu
                                               # outputs of metric calculations (e.g. rotation files,
                                               # dicts, mapE tables) which need be calculated only
                                               # once
-#TRUTH_DIR = "/Users/browe/great3/beta/truth"  # Root folder in which the truth values are
-#TRUTH_DIR = "/Users/browe/great3/truth-alpha-release-1"  # Root folder in which the truth values are
-TRUTH_DIR = "/projector/browe/great3/beta/truth"          # unpacked (admin only)
+TRUTH_DIR = "/great3/beta/truth"  # Root folder in which the truth values are upacked (admin)
+#TRUTH_DIR = "/Users/browe/great3/truth-alpha-release-1" 
+#TRUTH_DIR = "/projector/browe/great3/beta/truth"
 
 SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
