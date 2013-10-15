@@ -72,7 +72,8 @@ def get_variable_gtrue(experiment, obs_type, logger=None):
     # Then return
     return identifier, xx, yy, g1true, g2true
 
-def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, noise_sigma=0.05):
+def make_variable_submission(x, y, g1true, g2true, g1int, g2int, c1, c2, m1, m2, outfile,
+                             noise_sigma=0.05):
     """Make a fake submission based on input x, y, true shears, bias and noise parameters.
 
     Saves to outfile in the format of Melanie's presubmission.py output.
@@ -84,9 +85,13 @@ def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, nois
     if y.shape != x.shape: raise ValueError("y.shape does not match x.shape.")
     if g1true.shape != x.shape: raise ValueError("g1true.shape does not match x.shape.")
     if g2true.shape !=  x.shape: raise ValueError("g2true.shape does not match x.shape.")
-    # Then apply the chosen biases 
-    g1sub = g1true * (1. + m1) + c1 + np.random.randn(*g1true.shape) * noise_sigma 
-    g2sub = g2true * (1. + m2) + c2 + np.random.randn(*g2true.shape) * noise_sigma
+    # First apply the chosen biases and some noise, use complex shears for easy addition 
+    gbiasc = g1true * (1. + m1) + c1 + np.random.randn(*g1true.shape) * noise_sigma + \
+        (g2true * (1. + m2) + c2 + np.random.randn(*g2true.shape) * noise_sigma) * 1j
+    gintc = g1int + g2int * 1j
+    gsubc = (gintc + gbiasc) / (1. + gbiasc.conj() * gintc)
+    g1sub = gsubc.real
+    g2sub = gsubc.imag
     # Define the field array, then theta and map arrays in which we'll store the results
     field = np.arange(evaluate.NBINS_THETA * evaluate.NFIELDS) / evaluate.NBINS_THETA
     theta = np.empty(evaluate.NBINS_THETA * evaluate.NFIELDS)
@@ -98,10 +103,15 @@ def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, nois
         # Extracting the x, y and g1, g2 for all the subfields in this field, flatten and use
         # to calculate the map_E
         map_results = evaluate.run_corr2(
-            x[:, :, ifield].flatten(), y[:, :, ifield].flatten(), g1sub[:, :, ifield].flatten(),
-            g2sub[:, :, ifield].flatten(), np.ones_like(x[:, :, ifield]).flatten(),
+            x[:, :, ifield].flatten(),
+            y[:, :, ifield].flatten(),
+            g1sub[:, :, ifield].flatten(),
+            g2sub[:, :, ifield].flatten(),
+            np.ones_like(x[:, :, ifield]).flatten(),
             min_sep=evaluate.THETA_MIN_DEG,
-            max_sep=evaluate.THETA_MAX_DEG, nbins=evaluate.NBINS_THETA, xy_units="degrees",
+            max_sep=evaluate.THETA_MAX_DEG,
+            nbins=evaluate.NBINS_THETA,
+            xy_units="degrees",
             sep_units="degrees")
         theta[ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA] = \
             map_results[:, 0]
@@ -142,16 +152,11 @@ if __name__ == "__main__":
     # Try a simple submission, no biases, and see what Q I get
     label = "sub1"
     g1sub, g2sub = g3metrics.make_submission_const_shear(
-       0.001, 0., 0., -0.01, g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
+       -1.e-3, 0., 0.03, 0., g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
     subfile = "./g3subs/g3_const_shear_sub."+label+".dat"
 
     q, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2  = evaluate.q_constant(
-        subfile, 'control', 'ground', logger=logger)
-    print "Q_c = "+str(q)
-    print "c+ = "+str(c1)+" +/- "+str(sigc1)
-    print "m+ = "+str(m1)+" +/- "+str(sigm1)
-    print "cx = "+str(c2)+" +/- "+str(sigc2)
-    print "mx = "+str(m2)+" +/- "+str(sigm2)
+        subfile, experiment, obs_type, logger=logger, pretty_print=True)
     #os.remove(subfile)
 
     # Try getting the offsets
