@@ -211,6 +211,10 @@ if __name__ == "__main__":
     poisson = (True, "poisson") 
     fractional = (False, "absdiffs")
 
+    print usebins
+    print poisson
+    print fractional
+
     # Try making a fake submission
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
     _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type)
