@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+"""Compare two md5sums files output by get_md5sums.py, checking consistency.
+
+Reads in two full md5sum output files each with entries in the format
+
+    <MD5 checksum> <filename>
+
+and compares the MD5 column for consistency. The filenames columnm, which may be different on
+different systems, is ignored for the purpose of this comparison.
+"""
 
 import os
 
@@ -13,9 +22,10 @@ def compare_md5sum_files(file1, file2):
         data2 = funit2.readlines()
     # Check record length, totally basic!
     if len(data1) != len(data2):
-        raise ValueError(
+        print (
             "FAIL: file "+str(file1)+" has "+str(len(data1))+" records but file "+str(file2)+
-            " has "+str(len(data2))+" records: FAIL")
+            " has "+str(len(data2))+" records")
+        exit(1)
     # Then get the md5sum bits separated from the filename bits
     md1list = [ditem.split()[0] for ditem in data1]
     md2list = [ditem.split()[0] for ditem in data2]
@@ -40,25 +50,9 @@ def compare_md5sum_files(file1, file2):
 
 if __name__ == "__main__":
 
-    import argparse
-
-    description = \
-    """Compare two md5sums files output by get_md5sums.py, checking consistency.
-
-    Reads in two full md5sum output files each with entries in the format
-
-        <MD5 checksum> <filename>
-
-    and compares the MD5 column for consistency. The filenames columnm, which may be different on
-    different systems, is ignored for the purpose of this comparison.
-    """
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument(
-        "file1", type=str,
-        help="First ASCII file containing all md5sums calculated for one build of GREAT3")
-    parser.add_argument(
-        "file2", type=str,
-        help="Second ASCII  file containing all md5sums calculated for another build of GREAT3")
-    args = parser.parse_args()
+    from sys import argv
+    if len(argv) != 3:
+        print "usage: compare_md5sums.py file1 file2"
+        exit(1)
     # Then compare
-    compare_md5sum_files(args.file1, args.file2) 
+    compare_md5sum_files(argv[1], argv[2]) 
