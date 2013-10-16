@@ -49,8 +49,8 @@ if __name__ == "__main__":
 
         <MD5 checksum> <filename>
 
-    and compares the MD5 column for consistency (filenames, which may be different on different
-    systems, are ignored for the purpose of this comparison).
+    and compares the MD5 column for consistency. The filenames columnm, which may be different on
+    different systems, is ignored for the purpose of this comparison.
     """
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(

@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     description = \
     """Get all the md5sums for the all the branches in the experiments, obs_types, shear_types
-    lists in validation/constants.py
+    lists in validation/constants.py.
 
     Writes a full md5sum output file with each entry in the format <MD5 checksum> <filename> to
     the specified outfile.
