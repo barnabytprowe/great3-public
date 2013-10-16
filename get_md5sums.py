@@ -78,9 +78,10 @@ if __name__ == "__main__":
         help="Filename for ASCII file containing all md5sums calculated")
     parser.add_argument(
         '-root_dir', default=str(constants.public_dir),
-        help="Root directory for the GREAT3 release for which you want to calculate md5sums")
+        help="Root directory for the GREAT3 release for which you want to calculate md5sums "+
+        "[default = "+str(constants.public_dir)+"]")
     parser.add_argument(
-        "-md5sum", default="md5sum", help="Path to md5sum executable") 
+        "-md5sum", default="md5sum", help="Path to md5sum executable [default = md5sum]") 
     args = parser.parse_args()
     collate_all(args.root_dir, args.outfile, md5sum_exec=args.md5sum)
 
