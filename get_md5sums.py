@@ -74,16 +74,17 @@ if __name__ == "__main__":
 
     parser = optparse.OptionParser(description=description)
     parser.add_option(
-        '--root_dir', action="store_const", default=str(constants.public_dir),
+        '--root_dir', default=str(constants.public_dir),
         help="Root directory for the GREAT3 release for which you want to calculate md5sums "+
         "[default = "+str(constants.public_dir)+"]")
     parser.add_option(
-        "--md5sum", action="store_const", default="md5sum",
+        "--md5sum", default="md5sum",
         help="Path to md5sum executable [default = md5sum]") 
     args, outfile = parser.parse_args()
     if len(outfile) == 0 or len(outfile) > 1:
-        print "Please supply one outfile!"
-        print "usage: get_md5sums.py outfile [--root_dir ROOT_DIR] [--md5sum MD5SUM] [-h]"
+        print outfile
+        print "Please supply one outfile, and place it *before* optional inputs!"
+        print "usage: get_md5sums.py outfile [--root_dir=ROOT_DIR] [--md5sum=MD5SUM] [-h]"
         exit(1)
     collate_all(args.root_dir, outfile[0], md5sum_exec=args.md5sum)
 
