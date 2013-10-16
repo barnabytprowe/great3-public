@@ -219,7 +219,7 @@ def check_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                                 nhists+=1
                         # In case len(histograms) doesn't divide evenly into n_curves_per
                         if (i+1)%n_curves_per_histogram_plot!=0:
-                            plt.title('Pixel histogram for'+experiment+'-'+obs_type+'-'+shear_type)
+                            plt.title('Pixel histogram for '+experiment+'-'+obs_type+'-'+shear_type)
                             plt.xlabel('log(1+pixel value)')
                             plt.ylabel('log(Number of pixels)')
                             plt.savefig(histogram_filename_base+'-'+str(nhists)+'.png')
