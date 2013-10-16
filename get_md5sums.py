@@ -1,5 +1,12 @@
 #!/usr/bin/env python
+description="""
+Get all the md5sums for the all the branches in the experiments, obs_types, shear_types lists in
+validation/constants.py.
 
+Writes a full md5sum output file with each entry in the format <MD5 checksum> <filename> to the
+specified outfile.
+"""
+ 
 import os
 import constants
 
@@ -63,25 +70,20 @@ def collate_all(root_dir, outfile, experiments=constants.experiments, obs_types=
 
 if __name__ == "__main__":
 
-    import argparse
+    import optparse
 
-    description = \
-    """Get all the md5sums for the all the branches in the experiments, obs_types, shear_types
-    lists in validation/constants.py.
-
-    Writes a full md5sum output file with each entry in the format <MD5 checksum> <filename> to
-    the specified outfile.
-    """
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument(
-        "outfile", type=str,
-        help="Filename for ASCII file containing all md5sums calculated")
-    parser.add_argument(
-        '-root_dir', default=str(constants.public_dir),
+    parser = optparse.OptionParser(description=description)
+    parser.add_option(
+        '--root_dir', action="store_const", default=str(constants.public_dir),
         help="Root directory for the GREAT3 release for which you want to calculate md5sums "+
         "[default = "+str(constants.public_dir)+"]")
-    parser.add_argument(
-        "-md5sum", default="md5sum", help="Path to md5sum executable [default = md5sum]") 
-    args = parser.parse_args()
-    collate_all(args.root_dir, args.outfile, md5sum_exec=args.md5sum)
+    parser.add_option(
+        "--md5sum", action="store_const", default="md5sum",
+        help="Path to md5sum executable [default = md5sum]") 
+    args, outfile = parser.parse_args()
+    if len(outfile) == 0 or len(outfile) > 1:
+        print "Please supply one outfile!"
+        print "usage: get_md5sums.py outfile [-root_dir ROOT_DIR] [-md5sum MD5SUM] [-h]"
+        exit(1)
+    collate_all(args.root_dir, outfile[0], md5sum_exec=args.md5sum)
 
