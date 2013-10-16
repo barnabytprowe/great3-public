@@ -83,7 +83,7 @@ if __name__ == "__main__":
     args, outfile = parser.parse_args()
     if len(outfile) == 0 or len(outfile) > 1:
         print "Please supply one outfile!"
-        print "usage: get_md5sums.py outfile [-root_dir ROOT_DIR] [-md5sum MD5SUM] [-h]"
+        print "usage: get_md5sums.py outfile [--root_dir ROOT_DIR] [--md5sum MD5SUM] [-h]"
         exit(1)
     collate_all(args.root_dir, outfile[0], md5sum_exec=args.md5sum)
 
