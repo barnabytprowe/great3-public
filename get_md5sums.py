@@ -22,7 +22,7 @@ def get_md5sum(filename, md5sum_exec="md5sum", silent=True):
     return retstring
 
 def collate_all(root_dir, outfile, experiments=constants.experiments, obs_types=constants.obs_types,
-                shear_types=constants.shear_types):
+                shear_types=constants.shear_types, md5sum_exec="md5sum"):
     """Put together a file containing an <MD5 checksum> <filename> entry for every file in the
     all the experiment/obs_type/shear_type folders specified.
     """
@@ -63,6 +63,8 @@ def collate_all(root_dir, outfile, experiments=constants.experiments, obs_types=
 
 if __name__ == "__main__":
 
+    import argparse
+
     description = \
     """Get all the md5sums for the all the branches in the experiments, obs_types, shear_types
     lists in validation/constants.py
@@ -70,13 +72,15 @@ if __name__ == "__main__":
     Writes a full md5sum output file with each entry in the format <MD5 checksum> <filename> to
     the specified outfile.
     """
-    import argparse
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
-        "outfile", type=str, help="Filename for ASCII file containing all md5sums calculated")
+        "outfile", type=str,
+        help="Filename for ASCII file containing all md5sums calculated")
     parser.add_argument(
-        "-root_dir", type=str, action="store_const", default=constant.public_dir,
+        '-root_dir', default=str(constants.public_dir),
         help="Root directory for the GREAT3 release for which you want to calculate md5sums")
+    parser.add_argument(
+        "-md5sum", default="md5sum", help="Path to md5sum executable") 
     args = parser.parse_args()
-    collate_all(args.root_dir, args.outfile)
+    collate_all(args.root_dir, args.outfile, md5sum_exec=args.md5sum)
 
