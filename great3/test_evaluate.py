@@ -69,10 +69,70 @@ def get_variable_gtrue(experiment, obs_type, logger=None):
             g1true[:, jsub, ifield] = truedata["g1"]
             g2true[:, jsub, ifield] = truedata["g2"]
             identifier[:, jsub, ifield] = truedata["ID"]
+
     # Then return
     return identifier, xx, yy, g1true, g2true
 
-def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, noise_sigma=0.05):
+def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", file_prefix="galaxy_catalog",
+                         logger=None):
+    """Get the full catalog of intrinsic "shears" and positions for all fields.
+
+    Gets "g1"+suffix and "g2"+suffix from the subfield_catalog files.
+
+    @return id, x, y, g1, g2
+    """
+    mapper = great3sims.mapper.Mapper(evaluate.TRUTH_DIR, experiment, obs_type, "variable")
+    identifier = np.empty(
+        (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS), dtype=int)
+    g1int = np.empty(
+        (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS))
+    g2int = np.empty(
+        (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS))
+    xx = np.empty(
+        (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS))
+    yy = np.empty(
+        (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS))
+    # Load the offsets
+    subfield_indices, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
+        experiment, obs_type, storage_dir=evaluate.STORAGE_DIR, truth_dir=evaluate.TRUTH_DIR,
+        logger=logger)
+    # Build basic x and y grids to use for coord positions
+    xgrid_deg, ygrid_deg = np.meshgrid(
+        np.arange(0., evaluate.XMAX_GRID_DEG, evaluate.DX_GRID_DEG),
+        np.arange(0., evaluate.XMAX_GRID_DEG, evaluate.DX_GRID_DEG))
+    xgrid_deg = xgrid_deg.flatten() # Flatten these - the default C ordering corresponds to the way
+    ygrid_deg = ygrid_deg.flatten() # the shears are ordered too, which is handy
+    if len(xgrid_deg) != evaluate.NGALS_PER_SUBFIELD:
+        raise ValueError(
+            "Dimensions of xgrid_deg and ygrid_deg do not match NGALS_PER_SUBFIELD.  Please check "+
+            "the values of XMAX_GRID_DEG and DX_GRID_DEG in evaluate.py.")
+    # Then loop over the fields and subfields getting the galaxy catalogues
+    import pyfits
+    for ifield in range(evaluate.NFIELDS):
+
+        # Read in all the shears in this field and store
+        for jsub in range(evaluate.NSUBFIELDS_PER_FIELD):
+
+            # Build the x,y grid using the subfield offsets
+            isubfield_index = jsub + ifield * evaluate.NSUBFIELDS_PER_FIELD
+            xx[:, jsub, ifield] = xgrid_deg + offset_deg_x[isubfield_index]
+            yy[:, jsub, ifield] = ygrid_deg + offset_deg_y[isubfield_index]
+            galcatfile = os.path.join(
+                mapper.full_dir, (file_prefix+"-%03d.fits" % isubfield_index))
+            truedata = pyfits.getdata(galcatfile)
+            if len(truedata) != evaluate.NGALS_PER_SUBFIELD:
+                raise ValueError(
+                    "Number of records in "+galcatfile+" (="+str(len(truedata))+") is not "+
+                    "equal to NGALS_PER_SUBFIELD (="+str(evaluate.NGALS_PER_SUBFIELD)+")")
+            g1int[:, jsub, ifield] = truedata["g1"+suffix]
+            g2int[:, jsub, ifield] = truedata["g2"+suffix]
+            identifier[:, jsub, ifield] = truedata["ID"]
+
+    # Then return
+    return identifier, xx, yy, g1int, g2int
+
+def make_variable_submission(x, y, g1true, g2true, g1int, g2int, c1, c2, m1, m2, outfile,
+                             noise_sigma=0.05):
     """Make a fake submission based on input x, y, true shears, bias and noise parameters.
 
     Saves to outfile in the format of Melanie's presubmission.py output.
@@ -84,9 +144,13 @@ def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, nois
     if y.shape != x.shape: raise ValueError("y.shape does not match x.shape.")
     if g1true.shape != x.shape: raise ValueError("g1true.shape does not match x.shape.")
     if g2true.shape !=  x.shape: raise ValueError("g2true.shape does not match x.shape.")
-    # Then apply the chosen biases 
-    g1sub = g1true * (1. + m1) + c1 + np.random.randn(*g1true.shape) * noise_sigma 
-    g2sub = g2true * (1. + m2) + c2 + np.random.randn(*g2true.shape) * noise_sigma
+    # First apply the chosen biases and some noise, use complex shears for easy addition 
+    gbiasc = g1true * (1. + m1) + c1 + np.random.randn(*g1true.shape) * noise_sigma + \
+        (g2true * (1. + m2) + c2 + np.random.randn(*g2true.shape) * noise_sigma) * 1j
+    gintc = g1int * (1. + m1) + g2int * (1. + m2) * 1j  # m biases also affect intrinsic part
+    gsubc = (gintc + gbiasc) / (1. + gbiasc.conj() * gintc)
+    g1sub = gsubc.real
+    g2sub = gsubc.imag
     # Define the field array, then theta and map arrays in which we'll store the results
     field = np.arange(evaluate.NBINS_THETA * evaluate.NFIELDS) / evaluate.NBINS_THETA
     theta = np.empty(evaluate.NBINS_THETA * evaluate.NFIELDS)
@@ -97,11 +161,17 @@ def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, nois
 
         # Extracting the x, y and g1, g2 for all the subfields in this field, flatten and use
         # to calculate the map_E
-        map_results = g3metrics.run_corr2(
-            x[:, :, ifield].flatten(), y[:, :, ifield].flatten(), g1sub[:, :, ifield].flatten(),
-            g2sub[:, :, ifield].flatten(), min_sep=evaluate.THETA_MIN_DEG,
-            max_sep=evaluate.THETA_MAX_DEG, nbins=evaluate.NBINS_THETA,
-            params_file="./corr2.params", xy_units="degrees", sep_units="degrees")
+        map_results = evaluate.run_corr2(
+            x[:, :, ifield].flatten(),
+            y[:, :, ifield].flatten(),
+            g1sub[:, :, ifield].flatten(),
+            g2sub[:, :, ifield].flatten(),
+            np.ones_like(x[:, :, ifield]).flatten(),
+            min_sep=evaluate.THETA_MIN_DEG,
+            max_sep=evaluate.THETA_MAX_DEG,
+            nbins=evaluate.NBINS_THETA,
+            xy_units="degrees",
+            sep_units="degrees")
         theta[ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA] = \
             map_results[:, 0]
         map_E[ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA] = \
@@ -125,6 +195,9 @@ def make_variable_submission(x, y, g1true, g2true, c1, c2, m1, m2, outfile, nois
 
 if __name__ == "__main__":
 
+    import os
+    import tempfile
+
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
     obs_type = 'space'
@@ -134,66 +207,73 @@ if __name__ == "__main__":
     logger = logging.getLogger("test")
     logger.setLevel(logging.DEBUG)
 
-    # Just try getting / building the intermediate products for this branch first
-    sind, g1t, g2t = evaluate.get_generate_const_truth(experiment, obs_type, logger=logger)
-    gdict = evaluate.get_generate_const_subfield_dict(experiment, obs_type, logger=logger)
-    grot = evaluate.get_generate_const_rotations(experiment, obs_type, logger=logger)
+    usebins = (evaluate.USEBINS, "subbins") #(evaluate.USEBINS, "subbins")
+    poisson = (False, "noweight") 
+    fractional = (False, "absdiffs")
 
-    # Try a simple submission, no biases, and see what Q I get
-    label = "sub1"
-    g1sub, g2sub = g3metrics.make_submission_const_shear(
-       0.001, 0., 0., -0.01, g1t, g2t, 1e4, 0.05, label=label, rotate_cs=grot)
-    subfile = "./g3subs/g3_const_shear_sub."+label+".dat"
+    NTEST = 100
+    NOISE_SIGMA = 0.05
+    cvals = (evaluate.CFID, 10. * evaluate.CFID, 100. * evaluate.CFID) 
+    mvals = (evaluate.MFID, 10. * evaluate.MFID, 100. * evaluate.MFID) 
+    qarr = np.empty((NTEST, len(cvals), len(mvals)))
 
-    q, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2  = evaluate.q_constant(
-        subfile, 'control', 'ground', logger=logger)
-    print "Q_c = "+str(q)
-    print "c+ = "+str(c1)+" +/- "+str(sigc1)
-    print "m+ = "+str(m1)+" +/- "+str(sigm1)
-    print "cx = "+str(c2)+" +/- "+str(sigc2)
-    print "mx = "+str(m2)+" +/- "+str(sigm2)
-    #os.remove(subfile)
+    print usebins[1]
+    print poisson[1]
+    print fractional[1]
 
-    # Try getting the offsets
-    #subfield_index, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
-    #    experiment, obs_type, logger=logger)
-
-    # Try getting / generating the map_E truth for the variable shear branches
-    field, theta, map_E, map_B, maperr = evaluate.get_generate_variable_truth(
-        experiment, obs_type, logger=logger)
-
-    # Try a basically random variable shear submission from Melanie's code!
-    #q_v = evaluate.q_variable(
-    #    "../../public-scripts/csv_test.dat", experiment, obs_type, logger=None)
-    #print "Q_v (from presubmission) = "+str(q_v)
-
-    # Then try making a fake submission ourselves
+    # Get the x,y, true intrinsic ellips and shears for making fake submissions
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
-    result = make_variable_submission(x, y, g1true, g2true, 5.e-3, 2.e-4, 0.01, -0.01,
-        outfile="./g3subs/junk_map_test.dat")
-    q_biased = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type)
-    print "Q_v (from own biased submission simulator) = "+str(q_biased)
+    _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type)
 
-    # Then perform a fiducial simualtion, and do up to NTEST trials, so as to help find an updated
-    # normalization factor
-    NTEST = 300
-    result = make_variable_submission(
-        x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-        outfile="./g3subs/junk_map_test.dat")
-    q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type)
-    print "Q_v (from own fiducial submission simulator) = "+str(q)
+    for ic in range(len(cvals)):
 
-    qlist = [q]
-    for i in range(NTEST - 1):
+        for jm in range(len(mvals)):
+
+            print
+            print "Running metric simulations for c = %.4f, m = %.4f" % (cvals[ic], mvals[jm])
+            # Perform a simualtion, and do up to NTEST trials, so as to help find an updated
+            # normalization factor (do one outside loop so I can check logger action)
+            subfile = tempfile.mktemp(suffix=".dat")
+            result = make_variable_submission(
+                x, y, g1true, g2true, g1int, g2int, cvals[ic], cvals[ic], mvals[jm], mvals[jm],
+                outfile=subfile, noise_sigma=NOISE_SIGMA)
+            q = evaluate.q_variable(
+                subfile, experiment, obs_type, logger=logger, usebins=usebins[0],
+                poisson_weight=poisson[0], fractional_diff=fractional[0])
+            os.remove(subfile)
+            print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (1, NTEST, cvals[ic], mvals[jm], q)
+
+            qlist = [q]
+            for i in range(NTEST - 1):
     
-        result = make_variable_submission(
-            x, y, g1true, g2true, evaluate.CFID, evaluate.CFID, evaluate.MFID, evaluate.MFID,
-            outfile="./g3subs/junk_map_test.dat")
+                subfile = tempfile.mktemp(suffix=".dat")
+                result = make_variable_submission(
+                    x, y, g1true, g2true, g1int, g2int, cvals[ic], cvals[ic], mvals[jm], mvals[jm],
+                    outfile=subfile, noise_sigma=NOISE_SIGMA)
+                q = evaluate.q_variable(
+                    subfile, experiment, obs_type, logger=None, usebins=usebins[0],
+                    poisson_weight=poisson[0], fractional_diff=fractional[0])
+                os.remove(subfile)
+                print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (
+                    i + 2, NTEST, cvals[ic], mvals[jm], q)
+                qlist.append(q)
 
-        q = evaluate.q_variable("./g3subs/junk_map_test.dat", experiment, obs_type)
-        print "Q_v (from own fiducial submission simulator: "+str(i+2)+"/"+str(NTEST)+") = "+str(q)
-        qlist.append(q)
+            # Collate and print results
+            qarr[:, ic, jm] = np.asarray(qlist)
+            print "Mean of Q_v values = %.5e +/- %.5e" % (
+                np.mean(qarr[:, ic, jm]), np.std(qarr[:, ic, jm]) / np.sqrt(len(qarr[:, ic, jm])))
+            print "Std of Q_v values = %.5e +/- %.5e " % (
+                np.std(qarr[:, ic, jm]),
+                np.std(qarr[:, ic, jm]) / np.sqrt(2 * (len(qarr[:, ic, jm]) - 1)))
+            print "Fractional uncertainty on Q_v values = %.5e +/- %.5e " % (
+                np.std(qarr[:, ic, jm]) / np.mean(qarr[:, ic, jm]),
+                np.std(qarr[:, ic, jm]) / np.sqrt((len(qarr[:, ic, jm]) - 1))
+                / np.mean(qarr[:, ic, jm]))
+            #print "Best estimate of normalization factor = "+str(1. / np.mean(qarr[:, ic, jm]))
 
-    # Collate and print results
-    qarr = np.asarray(qlist)
-    print "Mean of Q_v values = "+str(np.mean(qarr))+"+/-"+str(np.std(qarr) / np.sqrt(len(qarr)))
+    # Save the arrays
+    filename = os.path.join(
+        evaluate.STORAGE_DIR,
+        "test_evaluate_"+usebins[1]+"_"+poisson[1]+"_"+fractional[1]+"_mc_N"+str(NTEST)+".npy")
+    print "Saving to "+filename
+    np.save(filename, qarr)

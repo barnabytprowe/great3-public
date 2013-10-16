@@ -26,7 +26,7 @@ EVALUATE_LOG_FILE = os.path.join(installation_base, "results", "evaluation.log")
 LOG_LEVEL = logging.INFO # Logging level - currently info, could set to WARN once testing is done
 
 # Directory in which the truth catalogues are stored (and assumed unpacked!)
-TRUTH_DIR = os.path.join("/great3", "truth") 
+TRUTH_DIR = os.path.join("/great3", "beta", "truth") 
 # Directory into which to store intermediate products (truth catalogues, etc.) as a hardcopy cache
 # that speeds up the metric calculation
 STORAGE_DIR = os.path.join(installation_base, "results", "intermediates") 
@@ -34,6 +34,12 @@ STORAGE_DIR = os.path.join(installation_base, "results", "intermediates")
 # Some things required by corr2:
 CORR2_EXEC = "/usr/local/bin/corr2" # Path to executable for MJ's corr2 correlation function code
                                     # on the server
+
+POISSON_WEIGHT = False              # Weight the aperture mass bins by their inverse poisson
+                                    # variance when estimating the absolute difference metric? 
+USEBINS = evaluate.USEBINS          # Take a subset of bins, ignoring extreme small and large bins?
+                                    # If so, supply evaluate.USEBINS; if not, set USEBINS=None
+                                    # and all bins are used (old style)
 
 # Note the Q scores for both the constant and variable shear branches are affected by
 # empricially-determined normalization factor, and (in the case of the constant branches) fiducial,
@@ -70,13 +76,14 @@ class Command(BaseCommand):
                 entry.score = evaluate.q_variable(
                     filename, experiment, obs_type, 
                     normalization=evaluate.NORMALIZATION_VARIABLE, truth_dir=TRUTH_DIR,
-                    storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_EXEC)
+                    storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_EXEC,
+                    poisson_weight=POISSON_WEIGHT, usebins=USEBINS)
             else:
                 shear_type = "constant"
                 entry.score = evaluate.q_constant(
                     filename, experiment, obs_type,  cfid=evaluate.CFID, mfid=evaluate.MFID,
                     normalization=evaluate.NORMALIZATION_CONSTANT, just_q=True, truth_dir=TRUTH_DIR,
-                    storage_dir=STORAGE_DIR, logger=logger)
+                    storage_dir=STORAGE_DIR, logger=logger, pretty_print=False)
             datestamp = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
             outfile.write('%s\t%s\t%r\t%s\n' % (entry.name,filename,entry.score,datestamp))
             entry.save()
