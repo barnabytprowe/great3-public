@@ -140,7 +140,6 @@ def check_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                     continue
                 fitsfiles = glob.glob(os.path.join(mapper.full_dir, "image*.fits"))
                 fitsfiles.sort() # So they're in numerical order
-                fitsfiles = fitsfiles[:5] # So they're in numerical order
                 # If any fits files found, check
                 if len(fitsfiles) > 0:
                     # Reset for every branch since these may be different branch to branch.
@@ -159,9 +158,10 @@ def check_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                         expected_size=4800
                     if nproc>1:
                         pool = multiprocessing.Pool(nproc)  
-                        results = pool.map(image_good,(fitsfiles,expected_size))
+                        results = pool.map(image_good,(fitsfiles,expected_size,full_stats))
                     else:
-                        results = [image_good(fitsfile,expected_size) for fitsfile in fitsfiles]
+                        results = [image_good(fitsfile,expected_size,full_stats) 
+                                                                for fitsfile in fitsfiles]
                     # Turn the list of results into usefully-named quantities by
                     # transposing the list of tuples
                     (query_sizes, query_NaNs, query_zeros, 
