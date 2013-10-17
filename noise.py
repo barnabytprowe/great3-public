@@ -87,8 +87,7 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
             n_epochs = 1
         # Variance gets decreased by n_epochs, because we're assuming it's like taking the same
         # total exposure time but splitting it up.  If the exposure time is 1/n_epochs shorter, then
-        # the sky level is lower by that factor, and so is the effective noise variance (in the
-        # limit that sky noise dominates, which is what we're assuming).
+        # the sky level is lower by that factor, and so is the effective noise variance.
         self.noise_mult = noise_mult / n_epochs
         if self.obs_type == "space":
             self.min_variance = 1.35e-3
@@ -110,9 +109,15 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
             max_var = self.max_var_tab(effective_seeing)
             self.min_variance = 0.95*max_var
             self.max_variance = 1.05*max_var
+        # Note that typical variance was determined for a regular (not deep) field, assuming a
+        # single combined image.  The only considerations that determine it are what noise variance
+        # we want for a given obs_type (ground/space) and seeing (if ground-based imaging).
         self.typical_variance = 0.5*(self.min_variance + self.max_variance)
 
         variance = rng() * (self.max_variance - self.min_variance) + self.min_variance
+        # However, the dict return must include all factors that multiply the nominal noise
+        # variance, to account for whether this is a regular or deep field, whether the imaging is
+        # single vs. multi-epoch.  This number will be used in the image generation process.
         return dict(variance=variance*self.noise_mult)
 
     def addNoise(self, rng, parameters, image, current_var):
