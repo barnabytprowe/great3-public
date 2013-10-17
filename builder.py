@@ -528,8 +528,6 @@ class SimBuilder(object):
             'dir' : self.mapper.dir,
 
             'nfiles' : self.n_epochs*(subfield_max - subfield_min + 1),
-
-            'nproc' : self.nproc
         }
 
         # The image field:
@@ -568,6 +566,14 @@ class SimBuilder(object):
 
             'index_convention' : 'python',
         }
+
+        if self.variable_psf:
+            # The variable psf images are rather large, so parallelize at the image level.
+            d['image']['nproc'] = self.nproc
+        else:
+            # The constant psf images are small enough that it is probably better to
+            # parallelize at the file level.
+            d['output']['nproc'] = self.nproc
 
         # Delegate the basic 'psf' dict to psf_builder
         d['psf'] = self.psf_builder.makeConfigDict()
@@ -644,14 +650,13 @@ class SimBuilder(object):
         }
         d['gal']['magnification'] = { 'type' : 'Catalog', 'col' : 'mu' }
 
-        if self.real_galaxy:
-            # Normally, it is better to parallelize at the file level.  But with RealGalaxy
-            # we parallelize at the postage stamp level to make the preloading more 
-            # efficient.
+        if not self.variable_psf:
+            # The galaxy images are large, so parallelize at the image level.
             d['image']['nproc'] = self.nproc
             del d['output']['nproc']
 
-            # Also need to add the RealGalaxyCatalog to input
+        if self.real_galaxy:
+            # Need to add the RealGalaxyCatalog to input
             d['input']['real_catalog'] = {
                 'dir' : os.path.abspath(self.galaxy_builder.gal_dir),
                 'file_name' : self.galaxy_builder.rgc_file,
@@ -688,6 +693,7 @@ class SimBuilder(object):
             'file_name' : 'star_test_images.fits',
             'dir' : self.mapper.dir,
             'nimages' : self.n_epochs*(subfield_max - subfield_min + 1),
+            # The startest images are all small, so parallelize at the file level.
             'nproc' : self.nproc
         }
 
