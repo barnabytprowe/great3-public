@@ -193,6 +193,12 @@ if __name__ == "__main__":
     #run_variable_tests()
     import glob
     import subprocess
+    import logging
+
+    # Setup the logger
+    logging.basicConfig(stream=sys.stderr)
+    logger = logging.getLogger("test")
+    logger.setLevel(logging.DEBUG)
 
     # First get the mapEtruth version
     fieldt, thetat, map_Et, map_Bt, maperrt = evaluate.get_generate_variable_truth(
