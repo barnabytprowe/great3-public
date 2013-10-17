@@ -202,13 +202,13 @@ if __name__ == "__main__":
 
     # First get the mapEtruth version
     fieldt, thetat, map_Et, map_Bt, maperrt = evaluate.get_generate_variable_truth(
-        "control", "space", truth_dir="/Users/browe/great3/truth-alpha-release-2",
-        file_prefixes=("galaxy_catalog",), suffixes=("",), make_plots=False)
+        "control", "space", truth_dir="/Users/browe/great3/beta/truth",
+        file_prefixes=("galaxy_catalog",), suffixes=("",), make_plots=False, logger=logger)
 
     # Then get the submission truth
     idt, xt, yt, g1t, g2t = get_variable_gsuffix(
         "control", "space", suffix="", file_prefix="galaxy_catalog",
-        test_dir="/Users/browe/great3/truth-alpha-release-2") # True = g1/g2 only
+        test_dir="/Users/browe/great3/beta/truth") # True = g1/g2 only
     ret = make_fits_cats(idt, g1t, g2t, prefix="gtrue_comparison")
     gtruesubfile = "./submissions/gtrue_comparison_csv.asc"
     call_list = [
