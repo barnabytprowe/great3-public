@@ -222,8 +222,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # If we haven't set up the catalog and such yet, do so now:
         if not hasattr(self,'rgc'):
             # Read in RealGalaxyCatalog, fits.
-            # TODO: The question of preloading vs. not should be investigated once this branch
-            # basically works.
             self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir,
                                                 preload=self.preload)
             self.fit_catalog = pyfits.getdata(os.path.join(self.gal_dir, self.rgc_fits_file))
@@ -733,8 +731,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # attribute.  Check and read it in if necessary, before trying to make a RealGalaxy.
         if not hasattr(self,'rgc'):
             # Read in RealGalaxyCatalog, fits.
-            # TODO: The question of preloading vs. not should be investigated once this branch
-            # basically works.
             self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir,
                                                 preload=self.preload)
         noise_pad_size = int(np.ceil(constants.xsize[self.obs_type][self.multiepoch] *
