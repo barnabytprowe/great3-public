@@ -18,7 +18,7 @@ def get_field(subfield_index, nsubfields_per_field=evaluate.NSUBFIELDS_PER_FIELD
 def get_subfield_within_field(subfield_index, nsubfields_per_field=evaluate.NSUBFIELDS_PER_FIELD):
     return subfield_index % nsubfields_per_field
 
-def make_fits_cats(idarray, g1array, g2array, dir="./cats", prefix="vartest"):
+def make_fits_cats(idarray, g1array, g2array, dir="./cats", prefix="vartest", silent=True):
     """Make a whole series of FITS catalogues of the sort expected by Melanie's presubmission.py
     script.
     
@@ -49,8 +49,12 @@ def make_fits_cats(idarray, g1array, g2array, dir="./cats", prefix="vartest"):
        prhdu = pyfits.PrimaryHDU()
        thdulist = pyfits.HDUList([prhdu, tbhdu])
        outfile = os.path.join(dir, prefix+("-%03d" % subfield_index)+".fits")
-       print "Saving FITS catalogue to "+outfile
-       thdulist.writeto(outfile, clobber=True)
+       if not silent:
+           print "Saving FITS catalogue to "+outfile
+           thdulist.writeto(outfile, clobber=True)
+       else:
+           if os.path.isfile(outfile): os.remove(outfile)
+           thdulist.writeto(outfile)
     return
 
 def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", file_prefix="subfield_catalog",
