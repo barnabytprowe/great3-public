@@ -384,11 +384,12 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
     # Use fits binary table for faster I/O. (Converting to/from strings is slow.)
     # First, make the data into np arrays
     x_array = np.asarray(x).flatten()
-    #DEBUG: print np.sum(x_array)
     y_array = np.asarray(y).flatten()
     g1_array = np.asarray(e1).flatten()
     g2_array = np.asarray(e2).flatten()
     w_array = np.asarray(w).flatten()
+    #DEBUG:
+    print np.sum(x_array), np.sum(y_array), np.sum(g1_array), np.sum(g2_array)
     # Then, mask out the >= 10 values
     use_mask = np.logical_and.reduce([g1_array<10.,g2_array<10.])
     # And finally make the FITS file
@@ -578,11 +579,11 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                             "equal to NGALS_PER_SUBFIELD (="+str(NGALS_PER_SUBFIELD)+")")
                     # Use the correct rule for shear addition, best (most safely) evaluated using
                     # arrays of complex numbers, see Schneider 2006 eq 12
-                    gtoaddc = truedata["g1"+suffix] + truedata["g2"+suffix]*1j 
+                    gtoaddc = truedata["g1"+suffix] + truedata["g2"+suffix]*1j
                     gpriorc = g1[:, jsub] + g2[:, jsub]*1j
                     gfinalc = (gpriorc + gtoaddc) / (1. + gtoaddc.conj() * gpriorc)
                     g1[:, jsub] = gfinalc.real
-                    g2[:, jsub] = gfinalc.imag 
+                    g2[:, jsub] = gfinalc.imag
 
             # If requested (by setting output_xy_prefix) then write these xy out for diagnostic
             if output_xy_prefix is not None:
