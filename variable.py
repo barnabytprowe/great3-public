@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+"""Has been used to perform various tests on the variable shear branch catalogs, mostly consistency
+with expectations and the presence of B-mode leakage.
+
+Currently compares the map_E output of server/great3/evaluate.py versus that which comes from
+running presubmisson.py (assumed to be stored in ../../great3-public/presubmission_script/),
+plotting the results.  However, module has tools which can be used for a number of related 
+investigations.
+"""
+
 import os
 import sys
 import numpy as np
@@ -57,7 +66,7 @@ def make_fits_cats(idarray, g1array, g2array, dir="./cats", prefix="vartest", si
            thdulist.writeto(outfile)
     return
 
-def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", file_prefix="subfield_catalog",
+def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", file_prefix="galaxy_catalog",
                          logger=None, test_dir=TEST_DIR):
     """Get the full catalog of intrinsic "shears" and positions for all fields.
 
@@ -116,7 +125,7 @@ def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", file_prefix=
     return identifier, xx, yy, g1int, g2int
 
 def add_submissions(sub1file, sub2file, outfile):
-    """Add two submissions.  Error is arithmetic mean of both.
+    """Add two submissions.  Errors added in quadrature.
     """
     print "Adding "+sub2file+" to "+sub1file
     sub1 = np.loadtxt(sub1file)
@@ -125,13 +134,12 @@ def add_submissions(sub1file, sub2file, outfile):
     theta = sub1[:, 1]
     mapE = sub1[:, 2] + sub2[:, 2]
     mapB = sub1[:, 3] + sub2[:, 3]
-    maperr = .5 * (sub1[:, 4] + sub2[:, 4])
+    maperr = np.sqrt(sub1[:, 4]**2 + sub2[:, 4]**2)
     np.savetxt(outfile, np.array((field, theta, mapE, mapB, maperr)).T, fmt="%d %f %e %e %e")
     return
 
 def subtract_submissions(sub1file, sub2file, outfile):
-    """Subtract submission 2 from submission 1 and save to outfile.  Error is arithmetic mean of
-    both.
+    """Subtract submission 2 from submission 1 and save to outfile.  Errors added in quadrature.
     """
     print "Subtracting "+sub2file+" from "+sub1file
     sub1 = np.loadtxt(sub1file)
@@ -140,12 +148,13 @@ def subtract_submissions(sub1file, sub2file, outfile):
     theta = sub1[:, 1]
     mapE = sub1[:, 2] - sub2[:, 2]
     mapB = sub1[:, 3] - sub2[:, 3]
-    maperr = .5 * (sub1[:, 4] + sub2[:, 4])
+    maperr = np.sqrt(sub1[:, 4]**2 + sub2[:, 4]**2)
     np.savetxt(outfile, np.array((field, theta, mapE, mapB, maperr)).T, fmt="%d %f %e %e %e")
     return
 
 def run_variable_tests():
-    """Run some variable shear tests.
+    """Run some variable shear tests (tests that were happening aroud ~30 Sep - 6 Oct 2013, so
+    removed from the main module text and retired here)"
     """
     # Make intermediate catalogues for control space variable
     idt, xt, yt, g1t, g2t = get_variable_gsuffix("control", "space", suffix="") # True = g1/g2 only
