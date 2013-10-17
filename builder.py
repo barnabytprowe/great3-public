@@ -707,7 +707,7 @@ class SimBuilder(object):
             'file_name' : 'star_test_images.fits',
             'dir' : self.mapper.dir,
             'nimages' : self.n_epochs*(subfield_max - subfield_min + 1),
-            # The startest images are all small, so parallelize at the file level.
+            # The star_test images are all small, so parallelize at the file level.
             'nproc' : self.nproc
         }
 
@@ -1213,11 +1213,8 @@ class SimBuilder(object):
             # If variable shear, then loop over subfield catalogs and copy over just the ID and the
             # per-galaxy reduced shear.
             if self.shear_type == 'variable':
-                if self.real_galaxy:
-                    use_cols = [('ID', int), ('g1', float), ('g2', float)]
-                else:
-                    use_cols = [('ID', int), ('g1', float), ('g2', float),
-                                ('g1_intrinsic', float), ('g2_intrinsic', float)]
+                use_cols = [('ID', int), ('g1', float), ('g2', float),
+                            ('g1_intrinsic', float), ('g2_intrinsic', float)]
                 outfile = root_rel_mapper.copySub(sub_mapper, 'subfield_catalog', tmp_dict,
                                                   use_cols,
                                                   new_template =
