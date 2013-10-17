@@ -119,7 +119,7 @@ MAPEOBS_FILE_PREFIX = "mapEobs_"
 NORMALIZATION_CONSTANT = 1.089 
 #NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
 #NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
-NORMALIZATION_VARIABLE = 2.4502427759585598e-07 # Factor comes from tests with test_evaluate.py on
+NORMALIZATION_VARIABLE = 2.4502427759585598e-04 # Factor comes from tests with test_evaluate.py on
                                                 # 600 runs, 15 Oct 2013
 
 
@@ -389,7 +389,7 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
     g2_array = np.asarray(e2).flatten()
     w_array = np.asarray(w).flatten()
     #DEBUG:
-    print np.sum(x_array), np.sum(y_array), np.sum(g1_array), np.sum(g2_array)
+    #print np.sum(x_array), np.sum(y_array), np.sum(g1_array), np.sum(g2_array)
     # Then, mask out the >= 10 values
     use_mask = np.logical_and.reduce([g1_array<10.,g2_array<10.])
     # And finally make the FITS file
