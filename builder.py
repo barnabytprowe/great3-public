@@ -664,7 +664,8 @@ class SimBuilder(object):
         d['gal']['magnification'] = { 'type' : 'Catalog', 'col' : 'mu' }
 
         if not self.variable_psf:
-            # The galaxy images are large, so parallelize at the image level.
+            # The galaxy images are large, so parallelize at the image level (unlike for the star
+            # fields, for which we already had set up to parallelize at the file level).
             d['image']['nproc'] = self.nproc
             del d['output']['nproc']
 
