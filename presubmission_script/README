@@ -115,10 +115,11 @@ formats, for example), and this can fail if the galaxy ID numbers have changed b
 versions.  Previous versions of this script can be downloaded as tagged versions from the 
 great3-public repository.
 
-CURRENT RELEASE (MD5 71e2298672c1244237401f37dd11e9f9,
+CURRENT RELEASE (as of 10/17): no tag necessary!
+ALPHA RELEASE 2 (MD5 71e2298672c1244237401f37dd11e9f9,
                  MD5 c4627b4dd8810251f80481672ae56d71,
                  MD5 160f3e2938f723702045ffceedd1b5c0,
-                 MD5 509a4a221ef405bf0c18404ffd169f80): no tag necessary!
+                 MD5 509a4a221ef405bf0c18404ffd169f80): tag alpha-release-2
 ALPHA RELEASE 1 (MD5 146609944f92b8411aff594275af7204,
                  MD5 5d607c9a4a39518c7512534461a49f45,
                  MD5 98d383be3de05da2ba79dbe8524d5bd7,
