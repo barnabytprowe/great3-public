@@ -35,7 +35,7 @@ class SimBuilder(object):
         return cls
 
     def __init__(self, root, obs_type, shear_type, gal_dir, ps_dir, atmos_ps_dir, public_dir,
-                 truth_dir, preload, nproc=-1):
+                 truth_dir, preload=False, nproc=-1):
         """Initialize a builder for the given obs_type and shear_type.
 
         @param[in] root         Root directory for generated files
@@ -48,7 +48,7 @@ class SimBuilder(object):
         @param[in] truth_dir    Directory containing files used for metric evaluation.
         @param[in] preload      Preload the RealGalaxyCatalog images to speed up generation of large
                                 numbers of real galaxies?  Note that for parametric galaxy branches,
-                                the catalog is never preloaded.
+                                the catalog is never preloaded. (default = False)
         @param[in] nproc        How many processes to use in the config file.  (default = -1)
         """
         self.obs_type = obs_type
