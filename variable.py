@@ -225,5 +225,24 @@ if __name__ == "__main__":
 
 #    print thetat - thetas
 
+    import matplotlib.pyplot as plt
+    for theta, diff, mapE in zip(
+        np.split(thetat, evaluate.NFIELDS), np.split(map_Et - map_Es, evaluate.NFIELDS), 
+        np.split(map_Et, evaluate.NFIELDS)):
+
+        plt.loglog(theta, np.abs(diff) / np.abs(mapE), '--')
+
+    plt.title("Abs(map_E_truth - map_E_truth_presub) / Abs(map_E_truth)")
+    plt.savefig("fractional_mapdiff.png")
+    plt.clf()
+    for theta, diff, mapE in zip(
+        np.split(thetat, evaluate.NFIELDS), np.split(map_Et - map_Es, evaluate.NFIELDS), 
+        np.split(map_Et, evaluate.NFIELDS)):
+
+        plt.loglog(theta, np.abs(diff), '--')
+
+    plt.title("Abs(map_E_truth - map_E_presub)")
+    plt.savefig("absolute_ediff.png")
+ 
     print map_Et - map_Es
  
