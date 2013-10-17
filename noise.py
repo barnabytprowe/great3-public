@@ -83,6 +83,12 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
     def generateEpochParameters(self, rng, subfield_index, epoch_index, seeing, noise_mult):
         if self.multiepoch:
             n_epochs = constants.n_epochs
+            # The next line accounts for the fact that we've defined good values of noise variance
+            # for single-epoch data, so if we change the pixel scale in the multiepoch data (as we
+            # do for space) then the noise variance in the multiepoch sims should be made 4x as
+            # large (corresponding to collection of 4x as many sky photons in a given pixel).
+            noise_mult *= \
+                (constants.pixel_scale[self.obs_type][True]/constants.pixel_scale[self.obs_type][False])**2
         else:
             n_epochs = 1
         # Variance gets decreased by n_epochs, because we're assuming it's like taking the same
@@ -110,7 +116,10 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
             self.min_variance = 0.95*max_var
             self.max_variance = 1.05*max_var
         # Note that typical variance was determined for a regular (not deep) field, assuming a
-        # single combined image.  The only considerations that determine it are what noise variance
+        # single combined image at the single epoch pixel scale.  Hence it does not include (a)
+        # factors of 1/n_epochs, (b) factors related to the deep field variance reduction, or (c)
+        # differences in variance to account for different pixel scales in single vs. multi-epoch
+        # sims.  The only considerations that determine it are what noise variance
         # we want for a given obs_type (ground/space) and seeing (if ground-based imaging).
         self.typical_variance = 0.5*(self.min_variance + self.max_variance)
 

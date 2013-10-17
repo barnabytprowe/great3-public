@@ -294,7 +294,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # flags.
             else:
                 self.noise_max_var = self.selection_catalog.field('max_var')[:,0]
-                if self.multiepoch: self.noise_max_var *= 4.0
                 self.flux_frac = self.selection_catalog.field('flux_frac')[:,0]
                 self.resolution = self.selection_catalog.field('resolution')[:,0]
  
