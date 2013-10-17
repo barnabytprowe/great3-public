@@ -273,16 +273,14 @@ class SimBuilder(object):
                 index += 1
 
         # Determine multiplying factor for the sky variance based on whether we are in a deep field
-        # or not.  Note that sky variance changes due to single vs. multiepoch images are do not
-        # need to be included at all at this stage, because we want to impose our cuts based on
-        # whether the S/N would be 20 in a single combined image, not based on its value in the
-        # individual epoch images.  Also note that while the noise variance parameter output into
-        # the epoch_parameters files by the noise builder already includes this noise_mult for the
-        # deep fields (and any factors due to single vs. multiepoch), we have to recalculate here
-        # because we're just going to use the noise_builder.typical_variance which does not include
-        # those factors.  That was a deliberate choice (to not use the epoch_parameter noise
-        # variance) since in the galaxy builder we'll need to know the effective S/N over all
-        # images.
+        # or not.  Note that sky variance changes due to single vs. multiepoch images do not need to
+        # be included at all at this stage, because we want to impose our cuts based on whether the
+        # S/N would be 20 in a single combined image, not based on its value in the individual epoch
+        # images.  Also note that while the noise variance parameter output into the
+        # epoch_parameters files by the noise builder already includes this noise_mult for the deep
+        # fields (and any factors due to single vs. multiepoch which we do *not* want here), we have
+        # to recalculate the deep field noise multiplying factor because we're just going to use the
+        # noise_builder.typical_variance which does not include any of those factors.
         if subfield_index < constants.n_subfields - constants.n_deep_subfields:
             noise_mult = 1.
         else:
