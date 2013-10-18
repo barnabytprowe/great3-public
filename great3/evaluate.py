@@ -93,24 +93,34 @@ THETA_MAX_DEG = 10.0 # aperture mass disp. - MUST match specs given to participa
 NBINS_THETA = 15     # Number of logarithmic bins theta for the aperture mass dispersion
 
 EXPECTED_THETA = np.array([ # Array of theta values expected in submissions, good to 3 d.p.
-    0.0246, 0.0372,  0.0563,  0.0853,  0.129 ,  0.1953,  0.2955, 0.4472,  0.6768,  1.0242,  1.5499,
-    2.3455,  3.5495,  5.3716, 8.1289] * NFIELDS)
+    0.0246,  0.0372,  0.0563,  0.0853,  0.1290,  0.1953,  0.2955, 0.4472,  0.6768,  1.0242,  1.5499,
+    2.3455,  3.5495,  5.3716,  8.1289] * NFIELDS)
+
+USEBINS = np.array([ # Which of the theta bins above to actually use in calculating the metric?
+    False,   False,   False,   True,    True,    True,    True,   True,    True,    True,    True,
+    True,    True,    False,   False] * NFIELDS) # Note the *NFIELDS to match per-field theta layout
 
 STORAGE_DIR = "./metric_calculation_products" # Folder into which to store useful intermediate
                                               # outputs of metric calculations (e.g. rotation files,
                                               # dicts, mapE tables) which need be calculated only
                                               # once
-TRUTH_DIR = "/Users/browe/great3/truth-alpha-release-2" # Root folder in which the truth values are
-                                                        # unpacked (admin only)
+TRUTH_DIR = "/great3/beta/truth"  # Root folder in which the truth values are upacked (admin)
+#TRUTH_DIR = "/Users/browe/great3/truth-alpha-release-1" 
+#TRUTH_DIR = "/projector/browe/great3/beta/truth"
 
 SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
 ROTATIONS_FILE_PREFIX = "rotations_"
 OFFSETS_FILE_PREFIX = "offsets_"
-MAPETRUTH_FILE_PREFIX = "mapEtruth_"
+MAPESHEAR_FILE_PREFIX = "mapEshear_"
+MAPEINT_FILE_PREFIX = "mapEint_"
+MAPEOBS_FILE_PREFIX = "mapEobs_"
 
 NORMALIZATION_CONSTANT = 1.089 
-NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
+#NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
+#NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
+NORMALIZATION_VARIABLE = 2.4502427759585598e-04 # Factor comes from tests with test_evaluate.py on
+                                                # 600 runs, 15 Oct 2013
 
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
@@ -181,103 +191,8 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
             np.savetxt(fout, gtruedata, fmt=" %4d %+.18e %+.18e")
     return (gtruedata[:, 0]).astype(int), gtruedata[:, 1], gtruedata[:, 2]
 
-def get_generate_const_subfield_dict(experiment, obs_type, storage_dir=STORAGE_DIR,
-                                     truth_dir=TRUTH_DIR, logger=None):
-    """Get or generate a dict mapping which subfields contain which of NFIELDS independent truth
-    shear values.
-
-    If the subfield_dict file has already been built for this constant shear branch, loads and
-    returns the saved copy.
-
-    If the subfield_dict has not been built, or is older than the first entry in the set of
-    shear_params files, the subfield_dict is built first, saved to file, then returned.
-
-    @param experiment     Experiment for this branch, one of 'control', 'real_galaxy',
-                          'variable_psf', 'multiepoch', 'full'
-    @param obs_type       Observation type for this branch, one of 'ground' or 'space'
-    @param storage_dir    Directory from/into which to load/store rotation files
-    @param truth_dir      Root directory in which the truth information for the challenge is stored
-    @param logger         Python logging.Logger instance, for message logging
-    @return subfield_dict The subfield_dict (see code below for details)
-    """
-    import cPickle
-    subfield_dict_file = os.path.join(
-        storage_dir, SUBFIELD_DICT_FILE_PREFIX+experiment[0]+obs_type[0]+"c.pkl")
-    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "constant")
-    use_stored = True
-    if not os.path.isfile(subfield_dict_file):
-        use_stored = False
-        if logger is not None:
-            logger.info(
-                "First build of shear-subfield dictionary using values from "+
-                os.path.join(mapper.full_dir, "shear_params-*.yaml"))
-    else:
-        # Compare timestamps for the subfield_dict file and the first shear_params file
-        # (subfield = 000) for this branch.  If the former is older than the latter, or this file, 
-        # force rebuild...
-        dictmtime = os.path.getmtime(subfield_dict_file)
-        shear_params_file = os.path.join(mapper.full_dir, "shear_params-000.yaml")
-        shear_params_mtime = os.path.getmtime(shear_params_file)
-        if dictmtime < shear_params_mtime or dictmtime < os.path.getmtime(__file__):
-            use_stored = False 
-            if logger is not None:
-                logger.info(
-                    "Updating out-of-date shear-subfield dictionary using newer values from "+
-                    os.path.join(mapper.full_dir, "shear_params-*.yaml"))
-    # Then load or build (and save) the subfield_dict
-    if use_stored is True:
-        if logger is not None:
-            logger.info("Loading shear-subfield dictionary from "+subfield_dict_file)  
-        with open(subfield_dict_file, 'rb') as funit:
-            subfield_dict = cPickle.load(funit)
-    else:
-        _, g1true, g2true = get_generate_const_truth(experiment, obs_type, logger=logger)
-        # First of all get all the unique (g1, g2) values, in the order in which they first
-        # appear in the arrays (so as not to mess up pairs) as suggested in
-        # http://stackoverflow.com/questions/12926898/numpy-unique-without-sort
-        g1unique, g1unique_indices = np.unique(g1true, return_index=True) 
-        g2unique, g2unique_indices = np.unique(g2true, return_index=True)
-        # Put back into first-found order
-        g1unique_unsorted = [g1true[index] for index in sorted(g1unique_indices)]
-        g2unique_unsorted = [g2true[index] for index in sorted(g2unique_indices)]
-        # Sanity check
-        if len(g1unique_unsorted) != NFIELDS or len(g2unique_unsorted) != NFIELDS:
-            raise ValueError(
-                "Number of unique shear values != NFIELDS!\n"+
-                "NFIELDS = "+str(NFIELDS)+"; n_unique = "+str(len(g1unique_indices)))
-        # Then construct the subfield dict by looping over these unique values and saving the
-        # g1 and g2 values to an ordered list, along with a corresponding ordered list of
-        # NumPy arrays containing indices of the subfields this shear was applied to 
-        g1dict = {"value": g1unique_unsorted, "subfield_indices":[]}
-        g2dict = {"value": g2unique_unsorted, "subfield_indices":[]}
-        ifullset = np.arange(NSUBFIELDS, dtype=int)
-        for g1trueval, g2trueval in zip(g1dict["value"], g2dict["value"]):
-
-            ig1subset = ifullset[g1true == g1trueval]
-            ig2subset = ifullset[g2true == g2trueval]
-            if tuple(ig1subset) != tuple(ig2subset): # Tuple comparison
-                raise ValueError(
-                    "Unique values of truth g1 and g2 do not correspond pairwise!")
-            if len(ig1subset) != NSUBFIELDS_PER_FIELD:
-                raise ValueError(
-                    "Fields of truth shear values do not contain equal numbers of subfields!")
-            g1dict["subfield_indices"].append(ig1subset)
-            g2dict["subfield_indices"].append(ig2subset)
-
-        # Then put both g1 and g2 into the subfield_dict
-        subfield_dict = {"g1": g1dict, "g2": g2dict}
-        # Save the resulting subfield_dict
-        if logger is not None:
-            logger.info("Saving subfield_dict to "+subfield_dict_file)
-        if not os.path.isdir(storage_dir):
-            os.mkdir(storage_dir) 
-        with open(subfield_dict_file, 'wb') as fout:
-            cPickle.dump(subfield_dict, fout)
-    # Then return
-    return subfield_dict
-
-def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR,
-                                 truth_dir=TRUTH_DIR, logger=None):
+def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
+                                 logger=None):
     """Get or generate an array of rotation angles for Q_const calculation.
 
     If the rotation file has already been built for this constant shear branch, loads and returns an
@@ -465,7 +380,7 @@ def run_corr2(x, y, e1, e2, w, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_DEG, nbi
     m2file = tempfile.mktemp(suffix=m2_file_suffix)
     # Write the basic corr2.params to temp location
     print_basic_corr2_params(paramsfile, min_sep=min_sep, max_sep=max_sep, nbins=nbins,
-                             xy_units=xy_units, sep_units=sep_units,fits_columns=True)
+                             xy_units=xy_units, sep_units=sep_units, fits_columns=True)
     # Use fits binary table for faster I/O. (Converting to/from strings is slow.)
     # First, make the data into np arrays
     x_array = np.asarray(x).flatten()
@@ -541,7 +456,7 @@ def print_basic_corr2_params(outfile, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_D
 def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                                 logger=None, corr2_exec="corr2", make_plots=True,
                                 file_prefixes=("galaxy_catalog",), suffixes=("",),
-                                mapetruth_file_prefix=MAPETRUTH_FILE_PREFIX, output_xy_prefix=None):
+                                mape_file_prefix=MAPESHEAR_FILE_PREFIX, output_xy_prefix=None):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
 
     If the map_E truth file has already been built for this variable shear branch, loads and returns
@@ -565,7 +480,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                              `file_prefixes[0]`-type files, then add "g1"+suffixes[1] from
                              `file_prefixes[1]`-type files, etc.  Must be same length as 
                              `file_prefixes` tuple [default = `("",)`]
-    @param mapetruth_file_prefix  Prefix for truth filename
+    @param mape_file_prefix  Prefix for output filename
     @param output_xy_prefix  Filename prefix (and switch if not None) for x-y position debug output
     @return field, theta, map_E, map_B, maperr
     """
@@ -584,7 +499,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             "the values of XMAX_GRID_DEG and DX_GRID_DEG in evaluate.py.")
     # Define storage file and check for its existence and/or age
     mapEtruefile = os.path.join(
-        storage_dir, mapetruth_file_prefix+experiment[0]+obs_type[0]+"v.asc")
+        storage_dir, mape_file_prefix+experiment[0]+obs_type[0]+"v.asc")
     mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable") 
     use_stored = True
     if not os.path.isfile(mapEtruefile):
@@ -629,8 +544,6 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         subfield_indices, offset_deg_x, offset_deg_y = get_generate_variable_offsets(
             experiment, obs_type, storage_dir=storage_dir, truth_dir=truth_dir, logger=logger)
         # Setup some storage arrays into which we'll write
-        g1true = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
-        g2true = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
         xfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
         yfield = np.empty((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
         # Loop over fields
@@ -638,6 +551,8 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
         for ifield in range(NFIELDS):
 
             # Read in all the shears in this field and store
+            g1 = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD))
+            g2 = np.zeros((NGALS_PER_SUBFIELD, NSUBFIELDS_PER_FIELD)) 
             for jsub in range(NSUBFIELDS_PER_FIELD):
 
                 # Build the x,y grid using the subfield offsets
@@ -661,8 +576,13 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
                         raise ValueError(
                             "Number of records in "+galcatfile+" (="+str(len(truedata))+") is not "+
                             "equal to NGALS_PER_SUBFIELD (="+str(NGALS_PER_SUBFIELD)+")")
-                    g1true[:, jsub] += truedata["g1"+suffix]
-                    g2true[:, jsub] += truedata["g2"+suffix] 
+                    # Use the correct rule for shear addition, best (most safely) evaluated using
+                    # arrays of complex numbers, see Schneider 2006 eq 12
+                    gtoaddc = truedata["g1"+suffix] + truedata["g2"+suffix]*1j 
+                    gpriorc = g1[:, jsub] + g2[:, jsub]*1j
+                    gfinalc = (gpriorc + gtoaddc) / (1. + gtoaddc.conj() * gpriorc)
+                    g1[:, jsub] = gfinalc.real
+                    g2[:, jsub] = gfinalc.imag 
 
             # If requested (by setting output_xy_prefix) then write these xy out for diagnostic
             if output_xy_prefix is not None:
@@ -674,7 +594,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             # Having got the x,y and g1, g2 for all the subfields in this field, flatten and use
             # to calculate the map_E
             map_results = run_corr2(
-                xfield.flatten(), yfield.flatten(), g1true.flatten(), g2true.flatten(),
+                xfield.flatten(), yfield.flatten(), g1.flatten(), g2.flatten(),
                 np.ones(NGALS_PER_SUBFIELD * NSUBFIELDS_PER_FIELD), min_sep=THETA_MIN_DEG,
                 max_sep=THETA_MAX_DEG, nbins=NBINS_THETA, corr2_executable=corr2_exec,
                 xy_units="degrees", sep_units="degrees")
@@ -692,7 +612,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
             np.savetxt(
                 fout, np.array((field, theta, map_E, map_B, maperr)).T,
                 fmt=" %2d %.18e %.18e %.18e %.18e")
-    if make_plots:
+    if make_plots and not use_stored: # No point plotting if already built!
         import matplotlib.pyplot as plt
         plt.figure(figsize=(10, 8))
         plt.subplot(211)
@@ -756,7 +676,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     if flip_g1: g1sub = -g1sub
     if flip_g2: g2sub = -g2sub
     # Load up the rotations, then rotate g1 & g2 in the correct sense.
-    # NOTE THE MINUS SIGNS!  This is because we need to rotated the coordinates back into a frame
+    # NOTE THE MINUS SIGNS!  This is because we need to rotate the coordinates *back* into a frame
     # in which the primary direction of the PSF is g1, and the orthogonal is g2
     try: # Put this in a try except block to handle funky submissions better
         rotations = get_generate_const_rotations(
@@ -800,8 +720,8 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     return ret
 
 def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2", 
-               corr2_params="corr2.params"):
+               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2",
+               poisson_weight=False, usebins=USEBINS, fractional_diff=False):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -814,7 +734,13 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     @param logger           Python logging.Logger instance, for message logging
     @param normalization    Normalization factor for the metric
     @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
-    @param corr2_params     Path to parameter file for Mike Jarvis' corr2 exectuable
+    @param poisson_weight   If `True`, use the relative Poisson errors in each bin of map_E
+                            to form an inverse variance weight for the difference metric
+                            [default = `False`]
+    @param usebins          An array the same shape as EXPECTED_THETA specifying which bins to
+                            use in the calculation of Q_v [default = `USEBINS`].  If set to `None`,
+                            uses all bins
+    @param fractional_diff  Use a fractional, rather than absolute difference in metric
     @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
@@ -830,17 +756,50 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     field_sub = data[:, 0].astype(int)
     theta_sub = data[:, 1]
     map_E_sub = data[:, 2]
-    # Load/generate the truth
-    field, theta, map_E, _, _ = get_generate_variable_truth(
+    # Load/generate the truth shear signal
+    field_shear, theta_shear, map_E_shear, _, maperr_shear = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
-        corr2_exec=corr2_exec, corr2_params=corr2_params)
+        corr2_exec=corr2_exec, mape_file_prefix=MAPESHEAR_FILE_PREFIX, suffixes=("",),
+        make_plots=True)
+    #print map_E_shear
+    # Then generate the intrinsic only map_E, useful for examinging plots, including the maperr
+    # (a good estimate of the relative Poisson errors per bin) which we will use to provide a weight
+    field_int, theta_int, map_E_int, _, maperr_int = get_generate_variable_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
+        corr2_exec=corr2_exec, mape_file_prefix=MAPEINT_FILE_PREFIX, suffixes=("_intrinsic",),
+        make_plots=True)
+    # Then generate the theory observed = int + shear combined map signals - these are our reference
+    # Note this uses the new functionality of get_generate_variable_truth for adding shears
+    field_ref, theta_ref, map_E_ref, _, maperr_ref = get_generate_variable_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
+        corr2_exec=corr2_exec, mape_file_prefix=MAPEOBS_FILE_PREFIX,
+        file_prefixes=("galaxy_catalog", "galaxy_catalog"), suffixes=("_intrinsic", ""),
+        make_plots=True)
+    # Set up the weight
+    if poisson_weight:
+        weight = max(maperr_int**2) / maperr_int**2 # Inverse variance weight
+    else:
+        weight = np.ones_like(map_E_ref)
+    # Set up the usebins to use if `usebins == None` (use all bins)
+    if usebins is None:
+        usebins = np.repeat(True, NBINS_THETA * NFIELDS)
     try: # Put this in a try except block to handle funky submissions better
+        np.testing.assert_array_almost_equal( # Sanity check out truth / expected theta bins
+            theta_shear, EXPECTED_THETA, decimal=3,
+            err_msg="BIG SNAFU! Truth theta does not match the EXPECTED_THETA, failing...")
         np.testing.assert_array_equal(
-            field_sub, field, err_msg="User field array does not match truth.")
+            field_sub, field_ref, err_msg="User field array does not match truth.")
         np.testing.assert_array_almost_equal(
-            theta_sub, theta, decimal=3, err_msg="User theta array does not match truth.")
+            theta_sub, theta_ref, decimal=3, err_msg="User theta array does not match truth.")
         # The definition of Q_v is so simple there is no need to use the g3metrics version
-        Q_v = normalization / np.mean(np.abs(data[:, 2] - map_E))
+        if not fractional_diff:
+            Q_v = normalization * np.sum(weight[usebins]) / np.sum(
+                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_ref[usebins]))
+        else:
+            Q_v = normalization * np.sum(weight[usebins]) / np.sum(
+                weight[usebins] * np.abs(
+                    (map_E_sub[usebins] - map_E_ref[usebins]) / map_E_ref[usebins])
+                ) 
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
