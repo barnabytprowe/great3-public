@@ -1127,7 +1127,7 @@ class SimBuilder(object):
             # all branches, we include this even for single epoch branches (for which the dithers
             # are all 0 since each image IS the first and only epoch).  We extract the xdither and
             # ydither from the epoch_parameters, and write a file for each subfield and epoch.
-            # Technically it should be the same for all subfields in the field, but these files are
+            # These files are
             # tiny, so let's write one for each subfield and epoch, in both yaml and txt format.
             for epoch_index in xrange(self.n_epochs):
                 tmp_dict["epoch_index"] = epoch_index
