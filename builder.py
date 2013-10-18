@@ -805,19 +805,20 @@ class SimBuilder(object):
             else:
                 current_var = 0.
 
-            # The lines below are commented out because they are just diagnostics that can be used
+            # The lines below are diagnostics that can be used
             # to check that the actual S/N is fairly consistent with the estimated one.
-            #actual_sn = \
-            #        numpy.sqrt((stamp.array**2).sum() / float(epoch_parameters['noise']['variance']))
+            if False:
+                actual_sn = \
+                    numpy.sqrt((stamp.array**2).sum() / float(epoch_parameters['noise']['variance']))
+                try:
+                    res = stamp.FindAdaptiveMom()
+                    aperture_noise = numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
+                                                    2.*numpy.pi*(res.moments_sigma**2))
+                    sn_ellip_gauss = res.moments_amp / aperture_noise
+                except:
+                    sn_ellip_gauss = -10.
+                print 'Claimed, actual, ellip SN: ', record['gal_sn'], actual_sn, sn_ellip_gauss
             self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, current_var)
-            #try:
-            #    res = stamp.FindAdaptiveMom()
-            #    aperture_noise = numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
-            #                                    2.*numpy.pi*(res.moments_sigma**2))
-            #    sn_ellip_gauss = res.moments_amp / aperture_noise
-            #except:
-            #    sn_ellip_gauss = -10.
-            #print 'Claimed, actual, ellip SN: ', record['gal_sn'], actual_sn, sn_ellip_gauss
 
         self.mapper.write(galaxy_image, "image", epoch_parameters)
 

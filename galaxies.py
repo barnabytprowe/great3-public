@@ -518,10 +518,11 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             y_pos += parameters["subfield_offset"][1] * constants.image_size_deg / constants.ncols
             g1_b, g2_b = self.cached_ps.getShear(pos=(x_pos, y_pos), units=galsim.degrees)
             gmag_b = np.sqrt(g1_b**2 + g2_b**2)
-            # DEBUG: Plot the histogram of gmag to check it is reasonable
-            #import matplotlib.pyplot as plt
-            #print "Mean, median gmag_b = "+str(gmag_b.mean())+", "+str(np.median(gmag_b))
-            #plt.hist(gmag_b, range=(0, 1), bins=50); plt.show()
+            if False:
+                # DEBUG: Plot the histogram of gmag to check it is reasonable
+                import matplotlib.pyplot as plt
+                print "Mean, median gmag_b = "+str(gmag_b.mean())+", "+str(np.median(gmag_b))
+                plt.hist(gmag_b, range=(0, 1), bins=50); plt.show()
             if np.any(gmag_b > 1.):
                 # The shear field generated with this B-mode power function is not limited to
                 # |g|<1.  We have to fix these:
