@@ -195,6 +195,10 @@ class SimBuilder(object):
                     epoch_parameters["psf"] = \
                         self.psf_builder.generateEpochParameters(rng, subfield_index, epoch_index,
                                                                  field_psf_parameters)
+                    # Determine multiplying factor for the sky variance based on whether we are in a
+                    # deep field or not.  Note that sky variance changes due to single
+                    # vs. multiepoch images are handled directly in the noise_builder, so they do
+                    # not need to be included here.
                     if subfield_index < n_reg_subfields:
                         noise_mult = 1.
                     else:
@@ -268,6 +272,15 @@ class SimBuilder(object):
                 record['yshift'] = sy
                 index += 1
 
+        # Determine multiplying factor for the sky variance based on whether we are in a deep field
+        # or not.  Note that sky variance changes due to single vs. multiepoch images do not need to
+        # be included at all at this stage, because we want to impose our cuts based on whether the
+        # S/N would be 20 in a single combined image, not based on its value in the individual epoch
+        # images.  Also note that while the noise variance parameter output into the
+        # epoch_parameters files by the noise builder already includes this noise_mult for the deep
+        # fields (and any factors due to single vs. multiepoch which we do *not* want here), we have
+        # to recalculate the deep field noise multiplying factor because we're just going to use the
+        # noise_builder.typical_variance which does not include any of those factors.
         if subfield_index < constants.n_subfields - constants.n_deep_subfields:
             noise_mult = 1.
         else:
@@ -650,7 +663,8 @@ class SimBuilder(object):
         d['gal']['magnification'] = { 'type' : 'Catalog', 'col' : 'mu' }
 
         if not self.variable_psf:
-            # The galaxy images are large, so parallelize at the image level.
+            # The galaxy images are large, so parallelize at the image level (unlike for the star
+            # fields, for which we already had set up to parallelize at the file level).
             d['image']['nproc'] = self.nproc
             del d['output']['nproc']
 
@@ -691,7 +705,7 @@ class SimBuilder(object):
             'file_name' : 'star_test_images.fits',
             'dir' : self.mapper.dir,
             'nimages' : self.n_epochs*(subfield_max - subfield_min + 1),
-            # The startest images are all small, so parallelize at the file level.
+            # The star_test images are all small, so parallelize at the file level.
             'nproc' : self.nproc
         }
 
@@ -788,19 +802,20 @@ class SimBuilder(object):
             else:
                 current_var = 0.
 
-            # The lines below are commented out because they are just diagnostics that can be used
+            # The lines below are diagnostics that can be used
             # to check that the actual S/N is fairly consistent with the estimated one.
-            #actual_sn = \
-            #        numpy.sqrt((stamp.array**2).sum() / float(epoch_parameters['noise']['variance']))
+            if False:
+                actual_sn = \
+                    numpy.sqrt((stamp.array**2).sum() / float(epoch_parameters['noise']['variance']))
+                try:
+                    res = stamp.FindAdaptiveMom()
+                    aperture_noise = numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
+                                                    2.*numpy.pi*(res.moments_sigma**2))
+                    sn_ellip_gauss = res.moments_amp / aperture_noise
+                except:
+                    sn_ellip_gauss = -10.
+                print 'Claimed, actual, ellip SN: ', record['gal_sn'], actual_sn, sn_ellip_gauss
             self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, current_var)
-            #try:
-            #    res = stamp.FindAdaptiveMom()
-            #    aperture_noise = numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
-            #                                    2.*numpy.pi*(res.moments_sigma**2))
-            #    sn_ellip_gauss = res.moments_amp / aperture_noise
-            #except:
-            #    sn_ellip_gauss = -10.
-            #print 'Claimed, actual, ellip SN: ', record['gal_sn'], actual_sn, sn_ellip_gauss
 
         self.mapper.write(galaxy_image, "image", epoch_parameters)
 
@@ -1110,7 +1125,7 @@ class SimBuilder(object):
             # all branches, we include this even for single epoch branches (for which the dithers
             # are all 0 since each image IS the first and only epoch).  We extract the xdither and
             # ydither from the epoch_parameters, and write a file for each subfield and epoch.
-            # Technically it should be the same for all subfields in the field, but these files are
+            # These files are
             # tiny, so let's write one for each subfield and epoch, in both yaml and txt format.
             for epoch_index in xrange(self.n_epochs):
                 tmp_dict["epoch_index"] = epoch_index
@@ -1197,11 +1212,8 @@ class SimBuilder(object):
             # If variable shear, then loop over subfield catalogs and copy over just the ID and the
             # per-galaxy reduced shear.
             if self.shear_type == 'variable':
-                if self.real_galaxy:
-                    use_cols = [('ID', int), ('g1', float), ('g2', float)]
-                else:
-                    use_cols = [('ID', int), ('g1', float), ('g2', float),
-                                ('g1_intrinsic', float), ('g2_intrinsic', float)]
+                use_cols = [('ID', int), ('g1', float), ('g2', float),
+                            ('g1_intrinsic', float), ('g2_intrinsic', float)]
                 outfile = root_rel_mapper.copySub(sub_mapper, 'subfield_catalog', tmp_dict,
                                                   use_cols,
                                                   new_template =
