@@ -96,7 +96,7 @@ if not package_only:
         pbs_name = prefix1+e+o+s
         pbs_file = pbs_name+'.sh'
         command_str = 'qsub '+pbs_file
-        p = subprocess.Popen(command_str,shell=True)
+        p = subprocess.Popen(command_str,shell=True, close_fds=True)
     # The above command just submitted all the files to the queue.  We have to periodically poll the
     # queue to see if they are still running.
     mass_produce_utils.check_done('g3_step1', sleep_time=sleep_time)
@@ -115,7 +115,7 @@ if not package_only:
             pbs_file = prefix2 + type+'.sh'
             mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
             command_str = 'qsub '+pbs_file
-            p = subprocess.Popen(command_str, shell=True)
+            p = subprocess.Popen(command_str, shell=True, close_fds=True)
         mass_produce_utils.check_done('g3', sleep_time=sleep_time)
         t2 = time.time()
         # Times are approximate since check_done only checks every N seconds for some N
@@ -142,7 +142,7 @@ for experiment, obs_type, shear_type in branches:
                                      n_config_per_branch, preload, my_step=3)
     # And then submit them
     command_str = 'qsub '+pbs_file
-    p = subprocess.Popen(command_str,shell=True)
+    p = subprocess.Popen(command_str,shell=True, close_fds=True)
 # The above command just submitted all the files to the queue.  We have to periodically poll the
 # queue to see if they are still running.
 mass_produce_utils.check_done('g3_step3', sleep_time=sleep_time)

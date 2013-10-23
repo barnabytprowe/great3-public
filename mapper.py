@@ -34,19 +34,18 @@ def writeDict(d, path, type = 'yaml', comment_pref = '#'):
         with open(path + ".p", 'w') as stream:
             cPickle.dump(d, stream, protocol=2)
     elif type == 'txt':
-        f = open(path + ".txt", 'w')
-        # First print one line with keys (as a comment).
-        # Note that we want to do this alphabetically so e.g. x comes before y.
-        list_keys = sorted(d)
-        f.write(comment_pref + " ")
-        for key in list_keys:
-            f.write(key + " ")
-        f.write('\n')
-        # Then print one line with values
-        for key in list_keys:
-            f.write(str(d[key]) + " ")
-        f.write('\n')
-        f.close()
+        with open(path + ".txt", 'w') as f:
+            # First print one line with keys (as a comment).
+            # Note that we want to do this alphabetically so e.g. x comes before y.
+            list_keys = sorted(d)
+            f.write(comment_pref + " ")
+            for key in list_keys:
+                f.write(key + " ")
+            f.write('\n')
+            # Then print one line with values
+            for key in list_keys:
+                f.write(str(d[key]) + " ")
+            f.write('\n')
     else:
         raise NotImplementedError('%s type of file is not supported by writeDict'%type)
 
@@ -95,11 +94,10 @@ def writeCatalog(catalog, path, type = 'fits', comment_pref = '#', format = None
         import tempfile
         # First print lines with column names.  This goes into a separate file for now.
         f1, tmp_1 = tempfile.mkstemp(dir='.')
-        f = open(tmp_1, 'w')
-        name_list = catalog.names
-        for name in name_list:
-            f.write(comment_pref + " " + name + "\n")
-        f.close()
+        with open(tmp_1, 'w') as f:
+            name_list = catalog.names
+            for name in name_list:
+                f.write(comment_pref + " " + name + "\n")
 
         # Then save catalog itself.
         f2, tmp_2 = tempfile.mkstemp(dir='.')
@@ -109,10 +107,9 @@ def writeCatalog(catalog, path, type = 'fits', comment_pref = '#', format = None
             np.savetxt(tmp_2, catalog)
 
         # Finally, concatenate, and remove tmp files
-        destination = open(path + '.txt', 'wb')
-        shutil.copyfileobj(open(tmp_1, 'rb'), destination)
-        shutil.copyfileobj(open(tmp_2, 'rb'), destination)
-        destination.close()
+        with open(path + '.txt', 'wb') as destination:
+            shutil.copyfileobj(open(tmp_1, 'rb'), destination)
+            shutil.copyfileobj(open(tmp_2, 'rb'), destination)
         # Need to close the tempfiles opened by mkstemp.  cf:
         # http://stackoverflow.com/questions/9944135/how-do-i-close-the-files-from-tempfile-mkstemp
         os.close(f1)

@@ -601,9 +601,8 @@ class SimBuilder(object):
         Dumper = yaml.SafeDumper
         Dumper.ignore_aliases = lambda self, data: True
 
-        f = open(file_name,'w')
-        yaml.dump(d, f, indent=4, Dumper=Dumper)
-        f.close()
+        with open(file_name,'w') as f:
+            yaml.dump(d, f, indent=4, Dumper=Dumper)
 
         # 
         # (2) Make config files for the galaxy images
@@ -668,9 +667,8 @@ class SimBuilder(object):
                                  experiment_letter + obs_letter + shear_letter + '.yaml')
         print 'Write gal config dict to ',file_name
 
-        f = open(file_name,'w')
-        yaml.dump(d, f, indent=4, Dumper=Dumper)
-        f.close()
+        with open(file_name,'w') as f:
+            yaml.dump(d, f, indent=4, Dumper=Dumper)
 
         #
         # (3) Finally, make a config file for the "StarTest" images
@@ -717,9 +715,8 @@ class SimBuilder(object):
                                  experiment_letter + obs_letter + shear_letter + '_star_test.yaml')
         print 'Write star test config dict to ',file_name
 
-        f = open(file_name,'w')
-        yaml.dump(d, f, indent=4, Dumper=Dumper)
-        f.close()
+        with open(file_name,'w') as f:
+            yaml.dump(d, f, indent=4, Dumper=Dumper)
 
 
     def writeGalImage(self, subfield_index, epoch_index):
@@ -806,6 +803,7 @@ class SimBuilder(object):
             #print 'Claimed, actual, ellip SN: ', record['gal_sn'], actual_sn, sn_ellip_gauss
 
         self.mapper.write(galaxy_image, "image", epoch_parameters)
+
 
     def writePSFImage(self, subfield_index, epoch_index):
         """This method builds and writes the star field images to disk.
