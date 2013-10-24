@@ -28,6 +28,12 @@ do_images = True  # Make images or not?  If False with package_only also False, 
                   # image-making step: remake catalogs but do not delete files / dirs with images,
                   # then package it all up.
 preload = False # preloading for real galaxy branches - irrelevant for others
+# Do we want to be nice to others in the queue by rationing the number of image generation scripts
+# to be submitted simultaneously?  Or just submit them all, perhaps because there are so few that it
+# isn't rude to do them all at once?  If `queue_nicely = False`, then dump them all at once.  If
+# `queue_nicely` is set to some number, it means that number is the maximum number to have in the
+# queue at once.
+queue_nicely = False
 
 # Set which branches to test.  For now we do the control experiment (all four branches), but nothing
 # else.
@@ -115,6 +121,8 @@ if not package_only:
             pbs_file = prefix2 + type+'.sh'
             mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
             command_str = 'qsub '+pbs_file
+            if queue_nicely:
+                mass_produce_utils.check_njobs('g3', sleep_time=sleep_time, n_jobs=queue_nicely)
             p = subprocess.Popen(command_str, shell=True, close_fds=True)
         mass_produce_utils.check_done('g3', sleep_time=sleep_time)
         t2 = time.time()

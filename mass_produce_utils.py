@@ -129,6 +129,22 @@ def check_done(process_str, sleep_time=60):
     import subprocess
     ind_found = 1000
     while ind_found > 0:
-        time.sleep(sleep_time)
+        if ind_found < 1000:
+            # only sleep before checking if it's not the first time through this while loop
+            time.sleep(sleep_time)
+        res = subprocess.check_output('qstat')
+        ind_found = res.find(process_str)
+
+def check_njobs(process_str, sleep_time=60, n_jobs=10):
+    """Check the PBS queue to see how many processes that contain process_str in the name; wait
+    until it is <n_jobs before returning.
+    """
+    import time
+    import subprocess
+    ind_found = 1000
+    while ind_found >= n_jobs:
+        if ind_found < 1000:
+            # only sleep before checking if it's not the first time through this while loop
+            time.sleep(sleep_time)
         res = subprocess.check_output('qstat')
         ind_found = res.find(process_str)
