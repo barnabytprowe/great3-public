@@ -255,10 +255,19 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # Otherwise, for space, save a single set of results depending on whether it's single
             # epoch (smaller pixels) or multiepoch (bigger pixels).
             else:
-                if self.multiepoch:
-                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,1]
-                else:
-                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,0]
+                # Note, if we wanted to use the actual minimum variances post-whitening on a
+                # per-experiment basis, we'd do
+                # if self.multiepoch:
+                #    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,1]
+                # else:
+                #    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,0]
+                # However, this would result in different minimum variances and galaxy selection for
+                # single vs. multiepoch because the pixel scales are different for space sims for
+                # the two cases.  So, we just use the single-epoch minimum variances, which are
+                # higher, eliminating more objects from the sample.  This is conservative for the
+                # multiepoch sims, but it means the selection is consistent for the two cases, which
+                # will be helpful in interpreting results.
+                self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,0]
 
             # Read in catalog that tells us how the galaxy magnitude from Claire's fits differs from
             # that in the COSMOS catalog.  This can be used to exclude total screwiness, objects
