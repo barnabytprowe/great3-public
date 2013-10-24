@@ -14,13 +14,13 @@ import great3sims
 
 # Define some basic parameters.  This includes some system-dependent things like directories for
 # output.
-root = '/lustre/rmandelb/great3-v6'
+root = '/lustre/rmandelb/great3-v7'
 n_config_per_branch = 5 # Number of config files to be run per branch.
 subfield_min = 0 # NOTE CHANGE: SHOULD BE ZERO TO DO AN ENTIRE BRANCH.
 subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
 gal_dir = '/lustre/rmandelb/great3_fit_data'
 ps_dir = '/home/rmandelb/git/great3-private/inputs/ps/tables'
-seed = 397
+seed = 31416
 delta_seed = 1000 # amount to increment seed for each successive branch
 sleep_time = 10 # seconds between checks for programs to be done
 package_only = False # only do the packaging and nothing else
@@ -32,18 +32,18 @@ preload = False # preloading for real galaxy branches - irrelevant for others
 # Set which branches to test.  For now we do the control experiment (all four branches), but nothing
 # else.
 experiments = [
-    'control',
+    #'control',
     #'real_galaxy',
-    'variable_psf',
+    #'variable_psf',
     'multiepoch',
     #'full',
 ]
 obs_types = [
-    'ground',
+    #'ground',
     'space',
 ]
 shear_types = [
-    #'constant',
+    'constant',
     'variable',
 ]
 branches = [ (experiment, obs_type, shear_type)

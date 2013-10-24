@@ -69,13 +69,8 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
                 first = subfield_min + (subfield_max-subfield_min+1)/n_config_per_branch * i
                 last = subfield_min + (subfield_max-subfield_min+1)/n_config_per_branch * (i+1) - 1
                 # Could put nproc setting here.  However, for now we just want to use as many 
-                # processors as we have on that node.  This could get interesting for RealGalaxy 
-                # branches.
+                # processors as we have on that node.
                 nproc = -1
-                #if experiment != "variable_psf":
-                    #nproc = -1
-                #else:
-                    #nproc = 4
                 command_str = "great3sims.run('" + root + "', subfield_min=" + str(first) + \
                     ", subfield_max=" + str(last) + ", experiments=['" + experiment + \
                     "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
