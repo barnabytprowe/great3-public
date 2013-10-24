@@ -133,6 +133,8 @@ def check_done(process_str, sleep_time=60):
             # only sleep before checking if it's not the first time through this while loop
             time.sleep(sleep_time)
         res = subprocess.check_output('qstat')
+        # find index of first occurrence of process_str in output of qstat.  Since we want to know
+        # that all jobs are done, we don't have to find all occurrences.
         ind_found = res.find(process_str)
 
 def check_njobs(process_str, sleep_time=60, n_jobs=10):
