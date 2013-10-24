@@ -127,7 +127,7 @@ if do_config:
     for new_names in [ new_config_names, new_psf_config_names, star_test_config_names ]:
         for name in new_names:
             t3 = time.time()
-            p = subprocess.Popen(['galsim',name,'-v2'],close_fds=True)
+            p = subprocess.Popen(['galsim',name,'-v1'],close_fds=True)
             p.communicate() # wait until done
             t4 = time.time()
             print 'Time for galsim',name,'= ',t4-t3
