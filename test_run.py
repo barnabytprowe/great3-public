@@ -194,13 +194,11 @@ if do_images and do_config:
                 f2 = os.path.join(dir,'yaml_image-%03d-%1d.fits'%(i,j))
                 p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT,close_fds=True)
                 p.communicate()
-                p.stdout.close()
                 if p.returncode != 0: showdiff(f1,f2)
                 f1 = os.path.join(dir,'starfield_image-%03d-%1d.fits'%(i,j))
                 f2 = os.path.join(dir,'yaml_starfield_image-%03d-%1d.fits'%(i,j))
                 p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT,close_fds=True)
                 p.communicate()
-                p.stdout.close()
                 if p.returncode != 0: showdiff(f1,f2)
     print 'End diffs.'
     print
