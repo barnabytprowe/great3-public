@@ -24,7 +24,7 @@ seed = 31416
 delta_seed = 1000 # amount to increment seed for each successive branch
 sleep_time = 10 # seconds between checks for programs to be done
 package_only = False # only do the packaging and nothing else
-do_images = False # Make images or not?  If False with package_only also False, then just skip the
+do_images = True  # Make images or not?  If False with package_only also False, then just skip the
                   # image-making step: remake catalogs but do not delete files / dirs with images,
                   # then package it all up.
 preload = False # preloading for real galaxy branches - irrelevant for others
