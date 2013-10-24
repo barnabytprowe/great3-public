@@ -141,10 +141,11 @@ def check_njobs(process_str, sleep_time=60, n_jobs=10):
     """
     import time
     import subprocess
-    ind_found = 1000
-    while ind_found >= n_jobs:
-        if ind_found < 1000:
+    import re
+    n_found = 1000
+    while n_found >= n_jobs:
+        if n_found < 1000:
             # only sleep before checking if it's not the first time through this while loop
             time.sleep(sleep_time)
-        res = subprocess.check_output('qstat')
-        ind_found = res.find(process_str)
+        res = re.findall(process_str, subprocess.check_output('qstat'))
+        n_found = len(res)
