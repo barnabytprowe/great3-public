@@ -600,20 +600,49 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 if self.use_bulgefit[all_indices[ind]] == 1.:
                     params = self.fit_catalog[all_indices[ind]].field('bulgefit')
 
-                    bulge_q = params[11]
-                    bulge_beta = params[15]*galsim.radians + rot_angle[ind]*galsim.radians
-                    bulge_hlr = 0.03*self.size_rescale*np.sqrt(bulge_q)*params[9] # arcsec
-                    # Factor of 0.03^2 in line below is because of Claire's normalization
-                    # conventions when fitting.
-                    # It is needed if we're drawing with 'flux' normalization convention.
-                    bulge_flux = \
-                        2.0*np.pi*3.607*(bulge_hlr**2)*params[8]/self.size_rescale**2/(0.03**2) 
+                    (fit_disk_flux, fit_disk_hlr, fit_disk_n, fit_disk_q, _, _, _, fit_disk_beta,
+                     fit_bulge_flux, fit_bulge_hlr, fit_bulge_n, fit_bulge_q, _, _, _,
+                     fit_bulge_beta) = params
 
-                    disk_q = params[3]
-                    disk_beta = params[7]*galsim.radians + rot_angle[ind]*galsim.radians
-                    disk_hlr = 0.03*self.size_rescale*np.sqrt(disk_q)*params[1] # arcsec
+                    bulge_q = fit_bulge_q
+
+                    # Fit files store position angles as radians.
+                    bulge_beta = fit_bulge_beta*galsim.radians + rot_angle[ind]*galsim.radians
+                    # Half-light radii in files need several corrections:
+                    #    (1) They are in pixels, so we multiply by 0.03" (the coadded pixel scale)
+                    #        to get arcsec.
+                    #    (2) We are rescaling the galaxy sizes by self.size_rescale in order to
+                    #        mimic a fainter galaxy sample in which galaxies are naturally smaller,
+                    #        as described in the handbook.
+                    #    (3) The files give the half-light radius along the major axis, but for
+                    #        GalSim we want the azimuthally-averaged half-light radius, so we
+                    #        multiply by sqrt(q)=sqrt(b/a).
+
+                    bulge_hlr = 0.03*self.size_rescale*np.sqrt(bulge_q)*fit_bulge_hlr
+                    # Fluxes in the files require several corrections:
+                    #    (1) The "flux" values are actually surface brightness at the half-light
+                    #        radius along the major axis.  Thus we need to integrate the
+                    #        surface-brightness profile to get the total flux, which introduces
+                    #        2*pi*(half-light radius)^2 * some Sersic n-dependent fudge factors
+                    #        (Gamma functions, etc.).  The 3.607 in the line below is the Sersic
+                    #        n-dependent factor for n=4.  Note that the full expression is given in
+                    #        the lines of code below for the Sersic-fit profiles.
+                    #    (2) The division by self.size_rescale**2 is just to correct for the fact
+                    #        that the bulge half-light radii have already been decreased by this
+                    #        factor, but that factor wasn't in the original fit profiles and hence
+                    #        should not go into the flux calculation.
+                    #    (3) The division by 0.03**2 is because Claire's fits assumed the images
+                    #        were flux when really they were surface brightness, so her fluxes are
+                    #        too low by 0.03**2.
+                    bulge_flux = \
+                        2.0*np.pi*3.607*(bulge_hlr**2)*fit_bulge_flux/self.size_rescale**2/(0.03**2) 
+
+                    disk_q = fit_disk_q
+                    disk_beta = fit_disk_beta*galsim.radians + rot_angle[ind]*galsim.radians
+                    disk_hlr = 0.03*self.size_rescale*np.sqrt(disk_q)*fit_disk_hlr # arcsec
+                    # Here the 1.901 is the Sersic n-dependent factor described above, but for n=1.
                     disk_flux = \
-                        2.0*np.pi*1.901*(disk_hlr**2)*params[0]/self.size_rescale**2/(0.03**2)
+                        2.0*np.pi*1.901*(disk_hlr**2)*fit_disk_flux/self.size_rescale**2/(0.03**2)
 
                     record["gal_sn"] = approx_sn_gal[all_indices[ind]]
                     bulge_frac = bulge_flux / (bulge_flux + disk_flux)
@@ -629,18 +658,25 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 else:
                     # Make a single Sersic model instead
                     params = self.fit_catalog[all_indices[ind]].field('sersicfit')
-                    gal_n = params[2]
+                    (fit_gal_flux, fit_gal_hlr, fit_gal_n, fit_gal_q, _, _, _, fit_gal_beta) = \
+                        params
+
+                    gal_n = fit_gal_n
                     # Fudge this if it is at the edge.  Now that GalSim #325 and #449 allow Sersic n
                     # in the range 0.3<=n<=6, the only problem is that Claire occasionally goes as
                     # low as n=0.2.
-                    if gal_n < 0.3: gal_n = 0.3
-                    gal_q = params[3]
-                    gal_beta = params[7]*galsim.radians + rot_angle[ind]*galsim.radians
-                    gal_hlr = 0.03*self.size_rescale*np.sqrt(gal_q)*params[1]
+                    if gal_n < 0.3: fit_gal_n = 0.3
+                    gal_q = fit_gal_q
+                    gal_beta = fit_gal_beta*galsim.radians + rot_angle[ind]*galsim.radians
+                    gal_hlr = 0.03*self.size_rescale*np.sqrt(gal_q)*fit_gal_hlr
+                    # Below is the calculation of the full Sersic n-dependent quantity that goes
+                    # into the conversion from surface brightness to flux, which here we're calling
+                    # 'prefactor'.  In the n=4 and n=1 cases above, this was precomputed, but here
+                    # we have to calculate for each value of n.
                     tmp_ser = galsim.Sersic(gal_n, half_light_radius=1.)
                     gal_bn = (1./tmp_ser.getScaleRadius())**(1./gal_n)
                     prefactor = gal_n * _gammafn(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
-                    gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*params[0]/self.size_rescale**2/0.03**2
+                    gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*fit_gal_flux/self.size_rescale**2/0.03**2
                     record["gal_sn"] = approx_sn_gal[all_indices[ind]]
                     record["bulge_n"] = gal_n
                     record["bulge_hlr"] = gal_hlr
