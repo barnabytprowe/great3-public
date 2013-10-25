@@ -846,8 +846,8 @@ class SimBuilder(object):
                     max = float(stamp.array.shape[0]+1)
                     x_pix, y_pix = numpy.meshgrid(numpy.arange(min, max, 1.),
                                                   numpy.arange(min, max, 1.))
-                    dx_pix = x_pix - res.moments_centroid.x
-                    dy_pix = y_pix - res.moments_centroid.y
+                    dx_pix = x_pix - (res.moments_centroid.x - (res.image_bounds.xmin-1))
+                    dy_pix = y_pix - (res.moments_centroid.y - (res.image_bounds.ymin-1))
                     sn_size = numpy.sum(stamp.array**2 * (dx_pix**2 + dy_pix**2)) / \
                         numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
                                    numpy.sum(stamp.array**2 * (dx_pix**2 + dy_pix**2)**2))
