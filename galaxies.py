@@ -361,9 +361,10 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # variance post-whitening was estimated in a preprocessing step that didn't include some
         # details of the real simulations.
         # And yet another set of cuts: to avoid postage stamps with poor masking of nearby objects /
-        # shredding of the central object, we apply cuts on the minimum distance from the center
-        # of the image to a masked pixel in pixels, and on the flux in the nearest masked region
-        # compared to the peak image flux.
+        # shredding of the central object, we exclude objects that have a mask pixel nearer to the
+        # center than 11 pixels (0.33").  And we exclude objects whose nearest masked pixel has a
+        # flux brighter than 0.2 * the brightest unmasked pixel.  
+        # The `mask_cond` array is True for all objects that are not excluded.
         e1 = self.shapes_catalog.field('e1')
         e2 = self.shapes_catalog.field('e2')
         e_test = np.sqrt(e1**2 + e2**2)
