@@ -855,7 +855,7 @@ class SimBuilder(object):
                     sn_ellip_gauss = -10.
                     sn_size = -10.
                 print 'SN: ', record['gal_sn'], actual_sn_g08, sn_ellip_gauss, sn_size, \
-                    record['bulge_n'], record['bulge_hlr']
+                    record['bulge_n'], record['bulge_hlr'], record['bulge_flux']
             self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, current_var)
 
         self.mapper.write(galaxy_image, "image", epoch_parameters)
