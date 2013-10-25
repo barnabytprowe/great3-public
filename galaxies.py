@@ -464,7 +464,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # galaxy builders don't have a variable_psf attribute).  Much of the code below comes
             # from shear.py, which does operationally the same thing to the cosmological shear
             # field.
-            n_subfields_per_field = constants.n_subfields_per_field[self.shear_type][True]
+            n_subfields_per_field = constants.n_subfields_per_field['variable'][True]
             if self.cached_ps is None or \
                     parameters["galaxy"]["subfield_index"] % n_subfields_per_field == 0:
                 # Calculate the grid_spacing as this impacts the scaling of the PS
