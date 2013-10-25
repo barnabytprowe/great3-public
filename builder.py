@@ -802,19 +802,48 @@ class SimBuilder(object):
             else:
                 current_var = 0.
 
-            # The lines below are diagnostics that can be used
-            # to check that the actual S/N is fairly consistent with the estimated one.
+            # The lines below are diagnostics that can be used to check that the actual S/N is
+            # fairly consistent with the estimated one.
             if False:
-                actual_sn = \
+                # G08 is the best possible S/N estimate:
+                #   S = sum W(x,y) I(x,y) / sum W(x,y)
+                #   N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+                # with W(x,y) = I(x,y), so
+                #   S = sum I^2(x,y) / sum I(x,y)
+                #   N^2 = noise variance * sum I^2(x,y) / (sum I(x,y))^2
+                #   S/N = sqrt(sum I^2(x,y)) / sqrt(noise variance)
+                actual_sn_g08 = \
                     numpy.sqrt((stamp.array**2).sum() / float(epoch_parameters['noise']['variance']))
                 try:
                     res = stamp.FindAdaptiveMom()
                     aperture_noise = numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
                                                     2.*numpy.pi*(res.moments_sigma**2))
+                    # The number below is the flux S/N within an elliptical Gaussian filter.  My
+                    # guess is that it will be somewhere below the optimal actual_sn_g08 but not too
+                    # horrible.
                     sn_ellip_gauss = res.moments_amp / aperture_noise
+                    # We also want to estimate the S/N on the size, using an unweighted estimator
+                    #   S = Sum I(x,y) [(x-x_c)^2 + (y-y_c)^2]
+                    #   N^2 = (noise variance) * Sum [(x-x_c)^2 + (y-y_c)^2]^2
+                    # For this, we use the centroid estimate from the adaptive moments.  But we also
+                    # have to set up the grid of x, y values for the postage stamp, according to the
+                    # same exact convention as used for adaptive moments, which is that the center
+                    # of the first pixel is 1.
+                    if stamp.array.shape[0] != stamp.array.shape[1]:
+                        raise RuntimeError
+                    min = 1.
+                    max = float(stamp.array.shape[0]+1)
+                    x_pix, y_pix = numpy.meshgrid(numpy.arange(min, max, 1.),
+                                                  numpy.arange(min, max, 1.))
+                    dx_pix = x_pix - res.moments_centroid.x
+                    dy_pix = y_pix - res.moments_centroid.y
+                    sn_size = numpy.sum(stamp.array * (dx_pix**2 + dy_pix**2)) / \
+                        numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
+                                       numpy.sum((dx_pix**2 + dy_pix**2)**2))
                 except:
                     sn_ellip_gauss = -10.
-                print 'Claimed, actual, ellip SN: ', record['gal_sn'], actual_sn, sn_ellip_gauss
+                    sn_size = -10.
+                print 'SN: ', record['gal_sn'], actual_sn_g08, sn_ellip_gauss, sn_size
             self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, current_var)
 
         self.mapper.write(galaxy_image, "image", epoch_parameters)
