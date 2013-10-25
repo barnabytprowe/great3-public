@@ -245,7 +245,12 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # function.
             self.original_sn = self.im_selection_catalog.field('sn_ellip_gauss')
             # If it's a ground-based catalog, set up LookupTables to interpolate the minimum
-            # variance post-whitening between FWHM values:
+            # variance post-whitening between FWHM values.  It is important to maintain consistency
+            # between the FWHM values used for the precomputation of minimum variances and the
+            # `fwhm_arr` that we build here.  The FWHM values that were used are specified as
+            # command-line arguments to the run_props.py script in inputs/galdata/ in the
+            # great3-private repository; to see which arguments were used and therefore FWHM values
+            # adopted, see the files pbs_props*.sh in that directory.
             if self.obs_type == "ground":
                 fwhm_arr = self.min_ground_fwhm + self.ground_dfwhm*np.arange(self.ground_nfwhm)
                 self.noise_min_var = []
