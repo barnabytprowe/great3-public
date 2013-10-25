@@ -828,7 +828,18 @@ class SimBuilder(object):
                     # For this, we use the centroid estimate from the adaptive moments.  But we also
                     # have to set up the grid of x, y values for the postage stamp, according to the
                     # same exact convention as used for adaptive moments, which is that the center
-                    # of the first pixel is 1.
+                    # of the first pixel is 1.  I do not like this estimator because if we make the
+                    # postage stamp larger (with white space) then S doesn't change but N^2
+                    # changes.  So let's instead use a weighted version:
+                    #   S = Sum W(x,y) I(x,y) [(x-x_c)^2 + (y-y_c)^2] / Sum W(x,y)
+                    #   N^2 = (noise variance) * Sum W^2(x,y) [(x-x_c)^2 + (y-y_c)^2]^2 /
+                    #                                      (Sum W(x,y))^2
+                    # Use W(x,y) = I(x,y),
+                    #   S = Sum I(x,y)^2 [(x-x_c)^2 + (y-y_c)^2] / Sum I(x,y)
+                    #   N^2 = (noise variance) * Sum I^2(x,y) [(x-x_c)^2 + (y-y_c)^2]^2 /
+                    #                                      (Sum I(x,y))^2
+                    #   S/N = Sum I(x,y)^2 [(x-x_c)^2 + (y-y_c)^2] /
+                    #         sqrt[(noise variance) * Sum I^2(x,y) [(x-x_c)^2 + (y-y_c)^2]^2]
                     if stamp.array.shape[0] != stamp.array.shape[1]:
                         raise RuntimeError
                     min = 1.
@@ -837,13 +848,14 @@ class SimBuilder(object):
                                                   numpy.arange(min, max, 1.))
                     dx_pix = x_pix - res.moments_centroid.x
                     dy_pix = y_pix - res.moments_centroid.y
-                    sn_size = numpy.sum(stamp.array * (dx_pix**2 + dy_pix**2)) / \
+                    sn_size = numpy.sum(stamp.array**2 * (dx_pix**2 + dy_pix**2)) / \
                         numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
-                                       numpy.sum((dx_pix**2 + dy_pix**2)**2))
+                                   numpy.sum(stamp.array**2 * (dx_pix**2 + dy_pix**2)**2))
                 except:
                     sn_ellip_gauss = -10.
                     sn_size = -10.
-                print 'SN: ', record['gal_sn'], actual_sn_g08, sn_ellip_gauss, sn_size
+                print 'SN: ', record['gal_sn'], actual_sn_g08, sn_ellip_gauss, sn_size, \
+                    record['bulge_n'], record['bulge_hlr']
             self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, current_var)
 
         self.mapper.write(galaxy_image, "image", epoch_parameters)
