@@ -16,7 +16,7 @@ import great3sims
 # output.
 root = '/lustre/rmandelb/great3-v7'
 n_config_per_branch = 5 # Number of config files to be run per branch.
-subfield_min = 0 # NOTE CHANGE: SHOULD BE ZERO TO DO AN ENTIRE BRANCH.
+subfield_min = 0
 subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
 gal_dir = '/lustre/rmandelb/great3_fit_data'
 ps_dir = '/home/rmandelb/git/great3-private/inputs/ps/tables'
