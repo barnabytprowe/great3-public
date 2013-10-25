@@ -1,4 +1,7 @@
 # Utilities needed for mass-production of sims.
+import time
+import subprocess
+import re
 
 def pbs_script_python(filename, jobname):
     """A utility to write a PBS script to filename, with the given jobname for python.
@@ -125,8 +128,6 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
 def check_done(process_str, sleep_time=60):
     """Check the PBS queue to see if there are any processes that contain process_str in the name.
     """
-    import time
-    import subprocess
     ind_found = 1000
     while ind_found > 0:
         if ind_found < 1000:
@@ -141,9 +142,6 @@ def check_njobs(process_str, sleep_time=60, n_jobs=10):
     """Check the PBS queue to see how many processes that contain process_str in the name; wait
     until it is <n_jobs before returning.
     """
-    import time
-    import subprocess
-    import re
     n_found = 1000
     while n_found >= n_jobs:
         if n_found < 1000:
