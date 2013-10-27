@@ -346,7 +346,8 @@ class ConstPSFBuilder(PSFBuilder):
             # Figure out how large a pad_factor will make the Optical PSF image size be no larger
             # than the size of the postage stamp onto which we will eventually draw it.
             # First repeat some of the calculations that OpticalPSF does to determine its
-            # image size.
+            # image size.  The 0.005 in the denominator is the value of alias_threshold that we use
+            # as the default in GalSim.
             twoR = 2. * lam_over_diam[i_epoch] / (
                     0.005 * 0.5 * np.pi * np.pi * (1.-obscuration[i_epoch]) )
             # This is the size in arcsec that OpticalPSF wants to create its image.
@@ -818,7 +819,8 @@ class VariablePSFBuilder(PSFBuilder):
         # Figure out how large a pad_factor will make the Optical PSF image size be no larger
         # than the size of the postage stamp onto which we will eventually draw it.
         # First repeat some of the calculations that OpticalPSF does to determine its
-        # image size.
+        # image size.  The 0.005 in the denominator is the value of alias_threshold that we use
+        # as the default in GalSim.
         twoR = 2. * self.lam_over_diam[self.obs_type] / (
                 0.005 * 0.5 * np.pi * np.pi * (1.-self.obscuration[self.obs_type]) )
         # This is the size in arcsec that OpticalPSF wants to create its image.
