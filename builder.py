@@ -541,6 +541,7 @@ class SimBuilder(object):
             'dir' : self.mapper.dir,
 
             'nfiles' : self.n_epochs*(subfield_max - subfield_min + 1),
+            'noclobber' : True,
         }
 
         # The image field:
@@ -706,7 +707,8 @@ class SimBuilder(object):
             'dir' : self.mapper.dir,
             'nimages' : self.n_epochs*(subfield_max - subfield_min + 1),
             # The star_test images are all small, so parallelize at the file level.
-            'nproc' : self.nproc
+            'nproc' : self.nproc,
+            'noclobber' : True
         }
 
         # The image field:
