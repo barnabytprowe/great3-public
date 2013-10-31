@@ -15,9 +15,7 @@ import great3sims
 # Define some basic parameters.  This includes some system-dependent things like directories for
 # output.
 root = '/physics/rmandelb/great3-v8'
-n_config_per_branch = 10 # Number of config files to be run per branch.  Warning: if this number
-# does not evenly divide subfield_max-subfield_min+1, then we will leave out some subfields.  Need
-# to adjust code to not have this problem.
+n_config_per_branch = 10 # Number of config files to be run per branch.
 subfield_min = 0
 subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
 gal_dir = '/home/rmandelb.proj/data-shared/great3_fit_data'
