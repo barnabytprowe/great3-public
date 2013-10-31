@@ -29,6 +29,9 @@ package_only = False # only do the packaging and nothing else
 do_images = True  # Make images or not?  If False with package_only also False, then just skip the
                   # image-making step: remake catalogs but do not delete files / dirs with images,
                   # then package it all up.
+do_gal_images = True # Make galaxy images?  If do_images = True, then do_gal_images becomes
+# relevant; it lets us only remake star fields if we wish (by having do_images = True, do_gal_images
+# = False).
 preload = False # preloading for real galaxy branches - irrelevant for others
 # Do we want to be nice to others in the queue by rationing the number of image generation scripts
 # to be submitted simultaneously?  Or just submit them all, perhaps because there are so few that it
@@ -86,8 +89,9 @@ if not package_only:
             mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max,
                                              experiment, obs_type, shear_type, gal_dir, ps_dir,
                                              seed, n_config_per_branch, preload, my_step=1)
-        for config_name in new_config_names:
-            all_config_names.append(config_name)
+        if do_gal_images:
+            for config_name in new_config_names:
+                all_config_names.append(config_name)
         for psf_config_name in new_psf_config_names:
             all_config_names.append(psf_config_name)
         for star_test_config_name in new_star_test_config_names:
@@ -119,8 +123,8 @@ if not package_only:
         t1 = time.time()
         prefix2 = 'g3_step2_'
         for config_name in all_config_names:
-            type, _ = os.path.splitext(config_name)
-            pbs_file = prefix2 + type+'.sh'
+            file_type, _ = os.path.splitext(config_name)
+            pbs_file = prefix2 + file_type+'.sh'
             mass_produce_utils.pbs_script_yaml(pbs_file, config_name, root)
             command_str = 'qsub '+pbs_file
             if queue_nicely:
