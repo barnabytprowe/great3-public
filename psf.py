@@ -346,7 +346,8 @@ class ConstPSFBuilder(PSFBuilder):
             # Figure out how large a pad_factor will make the Optical PSF image size be no larger
             # than the size of the postage stamp onto which we will eventually draw it.
             # First repeat some of the calculations that OpticalPSF does to determine its
-            # image size.
+            # image size.  The 0.005 in the denominator is the value of alias_threshold that we use
+            # as the default in GalSim.
             twoR = 2. * lam_over_diam[i_epoch] / (
                     0.005 * 0.5 * np.pi * np.pi * (1.-obscuration[i_epoch]) )
             # This is the size in arcsec that OpticalPSF wants to create its image.
@@ -818,7 +819,8 @@ class VariablePSFBuilder(PSFBuilder):
         # Figure out how large a pad_factor will make the Optical PSF image size be no larger
         # than the size of the postage stamp onto which we will eventually draw it.
         # First repeat some of the calculations that OpticalPSF does to determine its
-        # image size.
+        # image size.  The 0.005 in the denominator is the value of alias_threshold that we use
+        # as the default in GalSim.
         twoR = 2. * self.lam_over_diam[self.obs_type] / (
                 0.005 * 0.5 * np.pi * np.pi * (1.-self.obscuration[self.obs_type]) )
         # This is the size in arcsec that OpticalPSF wants to create its image.
@@ -985,22 +987,23 @@ class VariablePSFBuilder(PSFBuilder):
         field_index = parameters["field_index"]
         psf_parameters = parameters["psf"]
 
-        # Check if there is already a cache in place.  If not, prepare to set one up.  If yes, then
-        # just construct the index we'll use to access it.
-        # This is the index in the list we'll use to save the lists of OpticalPSFModel or
-        # galsim.PowerSpectrum (for atmosphere) objects.  The list index for all subfields/fields
-        # within the field comes from the epoch index.  Once we access based on the list_index, then
-        # we get a list of the results for each tile.
+        # Check if there is already a cache in place and that it's set up for this field.  If not,
+        # set one up.
+        if self.cached_field != field_index:
+            self.cached_field = field_index
+            self.cached_optics = []
+            self.cached_atmos = []
+
+        # The list_index defined here is the index in the list we'll use to save the lists of
+        # OpticalPSFModel or galsim.PowerSpectrum (for atmosphere) objects.  The list index for all
+        # subfields/fields within the field comes from the epoch index.  Once we access the cached
+        # lists self.cached_optics and self.cached_atmos based on the list_index, then we get a list
+        # of the results for each tile.
         list_index = epoch_index
-        if self.cached_field != field_index or len(self.cached_optics) < epoch_index+1:
-            # If it was the first option that triggered this 'if' statement, then we need to reset
-            # all caches to be empty, and change the cached_field to be this field.  Otherwise, the
-            # 'if' statement was triggered because we've hit another epoch for which we have to
-            # build up a cache, in which case none of those things should be done!
-            if self.cached_field != field_index:
-                self.cached_field = field_index
-                self.cached_optics = []
-                self.cached_atmos = []
+
+        # Now, check whether our cache is large enough to include results for this epoch.  If not,
+        # then we have to build up the cache appropriately:
+        if len(self.cached_optics) < epoch_index+1:
 
             # First, do optical PSF stuff, which has to happen regardless of whether it's ground or
             # space.  Try to do this as much as possible in a way that is independent of observation
