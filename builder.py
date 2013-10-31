@@ -375,10 +375,10 @@ class SimBuilder(object):
                         record['xshift'] = sx
                         record['yshift'] = sy
                         # But these numbers are the true positions within the field.
-                        record['x_field_true_deg'] = (constants.image_size_deg-1.) * rng() + \
+                        record['x_field_true_deg'] = constants.image_size_deg * rng() + \
                             epoch_parameters["epoch_offset"][0] * constants.image_size_deg / \
                             constants.nrows
-                        record['y_field_true_deg'] = (constants.image_size_deg-1.) * rng() + \
+                        record['y_field_true_deg'] = constants.image_size_deg * rng() + \
                             epoch_parameters["epoch_offset"][1] * constants.image_size_deg / \
                             constants.ncols
                         # Finally, let's make a S/N value for this star (per epoch).  In other
