@@ -42,6 +42,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
     generation.
     """
     import os
+    import numpy as np
     if my_step == 1:
         with open(filename, "w") as f:
             f.write("import sys\n")
