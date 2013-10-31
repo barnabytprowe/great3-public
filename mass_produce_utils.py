@@ -68,9 +68,13 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
             new_config_names = []
             new_psf_config_names = []
             new_star_test_config_names = []
+            x = np.arange(n_config_per_branch).astype(float)
+            x1 = x+1
+            first_arr = (np.round(subfield_min + (subfield_max-subfield_min+1)*x/n_config_per_branch)).astype(int)
+            last_arr = (np.round(subfield_min + (subfield_max-subfield_min+1)*x1/n_config_per_branch)-1).astype(int)
             for i in range(n_config_per_branch):
-                first = subfield_min + (subfield_max-subfield_min+1)/n_config_per_branch * i
-                last = subfield_min + (subfield_max-subfield_min+1)/n_config_per_branch * (i+1) - 1
+                first = first_arr[i]
+                last = last_arr[i]
                 # Could put nproc setting here.  However, for now we just want to use as many 
                 # processors as we have on that node.
                 nproc = -1
