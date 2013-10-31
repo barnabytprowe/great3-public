@@ -665,7 +665,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                     # Fudge this if it is at the edge.  Now that GalSim #325 and #449 allow Sersic n
                     # in the range 0.3<=n<=6, the only problem is that Claire occasionally goes as
                     # low as n=0.2.
-                    if gal_n < 0.3: fit_gal_n = 0.3
+                    if gal_n < 0.3: gal_n = 0.3
                     gal_q = fit_gal_q
                     gal_beta = fit_gal_beta*galsim.radians + rot_angle[ind]*galsim.radians
                     gal_hlr = 0.03*self.size_rescale*np.sqrt(gal_q)*fit_gal_hlr
