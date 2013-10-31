@@ -140,7 +140,7 @@ def check_done(process_str, sleep_time=60):
         else:
             # otherwise, sleep 1s (just to give the queue time to recognize any jobs that were
             # submitted very recently)
-            time.sleep(1s)
+            time.sleep(1)
         res = subprocess.check_output('qstat')
         # find index of first occurrence of process_str in output of qstat.  Since we want to know
         # that all jobs are done, we don't have to find all occurrences.
