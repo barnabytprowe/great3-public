@@ -709,7 +709,12 @@ class VariablePSFBuilder(PSFBuilder):
     #Old version is commented out.  We use a new version that has only 0.5-0.85
     #freq = (0., 0., 0., 7.5, 19., 20., 17., 13., 9., 5., 3.5, 2., 1., 1., 0.5, 0.0, 0.0)
     freq = (0., 0., 0., 0.0, 0.0, 20., 17., 13., 9., 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-    fwhm_scatter = 0.1 # fractional scatter in FWHM for tiles within a single field
+    fwhm_scatter = 0.05 # fractional scatter in FWHM for tiles within a single field
+    # Impose some additional constraints on values drawn from the distribution, since the values
+    # drawn for the first tile are then used with some scatter for the later tiles, and we don't
+    # want the seeing to regularly be outside of the bounds normally allowed by the distribution.
+    fwhm_min = 0.55
+    fwhm_max = 0.75
     # Later on we will draw from this distribution using:
     # dd = galsim.DistDeviate(uniform_deviate, 
     #                        function=galsim.LookupTable(fwhm_arcsec, freq, interpolant='linear'))
@@ -841,7 +846,10 @@ class VariablePSFBuilder(PSFBuilder):
                 if self.obs_type == "ground":
                     # Some atmosphere parameters: PSF FWHM, P(k) numbers
                     if i_tile == 0:
-                        atmos_psf_fwhm[i_tile, i_epoch] = dist_deviate()
+                        test_val = dist_deviate()
+                        while test_val < self.fwhm_min or test_val > self.fwhm_max:
+                            test_val = dist_deviate()
+                        atmos_psf_fwhm[i_tile, i_epoch] = test_val
                     else:
                         atmos_psf_fwhm[i_tile, i_epoch] = atmos_psf_fwhm[0, i_epoch] * \
                             (1.0 + self.fwhm_scatter*gaussian_deviate())
