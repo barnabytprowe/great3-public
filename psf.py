@@ -714,8 +714,8 @@ class VariablePSFBuilder(PSFBuilder):
     # Impose some additional constraints on values drawn from the distribution, since the values
     # drawn for the first tile are then used with some scatter for the later tiles, and we don't
     # want the seeing to regularly be outside of the bounds normally allowed by the distribution.
-    fwhm_min = 0.55
-    fwhm_max = 0.77
+    fwhm_min = 0.5
+    fwhm_max = 0.86
     # Later on we will draw from this distribution using:
     # dd = galsim.DistDeviate(uniform_deviate, 
     #                        function=galsim.LookupTable(fwhm_arcsec, freq, interpolant='linear'))
