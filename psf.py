@@ -854,8 +854,9 @@ class VariablePSFBuilder(PSFBuilder):
                     else:
                         test_val = gaussian_deviate()
                         while test_val < -2. or test_val > 2.:
-                            atmos_psf_fwhm[i_tile, i_epoch] = atmos_psf_fwhm[0, i_epoch] * \
-                                (1.0 + self.fwhm_scatter*test_val)
+                            test_val = gaussian_deviate()
+                        atmos_psf_fwhm[i_tile, i_epoch] = atmos_psf_fwhm[0, i_epoch] * \
+                            (1.0 + self.fwhm_scatter*test_val)
                     atmos_psf_pk_amp[i_tile, i_epoch] = \
                         (uniform_deviate()*(self.max_A-self.min_A) + self.min_A) * (20./t_exp)
                     atmos_psf_pk_theta0[i_tile, i_epoch] = \
