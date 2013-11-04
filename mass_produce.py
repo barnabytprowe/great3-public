@@ -14,15 +14,15 @@ import great3sims
 
 # Define some basic parameters.  This includes some system-dependent things like directories for
 # output.
-root = '/physics/rmandelb/great3-v8'
+root = '/physics/rmandelb/great3-v11'
 n_config_per_branch = 10 # Number of config files to be run per branch.
 subfield_min = 0
 subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
-gal_dir = '/home/rmandelb.proj/data-shared/great3_fit_data'
+gal_dir = '/lustre/rmandelb/great3_fit_data'
 ps_dir = '/home/rmandelb/git/great3-private/inputs/ps/tables'
-seed = 2718
-delta_seed = 1000 # amount to increment seed for each successive branch
-sleep_time = 10 # seconds between checks for programs to be done
+seed = 137
+delta_seed = 137 # amount to increment seed for each successive branch
+sleep_time = 30 # seconds between checks for programs to be done
 package_only = False # only do the packaging and nothing else
 do_images = True  # Make images or not?  If False with package_only also False, then just skip the
                   # image-making step: remake catalogs but do not delete files / dirs with images,
@@ -36,14 +36,14 @@ preload = False # preloading for real galaxy branches - irrelevant for others
 # isn't rude to do them all at once?  If `queue_nicely = False`, then dump them all at once.  If
 # `queue_nicely` is set to some number, it means that number is the maximum number to have in the
 # queue at once.
-queue_nicely = 10
+queue_nicely = 13
 
 # Set which branches to test.  For now we do the control experiment (all four branches), but nothing
 # else.
 experiments = [
     #'control',
-    'real_galaxy',
-    #'variable_psf',
+    #'real_galaxy',
+    'variable_psf',
     #'multiepoch',
     'full',
 ]
