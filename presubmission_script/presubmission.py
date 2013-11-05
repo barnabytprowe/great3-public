@@ -2,7 +2,7 @@
 
 #    presubmission.py: a script to generate summary statistics for submission
 #    to the GREAT3 Challenge (http://great3challenge.info)
-#    Copyright (C) Melanie Simet & the GREAT3 Team:
+#    Copyright (C) 2013  Melanie Simet & the GREAT3 Team:
 #    https://github.com/barnabytprowe/great3-public
 #
 #    This program is free software: you can redistribute it and/or modify
