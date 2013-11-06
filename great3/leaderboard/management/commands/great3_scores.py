@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from leaderboard.models import Entry, PLACEHOLDER_SCORE, recompute_scoring
 from great3.settings import installation_base
+from django.core.mail import mail_admins
 import logging
 import numpy as np
 import os
@@ -48,7 +49,20 @@ USEBINS = evaluate.USEBINS          # Take a subset of bins, ignoring extreme sm
 # These numbers are stored in the great3-private/server/great3/evaluate.py module, and should be
 # changed or updated there if necessary.
 
+MAIL_SUBJECT = "[Great3] New entry {entry} by {team} on {board} scored {score}"
+MAIL_MESSAGE = """Dear Great-3 People,
 
+A new entry has been made to the Great-3 leaderboards!
+It looked something like this:
+
+Team: {team}
+Method: {method}
+Name: {entry}
+Score: {score}
+Date: {date}
+Notes: {notes}
+
+"""
 class Command(BaseCommand):
     args = ''
     help = 'Checks for entries that do not have a score yet and processes them'
@@ -88,4 +102,9 @@ class Command(BaseCommand):
             outfile.write('%s\t%s\t%r\t%s\n' % (entry.name,filename,entry.score,datestamp))
             entry.save()
             outfile.close()
+            subject = MAIL_SUBJECT.format(entry=entry, board=entry.board, team=entry.team, 
+                score=entry.score)
+            message = MAIL_MESSAGE.format(entry=entry, board=entry.board, team=entry.team, 
+                score=entry.score, method=entry.method, notes=entry.notes, date=datestamp)
+            mail_admins(subject, message, fail_silently=True)
         recompute_scoring()
