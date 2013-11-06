@@ -88,4 +88,4 @@ class Command(BaseCommand):
             outfile.write('%s\t%s\t%r\t%s\n' % (entry.name,filename,entry.score,datestamp))
             entry.save()
             outfile.close()
-            recompute_scoring()
+        recompute_scoring()
