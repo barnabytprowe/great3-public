@@ -232,9 +232,6 @@ class VariableShearBuilder(ShearBuilder):
             # Run buildGrid() to get the shears and convergences on this grid.  However, we also
             # want to effectively change the value of k_min that is used for the calculation, to get
             # a reasonable shear correlation function on large scales without excessive truncation.
-            # TODO: check that this value of kmin_factor is adequate!  Right now it is determined by
-            # the fact that our grid gives ell_min=36, and the iCosmo outputs only go to ell=10, so
-            # using kmin_factor>3 would require some extrapolation.
             # We also define a grid center such that the position of the first pixel is (0,0).
             grid_center = 0.5 * (constants.image_size_deg - grid_spacing)
             self.cached_ps.buildGrid(grid_spacing = grid_spacing,
