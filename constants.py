@@ -7,7 +7,7 @@ public_dir = "/great3/tmp/unpacked/beta/public"
 # Experiments, obs_types and shear_types to validate
 experiments = [
     "control",
-    "real_gal",
+    "real_galaxy",
     "variable_psf",
     "multiepoch",
     "full"
