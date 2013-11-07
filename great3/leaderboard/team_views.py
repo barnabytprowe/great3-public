@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django import forms
 from django.conf import settings
+from django.utils.safestring import mark_safe
 
 class TeamDetailsChangeForm(forms.Form):
     notes = forms.CharField(max_length=512,widget = forms.Textarea)
@@ -43,7 +44,7 @@ def setup(request):
 
 
 class TeamCreationForm(forms.ModelForm):
-	tainted = forms.BooleanField(label="Tick if any Great-3 Exective Team members will contribute to team entries:", required=False)
+	tainted = forms.BooleanField(label=mark_safe("Tick if any Great-3 <STRONG>Executive Committee members have compromised this team</STRONG> with privileged information or worked on the method while on the EC. (Ask the EC member him/herself if you are not sure what the answer should be.)"), required=False)
 
 	class Meta:
 		model = Team

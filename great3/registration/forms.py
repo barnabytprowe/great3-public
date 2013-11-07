@@ -8,7 +8,8 @@ from django.contrib.auth.models import User
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-from captcha.fields import ReCaptchaField
+if settings.RECAPTCHA_PRIVATE_KEY:
+    from captcha.fields import ReCaptchaField
 
 
 # I put this on all required fields, because it's easier to pick up
