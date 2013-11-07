@@ -76,6 +76,7 @@ def check_all(root_dir, experiments=constants.experiments, obs_types=constants.o
     print "Found FITS files for experiments "+str(found_exps)
     print "Found FITS files for obs_types "+str(found_obs)
     print "Found FITS files for shear_types "+str(found_shears)
+    print "Found "+str(len(good))+" FITS files total"
     if len(bad) > 0:
         retlist = bad
         message = "The following files failed FITS verify:\n"+str(bad)
