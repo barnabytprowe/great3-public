@@ -1,0 +1,32 @@
+{% extends "leaderboard/table_page.html" %}
+
+{% block subtitle %}Overall Leaderboard{% endblock %}
+
+{% block header_script %}
+	<script>
+		$(document).ready(function() {$("#teamTable").tablesorter({widgets:['zebra']}); } ); 
+	</script>
+{% endblock %}
+
+{% block content %}
+    <h2>Overall Leaderboard</h2>
+    <TABLE id="teamTable" class="tablesorter" >
+    	<THEAD>
+    		<TH>Name</TH>
+    		<TH>Notes</TH>
+            <TH>Score</TH>
+            <TH>Number of entries</TH>
+    	</THEAD>
+    	<TBODY>
+    		<TR>
+		        {% for team in teams %}
+    			<TD><A href="{% url leaderboard.team_views.detail team.id %}">{{ team.name }} </A></TD>
+    			<TD> {{ team.notes }} </TD>
+                <TD> {{ team.score_text }} </TD>
+                <TD> {{ team.number_entries }} </TD>
+    		</TR>
+        {% endfor %}
+    </TBODY>
+    </TABLE>
+{% endblock %}
+

@@ -1,0 +1,6 @@
+{% extends "leaderboard/base.html" %}
+{% block title %}Thank you for your submission{% endblock %}
+{% block content %}
+<P> Thank you for your submission.  It is being processed. Scores are calculated every 10 minutes. </P>
+<P><A href="{% url leaderboard.board_views.detail board_id  %}">Return to leaderboard</A>
+{% endblock %}

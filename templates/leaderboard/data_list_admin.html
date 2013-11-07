@@ -1,0 +1,12 @@
+{% extends "leaderboard/data_list.html" %}
+{% block admin_content %} 
+<H4> Super-secret admin data</H4>
+<P>
+	Additional admin-only data (catalogs) available here:
+</P>
+	<UL>
+	{% for admin_file in admin_files %}
+	<LI><A href="{% url leaderboard.data_views.admin_file admin_file.filename %}">{{admin_file.filename}}</A></LI>
+	{% endfor %}
+	</UL>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "leaderboard/base.html" %}
+{% block subtitle %} Main Page {% endblock %}
+{% block content %} 
+<H2>Welcome to the Great3 Leaderboard</H2>
+<P>Great3 is a data analysis challenge for <a href="http://en.wikipedia.org/wiki/Weak_gravitational_lensing">Weak Gravitational Lensing<a> cosmology.  Participants are given a large number of simulated images of distant galaxies and are challenged to compute and submit statistics about the underlying distortions that have affected the images.<P>
+<H4>Information</H4>
+<P>This site is where challenge data can be downloaded and results submitted.  For information on the challenge, see these sources:</P>
+<UL>
+	<LI> The <a href="http://www.great3challenge.info/">main challenge site</a> explains the timeline and background of the challenge</LI>
+	<LI> Sign up to our <a href="https://lists.andrew.cmu.edu/mailman/listinfo/great3-participants">mailing list</a>. </LI>
+	<LI> The <a href="http://arxiv.org/abs/1308.4982">challenge handbook</a> explains the details of the challenge </LI>
+	<LI>Public challenge code is kept in our <a href="https://github.com/barnabytprowe/great3-public">GitHub repository</a>. </LI>
+	<LI>If you have questions, <a href="https://github.com/barnabytprowe/great3-public/wiki/Frequently-Asked-Questions">see our FAQ</a>.
+		<!-- You can also <a href="https://github.com/barnabytprowe/great3-public/issues">create an issue</a> with new questions or problems. -->
+	</LI>
+	<LI>For private questions of anything not addressed elsewhere, please <a href="mailto:challenge@great3challenge.info">email us</a>.</LI>
+</UL>
+<H4>Getting Started</H4>
+
+<P><A href='{% url leaderboard.data_views.index %}'> Get the data</A></P>
+<P><A href='{% url leaderboard.board_views.index %}'> See the leaderboards</A> (or submit a new entry to one of them)</P>
+<P><A href='{% url leaderboard.team_views.index %}'> See the teams</A></P>
+{% if winners|length == 0 %}
+<P>No entries have been scored yet so there is no current winner.</P>
+{% elif winners|length == 1 %}
+{% with winners|first as winner %}
+<P> Team <A href="{% url leaderboard.team_views.detail winner.id %}">  {{ winner }} </A> is in the lead with {{score}} points{{tiebreak}}!</P>
+{% endwith %}
+{% else %}
+<P> These teams are sharing the lead with {{score}} points! 
+<UL>
+	{% for team in winners %}
+	<LI> <A href="{% url leaderboard.team_views.detail team.id %}">  {{ team }} </A> </LI>
+	{% endfor %}
+</UL>
+</P>
+{% endif %}
+{% block login_note %} {% endblock %}
+{% endblock %}

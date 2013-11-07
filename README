@@ -1,0 +1,60 @@
+Pre-requisites
+
+Django 1.4 (available in pip) 
+NumPy for scoring
+
+Running on a local machine
+--------------------------
+To run on a local machine:
+cd great3
+./reset
+
+You will be prompted to set a password for a super-user called jaz.  Pick 
+anything.
+
+You can then open the homepage on
+http://127.0.0.1:8000/
+
+If you want you can log in as "jaz" with the password you just created, or one of 
+the other pre-created users : "mike", "barney", or "rachel".  In each case the 
+password is just the username.
+
+You can then explore the site and submit entries to exising leaderboards!
+
+New Users
+---------
+From the login tab you have the option of creating new users.  The email that
+would be sent to the new user on creation is stored as a text file in 
+server/emails, until we connect to a real SMTP server.  We can customize new 
+user creation easily if, for example, we wanted to ask for full names, 
+institutions, etc.
+
+Admin
+-----
+
+The admin site (which only the super user jaz can access)  is at
+http://127.0.0.1:8000/admin.  This is where we will create new leaderboards.
+
+Scoring
+-------
+
+The scoring of entries will be done using a cron job every few minutes which checks
+for new entries and then computes their scores.  This is an external process so 
+that the site does not hang when processing.  The command to be run (from the  
+server/great3 dir) is:
+
+python manage.py great3_scores
+
+Initially the scores were random, until the metric code was ready.
+
+Deployment
+----------
+Things that were done before deploying:
+ - remove the initial yaml data 
+ - https://docs.djangoproject.com/en/1.4/howto/deployment/wsgi/modwsgi/
+ - change the secret key (settings.py)
+ - set the admin user (settings.py)
+ - set the database settings in great3/settings.py to correct (e.g. MySQL)
+   values (settings.py)
+ - change the email backend (settings.py)
+ - update the site settings in the admin controls

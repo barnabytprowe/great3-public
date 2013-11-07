@@ -1,0 +1,29 @@
+{% extends "registration/base.html" %}
+{% block content %}
+<P>{{login_text}}</P>
+{% if form.errors %}
+<p>Your username and password didn't match. Please try again.</p>
+{% endif %}
+<H3>Login</H3>
+
+<form method="post" action="{% url django.contrib.auth.views.login %}">
+{% csrf_token %}
+<table>
+<tr>
+    <td>{{ form.username.label_tag }}</td>
+    <td>{{ form.username }}</td>
+</tr>
+<tr>
+    <td>{{ form.password.label_tag }}</td>
+    <td>{{ form.password }}</td>
+</tr>
+</table>
+
+<input type="submit" value="login" />
+<input type="hidden" name="next" value="{{ next }}" />
+</form>
+<H3>Or</H3>
+<P><A href="{% url registration_register %}">Create a new account</A></P>
+<P><A href="{% url django.contrib.auth.views.password_reset %}">Reset account password</A></P>
+
+{% endblock %}

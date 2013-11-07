@@ -1,0 +1,8 @@
+{% extends "leaderboard/base.html" %}
+{% block subtitle %} Request join {% endblock %}
+
+{% block content %} 
+
+<P>An email has been sent to the creator of team <A href="{% url leaderboard.team_views.detail team.id %}">{{team}}</A>.  You will be notified by email if you are accepted into the team.</P>
+
+{% endblock %}
