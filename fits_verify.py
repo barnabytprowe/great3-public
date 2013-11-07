@@ -8,7 +8,7 @@ sys.path.append("..")
 import great3sims.mapper
 
 
-def file_good(filename, fitsverify_exec="fitsverify", silent=True):
+def file_good(filename, fitsverify_exec="/usr/local/bin/fitsverify", silent=True):
     """Run fitsverify on the given `filename`.
 
     @param fitsverify_exec Executable file for fitsverify (default=`fitsverify`).
