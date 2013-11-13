@@ -494,10 +494,10 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 if constants.nrows != constants.ncols:
                     raise NotImplementedError("Currently variable shear grids require nrows=ncols")
 
-                # Run buildGrid() to get the shears and convergences on this grid.  However, we also
-                # want to effectively change the value of k_min that is used for the calculation, to
-                # get a reasonable shear correlation function on large scales without excessive
-                # truncation. 
+                # Run buildGrid() to get the shears and convergences on this grid.  We use a value
+                # of kmax_factor that is relatively large, motivated by tests that suggested that
+                # B-mode shape noise was not as effective as we need it to be until large values
+                # were chosen.
                 grid_center = 0.5 * (constants.image_size_deg - grid_spacing)
                 self.cached_ps.buildGrid(grid_spacing = grid_spacing,
                                          ngrid = n_grid,
