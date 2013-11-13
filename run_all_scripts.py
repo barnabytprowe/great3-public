@@ -53,7 +53,7 @@ for experiment, obs_type, shear_type in branches:
     pbs_name = prefix1+e+o+s
     # Now make the script names by looping over the number of configs
     for i_config in range(n_config_per_branch):
-        script_name = pbs_name + '_psf_%03d'%i_config + '.sh'
+        script_name = pbs_name + '_psf_%0dd'%i_config + '.sh'
         print script_name
         all_script_names.append(script_name)
 n_scripts = len(all_script_names)
