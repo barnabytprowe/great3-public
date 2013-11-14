@@ -12,10 +12,13 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import constants
 sys.path.append("..")
-import great3sims.mapper
+try:
+    import great3sims.mapper
+except:
+    pass    
 from great3sims.constants import n_subfields, n_deep_subfields
 
-nproc = 1
+nproc = 8
 threshhold = 3 # Report deviations >= this many sigma for the means, medians, etc
 n_histogram_bins = 40
 n_curves_per_histogram_plot = 20 
@@ -51,13 +54,42 @@ def draw_histogram(x,cnum=0):
     bins=x[1]
     line_x = bins[:-1]
     # Offset the curves so they're easier to see
-    line_y = 0.1*(cnum%n_curves_per_histogram_plot)+numpy.log(frequencies)
-    plt.step(line_x,line_y,color=colors[cnum%len_colors])
+    line_y = 0.1*(cnum%n_curves_per_histogram_plot)+frequencies
+    plt.step(line_x,line_y,color=colors[cnum%len_colors],where='post')
     # Return to previous numpy floating-point error behavior, ie to warn but not stop
     numpy.seterr(all='warn')
     return
 
-def image_good(filename, expected_size=4800, full_stats = True):
+# So we can pool.map without worrying about kwargs--kind of a hack, but easy
+expected_size = 4800
+
+def image_good_sizeonly(filename):
+    """Run an image check on the given `filename`.
+
+    @return a tuple of 8 values: 3 logical values for correct size, no NaNs, and no zero-valued
+    pixels; then zeros to fill out the array so the return signature is the same as image_good_full.
+    """
+    image_file = pyfits.open(filename)
+    image = image_file[0].data
+    size = image.shape
+    # Do basic FITS-file pixel level checks
+    if size[0]==size[1] and size[0]==expected_size:
+        good_size = True
+    else:
+        good_size = False
+    if numpy.any(numpy.isnan(image)):
+        good_pixels = False
+    else:
+        good_pixels = True
+    if numpy.any(image==0):
+        no_zero_pixels = False
+    else:
+        no_zero_pixels = True
+    image_file.close()
+    return good_size, good_pixels, no_zero_pixels, 0, 0, 0, 0, 0
+     
+
+def image_good_full(filename):
     """Run an image check on the given `filename` and make pixel histograms.
 
     @return a tuple of 8 values: 3 logical values for correct size, no NaNs, and no zero-valued
@@ -80,21 +112,14 @@ def image_good(filename, expected_size=4800, full_stats = True):
         no_zero_pixels = False
     else:
         no_zero_pixels = True
-    if full_stats:
-        # Do a histogram.  So many of the values are near 0 that doing log(pixel value) is more
-        # easily readable; since some values are <1, do log(1+pixel value).
-        histogram = numpy.histogram(numpy.log(1.+image),bins=n_histogram_bins)
-        # Compute some summary statistics.
-        mean = numpy.mean(image)
-        stddev = numpy.std(image)
-        median = numpy.median(image)
-        mad = numpy.median(numpy.abs(image-median))
-    else:
-        histogram = 0
-        mean = 0
-        stddev = 0
-        median = 0
-        mad = 0
+    # Do a histogram.  So many of the values are near 0 that doing log(pixel value) is more
+    # easily readable; since some values are <1, do log(1+pixel value).
+    histogram = numpy.histogram(numpy.log(1.+image),bins=n_histogram_bins)
+    # Compute some summary statistics.
+    mean = numpy.mean(image)
+    stddev = numpy.std(image)
+    median = numpy.median(image)
+    mad = numpy.median(numpy.abs(image-median))
     image_file.close()
     return good_size, good_pixels, no_zero_pixels, mean, stddev, median, mad, histogram
 
@@ -112,8 +137,12 @@ def check_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                   this check and passed the correct-size checks.  If any checks failed, prints all
                   failed filenames and raises a TypeError exception.
     """
-    if full_stats and full_stats_filename:
-        fsf = open(full_stats_filename,'w')
+    if full_stats:
+        image_function = image_good_full
+        if full_stats_filename:
+            fsf = open(full_stats_filename,'w')
+    else:
+        image_function = image_good_sizeonly
     # Set storage lists
     good_sizes = []
     bad_sizes = []
@@ -136,9 +165,9 @@ def check_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                 # directories, which caused the mapper to fail when branches didn't exist.
                 try:
                     mapper = great3sims.mapper.Mapper(root_dir, experiment, obs_type, shear_type)
+                    fitsfiles = glob.glob(os.path.join(mapper.full_dir, "image*.fits"))
                 except:
-                    continue
-                fitsfiles = glob.glob(os.path.join(mapper.full_dir, "image*.fits"))
+                    fitsfiles = glob.glob(os.path.join(root_dir, experiment, obs_type, shear_type, "image*.fits"))
                 fitsfiles.sort() # So they're in numerical order
                 # If any fits files found, check
                 if len(fitsfiles) > 0:
@@ -152,16 +181,16 @@ def check_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                     if obs_type not in found_obs: found_obs.append(obs_type)
                     if shear_type not in found_shears: found_shears.append(shear_type)
                     # Expected image size for the different branches
-                    if obs_type=="space" and not (experiment=="multiepoch"):
+                    global expected_size
+                    if obs_type=="space" and not (experiment=="multiepoch" or experiment=="full"):
                         expected_size=9600
                     else:
                         expected_size=4800
                     if nproc>1:
                         pool = multiprocessing.Pool(nproc)  
-                        results = pool.map(image_good,(fitsfiles,expected_size,full_stats))
+                        results = pool.map(image_function,fitsfiles)
                     else:
-                        results = [image_good(fitsfile,expected_size,full_stats) 
-                                                                for fitsfile in fitsfiles]
+                        results = [image_function(fitsfile) for fitsfile in fitsfiles]
                     # Turn the list of results into usefully-named quantities by
                     # transposing the list of tuples
                     (query_sizes, query_NaNs, query_zeros, 
