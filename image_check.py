@@ -14,9 +14,10 @@ import constants
 sys.path.append("..")
 try:
     import great3sims.mapper
+    from great3sims.constants import n_subfields, n_deep_subfields
 except:
-    pass    
-from great3sims.constants import n_subfields, n_deep_subfields
+    n_subfields = 220
+    n_deep_subfields = 20
 
 nproc = 8
 threshhold = 3 # Report deviations >= this many sigma for the means, medians, etc
