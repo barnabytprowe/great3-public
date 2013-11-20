@@ -424,6 +424,10 @@ class SimBuilder(object):
                     if index > 0:
                         sx = (2.0*rng() - 1.0) * constants.centroid_shift_max
                         sy = (2.0*rng() - 1.0) * constants.centroid_shift_max
+                        # Note: this scheme does not preserve the shifts from epoch to epoch.  While
+                        # not serious enough a problem to merit rerunning the sims, someone who
+                        # wishes to use this script for other purposes may wish to fix the shifts to
+                        # be the same for each epoch.
                         record["xshift"] = sx
                         record["yshift"] = sy
                     else:
