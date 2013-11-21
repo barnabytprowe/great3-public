@@ -53,13 +53,17 @@ def training_galaxy_props(psf,
         print "Using ",n_use
         n = n_use
 
-    # loop over objects
+    # Create output arrays for the following quantities: bulge-to-total flux ratio B/T (bt),
+    # flux_frac (fraction of the flux included in a GREAT3 postage stamp), resolution factor based
+    # on adaptive moments, noise_var_snr_20 (noise variance to make the object have a S/N of 20) and
+    # use_bulgefit (should we use 2-component fit, or 1-component Sersic fit).
     bt = np.zeros(n)
     do_meas = np.zeros(n)
     flux_frac = np.zeros(n)
     resolution = np.zeros(n)
     noise_var_snr_20 = np.zeros(n)
     use_bulgefit = np.ones(n)
+    # loop over objects
     for i in range(n):
         if i % 1000 == 0:
             print "...",i

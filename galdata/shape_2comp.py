@@ -24,12 +24,15 @@ dat = pyfits.getdata(infile)
 n = len(dat)
 print "Read in ",n," from ",infile
 
-# loop over objects
+# Create output arrays for the following quantities: shape (e1 and e2), bulge-to-total flux ratio
+# B/T (bt), and flags do_meas (did we measure the shape for a 2-component fit?) and use_bulgefit
+# (should we use 2-component fit, or 1-component Sersic fit).
 e1 = np.zeros(n)
 e2 = np.zeros(n)
 bt = np.zeros(n)
 do_meas = np.zeros(n)
 use_bulgefit = np.ones(n)
+# loop over objects
 for i in range(n):
     if i % 1000 == 0:
         print "...",i

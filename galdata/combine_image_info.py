@@ -1,3 +1,9 @@
+# This script is used to combine the outputs of running training_galaxy_props_real.py to precompute
+# information we need about the real galaxy images for various different PSFs and pixel scales.  To
+# run it, you must have the files from that process (described in notes.txt) in the working
+# directory; filenames are in the variable `property_files` given below.  The purpose of the script
+# is simply to pull information for the different PSFs and pixel scales together into a single file
+# that can be used by the GREAT3 simulation scripts; no interesting calculations are done here.
 import pyfits
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,7 +16,8 @@ property_files = ['real_galaxy_catalog_23.5_real_props_Euclid_0.05.fits',
                   'real_galaxy_catalog_23.5_real_props_Kolm_0.65_0.2.fits',
                   'real_galaxy_catalog_23.5_real_props_Kolm_0.8_0.2.fits',
                   'real_galaxy_catalog_23.5_real_props_Kolm_0.95_0.2.fits']
-sn_index = 3 # index of file on list to use to get S/N in original image: should be 2-5, since did not calculate for 0-1
+sn_index = 3 # index of file on list to use to get S/N in original image: should be 2-5, since did
+             # not calculate for 0-1
 exclude_file = []
 n_files = len(property_files)
 out_dir = './'
