@@ -127,7 +127,7 @@ if do_config:
     for new_names in [ new_config_names, new_psf_config_names, star_test_config_names ]:
         for name in new_names:
             t3 = time.time()
-            p = subprocess.Popen(['galsim',name,'-v1'])
+            p = subprocess.Popen(['galsim',name,'-v1'],close_fds=True)
             p.communicate() # wait until done
             t4 = time.time()
             print 'Time for galsim',name,'= ',t4-t3
@@ -178,6 +178,8 @@ def showdiff(f1,f2):
         print '    The maximum pixel difference is %e.'%maxdiff
     else:
         print '    Weird.  The images have identical pixel values.'
+    a1.close()
+    a2.close()
 
 # Check that images are the same.
 if do_images and do_config:
@@ -190,12 +192,12 @@ if do_images and do_config:
             for j in range(0, n_epoch):
                 f1 = os.path.join(dir,'image-%03d-%1d.fits'%(i,j))
                 f2 = os.path.join(dir,'yaml_image-%03d-%1d.fits'%(i,j))
-                p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
+                p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT,close_fds=True)
                 p.communicate()
                 if p.returncode != 0: showdiff(f1,f2)
                 f1 = os.path.join(dir,'starfield_image-%03d-%1d.fits'%(i,j))
                 f2 = os.path.join(dir,'yaml_starfield_image-%03d-%1d.fits'%(i,j))
-                p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT)
+                p = subprocess.Popen(['diff',f1,f2],stderr=subprocess.STDOUT,close_fds=True)
                 p.communicate()
                 if p.returncode != 0: showdiff(f1,f2)
     print 'End diffs.'

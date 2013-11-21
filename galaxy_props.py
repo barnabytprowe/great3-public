@@ -55,6 +55,7 @@ sn = params[:,2]
 gal_q = params[:,3]
 hlr = 0.03*np.sqrt(gal_q)*params[:,1]
 mag = fit_catalog["mag_auto"]
+# bulge_tot or bt is the bulge-to-total flux ratio, i.e. (bulge flux)/(total flux).
 bt = shapes_catalog["bulge_tot"]
 zphot = fit_catalog["zphot"]
 flux_radius = 0.03*fit_catalog["flux_radius"]
