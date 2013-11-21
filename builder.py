@@ -35,7 +35,7 @@ class SimBuilder(object):
         return cls
 
     def __init__(self, root, obs_type, shear_type, gal_dir, ps_dir, atmos_ps_dir, public_dir,
-                 truth_dir, preload, nproc=-1):
+                 truth_dir, preload=False, nproc=-1):
         """Initialize a builder for the given obs_type and shear_type.
 
         @param[in] root         Root directory for generated files
@@ -48,7 +48,7 @@ class SimBuilder(object):
         @param[in] truth_dir    Directory containing files used for metric evaluation.
         @param[in] preload      Preload the RealGalaxyCatalog images to speed up generation of large
                                 numbers of real galaxies?  Note that for parametric galaxy branches,
-                                the catalog is never preloaded.
+                                the catalog is never preloaded. (default = False)
         @param[in] nproc        How many processes to use in the config file.  (default = -1)
         """
         self.obs_type = obs_type
@@ -195,6 +195,10 @@ class SimBuilder(object):
                     epoch_parameters["psf"] = \
                         self.psf_builder.generateEpochParameters(rng, subfield_index, epoch_index,
                                                                  field_psf_parameters)
+                    # Determine multiplying factor for the sky variance based on whether we are in a
+                    # deep field or not.  Note that sky variance changes due to single
+                    # vs. multiepoch images are handled directly in the noise_builder, so they do
+                    # not need to be included here.
                     if subfield_index < n_reg_subfields:
                         noise_mult = 1.
                     else:
@@ -268,6 +272,15 @@ class SimBuilder(object):
                 record['yshift'] = sy
                 index += 1
 
+        # Determine multiplying factor for the sky variance based on whether we are in a deep field
+        # or not.  Note that sky variance changes due to single vs. multiepoch images do not need to
+        # be included at all at this stage, because we want to impose our cuts based on whether the
+        # S/N would be 20 in a single combined image, not based on its value in the individual epoch
+        # images.  Also note that while the noise variance parameter output into the
+        # epoch_parameters files by the noise builder already includes this noise_mult for the deep
+        # fields (and any factors due to single vs. multiepoch which we do *not* want here), we have
+        # to recalculate the deep field noise multiplying factor because we're just going to use the
+        # noise_builder.typical_variance which does not include any of those factors.
         if subfield_index < constants.n_subfields - constants.n_deep_subfields:
             noise_mult = 1.
         else:
@@ -362,12 +375,8 @@ class SimBuilder(object):
                         record['xshift'] = sx
                         record['yshift'] = sy
                         # But these numbers are the true positions within the field.
-                        record['x_field_true_deg'] = (constants.image_size_deg-1.) * rng() + \
-                            epoch_parameters["epoch_offset"][0] * constants.image_size_deg / \
-                            constants.nrows
-                        record['y_field_true_deg'] = (constants.image_size_deg-1.) * rng() + \
-                            epoch_parameters["epoch_offset"][1] * constants.image_size_deg / \
-                            constants.ncols
+                        record['x_field_true_deg'] = constants.image_size_deg * rng()
+                        record['y_field_true_deg'] = constants.image_size_deg * rng()
                         # Finally, let's make a S/N value for this star (per epoch).  In other
                         # words, the star would have S/N=record['star_snr'] in a single-epoch
                         # branch, or in each of the images in a multi-epoch branch.  This differs
@@ -415,6 +424,10 @@ class SimBuilder(object):
                     if index > 0:
                         sx = (2.0*rng() - 1.0) * constants.centroid_shift_max
                         sy = (2.0*rng() - 1.0) * constants.centroid_shift_max
+                        # Note: this scheme does not preserve the shifts from epoch to epoch.  While
+                        # not serious enough a problem to merit rerunning the sims, someone who
+                        # wishes to use this script for other purposes may wish to fix the shifts to
+                        # be the same for each epoch.
                         record["xshift"] = sx
                         record["yshift"] = sy
                     else:
@@ -528,8 +541,7 @@ class SimBuilder(object):
             'dir' : self.mapper.dir,
 
             'nfiles' : self.n_epochs*(subfield_max - subfield_min + 1),
-
-            'nproc' : self.nproc
+            'noclobber' : True,
         }
 
         # The image field:
@@ -569,6 +581,14 @@ class SimBuilder(object):
             'index_convention' : 'python',
         }
 
+        if self.variable_psf:
+            # The variable psf images are rather large, so parallelize at the image level.
+            d['image']['nproc'] = self.nproc
+        else:
+            # The constant psf images are small enough that it is probably better to
+            # parallelize at the file level.
+            d['output']['nproc'] = self.nproc
+
         # Delegate the basic 'psf' dict to psf_builder
         d['psf'] = self.psf_builder.makeConfigDict()
 
@@ -595,9 +615,8 @@ class SimBuilder(object):
         Dumper = yaml.SafeDumper
         Dumper.ignore_aliases = lambda self, data: True
 
-        f = open(file_name,'w')
-        yaml.dump(d, f, indent=4, Dumper=Dumper)
-        f.close()
+        with open(file_name,'w') as f:
+            yaml.dump(d, f, indent=4, Dumper=Dumper)
 
         # 
         # (2) Make config files for the galaxy images
@@ -644,14 +663,15 @@ class SimBuilder(object):
         }
         d['gal']['magnification'] = { 'type' : 'Catalog', 'col' : 'mu' }
 
-        if self.real_galaxy:
-            # Normally, it is better to parallelize at the file level.  But with RealGalaxy
-            # we parallelize at the postage stamp level to make the preloading more 
-            # efficient.
+        if not self.variable_psf:
+            # The galaxy images are large, so parallelize at the image level (unlike for the small
+            # star fields for constant PSF, for which we already had set up to parallelize at the
+            # file level).
             d['image']['nproc'] = self.nproc
             del d['output']['nproc']
 
-            # Also need to add the RealGalaxyCatalog to input
+        if self.real_galaxy:
+            # Need to add the RealGalaxyCatalog to input
             d['input']['real_catalog'] = {
                 'dir' : os.path.abspath(self.galaxy_builder.gal_dir),
                 'file_name' : self.galaxy_builder.rgc_file,
@@ -663,9 +683,8 @@ class SimBuilder(object):
                                  experiment_letter + obs_letter + shear_letter + '.yaml')
         print 'Write gal config dict to ',file_name
 
-        f = open(file_name,'w')
-        yaml.dump(d, f, indent=4, Dumper=Dumper)
-        f.close()
+        with open(file_name,'w') as f:
+            yaml.dump(d, f, indent=4, Dumper=Dumper)
 
         #
         # (3) Finally, make a config file for the "StarTest" images
@@ -688,7 +707,9 @@ class SimBuilder(object):
             'file_name' : 'star_test_images.fits',
             'dir' : self.mapper.dir,
             'nimages' : self.n_epochs*(subfield_max - subfield_min + 1),
-            'nproc' : self.nproc
+            # The star_test images are all small, so parallelize at the file level.
+            'nproc' : self.nproc,
+            'noclobber' : True
         }
 
         # The image field:
@@ -711,9 +732,8 @@ class SimBuilder(object):
                                  experiment_letter + obs_letter + shear_letter + '_star_test.yaml')
         print 'Write star test config dict to ',file_name
 
-        f = open(file_name,'w')
-        yaml.dump(d, f, indent=4, Dumper=Dumper)
-        f.close()
+        with open(file_name,'w') as f:
+            yaml.dump(d, f, indent=4, Dumper=Dumper)
 
 
     def writeGalImage(self, subfield_index, epoch_index):
@@ -785,21 +805,64 @@ class SimBuilder(object):
             else:
                 current_var = 0.
 
-            # The lines below are commented out because they are just diagnostics that can be used
-            # to check that the actual S/N is fairly consistent with the estimated one.
-            #actual_sn = \
-            #        numpy.sqrt((stamp.array**2).sum() / float(epoch_parameters['noise']['variance']))
+            # The lines below are diagnostics that can be used to check that the actual S/N is
+            # fairly consistent with the estimated one.
+            if False:
+                # G08 is the best possible S/N estimate:
+                #   S = sum W(x,y) I(x,y) / sum W(x,y)
+                #   N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+                # with W(x,y) = I(x,y), so
+                #   S = sum I^2(x,y) / sum I(x,y)
+                #   N^2 = noise variance * sum I^2(x,y) / (sum I(x,y))^2
+                #   S/N = sqrt(sum I^2(x,y)) / sqrt(noise variance)
+                actual_sn_g08 = \
+                    numpy.sqrt((stamp.array**2).sum() / float(epoch_parameters['noise']['variance']))
+                try:
+                    res = stamp.FindAdaptiveMom()
+                    aperture_noise = numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
+                                                    2.*numpy.pi*(res.moments_sigma**2))
+                    # The number below is the flux S/N within an elliptical Gaussian filter.  My
+                    # guess is that it will be somewhere below the optimal actual_sn_g08 but not too
+                    # horrible.
+                    sn_ellip_gauss = res.moments_amp / aperture_noise
+                    # We also want to estimate the S/N on the size, using an unweighted estimator
+                    #   S = Sum I(x,y) [(x-x_c)^2 + (y-y_c)^2]
+                    #   N^2 = (noise variance) * Sum [(x-x_c)^2 + (y-y_c)^2]^2
+                    # For this, we use the centroid estimate from the adaptive moments.  But we also
+                    # have to set up the grid of x, y values for the postage stamp, according to the
+                    # same exact convention as used for adaptive moments, which is that the center
+                    # of the first pixel is 1.  I do not like this estimator because if we make the
+                    # postage stamp larger (with white space) then S doesn't change but N^2
+                    # changes.  So let's instead use a weighted version:
+                    #   S = Sum W(x,y) I(x,y) [(x-x_c)^2 + (y-y_c)^2] / Sum W(x,y)
+                    #   N^2 = (noise variance) * Sum W^2(x,y) [(x-x_c)^2 + (y-y_c)^2]^2 /
+                    #                                      (Sum W(x,y))^2
+                    # Use W(x,y) = I(x,y),
+                    #   S = Sum I(x,y)^2 [(x-x_c)^2 + (y-y_c)^2] / Sum I(x,y)
+                    #   N^2 = (noise variance) * Sum I^2(x,y) [(x-x_c)^2 + (y-y_c)^2]^2 /
+                    #                                      (Sum I(x,y))^2
+                    #   S/N = Sum I(x,y)^2 [(x-x_c)^2 + (y-y_c)^2] /
+                    #         sqrt[(noise variance) * Sum I^2(x,y) [(x-x_c)^2 + (y-y_c)^2]^2]
+                    if stamp.array.shape[0] != stamp.array.shape[1]:
+                        raise RuntimeError
+                    min = 1.
+                    max = float(stamp.array.shape[0]+1)
+                    x_pix, y_pix = numpy.meshgrid(numpy.arange(min, max, 1.),
+                                                  numpy.arange(min, max, 1.))
+                    dx_pix = x_pix - (res.moments_centroid.x - (res.image_bounds.xmin-1))
+                    dy_pix = y_pix - (res.moments_centroid.y - (res.image_bounds.ymin-1))
+                    sn_size = numpy.sum(stamp.array**2 * (dx_pix**2 + dy_pix**2)) / \
+                        numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
+                                   numpy.sum(stamp.array**2 * (dx_pix**2 + dy_pix**2)**2))
+                except:
+                    sn_ellip_gauss = -10.
+                    sn_size = -10.
+                print 'SN: ', record['gal_sn'], actual_sn_g08, sn_ellip_gauss, sn_size, \
+                    record['bulge_n'], record['bulge_hlr'], record['bulge_flux']
             self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, current_var)
-            #try:
-            #    res = stamp.FindAdaptiveMom()
-            #    aperture_noise = numpy.sqrt(float(epoch_parameters['noise']['variance']) * \
-            #                                    2.*numpy.pi*(res.moments_sigma**2))
-            #    sn_ellip_gauss = res.moments_amp / aperture_noise
-            #except:
-            #    sn_ellip_gauss = -10.
-            #print 'Claimed, actual, ellip SN: ', record['gal_sn'], actual_sn, sn_ellip_gauss
 
         self.mapper.write(galaxy_image, "image", epoch_parameters)
+
 
     def writePSFImage(self, subfield_index, epoch_index):
         """This method builds and writes the star field images to disk.
@@ -1106,7 +1169,7 @@ class SimBuilder(object):
             # all branches, we include this even for single epoch branches (for which the dithers
             # are all 0 since each image IS the first and only epoch).  We extract the xdither and
             # ydither from the epoch_parameters, and write a file for each subfield and epoch.
-            # Technically it should be the same for all subfields in the field, but these files are
+            # These files are
             # tiny, so let's write one for each subfield and epoch, in both yaml and txt format.
             for epoch_index in xrange(self.n_epochs):
                 tmp_dict["epoch_index"] = epoch_index
@@ -1193,11 +1256,8 @@ class SimBuilder(object):
             # If variable shear, then loop over subfield catalogs and copy over just the ID and the
             # per-galaxy reduced shear.
             if self.shear_type == 'variable':
-                if self.real_galaxy:
-                    use_cols = [('ID', int), ('g1', float), ('g2', float)]
-                else:
-                    use_cols = [('ID', int), ('g1', float), ('g2', float),
-                                ('g1_intrinsic', float), ('g2_intrinsic', float)]
+                use_cols = [('ID', int), ('g1', float), ('g2', float),
+                            ('g1_intrinsic', float), ('g2_intrinsic', float)]
                 outfile = root_rel_mapper.copySub(sub_mapper, 'subfield_catalog', tmp_dict,
                                                   use_cols,
                                                   new_template =

@@ -60,7 +60,8 @@ class GalaxyBuilder(object):
                                    generateSubfieldParameters() method.
         @param[in]     variance    A typical noise variance that will be added, so we can avoid
                                    those galaxies with too high / low S/N.  This does not include
-                                   any reduction in noise for the deep fields, so we can impose
+                                   any reduction in noise for the deep fields or for multiepoch
+                                   imaging, so we can impose
                                    galaxy selection to get only those that would be seen in the
                                    non-deep fields at reasonable S/N.
         @param[in]     noise_mult  A factor by which the noise variance will be multiplied in actual
@@ -164,6 +165,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
     # Set up empty cache for B-mode shape noise galsim.PowerSpectrum object (will only use if
     # variable shear)
     cached_ps = None
+    # And define parameters needed for PS generation for B-mode intrinsic shear field
+    kmin_factor = 1
+    kmax_factor = 16
 
     def __init__(self, real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload):
         """Construct for this type of branch.
@@ -189,7 +193,8 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # numbers.  We will want to access this in our tests of the catalog.
         if self.real_galaxy:
             gal_schema = [("rot_angle_radians", float), ("gal_sn", float), ("cosmos_ident", int),
-                          ("size_rescale", float), ("flux_rescale", float)]
+                          ("size_rescale", float), ("flux_rescale", float),
+                          ("g1_intrinsic", float), ("g2_intrinsic", float)]
         else:
             gal_schema=[("bulge_n", float), ("bulge_hlr", float),
                         ("bulge_q", float), ("bulge_beta_radians", float), ("bulge_flux", float),
@@ -217,8 +222,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # If we haven't set up the catalog and such yet, do so now:
         if not hasattr(self,'rgc'):
             # Read in RealGalaxyCatalog, fits.
-            # TODO: The question of preloading vs. not should be investigated once this branch
-            # basically works.
             self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir,
                                                 preload=self.preload)
             self.fit_catalog = pyfits.getdata(os.path.join(self.gal_dir, self.rgc_fits_file))
@@ -242,7 +245,12 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # function.
             self.original_sn = self.im_selection_catalog.field('sn_ellip_gauss')
             # If it's a ground-based catalog, set up LookupTables to interpolate the minimum
-            # variance post-whitening between FWHM values:
+            # variance post-whitening between FWHM values.  It is important to maintain consistency
+            # between the FWHM values used for the precomputation of minimum variances and the
+            # `fwhm_arr` that we build here.  The FWHM values that were used are specified as
+            # command-line arguments to the run_props.py script in inputs/galdata/ in the
+            # great3-private repository; to see which arguments were used and therefore FWHM values
+            # adopted, see the files pbs_props*.sh in that directory.
             if self.obs_type == "ground":
                 fwhm_arr = self.min_ground_fwhm + self.ground_dfwhm*np.arange(self.ground_nfwhm)
                 self.noise_min_var = []
@@ -252,10 +260,19 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # Otherwise, for space, save a single set of results depending on whether it's single
             # epoch (smaller pixels) or multiepoch (bigger pixels).
             else:
-                if self.multiepoch:
-                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,1]
-                else:
-                    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,0]
+                # Note, if we wanted to use the actual minimum variances post-whitening on a
+                # per-experiment basis, we'd do
+                # if self.multiepoch:
+                #    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,1]
+                # else:
+                #    self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,0]
+                # However, this would result in different minimum variances and galaxy selection for
+                # single vs. multiepoch because the pixel scales are different for space sims for
+                # the two cases.  So, we just use the single-epoch minimum variances, which are
+                # higher, eliminating more objects from the sample.  This is conservative for the
+                # multiepoch sims, but it means the selection is consistent for the two cases, which
+                # will be helpful in interpreting results.
+                self.noise_min_var = self.im_selection_catalog.field('min_var_white')[:,0]
 
             # Read in catalog that tells us how the galaxy magnitude from Claire's fits differs from
             # that in the COSMOS catalog.  This can be used to exclude total screwiness, objects
@@ -344,9 +361,10 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # variance post-whitening was estimated in a preprocessing step that didn't include some
         # details of the real simulations.
         # And yet another set of cuts: to avoid postage stamps with poor masking of nearby objects /
-        # shredding of the central object, we apply cuts on the minimum distance from the center
-        # of the image to a masked pixel in pixels, and on the flux in the nearest masked region
-        # compared to the peak image flux.
+        # shredding of the central object, we exclude objects that have a mask pixel nearer to the
+        # center than 11 pixels (0.33").  And we exclude objects whose nearest masked pixel has a
+        # flux brighter than 0.2 * the brightest unmasked pixel.  
+        # The `mask_cond` array is True for all objects that are not excluded.
         e1 = self.shapes_catalog.field('e1')
         e2 = self.shapes_catalog.field('e2')
         e_test = np.sqrt(e1**2 + e2**2)
@@ -369,7 +387,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
              mask_cond
              ])
         useful_indices = indices[cond]
-        #print "Possible galaxies: ",len(useful_indices)
+        print " / Possible galaxies: ",len(useful_indices)
         # Note on the two image-based cuts: without them, for some example run, we lost a few %
         # (ground) and ~20% (space) of the sample.  For the latter, the change is driven by the fact
         # that more noise has to be added to whiten, so it's harder to pass the minimum-variance cut
@@ -452,12 +470,9 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             # galaxy builders don't have a variable_psf attribute).  Much of the code below comes
             # from shear.py, which does operationally the same thing to the cosmological shear
             # field.
-            n_subfields_per_field = constants.n_subfields_per_field[self.shear_type][True]
+            n_subfields_per_field = constants.n_subfields_per_field['variable'][True]
             if self.cached_ps is None or \
                     parameters["galaxy"]["subfield_index"] % n_subfields_per_field == 0:
-                # Make the power spectrum object
-                kmin_factor = 1  # TODO: Should these be made constant.galaxies_kmin_factor etc.?
-                kmax_factor = 4  #
                 # Calculate the grid_spacing as this impacts the scaling of the PS
                 n_grid = constants.subfield_grid_subsampling * constants.nrows
                 grid_spacing = constants.image_size_deg / n_grid
@@ -465,7 +480,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 self.cached_ps = galsim.PowerSpectrum(
                     b_power_function=lambda k_arr : (
                         gvar * np.ones_like(k_arr) * grid_spacing**2
-                        / (float(kmax_factor**2) - 1. / (kmin_factor**2))), # Get the right variance
+                        / (float(self.kmax_factor**2) - 1. / (self.kmin_factor**2))), # Get the right variance
                     units=galsim.degrees
                     )
 
@@ -479,18 +494,18 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 if constants.nrows != constants.ncols:
                     raise NotImplementedError("Currently variable shear grids require nrows=ncols")
 
-                # Run buildGrid() to get the shears and convergences on this grid.  However, we also
-                # want to effectively change the value of k_min that is used for the calculation, to
-                # get a reasonable shear correlation function on large scales without excessive
-                # truncation. 
+                # Run buildGrid() to get the shears and convergences on this grid.  We use a value
+                # of kmax_factor that is relatively large, motivated by tests that suggested that
+                # B-mode shape noise was not as effective as we need it to be until large values
+                # were chosen.
                 grid_center = 0.5 * (constants.image_size_deg - grid_spacing)
                 self.cached_ps.buildGrid(grid_spacing = grid_spacing,
                                          ngrid = n_grid,
                                          units = galsim.degrees,
                                          rng = rng,
                                          center = (grid_center, grid_center),
-                                         kmin_factor = kmin_factor, 
-                                         kmax_factor = kmax_factor)
+                                         kmin_factor = self.kmin_factor, 
+                                         kmax_factor = self.kmax_factor)
 
             # Now we either built up a new cached B-mode shape noise field, or ascertained that we
             # should use a cached one.  We can now obtain g1 and g2 values for this B-mode shape
@@ -518,10 +533,11 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             y_pos += parameters["subfield_offset"][1] * constants.image_size_deg / constants.ncols
             g1_b, g2_b = self.cached_ps.getShear(pos=(x_pos, y_pos), units=galsim.degrees)
             gmag_b = np.sqrt(g1_b**2 + g2_b**2)
-            # DEBUG: Plot the histogram of gmag to check it is reasonable
-            #import matplotlib.pyplot as plt
-            #print "Mean, median gmag_b = "+str(gmag_b.mean())+", "+str(np.median(gmag_b))
-            #plt.hist(gmag_b, range=(0, 1), bins=50); plt.show()
+            if False:
+                # DEBUG: Plot the histogram of gmag to check it is reasonable
+                import matplotlib.pyplot as plt
+                print "Mean, median gmag_b = "+str(gmag_b.mean())+", "+str(np.median(gmag_b))
+                plt.hist(gmag_b, range=(0, 1), bins=50); plt.show()
             if np.any(gmag_b > 1.):
                 # The shear field generated with this B-mode power function is not limited to
                 # |g|<1.  We have to fix these:
@@ -557,42 +573,76 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # rescalings to mimic the deeper sample.
         ind = 0
         for record in catalog:
+
+            # Save ID and intrinsic shape information, regardless of whether this is a real galaxy
+            # or a parametric one.
             record["cosmos_ident"] = self.fit_catalog[all_indices[ind]].field('ident')
+            if self.shear_type == "variable":
+                final_g = galsim.Shear(g = gmag[all_indices[ind]],
+                                       beta=target_beta[ind]*galsim.radians)
+            else:
+                final_g = galsim.Shear(
+                    g = gmag[all_indices[ind]],
+                    beta=(ephi[all_indices[ind]]+rot_angle[ind])*galsim.radians
+                    )
+            record["g1_intrinsic"] = final_g.g1
+            record["g2_intrinsic"] = final_g.g2
+
+            # Now specialize to save the appropriate info for real galaxies or parametric ones.
             if self.real_galaxy:
                 record["gal_sn"] = approx_sn_gal[all_indices[ind]]
                 record["rot_angle_radians"] = rot_angle[ind]
                 record["size_rescale"] = self.size_rescale
                 record["flux_rescale"] = 1. / n_epochs
             else:
-                # First save intrinsic shape information.
-                if self.shear_type == "variable":
-                    final_g = galsim.Shear(g = gmag[all_indices[ind]],
-                                           beta=target_beta[ind]*galsim.radians)
-                else:
-                    final_g = galsim.Shear(
-                        g = gmag[all_indices[ind]],
-                        beta=(ephi[all_indices[ind]]+rot_angle[ind])*galsim.radians
-                        )
-                record["g1_intrinsic"] = final_g.g1
-                record["g2_intrinsic"] = final_g.g2
-                # Then save information that depends on whether we use 1- or 2-component fits.
+                # Information that we will save for parametric galaxies depends on whether we use 1-
+                # or 2-component fits.
                 if self.use_bulgefit[all_indices[ind]] == 1.:
                     params = self.fit_catalog[all_indices[ind]].field('bulgefit')
 
-                    bulge_q = params[11]
-                    bulge_beta = params[15]*galsim.radians + rot_angle[ind]*galsim.radians
-                    bulge_hlr = 0.03*self.size_rescale*np.sqrt(bulge_q)*params[9] # arcsec
-                    # Factor of 0.03^2 in line below is because of Claire's normalization
-                    # conventions when fitting.
-                    # It is needed if we're drawing with 'flux' normalization convention.
-                    bulge_flux = \
-                        2.0*np.pi*3.607*(bulge_hlr**2)*params[8]/self.size_rescale**2/(0.03**2) 
+                    (fit_disk_flux, fit_disk_hlr, fit_disk_n, fit_disk_q, _, _, _, fit_disk_beta,
+                     fit_bulge_flux, fit_bulge_hlr, fit_bulge_n, fit_bulge_q, _, _, _,
+                     fit_bulge_beta) = params
 
-                    disk_q = params[3]
-                    disk_beta = params[7]*galsim.radians + rot_angle[ind]*galsim.radians
-                    disk_hlr = 0.03*self.size_rescale*np.sqrt(disk_q)*params[1] # arcsec
+                    bulge_q = fit_bulge_q
+
+                    # Fit files store position angles as radians.
+                    bulge_beta = fit_bulge_beta*galsim.radians + rot_angle[ind]*galsim.radians
+                    # Half-light radii in files need several corrections:
+                    #    (1) They are in pixels, so we multiply by 0.03" (the coadded pixel scale)
+                    #        to get arcsec.
+                    #    (2) We are rescaling the galaxy sizes by self.size_rescale in order to
+                    #        mimic a fainter galaxy sample in which galaxies are naturally smaller,
+                    #        as described in the handbook.
+                    #    (3) The files give the half-light radius along the major axis, but for
+                    #        GalSim we want the azimuthally-averaged half-light radius, so we
+                    #        multiply by sqrt(q)=sqrt(b/a).
+
+                    bulge_hlr = 0.03*self.size_rescale*np.sqrt(bulge_q)*fit_bulge_hlr
+                    # Fluxes in the files require several corrections:
+                    #    (1) The "flux" values are actually surface brightness at the half-light
+                    #        radius along the major axis.  Thus we need to integrate the
+                    #        surface-brightness profile to get the total flux, which introduces
+                    #        2*pi*(half-light radius)^2 * some Sersic n-dependent fudge factors
+                    #        (Gamma functions, etc.).  The 3.607 in the line below is the Sersic
+                    #        n-dependent factor for n=4.  Note that the full expression is given in
+                    #        the lines of code below for the Sersic-fit profiles.
+                    #    (2) The division by self.size_rescale**2 is just to correct for the fact
+                    #        that the bulge half-light radii have already been decreased by this
+                    #        factor, but that factor wasn't in the original fit profiles and hence
+                    #        should not go into the flux calculation.
+                    #    (3) The division by 0.03**2 is because Claire's fits assumed the images
+                    #        were flux when really they were surface brightness, so her fluxes are
+                    #        too low by 0.03**2.
+                    bulge_flux = \
+                        2.0*np.pi*3.607*(bulge_hlr**2)*fit_bulge_flux/self.size_rescale**2/(0.03**2) 
+
+                    disk_q = fit_disk_q
+                    disk_beta = fit_disk_beta*galsim.radians + rot_angle[ind]*galsim.radians
+                    disk_hlr = 0.03*self.size_rescale*np.sqrt(disk_q)*fit_disk_hlr # arcsec
+                    # Here the 1.901 is the Sersic n-dependent factor described above, but for n=1.
                     disk_flux = \
-                        2.0*np.pi*1.901*(disk_hlr**2)*params[0]/self.size_rescale**2/(0.03**2)
+                        2.0*np.pi*1.901*(disk_hlr**2)*fit_disk_flux/self.size_rescale**2/(0.03**2)
 
                     record["gal_sn"] = approx_sn_gal[all_indices[ind]]
                     bulge_frac = bulge_flux / (bulge_flux + disk_flux)
@@ -608,18 +658,25 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
                 else:
                     # Make a single Sersic model instead
                     params = self.fit_catalog[all_indices[ind]].field('sersicfit')
-                    gal_n = params[2]
+                    (fit_gal_flux, fit_gal_hlr, fit_gal_n, fit_gal_q, _, _, _, fit_gal_beta) = \
+                        params
+
+                    gal_n = fit_gal_n
                     # Fudge this if it is at the edge.  Now that GalSim #325 and #449 allow Sersic n
                     # in the range 0.3<=n<=6, the only problem is that Claire occasionally goes as
                     # low as n=0.2.
                     if gal_n < 0.3: gal_n = 0.3
-                    gal_q = params[3]
-                    gal_beta = params[7]*galsim.radians + rot_angle[ind]*galsim.radians
-                    gal_hlr = 0.03*self.size_rescale*np.sqrt(gal_q)*params[1]
+                    gal_q = fit_gal_q
+                    gal_beta = fit_gal_beta*galsim.radians + rot_angle[ind]*galsim.radians
+                    gal_hlr = 0.03*self.size_rescale*np.sqrt(gal_q)*fit_gal_hlr
+                    # Below is the calculation of the full Sersic n-dependent quantity that goes
+                    # into the conversion from surface brightness to flux, which here we're calling
+                    # 'prefactor'.  In the n=4 and n=1 cases above, this was precomputed, but here
+                    # we have to calculate for each value of n.
                     tmp_ser = galsim.Sersic(gal_n, half_light_radius=1.)
                     gal_bn = (1./tmp_ser.getScaleRadius())**(1./gal_n)
                     prefactor = gal_n * _gammafn(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
-                    gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*params[0]/self.size_rescale**2/0.03**2
+                    gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*fit_gal_flux/self.size_rescale**2/0.03**2
                     record["gal_sn"] = approx_sn_gal[all_indices[ind]]
                     record["bulge_n"] = gal_n
                     record["bulge_hlr"] = gal_hlr
@@ -726,8 +783,6 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # attribute.  Check and read it in if necessary, before trying to make a RealGalaxy.
         if not hasattr(self,'rgc'):
             # Read in RealGalaxyCatalog, fits.
-            # TODO: The question of preloading vs. not should be investigated once this branch
-            # basically works.
             self.rgc = galsim.RealGalaxyCatalog(self.rgc_file, dir=self.gal_dir,
                                                 preload=self.preload)
         noise_pad_size = int(np.ceil(constants.xsize[self.obs_type][self.multiepoch] *

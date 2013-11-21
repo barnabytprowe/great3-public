@@ -346,7 +346,8 @@ class ConstPSFBuilder(PSFBuilder):
             # Figure out how large a pad_factor will make the Optical PSF image size be no larger
             # than the size of the postage stamp onto which we will eventually draw it.
             # First repeat some of the calculations that OpticalPSF does to determine its
-            # image size.
+            # image size.  The 0.005 in the denominator is the value of alias_threshold that we use
+            # as the default in GalSim.
             twoR = 2. * lam_over_diam[i_epoch] / (
                     0.005 * 0.5 * np.pi * np.pi * (1.-obscuration[i_epoch]) )
             # This is the size in arcsec that OpticalPSF wants to create its image.
@@ -708,7 +709,13 @@ class VariablePSFBuilder(PSFBuilder):
     #Old version is commented out.  We use a new version that has only 0.5-0.85
     #freq = (0., 0., 0., 7.5, 19., 20., 17., 13., 9., 5., 3.5, 2., 1., 1., 0.5, 0.0, 0.0)
     freq = (0., 0., 0., 0.0, 0.0, 20., 17., 13., 9., 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-    fwhm_scatter = 0.1 # fractional scatter in FWHM for tiles within a single field
+    fwhm_scatter = 0.05 # fractional scatter in FWHM for tiles within a single field - but discard
+    # >2sigma events.
+    # Impose some additional constraints on values drawn from the distribution, since the values
+    # drawn for the first tile are then used with some scatter for the later tiles, and we don't
+    # want the seeing to regularly be outside of the bounds normally allowed by the distribution.
+    fwhm_min = 0.5
+    fwhm_max = 0.86
     # Later on we will draw from this distribution using:
     # dd = galsim.DistDeviate(uniform_deviate, 
     #                        function=galsim.LookupTable(fwhm_arcsec, freq, interpolant='linear'))
@@ -728,7 +735,7 @@ class VariablePSFBuilder(PSFBuilder):
     # Set up empty cache for optical PSF and atmospheric PSF information, to be used for the entire
     # field.
     cached_atmos = None
-    cached_optics = None
+    cached_optics = []
     cached_field = None
     # set up grid needed to make filenames and interpolate
     log_min_theta_0 = np.log10(min_theta_0)
@@ -818,7 +825,8 @@ class VariablePSFBuilder(PSFBuilder):
         # Figure out how large a pad_factor will make the Optical PSF image size be no larger
         # than the size of the postage stamp onto which we will eventually draw it.
         # First repeat some of the calculations that OpticalPSF does to determine its
-        # image size.
+        # image size.  The 0.005 in the denominator is the value of alias_threshold that we use
+        # as the default in GalSim.
         twoR = 2. * self.lam_over_diam[self.obs_type] / (
                 0.005 * 0.5 * np.pi * np.pi * (1.-self.obscuration[self.obs_type]) )
         # This is the size in arcsec that OpticalPSF wants to create its image.
@@ -839,10 +847,16 @@ class VariablePSFBuilder(PSFBuilder):
                 if self.obs_type == "ground":
                     # Some atmosphere parameters: PSF FWHM, P(k) numbers
                     if i_tile == 0:
-                        atmos_psf_fwhm[i_tile, i_epoch] = dist_deviate()
+                        test_val = dist_deviate()
+                        while test_val < self.fwhm_min or test_val > self.fwhm_max:
+                            test_val = dist_deviate()
+                        atmos_psf_fwhm[i_tile, i_epoch] = test_val
                     else:
+                        test_val = gaussian_deviate()
+                        while test_val < -2. or test_val > 2.:
+                            test_val = gaussian_deviate()
                         atmos_psf_fwhm[i_tile, i_epoch] = atmos_psf_fwhm[0, i_epoch] * \
-                            (1.0 + self.fwhm_scatter*gaussian_deviate())
+                            (1.0 + self.fwhm_scatter*test_val)
                     atmos_psf_pk_amp[i_tile, i_epoch] = \
                         (uniform_deviate()*(self.max_A-self.min_A) + self.min_A) * (20./t_exp)
                     atmos_psf_pk_theta0[i_tile, i_epoch] = \
@@ -985,19 +999,27 @@ class VariablePSFBuilder(PSFBuilder):
         field_index = parameters["field_index"]
         psf_parameters = parameters["psf"]
 
-        # Check if there is already a cache in place.  If not, prepare to set one up.  If yes, then
-        # just construct the index we'll use to access it.
-        # This is the index in the list we'll use to save the lists of OpticalPSFModel or
-        # galsim.PowerSpectrum (for atmosphere) objects.  The list index for all subfields/fields
-        # within the field comes from the epoch index.  Once we access based on the list_index, then
-        # we get a list of the results for each tile.
-        list_index = epoch_index
+        # Check if there is already a cache in place and that it's set up for this field.  If not,
+        # set one up.
         if self.cached_field != field_index:
             self.cached_field = field_index
+            self.cached_optics = []
+            self.cached_atmos = []
+
+        # The list_index defined here is the index in the list we'll use to save the lists of
+        # OpticalPSFModel or galsim.PowerSpectrum (for atmosphere) objects.  The list index for all
+        # subfields/fields within the field comes from the epoch index.  Once we access the cached
+        # lists self.cached_optics and self.cached_atmos based on the list_index, then we get a list
+        # of the results for each tile.
+        list_index = epoch_index
+
+        # Now, check whether our cache is large enough to include results for this epoch.  If not,
+        # then we have to build up the cache appropriately:
+        if len(self.cached_optics) < epoch_index+1:
+
             # First, do optical PSF stuff, which has to happen regardless of whether it's ground or
             # space.  Try to do this as much as possible in a way that is independent of observation
             # type, though at some point, different functions must be called.
-            self.cached_optics = []
             tmp_list = []
             for i_tile in range(self.n_tiles):
                 if self.obs_type == "ground":
@@ -1033,7 +1055,6 @@ class VariablePSFBuilder(PSFBuilder):
             # And now, for ground-based observations, we must build up the cache for the atmospheric
             # PSF galsim.PowerSpectrum objects.
             if self.obs_type == "ground":
-                self.cached_atmos = []
                 tmp_list = [] # list for galsim.PowerSpectrum instances
 
                 import os

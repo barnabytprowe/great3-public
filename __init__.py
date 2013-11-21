@@ -172,6 +172,8 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
                     sys.stdout.flush()
                     builder.writeGalImage(subfield_index, epoch_index)
             sys.stderr.write("\n")
+            if hasattr(builder.galaxy_builder,'rgc'):
+                builder.galaxy_builder.rgc.close()
 
     if 'psf_images' in steps:
         for experiment, obs_type, shear_type, builder in branches:
