@@ -455,7 +455,7 @@ def print_basic_corr2_params(outfile, min_sep=THETA_MIN_DEG, max_sep=THETA_MAX_D
         fout.write("\n")
 
 def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
-                                logger=None, corr2_exec="corr2", make_plots=True,
+                                logger=None, corr2_exec="corr2", make_plots=False,
                                 file_prefixes=("galaxy_catalog",), suffixes=("",),
                                 mape_file_prefix=MAPESHEAR_FILE_PREFIX, output_xy_prefix=None):
     """Get or generate an array of truth map_E vectors for all the fields in this branch.
@@ -761,21 +761,21 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     field_shear, theta_shear, map_E_shear, _, maperr_shear = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
         corr2_exec=corr2_exec, mape_file_prefix=MAPESHEAR_FILE_PREFIX, suffixes=("",),
-        make_plots=True)
+        make_plots=False)
     #print map_E_shear
     # Then generate the intrinsic only map_E, useful for examinging plots, including the maperr
     # (a good estimate of the relative Poisson errors per bin) which we will use to provide a weight
     field_int, theta_int, map_E_int, _, maperr_int = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
         corr2_exec=corr2_exec, mape_file_prefix=MAPEINT_FILE_PREFIX, suffixes=("_intrinsic",),
-        make_plots=True)
+        make_plots=False)
     # Then generate the theory observed = int + shear combined map signals - these are our reference
     # Note this uses the new functionality of get_generate_variable_truth for adding shears
     field_ref, theta_ref, map_E_ref, _, maperr_ref = get_generate_variable_truth(
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
         corr2_exec=corr2_exec, mape_file_prefix=MAPEOBS_FILE_PREFIX,
         file_prefixes=("galaxy_catalog", "galaxy_catalog"), suffixes=("_intrinsic", ""),
-        make_plots=True)
+        make_plots=False)
     # Set up the weight
     if poisson_weight:
         weight = max(maperr_int**2) / maperr_int**2 # Inverse variance weight
