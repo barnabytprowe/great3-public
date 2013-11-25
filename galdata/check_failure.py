@@ -37,7 +37,7 @@ ax2.hist(size, normed=True, facecolor='blue', alpha=0.5, bins=0.05*np.arange(40)
 ax2.hist(size[do_meas<-0.5], normed=True, facecolor='red', alpha=0.5, bins=0.05*np.arange(40), label='Failures')
 ax2.set_xlabel('flux_radius')
 
-# histograms: B/T
+# histograms: B/T, or bulge-to-total flux ratio
 bt = shape_dat.field('bulge_tot')
 ax3 = fig.add_subplot(223)
 ax3.hist(bt, normed=True, facecolor='blue', alpha=0.5, bins=0.05*np.arange(21), label='All')

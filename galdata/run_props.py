@@ -1,7 +1,7 @@
 import sys
 import galsim
 import math
-from training_galaxy_props import *
+from training_galaxy_props_real import *
 
 # read command-line arguments, which are:
 #    PSF type: either Kolmogorov or Euclid
@@ -31,8 +31,8 @@ else:
     jitter_psf = galsim.Gaussian(sigma=jitter_rms)
     psf = galsim.Convolve(euclid_psf, jitter_psf)
 
-training_galaxy_props(psf,
-                      out_filename = sys.argv[4],
-                      pix_scale = float(sys.argv[3]),
-                      size_factor = 0.6,
-                      ps_size = 48)
+training_galaxy_props_real(psf,
+                           out_filename = sys.argv[4],
+                           pix_scale = float(sys.argv[3]),
+                           size_factor = 0.6,
+                           ps_size = 48)
