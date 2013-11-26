@@ -1,9 +1,11 @@
 {% extends "leaderboard/base.html" %}
 
-{% block subtitle %}Submission {% endblock %}
+{% block subtitle %}Submission to board {{board}} {% endblock %}
+
 
 {% block content %}
-	{% if teams|length > 1 %}
+<h3>Submit an entry to leader-board {{board}}.</H3>
+{% if teams|length > 1 %}
 
 	{% else %}
 		<P>You are submitting as a member of team {{ teams|first }}</P>
