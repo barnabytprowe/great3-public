@@ -3,6 +3,7 @@ truth_dir = "/great3/beta/truth"
 #public_dir = "/Users/browe/great3/great3-private/tests/test_run"
 #public_dir = "/Users/browe/great3/public"
 public_dir = "/great3/tmp/unpacked/beta/public"
+#public_dir = /Volumes/Data/GREAT3/beta/public
 
 # Experiments, obs_types and shear_types to validate
 experiments = [
