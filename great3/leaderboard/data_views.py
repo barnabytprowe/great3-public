@@ -19,8 +19,11 @@ def index(request):
 @login_required
 def admin_file(request, filename):
 	if not request.user.is_staff:
-		raise django.http.Http404		
-	dataFile = AdminDataFile.objects.get(filename=filename)
+		raise django.http.Http404
+	try:
+		dataFile = AdminDataFile.objects.get(filename=filename)
+	except AdminDataFile.DoesNotExist:
+		raise django.http.Http404
 	abs_filename = dataFile.abspath
 	response = django.http.HttpResponse()
 	del response['content-type']
@@ -29,7 +32,10 @@ def admin_file(request, filename):
 
 
 def public_file(request, filename):
-	dataFile = PublicDataFile.objects.get(filename=filename)
+	try:
+		dataFile = PublicDataFile.objects.get(filename=filename)
+	except PublicDataFile.DoesNotExist:
+		raise django.http.Http404
 	abs_filename = dataFile.abspath
 	response = django.http.HttpResponse()
 	del response['content-type']
