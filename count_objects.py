@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import os
 import sys
 import glob
@@ -42,15 +41,15 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
 
     Assumes all FITS files end in suffix .fits.
 
-    @return good  If all checks pass, returns a list of all the object totals that were counted by
-                  this tool, alongside the filename in a (nojects, filename) tuple.  Any files
+    @return good  If all checks pass, returns a dictionay containing the object totals that were
+                  counted by this tool, itemized by the filename.  Any files
                   found to contain neither 9 or 10 0000 objects are judged as failed.  All failed
                   filenames are printed and the function raises a ValueError exception with all
                   the failed filenames listed in the error message.
     """
     # Set storage lists
-    good = []
-    bad = []
+    good = {}
+    bad = {}
     found = {}
     found_obs = []
     found_shears = []
@@ -74,16 +73,31 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                                 print "Counting objects in FITS files in "+str(mapper.full_dir)
                                 for fitsfile in fitsfiles:
 
-                                    nobs = count_file good.append(fitsfile)
+                                    nobs = count_file(fitsfile)
+                                    if nobs == 3 and "starfield_image" in fitsfile:
+                                        good[fitsfile] = nobs
+                                    elif nobs == 10000 and "image-" in fitsfile:
+                                        good[fitsfile] = nobs
+                                    else:
+                                        bad[fitsfile] = nobs
+ 
+    print "Ran SExtractor on all FITS files in "+root_dir
+    print "Verified object totals in FITS files for the following branches: \n"+str(found)
+    print "Verified "+str(len(good))+" FITS files total"
+    if len(bad) > 0:
+        ret = bad
+        message = "The following files failed FITS object counting:\n"
+        for filename, nobs in bad.iteritems():
 
+            message += filename+" with "+str(nobs)+" objects\n" 
 
-    print "Ran fitsverify on all FITS files in "+root_dir
-    print "Found FITS files for experiments "+str(found_exps)
-    print "Found FITS files for obs_types "+str(found_obs)
-    print "Found FITS files for shear_types "+str(found_shears)
-    print "Found "+str(len(good))+" FITS files total"
+        raise ValueError(message)
+    else:
+        print "All files verified successfully!"
+        retl = good
+    return ret
+
 
 if __name__ == "__main__"
 
-    print "blah"
-
+    good_public = count_all(constants.public_dir)
