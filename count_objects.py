@@ -29,6 +29,7 @@ def file_count(filename, sex_exec="/usr/local/bin/sex", silent=False,
                 stdout=ftmp, stderr=ftmp)
         os.remove(stdoutfile)
     else:
+        print "Counting objects in "+filename
         subprocess.check_call([sex_exec, filename, "-c", config_filename, "-CATALOG_NAME", catfile])
     nobs = len(pyfits.getdata(catfile))
     os.remove(catfile)
