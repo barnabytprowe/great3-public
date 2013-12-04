@@ -64,7 +64,7 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                 if len(fitsfiles) > 0:
                     if experiment not in found:
                         found[experiment] = {}
-                        if obs_type not in found[obs_type]:
+                        if obs_type not in found[experiment]:
                             found[experiment][obs_type] = {}
                             if shear_type not in found[experiment][obs_type]:
                                 found[experiment][obs_type][shear_type] = True
