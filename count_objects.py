@@ -98,6 +98,6 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
     return ret
 
 
-if __name__ == "__main__"
+if __name__ == "__main__":
 
     good_public = count_all(constants.public_dir)
