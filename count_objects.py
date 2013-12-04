@@ -98,15 +98,31 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
 
 if __name__ == "__main__":
 
-    try:
-        good_public, bad_public = count_all(constants.public_dir)
-    except ValueError as err:
-        print err.message
     import time
     import cPickle
-    with open("goodcounts"+(time.asctime()).replace(" ", "_")+".p", "wb") as fgood:
-        print "Writing good dictionary to "+fgood.name
-        cPickle.dump(fgood, good)
-    with open("badcounts"+(time.asctime()).replace(" ", "_")+".p", "wb") as fbad:
-        print "Writing bad dictionary to "+fbad.name
-        cPickle.dump(fbad, bad)
+    if not os.path.isdir("./counts"): os.mkdir("./counts") # Build the required directory
+    # Loop over exps and obs making dictionary (lump both constant/variable together as detection
+    # should not differ between these sets)
+    for experiment in constants.experiments: 
+
+        for obs_type in constants.obs_types:
+
+            try:
+                good_public, bad_public = count_all(
+                    constants.public_dir, experiments=[experiment,], obs_types=[obs_type,])
+            except ValueError as err:
+                print err.message
+            with open(
+                os.path.join(
+                    "./counts",
+                    "goodcounts"+experiment+"-"+obs_type+(time.asctime()).replace(" ", "_")+".p"),
+                "wb") as fgood:
+                print "Writing good dictionary to "+fgood.name
+                cPickle.dump(fgood, good_public)
+            with open(
+                os.path.join(
+                    "./counts",
+                    "badcounts"+experiment+"-"+obs_type+(time.asctime()).replace(" ", "_")+".p"),
+                "wb") as fbad:
+                print "Writing bad dictionary to "+fbad.name
+                cPickle.dump(fbad, bad_public)
