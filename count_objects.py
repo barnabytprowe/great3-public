@@ -117,14 +117,14 @@ if __name__ == "__main__":
         with open(
             os.path.join(
                 "./counts",
-                "goodcounts_"+experiment+"-"+obs_type+(time.asctime()).replace(" ", "_")+".p"),
+                "goodcounts_"+experiment+"-"+obs_type+"_"+(time.asctime()).replace(" ", "_")+".p"),
             "wb") as fgood:
             print "Writing good dictionary to "+fgood.name
             cPickle.dump(fgood, good_public)
         with open(
             os.path.join(
                 "./counts",
-                "badcounts_"+experiment+"-"+obs_type+(time.asctime()).replace(" ", "_")+".p"),
+                "badcounts_"+experiment+"-"+obs_type+"_"+(time.asctime()).replace(" ", "_")+".p"),
             "wb") as fbad:
             print "Writing bad dictionary to "+fbad.name
             cPickle.dump(fbad, bad_public)
