@@ -85,7 +85,6 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
     print "Verified object totals in FITS files for the following branches: \n"+str(found)
     print "Verified "+str(len(good))+" FITS files total"
     if len(bad) > 0:
-        ret = bad
         message = "The following files failed FITS object counting:\n"
         for filename, nobs in bad.iteritems():
 
@@ -94,10 +93,20 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
         raise ValueError(message)
     else:
         print "All files verified successfully!"
-        retl = good
-    return ret
+    return good, bad
 
 
 if __name__ == "__main__":
 
-    good_public = count_all(constants.public_dir)
+    try:
+        good_public, bad_public = count_all(constants.public_dir)
+    except ValueError as err:
+        print err.message
+    import time
+    import cPickle
+    with open("goodcounts"+(time.asctime()).replace(" ", "_")+".p", "wb") as fgood:
+        print "Writing good dictionary to "+fgood.name
+        cPickle.dump(fgood, good)
+    with open("badcounts"+(time.asctime()).replace(" ", "_")+".p", "wb") as fbad:
+        print "Writing bad dictionary to "+fbad.name
+        cPickle.dump(fbad, bad)
