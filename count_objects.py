@@ -71,7 +71,7 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                                 print "Counting objects in FITS files in "+str(mapper.full_dir)
                                 for fitsfile in fitsfiles:
 
-                                    nobs = count_file(fitsfile)
+                                    nobs = file_count(fitsfile)
                                     if nobs == 3 and "starfield_image" in fitsfile:
                                         good[fitsfile] = nobs
                                     elif nobs == 10000 and "image-" in fitsfile:
