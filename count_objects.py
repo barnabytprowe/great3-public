@@ -51,8 +51,6 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
     good = {}
     bad = {}
     found = {}
-    found_obs = []
-    found_shears = []
     for experiment in experiments:
 
         for obs_type in obs_types:
@@ -64,7 +62,7 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                 fitsfiles = glob.glob(os.path.join(mapper.full_dir, "*.fits"))
                 # If any fits files found, check
                 if len(fitsfiles) > 0:
-                    if experiment not in foun:
+                    if experiment not in found:
                         found[experiment] = {}
                         if obs_type not in found[obs_type]:
                             found[experiment][obs_type] = {}
