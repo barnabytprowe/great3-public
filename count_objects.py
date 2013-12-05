@@ -33,7 +33,8 @@ def file_count(filename, sex_exec="/usr/local/bin/sex", silent=False,
         os.remove(stdoutfile)
     else:
         print "Counting objects in "+filename
-        subprocess.check_call([sex_exec, filename, "-c", config_filename, "-CATALOG_NAME", catfile])
+        subprocess.check_call(
+            [sex_exec, filename, "-c", config_filename, "-CATALOG_NAME", catfile], close_fds=True)
     data = pyfits.getdata(catfile)
     os.remove(catfile)
     return data
