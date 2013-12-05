@@ -34,9 +34,9 @@ def file_count(filename, sex_exec="/usr/local/bin/sex", silent=False,
     else:
         print "Counting objects in "+filename
         subprocess.check_call([sex_exec, filename, "-c", config_filename, "-CATALOG_NAME", catfile])
-    nobs = len(pyfits.getdata(catfile))
+    data = pyfits.getdata(catfile)
     os.remove(catfile)
-    return nobs
+    return data
 
 def count_all(root_dir, experiments=constants.experiments, obs_types=constants.obs_types,
               shear_types=constants.shear_types):
@@ -76,22 +76,23 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                                 for fitsfile in fitsfiles:
 
                                     if "image" in fitsfile:
-                                        nobs = file_count(fitsfile)
+                                        data = file_count(fitsfile)
+                                        nobs = len(data)
                                         if nobs == 9 and "starfield" in fitsfile:
-                                            good[fitsfile] = nobs
+                                            good[fitsfile] = {"nobs": nobs, "data": data}
                                         elif nobs == 10000:
-                                            good[fitsfile] = nobs
+                                            good[fitsfile] = {"nobs": nobs, "data": data}
                                         else:
-                                            bad[fitsfile] = nobs
+                                            bad[fitsfile] = {"nobs": nobs, "data": data}
  
     print "Ran SExtractor on all FITS files in "+root_dir
     print "Verified object totals in FITS files for the following branches: \n"+str(found)
     print "Verified "+str(len(good))+"/"+str(len(good) + len(bad))+" FITS files by counting"
     if len(bad) > 0:
         message = "The following files failed FITS object counting:\n"
-        for filename, nobs in bad.iteritems():
+        for filename, entry in bad.iteritems():
 
-            message += filename+" with "+str(nobs)+" objects\n" 
+            message += filename+" with "+str(entry["nobs"])+" objects\n" 
 
         print message
     else:
@@ -104,12 +105,15 @@ if __name__ == "__main__":
     import time
     import cPickle
     from sys import argv
+
+    # Check the argument list length
     if len(argv) == 2:
         experiment = argv[1]
     else:
         import sys
         print "usage: ./count_objects.py EXPERIMENT"
         sys.exit(1)
+
     if not os.path.isdir("./counts"): os.mkdir("./counts") # Build the required directory
     # Loop over exps and obs making dictionary (lump both constant/variable together as detection
     # should not differ between these sets)
@@ -131,3 +135,4 @@ if __name__ == "__main__":
             "wb") as fbad:
             print "Writing bad dictionary to "+fbad.name
             cPickle.dump(bad_public, fbad)
+
