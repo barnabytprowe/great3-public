@@ -20,13 +20,16 @@ def file_count(filename, sex_exec="/usr/local/bin/sex", silent=False,
     import subprocess
     import tempfile
     # Make a unique (safe) tempfile to which to write the FITS-format catalog
-    _, catfile = tempfile.mkstemp(suffix=".fits")
+    catfile_descriptor, catfile = tempfile.mkstemp(suffix=".fits")
+    # Close the catfile unit (it's currently open after creation)
+    cfobject = os.fdopen(catfile_descriptor)
+    cfobject.close() 
     if silent:
-        stdoutfile = tempfile.mkstemp()
-        with open(stdoutfile, "wb") as ftmp:
+        fdtmp, stdoutfile = tempfile.mkstemp()
+        with os.fdopen(fdtmp, "wb") as fotmp:
             subprocess.check_call(
                 [sex_exec, filename, "-c", config_filename, "-CATALOG_NAME", catfile],
-                stdout=ftmp, stderr=ftmp)
+                stdout=fotmp, stderr=fotmp)
         os.remove(stdoutfile)
     else:
         print "Counting objects in "+filename
