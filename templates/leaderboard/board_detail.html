@@ -10,10 +10,11 @@
 			widgets:['zebra'],
                 textExtraction: function(node) { 
                     // extract data from markup and return it
-                    var s = node.innerHTML; 
-                    return s.replace('*','');
-                }
-
+                    var s = node.innerHTML.replace(/\ /g,''); 
+                    if (s.replace(' ','')=="*") {s="0";};
+                    console.log('--'+s+'--');
+                    return s;
+                } 
 		}); }); 
 	</script>
 {% endblock %}

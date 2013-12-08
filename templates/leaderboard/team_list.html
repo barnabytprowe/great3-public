@@ -8,8 +8,9 @@
                 widgets:['zebra'],
                 textExtraction: function(node) { 
                     // extract data from markup and return it
-                    var s = node.innerHTML; 
-                    if (s=="*") {return "0";};
+                    var s = node.innerHTML.replace(/\ /g,''); 
+                    if (s.replace(' ','')=="*") {s="0";};
+                    console.log('--'+s+'--');
                     return s;
                 } 
 
