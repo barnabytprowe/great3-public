@@ -7,7 +7,14 @@
 	<script>
 		$(document).ready(function() {$("#boardTable").tablesorter({
 			headers: {3: {sorter:'rank'}},
-			widgets:['zebra']}); } ); 
+			widgets:['zebra'],
+                textExtraction: function(node) { 
+                    // extract data from markup and return it
+                    var s = node.innerHTML; 
+                    return s.replace('*','');
+                }
+
+		}); }); 
 	</script>
 {% endblock %}
 

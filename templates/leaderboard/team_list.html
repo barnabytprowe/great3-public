@@ -4,8 +4,17 @@
 
 {% block header_script %}
 	<script>
-		$(document).ready(function() {$("#teamTable").tablesorter({widgets:['zebra']}); } ); 
-	</script>
+		$(document).ready(function() {$("#teamTable").tablesorter({
+                widgets:['zebra'],
+                textExtraction: function(node) { 
+                    // extract data from markup and return it
+                    var s = node.innerHTML; 
+                    if (s=="*") {return "0";};
+                    return s;
+                } 
+
+            })}); 
+   	</script>
 {% endblock %}
 
 {% block content %}

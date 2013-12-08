@@ -2,7 +2,14 @@
 {% block subtitle %} Leaderboards {% endblock %}
 {% block header_script %}
 <script>
-		$(document).ready(function() {$("#boardTable").tablesorter({widgets:['zebra']}); } );
+		$(document).ready(function() {$("#boardTable").tablesorter({widgets:['zebra'],
+                textExtraction: function(node) { 
+                    // extract data from markup and return it
+                    var s = node.innerHTML; 
+                    return s.replace('*','');
+                }
+
+	}); } );
 </script>
  {% endblock %}
 
