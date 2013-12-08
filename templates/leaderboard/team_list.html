@@ -6,6 +6,7 @@
 	<script>
 		$(document).ready(function() {$("#teamTable").tablesorter({
                 widgets:['zebra'],
+                sortList:[[2,1],[0,0]],
                 textExtraction: function(node) { 
                     // extract data from markup and return it
                     var s = node.innerHTML.replace(/\ /g,''); 
