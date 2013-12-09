@@ -4,8 +4,19 @@
 
 {% block header_script %}
 	<script>
-		$(document).ready(function() {$("#teamTable").tablesorter({widgets:['zebra']}); } ); 
-	</script>
+		$(document).ready(function() {$("#teamTable").tablesorter({
+                widgets:['zebra'],
+                sortList:[[2,1],[0,0]],
+                textExtraction: function(node) { 
+                    // extract data from markup and return it
+                    var s = node.innerHTML.replace(/\ /g,''); 
+                    if (s.replace(' ','')=="*") {s="0";};
+                    console.log('--'+s+'--');
+                    return s;
+                } 
+
+            })}); 
+   	</script>
 {% endblock %}
 
 {% block content %}
