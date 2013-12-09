@@ -20,7 +20,7 @@ if __name__ == "__main__":
     # Setup a couple of variables to get the largest nobs
     biggest_nobs = 0
     biggest_nobs_field = ""
-    baddict = cPickle.load(argv[1])
+    baddict = cPickle.load(open(argv[1]))
     for key, subdict in baddict:
 
         nobs.append(value["nobs"])
