@@ -23,7 +23,7 @@ if __name__ == "__main__":
     baddict = cPickle.load(open(argv[1]))
     for key, subdict in baddict.iteritems():
 
-        nobs.append(value["nobs"])
+        nobs.append(subdict["nobs"])
         if nobs[-1] > biggest_nobs:
             biggest_nobs = nobs[-1]
             biggest_nobs_field = key
