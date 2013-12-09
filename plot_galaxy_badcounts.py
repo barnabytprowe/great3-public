@@ -23,11 +23,11 @@ if __name__ == "__main__":
     baddict = cPickle.load(open(argv[1]))
     for key, subdict in baddict.iteritems():
 
-        if "starfield_image" not in os.path.split(key)[-1]
-        nobs.append(subdict["nobs"])
-        if np.abs(nobs[-1] - 10000) > np.abs(biggest_nobs - 10000):
-            biggest_nobs = nobs[-1]
-            biggest_nobs_field = key
+        if "starfield_image" not in os.path.split(key)[-1]:
+            nobs.append(subdict["nobs"])
+            if np.abs(nobs[-1] - 10000) > np.abs(biggest_nobs - 10000):
+                biggest_nobs = nobs[-1]
+                biggest_nobs_field = key
 
     # Then plot the hist
     plt.hist(
