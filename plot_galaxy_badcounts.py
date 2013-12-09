@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # usage: ./plot_galaxy_badcounts.py DICTFILE
-
+import os
 from sys import argv
 import cPickle
 import pyfits
@@ -29,7 +29,9 @@ if __name__ == "__main__":
             biggest_nobs_field = key
 
     # Then plot the hist
-    plt.hist(nobs, bins=50, label="Worst offender: "+biggest_nobs_field+" with "+str(biggest_nobs))
+    plt.hist(
+        nobs, bins=50,
+        label="Worst offender: "+os.path.split(biggest_nobs_field)[-1]+" with "+str(biggest_nobs))
     plt.xlabel("N objects")
     plt.legend()
     splitname = ((argv[1]).rsplit("_"))
