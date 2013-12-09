@@ -32,7 +32,8 @@ if __name__ == "__main__":
     # Then plot the hist
     plt.hist(
         nobs, bins=50,
-        label="Worst offender: "+os.path.split(biggest_nobs_field)[-1]+" with "+str(biggest_nobs))
+        label="Worst offender: "+os.path.split(os.path.split(biggest_nobs_field)[0])[-1]+"/"+
+        os.path.split(biggest_nobs_field)[-1]+" with "+str(biggest_nobs))
     plt.xlabel("N objects")
     plt.legend()
     splitname = ((argv[1]).rsplit("_"))
