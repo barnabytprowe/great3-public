@@ -18,7 +18,7 @@ if __name__ == "__main__":
     # List for storing object counts 
     nobs = []
     # Setup a couple of variables to get the largest nobs
-    biggest_nobs = 0
+    biggest_nobs = 10000
     biggest_nobs_field = ""
     baddict = cPickle.load(open(argv[1]))
     for key, subdict in baddict.iteritems():
