@@ -29,8 +29,9 @@ if __name__ == "__main__":
             biggest_nobs_field = key
 
     # Then plot the hist
-    plt.hist(nobs, bins=30)
+    plt.hist(nobs, bins=50, label="Worst offender: "+biggest_nobs_field+" with "+str(biggest_nobs))
     plt.xlabel("N objects")
+    plt.legend()
     splitname = ((argv[1]).rsplit("_"))
     plt.title("Fields in "+str(splitname[1])+" with N objects != 10000")
     outfile = "histogram_"+((argv[1]).rstrip(".p"))+".png"
