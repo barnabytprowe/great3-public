@@ -7,8 +7,7 @@ import constants
 sys.path.append("..")
 import great3sims.mapper
 
-def file_count(filename, sex_exec="/usr/local/bin/sex", silent=False,
-	           config_filename="sex.config"):
+def file_count(filename, sex_exec="/usr/local/bin/sex", silent=False, config_filename="sex.config"):
     """Run SExtractor on the given `filename`.
 
     @param sex_exec        Executable file for SExtractor (default=`/usr/local/bin/sex`)
@@ -77,7 +76,11 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                                 for fitsfile in fitsfiles:
 
                                     if "image" in fitsfile:
-                                        data = file_count(fitsfile)
+                                        if obs_type is "space":
+                                            config_filename = "sex_space.config"
+                                        else:
+                                            config_filename = "sex.config"
+                                        data = file_count(fitsfile, config_filename=config_filename)
                                         nobs = len(data)
                                         if nobs == 9 and "starfield" in fitsfile:
                                             good[fitsfile] = {"nobs": nobs, "data": data}
