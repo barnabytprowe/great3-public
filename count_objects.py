@@ -76,7 +76,7 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                                 for fitsfile in fitsfiles:
 
                                     if "image" in fitsfile:
-                                        if obs_type is "space":
+                                        if obs_type == "space":
                                             config_filename = "sex_space.config"
                                         else:
                                             config_filename = "sex.config"
