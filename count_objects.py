@@ -122,7 +122,7 @@ if __name__ == "__main__":
     if not os.path.isdir("./counts"): os.mkdir("./counts") # Build the required directory
     # Loop over exps and obs making dictionary (lump both constant/variable together as detection
     # should not differ between these sets)
-    for obs_type in ("space",): #constants.obs_types:
+    for obs_type in constants.obs_types:
 
         good_public, bad_public = count_all(
             constants.public_dir, experiments=[experiment,], obs_types=[obs_type,])
