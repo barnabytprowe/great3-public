@@ -646,7 +646,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
 
 def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                logger=None, normalization=NORMALIZATION_CONSTANT, just_q=False, cfid=CFID,
-               mfid=MFID, pretty_print=False, flip_g1=False, flip_g2=False):
+               mfid=MFID, pretty_print=False, flip_g1=False, flip_g2=False, plot=False):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -694,6 +694,35 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
         Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = g3metrics.metricQZ1_const_shear(
             g1srot, g2srot, g1trot, g2trot, cfid=cfid, mfid=mfid)
         Q_c *= normalization
+        if plot:
+            import matplotlib.pyplot as plt
+            plt.subplot(211)
+            plt.plot(g1trot, g1srot - g1trot, 'k+')
+            plt.plot(
+                [min(g1trot), max(g1trot)], [m1 * min(g1trot) + c1, m1 * max(g1trot) + c1],
+                'b-', label="c+  = %+.5f +/- %.5f \nm+  = %+.5f +/- %.5f" % (c1, sigc1, m1, sigm1))
+            plt.xlim()
+            plt.xlabel("gtrue_+")
+            plt.ylabel("(gsub - gtrue)_+")
+            plt.ylim(-0.015, 0.015)
+            plt.title(os.path.split(submission_file)[-1])
+            plt.axhline(ls='--', color='k')
+            plt.legend()
+            plt.subplot(212)
+            plt.plot(g2trot, g2srot - g2trot, 'k+')
+            plt.plot(
+                [min(g2trot), max(g2trot)], [m2 * min(g2trot) + c2, m2 * max(g2trot) + c2],
+                'r-', label="cx  = %+.5f +/- %.5f \nmx  = %+.5f +/- %.5f" % (c2, sigc2, m2, sigm2))
+            plt.xlabel("gtrue_x")
+            plt.ylabel("(gsub - gtrue)_x")
+            plt.ylim(-0.015, 0.015)
+            plt.axhline(ls='--', color='k')
+            plt.legend()
+            if type(plot) == str:
+                print "Saving plot to "+plot
+                plt.savefig(plot)
+            plt.show()
+
     except Exception as err:
         # Something went wrong... We'll handle this silently setting all outputs to zero but warn
         # the user via any supplied logger; else raise
