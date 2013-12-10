@@ -80,6 +80,7 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                                             config_filename = "sex_space.config"
                                         else:
                                             config_filename = "sex.config"
+                                        print "Using "+config_filename
                                         data = file_count(fitsfile, config_filename=config_filename)
                                         nobs = len(data)
                                         if nobs == 9 and "starfield" in fitsfile:
