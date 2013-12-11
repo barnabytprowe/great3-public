@@ -22,7 +22,7 @@ def make_cat_dict(experiment):
         for shear_type in constants.shear_types:
 
             mapper = great3sims.mapper.Mapper(
-                constant.public_dir, experiment, obs_type, shear_type)
+                constants.public_dir, experiment, obs_type, shear_type)
             for subfield_index in range(200):
 
                 imfile = os.path.join(mapper.full_dir, "image-%03d-0.fits" % subfield_index)
