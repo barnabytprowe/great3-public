@@ -10,7 +10,7 @@ import great3sims.mapper
 EXPERIMENT = "variable_psf"
 
 
-def make_cat_dict(experiment):
+def make_cats_dict(experiment):
     """Make a dict of SExtractor catalogs for all galaxy images in all branches of this experiment
     """
     print "Beginning generation of catalogs to be stored into "+catfile
@@ -39,10 +39,16 @@ def make_cat_dict(experiment):
 
 if __name__ == "__main__":
 
+    import cPickle
     # First of all make the counts output directory and assign the filename for catalog output
     if not os.path.isdir("./counts"): os.mkdir("./counts")
     catfile = os.path.join(".counts", "variable_psf_sexcats.p")
     if not os.path.isfile(catfile):
-        make_cat_dict(EXPERIMENT)
-
+        cats = make_cats_dict(EXPERIMENT)
+        print "Saving catalogs in "+catfile
+        with open(catfile, "wb") as fout:
+            cPickle.dump(cats, fout)
+    else:
+        with open(catfile, "rb") as fin:
+            cats = cPickle.load(fin)
 
