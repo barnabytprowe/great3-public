@@ -50,6 +50,7 @@ if __name__ == "__main__":
 
             cats = make_cats(EXPERIMENT, obs_type, shear_type)
             quantiles = {}
+            i = 0
             for imfile, cat in cats.iteritems():
 
                 snr = cat["FLUX_AUTO"] / cat["FLUXERR_AUTO"]
@@ -57,15 +58,23 @@ if __name__ == "__main__":
                 quantiles[imfile] = {
                     80: snr_sorted[2000], 90: snr_sorted[1000], 95: snr_sorted[500],
                     99: snr_sorted[100]}
-                plt.hist(snr, bins=100, range=(0, 100), histtype="step",
-                    label="95% SNR > "+str(quantiles[imfile][95]))
-                plt.xlabel("FLUX_AUTO / FLUXERR_AUTO")
-                plt.ylabel("Counts")
-                plt.title(EXPERIMENT+"/"+obs_type+"/"+shear_type+"/"+os.path.split(imfile)[-1])
-                plt.legend()
                 outfile = os.path.join(
                     "./counts",
                     "snrhist_"+EXPERIMENT[0]+obs_type[0]+shear_type[0]+"_"+
                     os.path.split(imfile)[-1]+".png")
-                print "Saving plot to "+outfile
-                plt.savefig(outfile)
+                if not os.path.isfile(outfile): 
+                    plt.hist(snr, bins=100, range=(0, 100), histtype="step",
+                        label="95% SNR > "+str(quantiles[imfile][95]))
+                    plt.xlabel("FLUX_AUTO / FLUXERR_AUTO")
+                    plt.ylabel("Counts")
+                    plt.title(EXPERIMENT+"/"+obs_type+"/"+shear_type+"/"+os.path.split(imfile)[-1])
+                    plt.legend()
+                    print "Saving plot to "+outfile
+                    plt.savefig(outfile)
+
+            import cPickle
+            with open(
+                "./counts/quantiles_"+EXPERIMENT[0]+obs_type[0]+shear_type[0]+".p", "wb") as fout:
+                cPickle.dump(quantiles, fout)
+
+
