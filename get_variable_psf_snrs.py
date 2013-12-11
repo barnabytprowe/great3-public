@@ -2,6 +2,7 @@
 import os
 import sys
 import numpy as np
+import pyfits
 import constants
 import count_objects
 sys.path.append("..")
@@ -13,6 +14,7 @@ EXPERIMENT = "variable_psf"
 def make_cats(experiment, obs_type, shear_type, catfile_prefix="./counts/sexcat_"):
     """Make a dict of SExtractor catalogs for all galaxy images in all branches of this experiment
     """
+    import subprocess
     mapper = great3sims.mapper.Mapper(
         constants.public_dir, experiment, obs_type, shear_type)
     print "Making catalogs for galaxy images in "+mapper.full_dir
@@ -51,6 +53,7 @@ if __name__ == "__main__":
                 plt.hist(snr, bins=100, range=(0, 100), histtype="step")
                 plt.xlabel("FLUX_AUTO / FLUXERR_AUTO")
                 plt.ylabel("Counts")
+                plt.title(EXPERIMENT+"/"+obs_type+"/"+shear_type+"/"+os.path.split(imfile)[-1])
                 plt.show()
                 1/0
 
