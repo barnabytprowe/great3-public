@@ -62,8 +62,10 @@ if __name__ == "__main__":
                     "./counts",
                     "snrhist_"+EXPERIMENT[0]+obs_type[0]+shear_type[0]+"_"+
                     os.path.split(imfile)[-1]+".png")
-                if not os.path.isfile(outfile): 
-                    plt.hist(snr, bins=100, range=(0, 100), histtype="step",
+                if not os.path.isfile(outfile):
+                    plt.clf()
+                    plt.hist(
+                        snr, bins=100, range=(0, 100), histtype="step",
                         label="95% SNR > "+str(quantiles[imfile][95]))
                     plt.xlabel("FLUX_AUTO / FLUXERR_AUTO")
                     plt.ylabel("Counts")
