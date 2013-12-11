@@ -34,12 +34,14 @@ def make_cats(experiment, obs_type, shear_type, catfile_prefix="./counts/sexcat_
                 ["sex", imfile, "-c", config_filename, "-CATALOG_NAME", catfile], close_fds=True)
         print "Loading data from "+catfile
         cats[imfile] = pyfits.getdata(catfile)
+
     # Return the cats dict
     return cats
 
+
 if __name__ == "__main__":
 
-    import cPickle
+    import matplotlib.pyplot as plt
     # First of all make the counts output directory and assign the filename for catalog output
     if not os.path.isdir("./counts"): os.mkdir("./counts")
     for obs_type in constants.obs_types:
@@ -47,13 +49,20 @@ if __name__ == "__main__":
         for shear_type in constants.shear_types:
 
             cats = make_cats(EXPERIMENT, obs_type, shear_type)
+            quantiles = {}
             for imfile, cat in cats.iteritems():
 
                 snr = cat["FLUX_AUTO"] / cat["FLUXERR_AUTO"]
-                plt.hist(snr, bins=100, range=(0, 100), histtype="step")
+                snr_sorted = np.sort(snr)
+                quantiles[imfile] = {
+                    80: snr_sorted[2000], 90: snr_sorted[1000], 95: snr_sorted[500],
+                    99: snr_sorted[100]}
+                plt.hist(snr, bins=100, range=(0, 100), histtype="step",
+                    label="95% SNR > "+str(quantiles[imfile][95]))
                 plt.xlabel("FLUX_AUTO / FLUXERR_AUTO")
                 plt.ylabel("Counts")
                 plt.title(EXPERIMENT+"/"+obs_type+"/"+shear_type+"/"+os.path.split(imfile)[-1])
+                plt.legend()
                 plt.show()
                 1/0
 
