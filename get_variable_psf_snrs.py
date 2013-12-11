@@ -63,7 +63,9 @@ if __name__ == "__main__":
                 plt.ylabel("Counts")
                 plt.title(EXPERIMENT+"/"+obs_type+"/"+shear_type+"/"+os.path.split(imfile)[-1])
                 plt.legend()
-                plt.show()
-                1/0
-
-
+                outfile = os.path.join(
+                    "./counts",
+                    "snrhist_"+EXPERIMENT[0]+obs_type[0]+shear_type[0]+"_"+
+                    os.path.split(imfile)[-1]+".png")
+                print "Saving plot to "+outfile
+                plt.savefig(outfile)
