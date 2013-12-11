@@ -75,6 +75,7 @@ if __name__ == "__main__":
             import cPickle
             with open(
                 "./counts/quantiles_"+EXPERIMENT[0]+obs_type[0]+shear_type[0]+".p", "wb") as fout:
+                print "Saving quantile dict to "+fout.name
                 cPickle.dump(quantiles, fout)
 
 
