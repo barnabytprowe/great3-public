@@ -198,6 +198,17 @@ if __name__ == "__main__":
     import os
     import tempfile
 
+    # First do a constant shear example for control/ground/constant
+    subfield_indices, g1true, g2true = evaluate.get_generate_const_truth("control", "ground")
+    tempfile = "./g3subs/gcg_sub.asc"
+    g1sub, g2sub = g3metrics.make_submission_const_shear(
+        0., 0., 0., 0., g1true, g2true, 10000,  noise_sigma=0.05)
+    np.savetxt(tempfile, np.array((subfield_indices, g1sub, g2sub)).T)
+    qc = evaluate.q_constant(
+        tempfile, "control", "ground", pretty_print=True, plot="./g3subs/gcg_sub.png")
+    os.remove(tempfile) 
+    1/0
+
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
     obs_type = 'space'
