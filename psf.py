@@ -404,11 +404,10 @@ class ConstPSFBuilder(PSFBuilder):
                     + self.min_atmos_psf_e
                 atmos_psf_beta[i_epoch] = uniform_deviate()*180.0
             else:
-                # Note: I am letting the jitter and charge diffusion vary per epoch, but I realize
-                # this is debatable, so please comment if you disagree.  For jitter, based on
-                # comments from Lance I got the impression that (at least for Euclid) this can
-                # depend on some temporally localized conditions.  I guess charge diffusion is more
-                # arguable.  It's easy to change...
+                # Note: I am letting the jitter vary per epoch, since based on comments from Lance I
+                # got the impression that (at least for Euclid) this can depend on some temporally
+                # localized conditions.  Per Barney's suggestion, charge diffusion is fixed across
+                # epochs.
                 jitter_sigma[i_epoch] = \
                     uniform_deviate() * (self.max_jitter_sigma - \
                                              self.min_jitter_sigma) + self.min_jitter_sigma
@@ -416,12 +415,16 @@ class ConstPSFBuilder(PSFBuilder):
                     uniform_deviate() * (self.max_jitter_e - \
                                              self.min_jitter_e) + self.min_jitter_e
                 jitter_beta[i_epoch] = uniform_deviate()*180.0
-                charge_sigma[i_epoch] = \
-                    uniform_deviate() * (self.max_charge_sigma - \
-                                             self.min_charge_sigma) + self.min_charge_sigma
-                charge_e1[i_epoch] = \
-                    uniform_deviate() * (self.max_charge_e1 - \
-                                             self.min_charge_e1) + self.min_charge_e1
+                if i_epoch == 0:
+                    charge_sigma[i_epoch] = \
+                        uniform_deviate() * (self.max_charge_sigma - \
+                                                 self.min_charge_sigma) + self.min_charge_sigma
+                    charge_e1[i_epoch] = \
+                        uniform_deviate() * (self.max_charge_e1 - \
+                                                 self.min_charge_e1) + self.min_charge_e1
+                else:
+                    charge_sigma[i_epoch] = charge_sigma[0]
+                    charge_e1[i_epoch] = charge_e1[0]
 
         # Make schema for catalog.
         schema = [("opt_psf_lam_over_diam", float),
