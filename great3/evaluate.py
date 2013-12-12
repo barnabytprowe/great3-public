@@ -741,10 +741,10 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
             print "Evaluated results for submission "+str(submission_file)
             print
             print "Q_c =  %.4f" % Q_c
-            print "c+  = %+.5f +/- %.5f" % (c1, sigc1)
-            print "cx  = %+.5f +/- %.5f" % (c2, sigc2)
-            print "m+  = %+.5f +/- %.5f" % (m1, sigm1)
-            print "mx  = %+.5f +/- %.5f" % (m2, sigm2)
+            print "c+  = %+.6f +/- %.6f" % (c1, sigc1)
+            print "cx  = %+.6f +/- %.6f" % (c2, sigc2)
+            print "m+  = %+.6f +/- %.6f" % (m1, sigm1)
+            print "mx  = %+.6f +/- %.6f" % (m2, sigm2)
             print
         ret = (Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2)
     return ret
