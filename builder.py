@@ -421,14 +421,14 @@ class SimBuilder(object):
                     record["index"] = index
                     record["x"] = (record["xmin"] + record["xmax"]) / 2
                     record["y"] = (record["ymin"] + record["ymax"]) / 2
+                    # Here are some numbers that we will save in a cache, only computing for the
+                    # first epoch in a field, so as to preserve the random subpixel shifts between
+                    # stars in the starfield.  This way simple coaddition will work for all stars in
+                    # one of the constant PSF starfields.
                     if epoch_index == 0:
                         if index > 0:
                             sx = (2.0*rng() - 1.0) * constants.centroid_shift_max
                             sy = (2.0*rng() - 1.0) * constants.centroid_shift_max
-                            # Here are some numbers that we will save in a cache, only computing for
-                            # the first epoch in a field, so as to preserve the random subpixel
-                            # shifts between stars in the starfield.  This way simple coaddition
-                            # will work for all stars in one of the constant PSF starfields.
                             record["xshift"] = sx
                             record["yshift"] = sy
                         else:
