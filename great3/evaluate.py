@@ -724,20 +724,21 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
         ret = (Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2)
     return ret
 
-def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
-               logger=None, normalization=NORMALIZATION_VARIABLE, corr2_exec="corr2",
-               poisson_weight=False, usebins=USEBINS, fractional_diff=False):
+def q_variable(submission_file, experiment, obs_type, normalization=None, truth_dir=TRUTH_DIR,
+               storage_dir=STORAGE_DIR, logger=None, corr2_exec="corr2", poisson_weight=False,
+               usebins=USEBINS, fractional_diff=False):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
     @param experiment       Experiment for this branch, one of 'control', 'real_galaxy',
                             'variable_psf', 'multiepoch', 'full'
     @param obs_type         Observation type for this branch, one of 'ground' or 'space'
+    @param normalization    Normalization factor for the metric, default will be set differently for
+                            obs_type='space' and obs_type='ground'
     @param storage_dir      Directory from/into which to load/store rotation files
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
     @param logger           Python logging.Logger instance, for message logging
-    @param normalization    Normalization factor for the metric
     @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
     @param poisson_weight   If `True`, use the relative Poisson errors in each bin of map_E
                             to form an inverse variance weight for the difference metric
@@ -757,6 +758,14 @@ def q_variable(submission_file, experiment, obs_type, truth_dir=TRUTH_DIR, stora
     # We are stating that we want at least 4 and up to 5 columns, so check for this
     if data.shape not in ((NBINS_THETA * NFIELDS, 4), (NBINS_THETA * NFIELDS, 5)):
         raise ValueError("Submission "+str(submission_file)+" is not the correct shape!")
+    # Set the default normalization based on whether ground or space data
+    if normalization is None:
+        if obs_type == "ground":
+            normalization = NORMALIZATION_VARIABLE_GROUND
+        elif obs_type == "space":
+            normalization = NORMALIZATION_VARIABLE_SPACE
+        else:
+            raise ValueError("Default normalization cannot be set as obs_type not recognised")
     # Extract the salient parts of the submission from data
     field_sub = data[:, 0].astype(int)
     theta_sub = data[:, 1]
