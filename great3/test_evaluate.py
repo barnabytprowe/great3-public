@@ -277,7 +277,7 @@ if __name__ == "__main__":
     # Save the arrays
     filename = os.path.join(
         evaluate.STORAGE_DIR,
-        "test_evaluate_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+usebins[1]+"_"+poisson[1]+"_"+
+        "test_evaluate_grid_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+"_"+poisson[1]+"_"+
         fractional[1]+"_mc_N"+str(NTEST)+".npy")
     print "Saving to "+filename
     np.save(filename, qarr)
