@@ -649,8 +649,8 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     return field, theta, map_E, map_B, maperr
 
 def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
-               logger=None, normalization=NORMALIZATION_CONSTANT, just_q=False, cfid=CFID,
-               mfid=MFID, pretty_print=False, flip_g1=False, flip_g2=False):
+               logger=None, normalization=NORMALIZATION_CONSTANT, sigma_min=0., just_q=False,
+               cfid=CFID, mfid=MFID, pretty_print=False, flip_g1=False, flip_g2=False):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -662,11 +662,12 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
                             stored
     @param logger           Python logging.Logger instance, for message logging
     @param normalization    Normalization factor for the metric
+    @param sigma_min        Damping term to put into the denominator of QZ1 metric
     @param just_q           Set `just_q = True` (default is `False`) to only return Q_c rather than
                             the default behaviour of returning a tuple including best fitting c+,
                             m+, cx, mx, etc.
     @param cfid             Fiducial, target c value
-    @param mfid             Fiducial, target m value 
+    @param mfid             Fiducial, target m value
     @return The metric Q_c, & optionally best fitting c+, m+, cx, mx, sigc+, sigcm+, sigcx, sigmx.
     """
     if not os.path.isfile(submission_file):
@@ -696,7 +697,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
         g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
         g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
         Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = g3metrics.metricQZ1_const_shear(
-            g1srot, g2srot, g1trot, g2trot, cfid=cfid, mfid=mfid)
+            g1srot, g2srot, g1trot, g2trot, cfid=cfid, mfid=mfid, sigma_min=sigma_min)
         Q_c *= normalization
     except Exception as err:
         # Something went wrong... We'll handle this silently setting all outputs to zero but warn
@@ -714,6 +715,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
         if pretty_print:
             print
             print "Evaluated results for submission "+str(submission_file)
+            print "Using sigma_min = "+str(sigma_min)
             print
             print "Q_c =  %.4f" % Q_c
             print "c+  = %+.5f +/- %.5f" % (c1, sigc1)
