@@ -393,7 +393,7 @@ class SimBuilder(object):
                         # S/N distribution should be similar.
                         record['star_snr'] = dist_deviate()
                     index += 1
-            if epoch_index == 0.:
+            if epoch_index == 0:
                 self.cached_xshift = star_catalog['xshift']
                 self.cached_yshift = star_catalog['yshift']
                 self.cached_x_field_true_deg = star_catalog['x_field_true_deg']
@@ -435,7 +435,7 @@ class SimBuilder(object):
                             record["xshift"] = 0
                             record["yshift"] = 0
                     index += 1
-            if epoch_index == 0.:
+            if epoch_index == 0:
                 self.cached_xshift = star_catalog['xshift']
                 self.cached_yshift = star_catalog['yshift']
             else:
