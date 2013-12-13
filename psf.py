@@ -307,17 +307,58 @@ class ConstPSFBuilder(PSFBuilder):
 
         # Get numbers for various parameters that will be used to make an OpticalPSF:
         # * We choose a range of lam_over_diam motivated by upcoming telescopes and stored within
-        #   the class.
+        #   the class.  This is the same for all epochs within a field, since it's part of the
+        #   telescope model; the same is true for obscuration and struts.
         # * We draw random aberrations according to some overall RMS for the total over all
         #   aberrations, assuming they are independent.
         # * We choose a reasonable range of obscuration, using min/max defined in class.
         # * We choose a reasonable range of struts, using the list of options defined in class.
         # * We choose a random strut_angle, within the range expected given the number of struts.
         for i_epoch in range(n_epochs):
-            lam_over_diam[i_epoch] = (
-                uniform_deviate() * (self.max_lam_over_diam[self.obs_type] -
-                                     self.min_lam_over_diam[self.obs_type]) +
-                self.min_lam_over_diam[self.obs_type] )
+            if i_epoch == 0:
+                lam_over_diam[i_epoch] = (
+                    uniform_deviate() * (self.max_lam_over_diam[self.obs_type] -
+                                         self.min_lam_over_diam[self.obs_type]) +
+                    self.min_lam_over_diam[self.obs_type] )
+                obscuration[i_epoch] = (
+                    uniform_deviate() * (self.max_obscuration[self.obs_type] -
+                                         self.min_obscuration[self.obs_type]) +
+                    self.min_obscuration[self.obs_type] )
+
+                strut_rand_ind = \
+                    int( np.floor( uniform_deviate() * len(self.strut_list[self.obs_type]) ) )
+                tmp_n_struts = self.strut_list[self.obs_type][strut_rand_ind]
+                n_struts[i_epoch] = tmp_n_struts
+
+                if tmp_n_struts > 0:
+                    strut_angle[i_epoch] = 360.*uniform_deviate()
+                else:
+                    strut_angle[i_epoch] = 0.
+
+                # Start with the default pad_factor, and maybe go smaller.
+                pad_factor[i_epoch] = 1.5
+                # Figure out how large a pad_factor will make the Optical PSF image size be no
+                # larger than the size of the postage stamp onto which we will eventually draw it.
+                # First repeat some of the calculations that OpticalPSF does to determine its image
+                # size.  The 0.005 in the denominator is the value of alias_threshold that we use as
+                # the default in GalSim.
+                twoR = 2. * lam_over_diam[i_epoch] / (
+                    0.005 * 0.5 * np.pi * np.pi * (1.-obscuration[i_epoch]) )
+                # This is the size in arcsec that OpticalPSF wants to create its image.
+                # If this is larger than the postage stamp size, we can trim it down.
+                image_size = max(constants.xsize[self.obs_type][self.multiepoch],
+                                 constants.ysize[self.obs_type][self.multiepoch])
+                pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
+                image_size_arcsec = image_size * pixel_scale
+                if image_size_arcsec < twoR * pad_factor[i_epoch]:
+                    pad_factor[i_epoch] = image_size_arcsec / twoR
+
+            else:
+                lam_over_diam[i_epoch] = lam_over_diam[0]
+                obscuration[i_epoch] = obscuration[0]
+                n_struts[i_epoch] = n_struts[0]
+                strut_angle[i_epoch] = strut_angle[0]
+                pad_factor[i_epoch] = pad_factor[0]
 
             tmp_vec = np.zeros(self.n_aber)
             for ind_ab in range(self.n_aber):
@@ -325,43 +366,6 @@ class ConstPSFBuilder(PSFBuilder):
                     self.rms_aberration[self.obs_type] * self.aber_weights[self.obs_type][ind_ab] *\
                     gaussian_deviate() / np.sqrt(np.sum(self.aber_weights[self.obs_type]**2))
                 aber_dict[self.use_aber[ind_ab]][i_epoch] = tmp_vec[ind_ab]
-
-            obscuration[i_epoch] = (
-                uniform_deviate() * (self.max_obscuration[self.obs_type] -
-                                     self.min_obscuration[self.obs_type]) +
-                self.min_obscuration[self.obs_type] )
-
-            strut_rand_ind = \
-                int( np.floor( uniform_deviate() * len(self.strut_list[self.obs_type]) ) )
-            tmp_n_struts = self.strut_list[self.obs_type][strut_rand_ind]
-            n_struts[i_epoch] = tmp_n_struts
-
-            if tmp_n_struts > 0:
-                strut_angle[i_epoch] = 360.*uniform_deviate()
-            else:
-                strut_angle[i_epoch] = 0.
-
-            # Start with the default pad_factor, and maybe go smaller.
-            pad_factor[i_epoch] = 1.5
-            # Figure out how large a pad_factor will make the Optical PSF image size be no larger
-            # than the size of the postage stamp onto which we will eventually draw it.
-            # First repeat some of the calculations that OpticalPSF does to determine its
-            # image size.  The 0.005 in the denominator is the value of alias_threshold that we use
-            # as the default in GalSim.
-            twoR = 2. * lam_over_diam[i_epoch] / (
-                    0.005 * 0.5 * np.pi * np.pi * (1.-obscuration[i_epoch]) )
-            # This is the size in arcsec that OpticalPSF wants to create its image.
-            # If this is larger than the postage stamp size, we can trim it down.
-            image_size = max(constants.xsize[self.obs_type][self.multiepoch],
-                             constants.ysize[self.obs_type][self.multiepoch])
-            pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
-            image_size_arcsec = image_size * pixel_scale
-            if image_size_arcsec < twoR * pad_factor[i_epoch]:
-                pad_factor[i_epoch] = image_size_arcsec / twoR
-                #print 'image_size = ',image_size
-                #print 'image_size_arcsec = ',image_size_arcsec
-                #print 'twoR = ',twoR
-                #print 'pad_factor = ',pad_factor[i_epoch]
 
             if self.obs_type == "ground":
                 # for seeing values, check whether we need to force them to follow the distribution
@@ -400,6 +404,10 @@ class ConstPSFBuilder(PSFBuilder):
                     + self.min_atmos_psf_e
                 atmos_psf_beta[i_epoch] = uniform_deviate()*180.0
             else:
+                # Note: I am letting the jitter vary per epoch, since based on comments from Lance I
+                # got the impression that (at least for Euclid) this can depend on some temporally
+                # localized conditions.  Per Barney's suggestion, charge diffusion is fixed across
+                # epochs.
                 jitter_sigma[i_epoch] = \
                     uniform_deviate() * (self.max_jitter_sigma - \
                                              self.min_jitter_sigma) + self.min_jitter_sigma
@@ -407,12 +415,16 @@ class ConstPSFBuilder(PSFBuilder):
                     uniform_deviate() * (self.max_jitter_e - \
                                              self.min_jitter_e) + self.min_jitter_e
                 jitter_beta[i_epoch] = uniform_deviate()*180.0
-                charge_sigma[i_epoch] = \
-                    uniform_deviate() * (self.max_charge_sigma - \
-                                             self.min_charge_sigma) + self.min_charge_sigma
-                charge_e1[i_epoch] = \
-                    uniform_deviate() * (self.max_charge_e1 - \
-                                             self.min_charge_e1) + self.min_charge_e1
+                if i_epoch == 0:
+                    charge_sigma[i_epoch] = \
+                        uniform_deviate() * (self.max_charge_sigma - \
+                                                 self.min_charge_sigma) + self.min_charge_sigma
+                    charge_e1[i_epoch] = \
+                        uniform_deviate() * (self.max_charge_e1 - \
+                                                 self.min_charge_e1) + self.min_charge_e1
+                else:
+                    charge_sigma[i_epoch] = charge_sigma[0]
+                    charge_e1[i_epoch] = charge_e1[0]
 
         # Make schema for catalog.
         schema = [("opt_psf_lam_over_diam", float),

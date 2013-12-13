@@ -393,7 +393,7 @@ class SimBuilder(object):
                         # S/N distribution should be similar.
                         record['star_snr'] = dist_deviate()
                     index += 1
-            if epoch_index == 0.:
+            if epoch_index == 0:
                 self.cached_xshift = star_catalog['xshift']
                 self.cached_yshift = star_catalog['yshift']
                 self.cached_x_field_true_deg = star_catalog['x_field_true_deg']
@@ -421,19 +421,26 @@ class SimBuilder(object):
                     record["index"] = index
                     record["x"] = (record["xmin"] + record["xmax"]) / 2
                     record["y"] = (record["ymin"] + record["ymax"]) / 2
-                    if index > 0:
-                        sx = (2.0*rng() - 1.0) * constants.centroid_shift_max
-                        sy = (2.0*rng() - 1.0) * constants.centroid_shift_max
-                        # Note: this scheme does not preserve the shifts from epoch to epoch.  While
-                        # not serious enough a problem to merit rerunning the sims, someone who
-                        # wishes to use this script for other purposes may wish to fix the shifts to
-                        # be the same for each epoch.
-                        record["xshift"] = sx
-                        record["yshift"] = sy
-                    else:
-                        record["xshift"] = 0
-                        record["yshift"] = 0
+                    # Here are some numbers that we will save in a cache, only computing for the
+                    # first epoch in a field, so as to preserve the random subpixel shifts between
+                    # stars in the starfield.  This way simple coaddition will work for all stars in
+                    # one of the constant PSF starfields.
+                    if epoch_index == 0:
+                        if index > 0:
+                            sx = (2.0*rng() - 1.0) * constants.centroid_shift_max
+                            sy = (2.0*rng() - 1.0) * constants.centroid_shift_max
+                            record["xshift"] = sx
+                            record["yshift"] = sy
+                        else:
+                            record["xshift"] = 0
+                            record["yshift"] = 0
                     index += 1
+            if epoch_index == 0:
+                self.cached_xshift = star_catalog['xshift']
+                self.cached_yshift = star_catalog['yshift']
+            else:
+                star_catalog['xshift'] = self.cached_xshift
+                star_catalog['yshift'] = self.cached_yshift
         self.psf_builder.generateCatalog(rng, star_catalog, epoch_parameters,
                                          epoch_parameters["epoch_offset"], normalized=False)
         self.mapper.write(star_catalog, "star_catalog", epoch_parameters)
