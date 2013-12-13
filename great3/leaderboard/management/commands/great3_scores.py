@@ -42,6 +42,11 @@ USEBINS = evaluate.USEBINS          # Take a subset of bins, ignoring extreme sm
                                     # If so, supply evaluate.USEBINS; if not, set USEBINS=None
                                     # and all bins are used (old style)
 
+# Set values of the SIGMA_MIN parameter that will be sent to the Q_c metric denominator to damp
+# noisy, high Q, scores
+SIGMA_MIN_GROUND = 2.
+SIGMA_MIN_SPACE = 1.
+
 # Note the Q scores for both the constant and variable shear branches are affected by
 # empricially-determined normalization factor, and (in the case of the constant branches) fiducial,
 # target values of m & c biases.
@@ -102,6 +107,7 @@ class Command(BaseCommand):
                 entry.score = evaluate.q_constant(
                     filename, experiment, obs_type,  cfid=evaluate.CFID, mfid=evaluate.MFID,
                     normalization=evaluate.NORMALIZATION_CONSTANT, just_q=True, truth_dir=TRUTH_DIR,
+                    sigma_min={"ground": SIGMA_MIN_GROUND, "space": SIGMA_MIN_SPACE}[obs_type],
                     storage_dir=STORAGE_DIR, logger=logger, pretty_print=False)
             datestamp = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
             outfile.write('%s\t%s\t%r\t%s\n' % (entry.name,filename,entry.score,datestamp))
