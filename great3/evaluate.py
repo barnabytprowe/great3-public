@@ -119,8 +119,13 @@ MAPEOBS_FILE_PREFIX = "mapEobs_"
 NORMALIZATION_CONSTANT = 1.089 
 #NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
 #NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
-NORMALIZATION_VARIABLE = 2.4502427759585598e-04 # Factor comes from tests with test_evaluate.py on
-                                                # 600 runs, 15 Oct 2013
+#NORMALIZATION_VARIABLE = 2.4502427759585598e-04 # Factor comes from tests with test_evaluate.py on
+                                                 # 600 runs, 15 Oct 2013
+NORMALIZATION_VARIABLE_GROUND = 0.000794105283678 # Factor comes from tests with test_evaluate.py on
+                                                  # 600 runs and NOISE_SIGMA = 0.15, 13 Dec 2013
+
+NORMALIZATION_VARIABLE_SPACE = 0.000499406254775  # Factor comes from tests with test_evaluate.py on
+                                                  # 600 runs and NOISE_SIGMA = 0.10, 13 Dec 2013
 
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,

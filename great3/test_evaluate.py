@@ -198,6 +198,10 @@ if __name__ == "__main__":
     import os
     import tempfile
 
+    truth_dir = "/Users/browe/great3/beta/truth" # Modify to wherever truth is unpacked
+    # Temporarily write this into evaluate.TRUTH_DIR - HACKY!
+    evaluate.TRUTH_DIR = truth_dir
+
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
     obs_type = 'space'
@@ -211,9 +215,9 @@ if __name__ == "__main__":
     poisson = (False, "noweight") 
     fractional = (False, "absdiffs")
 
-    NTEST = 100
-    NOISE_SIGMA = 0.05
-    cvals = (evaluate.CFID, 10. * evaluate.CFID, 100. * evaluate.CFID) 
+    NTEST = 600
+    NOISE_SIGMA = 0.10
+    cvals = (evaluate.CFID,)# 10. * evaluate.CFID, 100. * evaluate.CFID) 
     mvals = (evaluate.MFID, 10. * evaluate.MFID, 100. * evaluate.MFID) 
     qarr = np.empty((NTEST, len(cvals), len(mvals)))
 
@@ -225,37 +229,36 @@ if __name__ == "__main__":
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
     _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type)
 
-    for ic in range(len(cvals)):
+    for ic, cval in enumerate(cvals):
 
-        for jm in range(len(mvals)):
+        for jm, mval in enumerate(mvals):
 
             print
-            print "Running metric simulations for c = %.4f, m = %.4f" % (cvals[ic], mvals[jm])
+            print "Running metric simulations for c = %.4f, m = %.4f" % (cval, mval)
             # Perform a simualtion, and do up to NTEST trials, so as to help find an updated
             # normalization factor (do one outside loop so I can check logger action)
-            subfile = tempfile.mktemp(suffix=".dat")
-            result = make_variable_submission(
-                x, y, g1true, g2true, g1int, g2int, cvals[ic], cvals[ic], mvals[jm], mvals[jm],
-                outfile=subfile, noise_sigma=NOISE_SIGMA)
-            q = evaluate.q_variable(
-                subfile, experiment, obs_type, logger=logger, usebins=usebins[0],
-                poisson_weight=poisson[0], fractional_diff=fractional[0])
-            os.remove(subfile)
-            print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (1, NTEST, cvals[ic], mvals[jm], q)
+            #subfile = tempfile.mktemp(suffix=".dat")
+            #result = make_variable_submission(
+            #    x, y, g1true, g2true, g1int, g2int, cval, cval, mval, mval,
+            #    outfile=subfile, noise_sigma=NOISE_SIGMA)
+            #q = evaluate.q_variable(
+            #    subfile, experiment, obs_type, logger=logger, usebins=usebins[0],
+            #    poisson_weight=poisson[0], fractional_diff=fractional[0])
+            #os.remove(subfile)
+            #print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (1, NTEST, cval, mval, q)
 
-            qlist = [q]
-            for i in range(NTEST - 1):
+            qlist = []
+            for i in range(NTEST):
     
                 subfile = tempfile.mktemp(suffix=".dat")
                 result = make_variable_submission(
-                    x, y, g1true, g2true, g1int, g2int, cvals[ic], cvals[ic], mvals[jm], mvals[jm],
+                    x, y, g1true, g2true, g1int, g2int, cval, cval, mval, mval,
                     outfile=subfile, noise_sigma=NOISE_SIGMA)
                 q = evaluate.q_variable(
                     subfile, experiment, obs_type, logger=None, usebins=usebins[0],
-                    poisson_weight=poisson[0], fractional_diff=fractional[0])
+                    poisson_weight=poisson[0], fractional_diff=fractional[0], truth_dir=truth_dir)
                 os.remove(subfile)
-                print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (
-                    i + 2, NTEST, cvals[ic], mvals[jm], q)
+                print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (i + 1, NTEST, cval, mval, q)
                 qlist.append(q)
 
             # Collate and print results
@@ -269,11 +272,12 @@ if __name__ == "__main__":
                 np.std(qarr[:, ic, jm]) / np.mean(qarr[:, ic, jm]),
                 np.std(qarr[:, ic, jm]) / np.sqrt((len(qarr[:, ic, jm]) - 1))
                 / np.mean(qarr[:, ic, jm]))
-            #print "Best estimate of normalization factor = "+str(1. / np.mean(qarr[:, ic, jm]))
+            print "Best estimate of normalization factor = "+str(1000. / np.mean(qarr[:, ic, jm]))
 
     # Save the arrays
     filename = os.path.join(
         evaluate.STORAGE_DIR,
-        "test_evaluate_"+usebins[1]+"_"+poisson[1]+"_"+fractional[1]+"_mc_N"+str(NTEST)+".npy")
+        "test_evaluate_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+usebins[1]+"_"+poisson[1]+"_"+
+        fractional[1]+"_mc_N"+str(NTEST)+".npy")
     print "Saving to "+filename
     np.save(filename, qarr)
