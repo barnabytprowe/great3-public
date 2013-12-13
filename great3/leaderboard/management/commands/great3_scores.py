@@ -89,7 +89,12 @@ class Command(BaseCommand):
                 shear_type = "variable"
                 entry.score = evaluate.q_variable(
                     filename, experiment, obs_type, 
-                    normalization=evaluate.NORMALIZATION_VARIABLE, truth_dir=TRUTH_DIR,
+                    normalization={ # Explicitly set the normalization here, although this is also
+                                    # the default... I'm just a bit nervous about hiding things in
+                                    # defaults!
+                        "ground": evaluate.NORMALIZATION_VARIABLE_GROUND,
+                        "space": evaluate.NORMALIZATION_VARIABLE_SPACE}[obs_type],
+                    truth_dir=TRUTH_DIR,
                     storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_EXEC,
                     poisson_weight=POISSON_WEIGHT, usebins=USEBINS)
             else:
