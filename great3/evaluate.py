@@ -308,7 +308,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR, 
         with open(rotfile, "wb") as fout:
             fout.write("# Rotations for "+experiment+"-"+obs_type+"-constant\n")
             fout.write("# subfield_index  rotation [radians]\n")
-            np.savetxt(fout, np.array((np.arange(NSUBFIELDS), rotations)).T, fmt=" %4d %+.18f")
+            np.savetxt(fout, np.array((np.arange(len(rotations)), rotations)).T, fmt=" %4d %+.18f")
     return rotations
 
 def get_generate_variable_offsets(experiment, obs_type, storage_dir=STORAGE_DIR,
