@@ -169,13 +169,22 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
             logger.info("Loading shear truth tables from "+gtruefile) 
         gtruedata = np.loadtxt(gtruefile)
     else: 
-        params_prefix = os.path.join(mapper.full_dir, "shear_params-") 
-        gtruedata = np.empty((NSUBFIELDS, 3))
+        params_prefix = os.path.join(mapper.full_dir, "shear_params-")
         import yaml
-        gtruedata[:, 0] = np.arange(NSUBFIELDS)
-        for i in range(NSUBFIELDS):
+        # Check to see if this is a variable_psf or full branch, in which case we only need the
+        # first entry from each set of subfields
+        if experiment == "variable_psf" or experiment == "full":
+            gtruedata = np.empty((NFIELDS, 3))
+            gtruedata[:, 0] = np.arange(NFIELDS)
+            subfield_index_targets = range(0, NSUBFIELDS, NSUBFIELDS_PER_FIELD)
+        else:
+            gtruedata = np.empty((NSUBFIELDS, 3))
+            gtruedata[:, 0] = np.arange(NSUBFIELDS)
+            subfield_index_targets = range(NSUBFIELDS)
+        # Then loop over the required subfields reading in the shears
+        for i, subfield_index in enumerate(subfield_index_targets):
 
-            params_file = params_prefix+("%03d" % i)+".yaml"
+            params_file = params_prefix+("%03d" % subfield_index)+".yaml"
             with open(params_file, "rb") as funit:
                 gdict = yaml.load(funit)
                 gtruedata[i, 1] = gdict["g1"]
