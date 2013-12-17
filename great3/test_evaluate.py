@@ -215,7 +215,7 @@ if __name__ == "__main__":
     poisson = (False, "noweight") 
     fractional = (False, "absdiffs")
 
-    NTEST = 300
+    NTEST = 600
     NOISE_SIGMA = 0.10
     cvals = (evaluate.CFID,)# 10. * evaluate.CFID, 100. * evaluate.CFID) 
     mvals = (evaluate.MFID,)# 10. * evaluate.MFID, 100. * evaluate.MFID) 
