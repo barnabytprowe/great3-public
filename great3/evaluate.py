@@ -825,9 +825,8 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
                 Q_v_fields[i] = np.sum(
                     ((weight * (map_E_sub - map_E_ref) / map_E_ref)[usebins])[i::nactive])
 
-        # Then take the average abs(Q_v_fields)
-        Q_v = normalization * np.sum(weight[usebins]) / np.sum(
-            weight[usebins[:NBINS_THETA]] * np.abs(Q_v_fields))
+        # Then take the weighted average abs(Q_v_fields)
+        Q_v = normalization * np.sum(weight[usebins]) / np.sum(np.abs(Q_v_fields))
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
