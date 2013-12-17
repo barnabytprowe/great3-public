@@ -215,7 +215,7 @@ if __name__ == "__main__":
     poisson = (False, "noweight") 
     fractional = (False, "absdiffs")
 
-    NTEST = 600
+    NTEST = 300
     NOISE_SIGMA = 0.10
     cvals = (evaluate.CFID,)# 10. * evaluate.CFID, 100. * evaluate.CFID) 
     mvals = (evaluate.MFID,)# 10. * evaluate.MFID, 100. * evaluate.MFID) 
@@ -256,7 +256,8 @@ if __name__ == "__main__":
                     outfile=subfile, noise_sigma=NOISE_SIGMA)
                 q = evaluate.q_variable(
                     subfile, experiment, obs_type, logger=None, usebins=usebins[0],
-                    poisson_weight=poisson[0], fractional_diff=fractional[0], truth_dir=truth_dir)
+                    poisson_weight=poisson[0], fractional_diff=fractional[0], truth_dir=truth_dir,
+                    sigma_min=1.e-6)
                 os.remove(subfile)
                 print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (i + 1, NTEST, cval, mval, q)
                 qlist.append(q)
@@ -277,7 +278,7 @@ if __name__ == "__main__":
     # Save the arrays
     filename = os.path.join(
         evaluate.STORAGE_DIR,
-        "newmetric_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+"_"+poisson[1]+"_"+
+        "newmetric_sigma_min1.e-6_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+"_"+poisson[1]+"_"+
         fractional[1]+"_mc_N"+str(NTEST)+".npy")
     print "Saving to "+filename
     np.save(filename, qarr)
