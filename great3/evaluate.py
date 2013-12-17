@@ -121,11 +121,13 @@ NORMALIZATION_CONSTANT = 1.089
 #NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
 #NORMALIZATION_VARIABLE = 2.4502427759585598e-04 # Factor comes from tests with test_evaluate.py on
                                                  # 600 runs, 15 Oct 2013
-NORMALIZATION_VARIABLE_GROUND = 0.000794105283678 # Factor comes from tests with test_evaluate.py on
-                                                  # 600 runs and NOISE_SIGMA = 0.15, 13 Dec 2013
+#NORMALIZATION_VARIABLE_GROUND = 0.000794105283678 # Factor comes from tests with test_evaluate.py on
+#                                                  # 600 runs and NOISE_SIGMA = 0.15, 13 Dec 2013
+NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
+NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
 
-NORMALIZATION_VARIABLE_SPACE = 0.000499406254775  # Factor comes from tests with test_evaluate.py on
-                                                  # 600 runs and NOISE_SIGMA = 0.10, 13 Dec 2013
+#NORMALIZATION_VARIABLE_SPACE = 0.000499406254775  # Factor comes from tests with test_evaluate.py on
+#                                                  # 600 runs and NOISE_SIGMA = 0.10, 13 Dec 2013
 
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
@@ -799,6 +801,8 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
     # Set up the usebins to use if `usebins == None` (use all bins)
     if usebins is None:
         usebins = np.repeat(True, NBINS_THETA * NFIELDS)
+    # Get the total number of active bins per field
+    nactive = sum(usebins) / NFIELDS
     try: # Put this in a try except block to handle funky submissions better
         np.testing.assert_array_almost_equal( # Sanity check out truth / expected theta bins
             theta_shear, EXPECTED_THETA, decimal=3,
@@ -808,14 +812,21 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
         np.testing.assert_array_almost_equal(
             theta_sub, theta_ref, decimal=3, err_msg="User theta array does not match truth.")
         # The definition of Q_v is so simple there is no need to use the g3metrics version
+        # NOTE WE ARE TRYING A NEW DEFINITION OF Q_v THAT IS NOT SO SIMPLE
+        Q_v_fields = np.zeros(nactive) # To store diffs averaged over fields, per bin
         if not fractional_diff:
-            Q_v = normalization * np.sum(weight[usebins]) / np.sum(
-                weight[usebins] * np.abs(map_E_sub[usebins] - map_E_ref[usebins]))
+            for i in range(nactive): # Sum over all fields for each bin, nactive being the stride
+
+                Q_v_fields[i] = np.sum(((weight * (map_E_sub - map_E_ref))[usebins])[i::nactive])
+
         else:
-            Q_v = normalization * np.sum(weight[usebins]) / np.sum(
-                weight[usebins] * np.abs(
-                    (map_E_sub[usebins] - map_E_ref[usebins]) / map_E_ref[usebins])
-                ) 
+            for i in range(nactive): # Sum over all fields for each bin, nactive being the stride
+
+                Q_v_fields[i] = np.sum(
+                    ((weight * (map_E_sub - map_E_ref) / map_E_ref)[usebins])[i::nactive])
+
+        # Then take the average abs(Q_v_fields)
+        Q_v = normalization * np.sum(weight[usebins]) / np.sum(np.abs(Q_v_fields))
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
