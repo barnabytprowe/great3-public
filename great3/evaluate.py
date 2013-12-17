@@ -173,7 +173,7 @@ def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_
         import yaml
         # Check to see if this is a variable_psf or full branch, in which case we only need the
         # first entry from each set of subfields
-        if experiment == "variable_psf" or experiment == "full":
+        if experiment in ("variable_psf", "full"):
             gtruedata = np.empty((NFIELDS, 3))
             gtruedata[:, 0] = np.arange(NFIELDS)
             subfield_index_targets = range(0, NSUBFIELDS, NSUBFIELDS_PER_FIELD)
@@ -293,7 +293,7 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR, 
                 mean_psf_g1[subfield_index] = 0. # This is safe in np.arctan2() -> 0. 
                 mean_psf_g2[subfield_index] = 0.
 
-        if experiment == "variable_psf" or experiment == "full":
+        if experiment in ("variable_psf", "full"):
             # Average over all subfields per field
             final_psf_g1 = np.empty(NFIELDS)
             final_psf_g2 = np.empty(NFIELDS)
