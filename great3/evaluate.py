@@ -283,8 +283,23 @@ def get_generate_const_rotations(experiment, obs_type, storage_dir=STORAGE_DIR, 
             else:
                 mean_psf_g1[subfield_index] = 0. # This is safe in np.arctan2() -> 0. 
                 mean_psf_g2[subfield_index] = 0.
+
+        if experiment == "variable_psf" or experiment == "full":
+            # Average over all subfields per field
+            final_psf_g1 = np.empty(NFIELDS)
+            final_psf_g2 = np.empty(NFIELDS)
+            for i in range(NFIELDS):
+
+                final_psf_g1[i] = np.mean(
+                    mean_psf_g1[i * NSUBFIELDS_PER_FIELD: (i + 1) * NSUBFIELDS_PER_FIELD])
+                final_psf_g2[i] = np.mean(
+                    mean_psf_g2[i * NSUBFIELDS_PER_FIELD: (i + 1) * NSUBFIELDS_PER_FIELD])
+
+        else:
+            final_psf_g1 = mean_psf_g1
+            final_psf_g2 = mean_psf_g2
  
-        rotations = .5 * np.arctan2(mean_psf_g2, mean_psf_g1)
+        rotations = .5 * np.arctan2(final_psf_g2, final_psf_g1)
         # We have built rotations, but then save this file as ascii for use next time
         if logger is not None:
             logger.info("Saving rotations to "+rotfile)    
