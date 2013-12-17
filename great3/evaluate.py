@@ -126,8 +126,11 @@ NORMALIZATION_CONSTANT = 1.089
 NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
 NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
 
-#NORMALIZATION_VARIABLE_SPACE = 0.000499406254775  # Factor comes from tests with test_evaluate.py on
-#                                                  # 600 runs and NOISE_SIGMA = 0.10, 13 Dec 2013
+#NORMALIZATION_VARIABLE_SPACE = 0.000499406254775 # Factor comes from tests with test_evaluate.py on
+#                                                 # 600 runs and NOISE_SIGMA = 0.10, 13 Dec 2013
+
+#NORMALIZATION_VARIABLE_SPACE = 0.000135102101297 # Factor comes from tests with test_evaluate.py on
+#                                                 # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013
 
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
