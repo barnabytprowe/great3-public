@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
-    obs_type = 'space'
+    obs_type = 'ground'
 
     # Setup the logger
     logging.basicConfig(stream=sys.stderr)
@@ -215,10 +215,10 @@ if __name__ == "__main__":
     poisson = (False, "noweight") 
     fractional = (False, "absdiffs")
 
-    NTEST = 100
-    NOISE_SIGMA = 0.10
-    cvals = (evaluate.CFID, 10. * evaluate.CFID, 100. * evaluate.CFID) 
-    mvals = (evaluate.MFID, 10. * evaluate.MFID, 100. * evaluate.MFID) 
+    NTEST = 600
+    NOISE_SIGMA = 0.15
+    cvals = (evaluate.CFID,)# 10. * evaluate.CFID, 100. * evaluate.CFID) 
+    mvals = (evaluate.MFID,)# 10. * evaluate.MFID, 100. * evaluate.MFID) 
     qarr = np.empty((NTEST, len(cvals), len(mvals)))
 
     print usebins[1]
@@ -278,7 +278,7 @@ if __name__ == "__main__":
     # Save the arrays
     filename = os.path.join(
         evaluate.STORAGE_DIR,
-        "newmetric_grid_sigma_min1.e-6_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+"_"+poisson[1]+
+        "newmetric_sigma_min1.e-6_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+"_"+poisson[1]+
         "_"+fractional[1]+"_mc_N"+str(NTEST)+".npy")
     print "Saving to "+filename
     np.save(filename, qarr)
