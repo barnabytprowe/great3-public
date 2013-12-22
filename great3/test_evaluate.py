@@ -260,7 +260,7 @@ if __name__ == "__main__":
                 q = evaluate.q_variable(
                     subfile, experiment, obs_type, logger=None, usebins=usebins[0],
                     poisson_weight=poisson[0], fractional_diff=fractional[0], truth_dir=truth_dir,
-                    sigma_min={"ground": 4.e-6, "space": 2.e-6}[obs_type])
+                    sigma2_min={"ground": 4.e-6, "space": 1.e-6}[obs_type])
                 os.remove(subfile)
                 print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (i + 1, NTEST, cval, mval, q)
                 qlist.append(q)
