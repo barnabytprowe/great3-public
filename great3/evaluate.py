@@ -762,7 +762,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
 
 def q_variable(submission_file, experiment, obs_type, normalization=None, truth_dir=TRUTH_DIR,
                storage_dir=STORAGE_DIR, logger=None, corr2_exec="corr2", poisson_weight=False,
-               usebins=USEBINS, fractional_diff=False, sigma_min=0.):
+               usebins=USEBINS, fractional_diff=False, sigma2_min=0.):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -783,7 +783,7 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
                             use in the calculation of Q_v [default = `USEBINS`].  If set to `None`,
                             uses all bins
     @param fractional_diff  Use a fractional, rather than absolute difference in metric
-    @param sigma_min        Damping term to put into the denominator of metric
+    @param sigma2_min       Damping term to put into the denominator of metric
     @return The metric Q_v
     """
     if not os.path.isfile(submission_file):
@@ -859,7 +859,7 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
                     ((weight * (map_E_sub - map_E_ref) / map_E_ref)[usebins])[i::nactive])
 
         # Then take the weighted average abs(Q_v_fields)
-        Q_v = normalization * np.sum(weight[usebins]) / (np.sum(np.abs(Q_v_fields)) + sigma_min)
+        Q_v = normalization * np.sum(weight[usebins]) / (np.sum(np.abs(Q_v_fields)) + sigma2_min)
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
