@@ -32,7 +32,7 @@ def plot_vs_c(data, cvals=CVALS, mvals=MVALS):
         std_data = np.std(data[:, :, im], axis=0)
         plt.errorbar(
             np.asarray(cvals) * (1.05**im), mean_data, yerr=std_data,
-            label='Input m = %.2e'%cvals[im])
+            label='Input m = %.2e'%mvals[im])
     plt.xscale('log')
     plt.xlim(4.e-2, 1.e-4)
     plt.legend(loc=2)
