@@ -221,11 +221,14 @@ if __name__ == "__main__":
     mvals = (evaluate.MFID, 10. * evaluate.MFID, 100. * evaluate.MFID) 
     qarr = np.empty((NTEST, len(cvals), len(mvals)))
 
+    sigma2_min = {"ground": 4.e-6, "space": 1.e-6}[obs_type]
+
     print usebins[1]
     print poisson[1]
     print fractional[1]
     print obs_type
     print NOISE_SIGMA
+    print sigma2_min
 
     # Get the x,y, true intrinsic ellips and shears for making fake submissions
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
@@ -260,7 +263,7 @@ if __name__ == "__main__":
                 q = evaluate.q_variable(
                     subfile, experiment, obs_type, logger=None, usebins=usebins[0],
                     poisson_weight=poisson[0], fractional_diff=fractional[0], truth_dir=truth_dir,
-                    sigma2_min={"ground": 4.e-6, "space": 1.e-6}[obs_type])
+                    sigma2_min=sigma2_min)
                 os.remove(subfile)
                 print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (i + 1, NTEST, cval, mval, q)
                 qlist.append(q)
