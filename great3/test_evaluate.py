@@ -257,7 +257,7 @@ if __name__ == "__main__":
                 q = evaluate.q_variable(
                     subfile, experiment, obs_type, logger=None, usebins=usebins[0],
                     poisson_weight=poisson[0], fractional_diff=fractional[0], truth_dir=truth_dir,
-                    sigma_min={"ground": 2.e-6, "space": 1.e-6}[obs_type])
+                    sigma_min={"ground": 0., "space": 0.}[obs_type])
                 os.remove(subfile)
                 print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (i + 1, NTEST, cval, mval, q)
                 qlist.append(q)
@@ -278,7 +278,7 @@ if __name__ == "__main__":
     # Save the arrays
     filename = os.path.join(
         evaluate.STORAGE_DIR,
-        "newmetric_grid_sigma_min_"+obs_type+"_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+
+        "newmetric_grid_no_sigma_min_"+obs_type+"_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+
         "_"+poisson[1]+"_"+fractional[1]+"_mc_N"+str(NTEST)+".npy")
     print "Saving to "+filename
     np.save(filename, qarr)
