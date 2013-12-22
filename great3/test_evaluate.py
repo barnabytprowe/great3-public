@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
-    obs_type = 'ground'
+    obs_type = 'space'
 
     # Setup the logger
     logging.basicConfig(stream=sys.stderr)
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     fractional = (False, "absdiffs")
 
     NTEST = 100
-    NOISE_SIGMA = 0.15
+    NOISE_SIGMA = 0.10
     cvals = (evaluate.CFID, 10. * evaluate.CFID, 100. * evaluate.CFID) 
     mvals = (evaluate.MFID, 10. * evaluate.MFID, 100. * evaluate.MFID) 
     qarr = np.empty((NTEST, len(cvals), len(mvals)))
@@ -224,6 +224,8 @@ if __name__ == "__main__":
     print usebins[1]
     print poisson[1]
     print fractional[1]
+    print obs_type
+    print NOISE_SIGMA
 
     # Get the x,y, true intrinsic ellips and shears for making fake submissions
     _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
@@ -250,10 +252,11 @@ if __name__ == "__main__":
             qlist = []
             for i in range(NTEST):
     
-                subfile = tempfile.mktemp(suffix=".dat")
+                fdsub, subfile = tempfile.mkstemp(suffix=".dat")
                 result = make_variable_submission(
                     x, y, g1true, g2true, g1int, g2int, cval, cval, mval, mval,
                     outfile=subfile, noise_sigma=NOISE_SIGMA)
+                os.close(fdsub)
                 q = evaluate.q_variable(
                     subfile, experiment, obs_type, logger=None, usebins=usebins[0],
                     poisson_weight=poisson[0], fractional_diff=fractional[0], truth_dir=truth_dir,
