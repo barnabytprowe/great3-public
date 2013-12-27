@@ -1,0 +1,86 @@
+\documentclass[preprint,11pt]{aastex}
+
+% Copyright 2012, 2013 The GalSim developers:
+% https://github.com/GalSim-developers
+%
+% This file is part of GalSim: The modular galaxy image simulation toolkit.
+%
+% GalSim is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+%
+% GalSim is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+%
+
+% packages for figures
+\usepackage{graphicx,times}
+% packages for symbols
+\usepackage{latexsym,amssymb,hyperref}
+% AMS-LaTeX package for e.g. subequations
+\usepackage{amsmath}
+
+%=====================================================================
+% FRONT MATTER
+%=====================================================================
+
+\slugcomment{\today}
+
+%=====================================================================
+% BEGIN DOCUMENT
+%=====================================================================
+
+\begin{document}
+
+\setlength{\parskip}{2.0ex plus 0.5ex minus 0.5ex}
+\setlength{\parindent}{0cm} 
+
+\title{Why Have We Updated the Metrics for GREAT3?}
+
+You may have noticed that your metric scores in the GREAT3
+Leaderboards have changed slightly.  These changes will be most
+noticeable for the highest scoring entries, but \emph{all} scores have
+changed by some amount.  This document will explain why these change
+were made, and give the definitions of the new metrics.
+
+\section{Background}
+As mentioned in the first versions of the GREAT3 Handbook (Mandelbaum
+et al 2013), we always felt it
+might be necessary to update the metrics as we received more
+information about methods in the form of entries to GREAT3.  In
+particular we felt it might be necessary to \emph{renormalize} the
+metrics, to make it so that a method scores $\sim 1000$ if it reaches
+target performance.
+
+So why would either the constant shear metric ($Q_{\rm c}$) or
+variable shear metric ($Q_{\rm v}$) need renormalization?
+
+To answer this question, let us consider a simple model of the
+contributions to an observation of a (complex) gravitational shear $g_{\rm obs}$.
+We may write this as a combination of the gravitational reduced shear $g$, galaxy intrinsic ellipticity
+$g_{\rm int}$, and a measurement noise term $g_{\rm noise}$ due to the
+noise on image pixels:
+\begin{equation}
+g_{\rm obs} \simeq g + g_{\rm int} + g_{\rm noise}.
+\end{equation}
+As they are both noise terms as far as shear measurement is concerned,
+it is common in weak lensing to refer to $g_{\rm int}$ as \emph{shape
+  noise} and $g_{\rm noise}$ as \emph{measurement noise} (this sounds
+better than `noise noise').
+In GREAT3 we have designed our experiments with inherent symmetries
+that allow us to cancel the intrinsic ellipticity
+
+\section{Galaxy image signal-to-noise}\label{sec:snr}
+The motivation for changing the metrics
+
+\section{The Constant Shear Metric $Q_{\rm c}$}\label{sec:qc}
+
+\section{The Variable Shear Metric $Q_{\rm v}$}\label{sec:qv}
+
+\end{document}
