@@ -124,17 +124,17 @@ NORMALIZATION_CONSTANT = 1.089
 #NORMALIZATION_VARIABLE_GROUND = 0.000794105283678 # Factor comes from tests with test_evaluate.py on
 #                                                  # 600 runs and NOISE_SIGMA = 0.15, 13 Dec 2013
 
-NORMALIZATION_VARIABLE_GROUND = 0.000237155945476 # Factor comes from tests with test_evaluate.py on
+#NORMALIZATION_VARIABLE_GROUND = 0.000237155945476 # Factor comes from tests with test_evaluate.py on
                                                   # 600 runs and NOISE_SIGMA = 0.15, 17 Dec 2013, with
                                                   # sigma_min = 2.e-6
 
-#NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
-#NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
+NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
+NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
 #NORMALIZATION_VARIABLE_SPACE = 0.000499406254775 # Factor comes from tests with test_evaluate.py on
 #                                                 # 600 runs and NOISE_SIGMA = 0.10, 13 Dec 2013
 #NORMALIZATION_VARIABLE_SPACE = 0.000135102101297 # Factor comes from tests with test_evaluate.py on
 #                                                 # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013
-NORMALIZATION_VARIABLE_SPACE = 0.00014815720975 # Factor comes from tests with test_evaluate.py on
+#NORMALIZATION_VARIABLE_SPACE = 0.00014815720975 # Factor comes from tests with test_evaluate.py on
                                                 # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013, with
                                                 # sigma_min = 1.e-6
 

@@ -215,10 +215,10 @@ if __name__ == "__main__":
     poisson = (False, "noweight") 
     fractional = (False, "absdiffs")
 
-    NTEST = 300
+    NTEST = 600
     NOISE_SIGMA = 0.10
-    cvals = (evaluate.CFID, 10. * evaluate.CFID, 100. * evaluate.CFID) 
-    mvals = (evaluate.MFID, 10. * evaluate.MFID, 100. * evaluate.MFID) 
+    cvals = (evaluate.CFID,)# 10. * evaluate.CFID, 100. * evaluate.CFID) 
+    mvals = (evaluate.MFID,)# 10. * evaluate.MFID, 100. * evaluate.MFID) 
     qarr = np.empty((NTEST, len(cvals), len(mvals)))
 
     sigma2_min = {"ground": 1.8e-5, "space": 8.e-6}[obs_type]
@@ -284,7 +284,7 @@ if __name__ == "__main__":
     # Save the arrays
     filename = os.path.join(
         evaluate.STORAGE_DIR,
-        "newmetric_grid_sigma2_min_8_"+obs_type+"_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+
+        "newmetric_sigma2_min_8_"+obs_type+"_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+
         "_"+poisson[1]+"_"+fractional[1]+"_mc_N"+str(NTEST)+".npy")
     print "Saving to "+filename
     np.save(filename, qarr)
