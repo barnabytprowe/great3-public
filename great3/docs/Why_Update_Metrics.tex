@@ -65,16 +65,34 @@ To answer this question, let us consider a simple model of the
 contributions to an observation of a (complex) gravitational shear $g_{\rm obs}$.
 We may write this as a combination of the gravitational reduced shear $g$, galaxy intrinsic ellipticity
 $g_{\rm int}$, and a measurement noise term $g_{\rm noise}$ due to the
-noise on image pixels:
+pixel noise in galaxy images:
 \begin{equation}
 g_{\rm obs} \simeq g + g_{\rm int} + g_{\rm noise}.
 \end{equation}
 As they are both noise terms as far as shear measurement is concerned,
-it is common in weak lensing to refer to $g_{\rm int}$ as \emph{shape
-  noise} and $g_{\rm noise}$ as \emph{measurement noise} (this sounds
-better than `noise noise').
+it is not uncommon in weak lensing to refer to $g_{\rm int}$ as \emph{shape
+  noise} and $g_{\rm noise}$ as \emph{measurement noise} (perhaps this sounds
+better than `noise noise'...).
+
 In GREAT3 we have designed our experiments with inherent symmetries
-that allow us to cancel the intrinsic ellipticity
+that allow us to cancel out the contributions from intrinsic ellipticity
+$g_{\rm int}$ to uncertainty on shear (see Mandelbaum et al 2013).
+This allows us to reduce the  total data volume of the challenge
+significantly.  However, we have not devised a means to cancel out
+contributions from $g_{\rm noise}$, and it is this noise which
+ultimately sets data volume required to reach a given sensitivity on
+shear biases in methods.
+
+When simulating the performance of various metrics -- for many different
+$Q_{\rm c}$ and $Q_{\rm v}$ have been tested using simulated GREAT3
+submissions with a range of biases -- we modelled the measurement
+noise as Normally distributed with zero mean and standard deviation \texttt{NOISE\_SIGMA}:
+\begin{equation}
+g_{\rm noise} \sim N(0, \texttt{NOISE\_SIGMA}).
+\end{equation}
+For all the simulations that went into testing and normalizing the
+metrics in the GREAT3 Handbook, a value of \texttt{NOISE\_SIGMA} =
+0.05 was estimated as being appropriate to our images.
 
 \section{Galaxy image signal-to-noise}\label{sec:snr}
 The motivation for changing the metrics
