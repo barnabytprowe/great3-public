@@ -105,15 +105,43 @@ rise to the estimate $\texttt{NOISE\_SIGMA} \simeq 0.05$ used in the
 simulations of metrics and the calculation of an appropriate
 normalization factor for $Q_{\rm v}$.
 
-
 \section{Galaxy image signal-to-noise}\label{sec:snr}
 What we have realised about the GREAT3 galaxy images is that the SNR
 definition itself has a significant impact on the SNR value assigned
 to each image.
 
+The Bridle et al (2008) definition uses prior knowledge of the
+convolved galaxy light profile and in that respect is an optimal
+(matched filter) estimate of the SNR.  It also means that it cannot be
+used as an estimate of SNR in real data, where this light profile is
+unknown.
 
+A definition of SNR often used in practice comes from an estimate of
+the flux within a given aperture, divided by an estimate of the
+uncertainty on the flux in the same aperture.  Using the
+\textsc{SExtractor} software (Bertin \& Arnouts 1996) we can define a
+practical of SNR as $\texttt{FLUX\_AUTO} / \texttt{FLUXERR\_AUTO}$.
+Using this definition, we find that
+
+\section{New Estimates for \texttt{NOISE\_SIGMA}}
+Because the typical SNR of galaxy images in GREAT3 is lower than
+envisaged using a practical definition of SNR, the scaling
+relationship used to estimate $\texttt{NOISE\_SIGMA}$ has been found
+to be wrong.   Based on results coming in from early submissions, and
+internal validations of GREAT3, we have found that better estimates of
+the typical measurement noise are:
+\begin{itemize}
+\item[] \texttt{NOISE\_SIGMA} = 0.15 for the data simulating
+  observations from the ground;
+\item[] \texttt{NOISE\_SIGMA} = 0.10 for the data simulating
+  observations from space.
+\end{itemize}
+The excess measurement noise for the ground data comes from the
+additional uncertainty on galaxy shape due to the larger convolving
+Point Spread Function in these simulations.
 
 \section{The Constant Shear Metric $Q_{\rm c}$}\label{sec:qc}
+
 
 \section{The Variable Shear Metric $Q_{\rm v}$}\label{sec:qv}
 
