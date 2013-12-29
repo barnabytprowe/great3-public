@@ -121,7 +121,24 @@ the flux within a given aperture, divided by an estimate of the
 uncertainty on the flux in the same aperture.  Using the
 \textsc{SExtractor} software (Bertin \& Arnouts 1996) we can define a
 practical of SNR as $\texttt{FLUX\_AUTO} / \texttt{FLUXERR\_AUTO}$.
-Using this definition, we find that
+Using this definition, and \textsc{SExtractor} detection settings that
+securely locate all objects, we find that 99\% of objects in the
+ground (space) data have SNR~$>$~9.97~(11.7), and 90\% have
+SNR~$>$~13.5 (14.4 for space).  In Figure \ref{eq:snr} we plot a
+typical distribution of these SNR values for objects in one of the
+GREAT3 galaxy image files.  A large fraction of these objects give an
+estimated SNR~$<$~20 using the  $\texttt{FLUX\_AUTO} /
+\texttt{FLUXERR\_AUTO}$ definition.
+
+\begin{figure}\label{eq:snr}
+\begin{center}
+%\epsscale{num}
+\includegraphics[width=\textwidth]{snr_cvg.eps}
+\caption{Distribution of $\texttt{FLUX\_AUTO} /
+  \texttt{FLUXERR\_AUTO}$ for galaxy postage stamps in
+  \texttt{image-163-0.fits} in the control/ground/variable branch of GREAT3.}
+\end{center}
+\end{figure}
 
 \section{New Estimates for \texttt{NOISE\_SIGMA}}
 Because the typical SNR of galaxy images in GREAT3 is lower than
@@ -141,8 +158,9 @@ additional uncertainty on galaxy shape due to the larger convolving
 Point Spread Function in these simulations.
 
 \section{The Constant Shear Metric $Q_{\rm c}$}\label{sec:qc}
-
+The 
 
 \section{The Variable Shear Metric $Q_{\rm v}$}\label{sec:qv}
+
 
 \end{document}
