@@ -86,16 +86,28 @@ shear biases in methods.
 When simulating the performance of various metrics -- for many different
 $Q_{\rm c}$ and $Q_{\rm v}$ have been tested using simulated GREAT3
 submissions with a range of biases -- we modelled the measurement
-noise as Normally distributed with zero mean and standard deviation \texttt{NOISE\_SIGMA}:
+noise as Normally distributed with zero mean and standard deviation
+set by the variable \texttt{NOISE\_SIGMA}:
 \begin{equation}
-g_{\rm noise} \sim N(0, \texttt{NOISE\_SIGMA}).
+g_{\rm noise} \sim \mathcal{N}(0, \texttt{NOISE\_SIGMA}^2).
 \end{equation}
 For all the simulations that went into testing and normalizing the
 metrics in the GREAT3 Handbook, a value of \texttt{NOISE\_SIGMA} =
 0.05 was estimated as being appropriate to our images.
 
+This figure was based on the decision to include only galaxy images
+with signal-to-noise ratio (SNR) $\gtrsim 20$ in GREAT3, using the SNR
+defined by Bridle et al (2008).  Assuming a steep distribution of
+galaxy SNRs so that the population is dominated by objects with ${\rm
+  SNR} \sim 20$, and invoking the approximate `rule of thumb' $g_{\rm
+  noise} \sim ({\rm SNR})^{-1}$, gave rise to the estimate
+$\texttt{NOISE\_SIGMA} \simeq 0.05$ used in the simulations of metrics
+and the calculation of an appropriate normalization factor for $Q_{\rm
+  v}$.
+
+
 \section{Galaxy image signal-to-noise}\label{sec:snr}
-The motivation for changing the metrics
+
 
 \section{The Constant Shear Metric $Q_{\rm c}$}\label{sec:qc}
 
