@@ -49,7 +49,7 @@ noticeable for the highest scoring entries, but \emph{all} scores have
 changed by some amount.  This document will explain why these change
 were made, and give the definitions of the new metrics.
 
-\section{Background}
+\section{Background}\label{sec:bg}
 As mentioned in the first versions of the GREAT3 Handbook (Mandelbaum
 et al 2013), we always felt it
 might be necessary to update the metrics as we received more
@@ -146,7 +146,7 @@ envisaged using a practical definition of SNR, the scaling
 relationship used to estimate $\texttt{NOISE\_SIGMA}$ has been found
 to be wrong.   Based on results coming in from early submissions, and
 internal validations of GREAT3, we have found that better estimates of
-the typical measurement noise are:
+the typical measurement noise are in fact:
 \begin{itemize}
 \item[] \texttt{NOISE\_SIGMA} = 0.15 for the data simulating
   observations from the ground;
@@ -155,10 +155,15 @@ the typical measurement noise are:
 \end{itemize}
 The excess measurement noise for the ground data comes from the
 additional uncertainty on galaxy shape due to the larger convolving
-Point Spread Function in these simulations.
+Point Spread Function (PSF) in these simulations.  This is a factor
+that is not included in the approximate rule of thumb we described in
+Section~\ref{sec:bg}: it is of relevance due to the realistically
+large PSF-to-galaxy size ratio in the simulations of the ground
+observations, based on galaxy models from HST images as described in
+Mandelbaum et al (2013).
 
 \section{The Constant Shear Metric $Q_{\rm c}$}\label{sec:qc}
-The 
+The increased measurement noise 
 
 \section{The Variable Shear Metric $Q_{\rm v}$}\label{sec:qv}
 
