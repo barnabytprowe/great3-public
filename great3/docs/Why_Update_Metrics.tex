@@ -140,20 +140,20 @@ estimated SNR~$<$~20 using the  $\texttt{FLUX\_AUTO} /
 \end{center}
 \end{figure}
 
-\section{New Estimates for \texttt{NOISE\_SIGMA}}
+\section{New Estimates for \texttt{NOISE\_SIGMA}}\label{sec:ns}
 Because the typical SNR of galaxy images in GREAT3 is lower than
 envisaged using a practical definition of SNR, the scaling
 relationship used to estimate $\texttt{NOISE\_SIGMA}$ has been found
 to be wrong.   Based on results coming in from early submissions, and
 internal validations of GREAT3, we have found that better estimates of
-the typical measurement noise are in fact:
+the typical standard deviation of measurement noise are in fact:
 \begin{itemize}
-\item[] \texttt{NOISE\_SIGMA} = 0.15 for the data simulating
+\item[] $\texttt{NOISE\_SIGMA} \simeq 0.15$ for the branches simulating
   observations from the ground;
-\item[] \texttt{NOISE\_SIGMA} = 0.10 for the data simulating
+\item[] $\texttt{NOISE\_SIGMA} \simeq 0.10$ for the branches simulating
   observations from space.
 \end{itemize}
-The excess measurement noise for the ground data comes from the
+The excess measurement noise for the ground branch data comes from the
 additional uncertainty on galaxy shape due to the larger convolving
 Point Spread Function (PSF) in these simulations.  This is a factor
 that is not included in the approximate rule of thumb we described in
@@ -163,7 +163,31 @@ observations, based on galaxy models from HST images as described in
 Mandelbaum et al (2013).
 
 \section{The Constant Shear Metric $Q_{\rm c}$}\label{sec:qc}
-The increased measurement noise 
+The increased measurement noise variance leads to greater
+uncertainty in the values of $m_i$ and $c_i$ used in the determination
+of $Q_{\rm c}$.  This was not something that was significant in
+simulations that used \texttt{NOISE\_SIGMA} = 0.05, but with the
+improved estimates described in Section \ref{sec:ns} this is no longer
+the case.
+
+To counter this effect, we have modified the $Q_{\rm c}$ metric. We
+now add the $m$ and $c$ values in quadrature with a noise term
+$\sigma_\text{min}^2$ that is designed to ensure that the scores for
+methods with very low-$m$ and $c$ are not dominated by noise, which
+can give spurious fluctuations to very high $Q_{\rm c}$ for methods
+without significant bias.  The constant shear branch metric is then
+defned as
+\begin{equation}\label{eq:q_c}
+Q_{\rm c} = \frac{2000}{\sqrt{ \sigma_\text{min}^2 + \displaystyle\sum_{i=1,2} \left(
+      \frac{m_i}{m_{\rm target}} \right)^2 + \left( \frac{c_i}{c_{\rm target}} \right)^2 }}
+\end{equation}
+(see Mandelbaum et al 2013 for defintions of all terms in this
+expression).  Based on simulations, we adopt a value of
+$\sigma_\text{min}^2$ = 4 (2) for ground (space) branches.  These
+correspond roughly to the intrinsic uncertainties in the quadrature
+sum of $m_i / m_{\rm target}$ and $c_i / c_{\rm target}$ due to
+measurement noise. For methods with $m_i$ or $c_i$ noticably above the
+targets, the $\sigma^2_{\rm min}$ term is essentially irrelevant.
 
 \section{The Variable Shear Metric $Q_{\rm v}$}\label{sec:qv}
 
