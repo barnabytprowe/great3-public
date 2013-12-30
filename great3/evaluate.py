@@ -706,7 +706,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     return field, theta, map_E, map_B, maperr
 
 def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
-               logger=None, normalization=NORMALIZATION_CONSTANT, sigma_min=0., just_q=False,
+               logger=None, normalization=NORMALIZATION_CONSTANT, sigma2_min=0., just_q=False,
                cfid=CFID, mfid=MFID, pretty_print=False, flip_g1=False, flip_g2=False):
     """Calculate the Q_c for a constant shear branch submission.
 
@@ -719,7 +719,9 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
                             stored
     @param logger           Python logging.Logger instance, for message logging
     @param normalization    Normalization factor for the metric
-    @param sigma_min        Damping term to put into the denominator of QZ1 metric
+    @param sigma2_min       Damping term to put into the denominator of QZ1 metric (default `None`
+                            uses either `SIGMA2_MIN_CONSTANT_GROUND` or `SIGMA2_MIN_CONSTANT_GROUND`
+                            depending on `obs_type`)
     @param just_q           Set `just_q = True` (default is `False`) to only return Q_c rather than
                             the default behaviour of returning a tuple including best fitting c+,
                             m+, cx, mx, etc.
@@ -738,6 +740,16 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     g2sub = data[:, 2]
     if flip_g1: g1sub = -g1sub
     if flip_g2: g2sub = -g2sub
+    # If the sigma2_min is not changed from `None`, set using defaults based on `obs_type`
+    if sigma2_min is None:
+        if obs_type == "ground":
+            sigma2_min = SIGMA2_MIN_CONSTANT_GROUND
+        elif obs_type == "space":
+            sigma2_min = SIGMA2_MIN_CONSTANT_SPACE
+        else:
+            raise ValueError(
+                "The supplied obs_type must be either 'ground' or 'space' to set default value "+
+                "for sigma2_min")
     # Load up the rotations, then rotate g1 & g2 in the correct sense.
     # NOTE THE MINUS SIGNS!  This is because we need to rotate the coordinates *back* into a frame
     # in which the primary direction of the PSF is g1, and the orthogonal is g2
@@ -754,7 +766,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
         g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
         g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
         Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = g3metrics.metricQZ1_const_shear(
-            g1srot, g2srot, g1trot, g2trot, cfid=cfid, mfid=mfid, sigma_min=sigma_min)
+            g1srot, g2srot, g1trot, g2trot, cfid=cfid, mfid=mfid, sigma2_min=sigma2_min)
         Q_c *= normalization
     except Exception as err:
         # Something went wrong... We'll handle this silently setting all outputs to zero but warn
