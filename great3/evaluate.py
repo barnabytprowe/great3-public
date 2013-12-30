@@ -65,9 +65,16 @@ import os
 import sys
 import logging
 import numpy as np
-sys.path.append(os.path.join("..", ".."))
-import great3sims
-import great3sims.mapper
+
+try:
+    import great3sims
+    import great3sims.mapper
+except ImportError:
+    path, module = os.path.split(__file__)
+    sys.path.append(os.path.join(path, "..", "..")) # Appends the folder great3-private/ to sys.path
+    import great3sims
+    import great3sims.mapper
+
 try:
     import g3metrics
 except ImportError:
