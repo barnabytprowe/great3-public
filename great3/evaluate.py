@@ -121,22 +121,38 @@ NORMALIZATION_CONSTANT = 1.089
 #NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
 #NORMALIZATION_VARIABLE = 2.4502427759585598e-04 # Factor comes from tests with test_evaluate.py on
                                                  # 600 runs, 15 Oct 2013
-#NORMALIZATION_VARIABLE_GROUND = 0.000794105283678 # Factor comes from tests with test_evaluate.py on
-#                                                  # 600 runs and NOISE_SIGMA = 0.15, 13 Dec 2013
+#NORMALIZATION_VARIABLE_GROUND = 0.000794105283678 # Factor comes from tests with test_evaluate.py
+                                                   # on 600 runs and NOISE_SIGMA = 0.15, 13 Dec 2013
 
-#NORMALIZATION_VARIABLE_GROUND = 0.000237155945476 # Factor comes from tests with test_evaluate.py on
-                                                  # 600 runs and NOISE_SIGMA = 0.15, 17 Dec 2013, with
-                                                  # sigma_min = 2.e-6
+#NORMALIZATION_VARIABLE_GROUND = 0.000237155945476 # Factor comes from tests with test_evaluate.py
+                                                   # on 600 runs and NOISE_SIGMA = 0.15, 17 Dec
+                                                   # 2013, with sigma_min = 2.e-6
 
-NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
-NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
+NORMALIZATION_VARIABLE_GROUND = 0.00041506829671444955 # Factor comes from tests with
+                                                       # test_evaluate.py on 600 runs and
+                                                       # NOISE_SIGMA = 0.15, 27 Dec 2013, with
+                                                       # sigma_min = 1.8e-5
+
+#NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
+#NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
 #NORMALIZATION_VARIABLE_SPACE = 0.000499406254775 # Factor comes from tests with test_evaluate.py on
-#                                                 # 600 runs and NOISE_SIGMA = 0.10, 13 Dec 2013
+                                                  # 600 runs and NOISE_SIGMA = 0.10, 13 Dec 2013
 #NORMALIZATION_VARIABLE_SPACE = 0.000135102101297 # Factor comes from tests with test_evaluate.py on
-#                                                 # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013
+                                                  # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013
 #NORMALIZATION_VARIABLE_SPACE = 0.00014815720975 # Factor comes from tests with test_evaluate.py on
-                                                # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013, with
-                                                # sigma_min = 1.e-6
+                                                 # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013,
+                                                 # with sigma_min = 1.e-6
+
+NORMALIZATION_VARIABLE_SPACE = 0.00022856010430161359 # Factor comes from tests with
+                                                      # test_evaluate.py on 600 runs and
+                                                      # NOISE_SIGMA = 0.10, 27 Dec 2013, with
+                                                      # sigma_min = 8.e-6
+
+# Values of sigma2_min to adopt as the defaults for the Q_c and Q_v metrics, as of 30 Dec 2013
+SIGMA2_MIN_CONSTANT_GROUND = 1.
+SIGMA2_MIN_CONSTANT_SPACE = 4.
+SIGMA2_MIN_VARIABLE_GROUND = 1.8e-5
+SIGMA2_MIN_VARIABLE_SPACE = 8.e-6
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
                              logger=None):
