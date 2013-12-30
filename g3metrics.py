@@ -396,10 +396,10 @@ def metricQ08_const_shear(g1est, g2est, g1true, g2true, nfields):
         g2set.append(np.mean((g2est - g2true)[i * nsubfields: (i + 1) * nsubfields]))
     return 1.e-4 / (0.5 * ((sum(g1set) / float(nfields))**2 + (sum(g2set) / float(nfields))**2))
 
-def metricQZ1_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3, sigma_min=0.):
+def metricQZ1_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3, sigma2_min=0.):
     """Calculate a metric along the lines suggested by Joe Zuntz in Pittsburgh (option 1).
 
-    Modified in December 2013 to add the sigma_min damping term, based on discussions on the email
+    Modified in December 2013 to add the sigma2_min damping term, based on discussions on the email
     list thread [great3-ec 104].
     """
     c1, m1, var_c1, cov_c1m1, var_m1 = fitline(g1true, g1est - g1true)
@@ -409,7 +409,7 @@ def metricQZ1_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3, 
     sig_c2 = np.sqrt(var_c2)
     sig_m2 = np.sqrt(var_m2)
     Q = 2000. / np.sqrt(
-        (c1 / cfid)**2 + (c2 / cfid)**2 + (m1 / mfid)**2 + (m2 / mfid)**2 + sigma_min**2)
+        (c1 / cfid)**2 + (c2 / cfid)**2 + (m1 / mfid)**2 + (m2 / mfid)**2 + sigma2_min)
     return (Q, c1, m1, c2, m2, sig_c1, sig_m1, sig_c2, sig_m2)
 
 def metricQZ2_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3):
