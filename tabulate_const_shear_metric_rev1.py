@@ -6,7 +6,9 @@ inclusion in the GREAT3 Handbook.
 
 import sys
 import os
+import tempfile
 import numpy as np
+import g3metrics
 path, module = os.path.split(__file__)
 sys.path.append(os.path.join(path, "..", "server", "great3")) # Appends the folder
                                                               # great3-private/server/great3 to
@@ -18,9 +20,7 @@ NOISE_SIGMA = {"ground": 0.15, "space": 0.10}
 CVALS = evaluate.CFID * 10.**(.5 * np.arange(5))
 MVALS = evaluate.MFID * 10.**(.5 * np.arange(5))
 
-truth_dir = "/Users/browe/great3/beta/truth" # Modify to wherever truth is unpacked
-# Temporarily write this into evaluate.TRUTH_DIR - HACKY!
-evaluate.TRUTH_DIR = truth_dir
+TRUTH_DIR = "/Users/browe/great3/beta/truth" # Modify to wherever truth is unpacked
 
 EXPERIMENT = "control" # Use the control truth values
 
@@ -34,12 +34,23 @@ if __name__ == "__main__":
 
         # First we build the truth table
         print "Building truth tables for control-"+obs_type+"-constant"
-        _, g1true, g2true = evaluate.get_generate_const_truth(EXPERIMENT, obs_type)
+        subfield_index, g1true, g2true = evaluate.get_generate_const_truth(
+        	EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
     	print "Calculating Q_c values versus c for control-"+obs_type+"-constant data in GREAT3"
+    	print "NOISE_SIGMA = "+str(NOISE_SIGMA[obs_type])
     	for jc, cval in enumerate(CVALS):
 
     		for itest in xrange(NTEST):
 
-    			qc[obs_type][itest, jc] = 
+    			# Build the submission
+    			g1sub, g2sub = g3metrics.make_submission_const_shear(
+                    cval, cval, evaluate.MFID, evaluate.MFID, g1true, g2true, 100000, NOISE_SIGMA[obs_type])
+    			fdsub, subfile = tempfile.mkstemp(suffix=".dat")
+    			with os.fdopen(fdsub, "wb") as fsub:
+    				np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
+    			# Then evaluate Q_c
+    			qc[obs_type][itest, jc] = evaluate.q_constant(
+    				subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
+    			print qc[obs_type][itest, jc]
 
 
