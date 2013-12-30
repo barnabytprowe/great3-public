@@ -156,10 +156,11 @@ NORMALIZATION_VARIABLE_SPACE = 0.00022856010430161359 # Factor comes from tests 
 
 # Values of sigma2_min to adopt as the defaults for the Q_c and Q_v metrics, as of 30 Dec 2013.
 # These parameters add a damping
-SIGMA2_MIN_CONSTANT_GROUND = 1. # 1^2
-SIGMA2_MIN_CONSTANT_SPACE = 4.  # 2^2
-SIGMA2_MIN_VARIABLE_GROUND = 1.8e-5
-SIGMA2_MIN_VARIABLE_SPACE = 8.e-6
+SIGMA2_MIN_CONSTANT_GROUND = 1.     # 1**2
+SIGMA2_MIN_CONSTANT_SPACE = 4.      # 2**2
+SIGMA2_MIN_VARIABLE_GROUND = 1.8e-5 # [2 * sqrt(2) * 1.e-3]**2
+SIGMA2_MIN_VARIABLE_SPACE = 8.e-6   # [3 * sqrt(2) * 1.e-3]**2
+
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
                              logger=None):
