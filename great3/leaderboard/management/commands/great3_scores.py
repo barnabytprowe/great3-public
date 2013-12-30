@@ -94,6 +94,10 @@ class Command(BaseCommand):
                                     # defaults!
                         "ground": evaluate.NORMALIZATION_VARIABLE_GROUND,
                         "space": evaluate.NORMALIZATION_VARIABLE_SPACE}[obs_type],
+                    sigma2_min={ # As above, explicitly set sigma2_min here, although this is also
+                                 # the default...
+                        "ground": evaluate.SIGMA2_MIN_VARIABLE_GROUND,
+                        "space": evaluate.SIGMA2_MIN_VARIABLE_SPACE}[obs_type],
                     truth_dir=TRUTH_DIR,
                     storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_EXEC,
                     poisson_weight=POISSON_WEIGHT, usebins=USEBINS)
