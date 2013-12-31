@@ -123,7 +123,9 @@ MAPESHEAR_FILE_PREFIX = "mapEshear_"
 MAPEINT_FILE_PREFIX = "mapEint_"
 MAPEOBS_FILE_PREFIX = "mapEobs_"
 
-NORMALIZATION_CONSTANT = 1.089 
+NORMALIZATION_CONSTANT_GROUND = 1.0 #0.9691999839196683 # These factors come from a run of 1000 sims
+NORMALIZATION_CONSTANT_SPACE = 1.0 #1.2941799801481992  # done on 30/31 Dec 2013
+
 #NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
 #NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
 #NORMALIZATION_VARIABLE = 2.4502427759585598e-04 # Factor comes from tests with test_evaluate.py on
@@ -156,8 +158,8 @@ NORMALIZATION_VARIABLE_SPACE = 0.00022856010430161359 # Factor comes from tests 
 
 # Values of sigma2_min to adopt as the defaults for the Q_c and Q_v metrics, as of 30 Dec 2013.
 # These parameters add a damping
-SIGMA2_MIN_CONSTANT_GROUND = 1.     # 1**2
-SIGMA2_MIN_CONSTANT_SPACE = 4.      # 2**2
+SIGMA2_MIN_CONSTANT_GROUND = 4.     # 2**2
+SIGMA2_MIN_CONSTANT_SPACE = 1.      # 1**2
 SIGMA2_MIN_VARIABLE_GROUND = 1.8e-5 # [2 * sqrt(2) * 1.e-3]**2
 SIGMA2_MIN_VARIABLE_SPACE = 8.e-6   # [3 * sqrt(2) * 1.e-3]**2
 
@@ -707,7 +709,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
     return field, theta, map_E, map_B, maperr
 
 def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
-               logger=None, normalization=NORMALIZATION_CONSTANT, sigma2_min=None, just_q=False,
+               logger=None, normalization=None, sigma2_min=None, just_q=False,
                cfid=CFID, mfid=MFID, pretty_print=False, flip_g1=False, flip_g2=False):
     """Calculate the Q_c for a constant shear branch submission.
 
@@ -719,7 +721,9 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
     @param logger           Python logging.Logger instance, for message logging
-    @param normalization    Normalization factor for the metric
+    @param normalization    Normalization factor for the metric (default `None` uses either
+                            `NORMALIZATION_CONSTANT_GROUND` or `NORMALIZATION_CONSTANT_SPACE`
+                            depending on `obs_type`)
     @param sigma2_min       Damping term to put into the denominator of QZ1 metric (default `None`
                             uses either `SIGMA2_MIN_CONSTANT_GROUND` or `SIGMA2_MIN_CONSTANT_SPACE`
                             depending on `obs_type`)
@@ -732,12 +736,20 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
     """
     if not os.path.isfile(submission_file):
         raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
-    # If the sigma2_min is not changed from `None`, set using defaults based on `obs_type`
+    # If the sigma2_min is not changed from None, set using defaults based on obs_type
     if sigma2_min is None:
         if obs_type == "ground":
             sigma2_min = SIGMA2_MIN_CONSTANT_GROUND
         elif obs_type == "space":
             sigma2_min = SIGMA2_MIN_CONSTANT_SPACE
+        else:
+            raise ValueError("Default sigma2_min cannot be set as obs_type not recognised")
+    # If the normalization is not changed from None, set using defaults based on obs_type
+    if normalization is None:
+        if obs_type == "ground":
+            normalization = NORMALIZATION_CONSTANT_GROUND
+        elif obs_type == "space":
+            normalization = NORMALIZATION_CONSTANT_SPACE
         else:
             raise ValueError("Default sigma2_min cannot be set as obs_type not recognised")
     # Load the submission and label the slices we're interested in
