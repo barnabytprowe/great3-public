@@ -16,6 +16,7 @@ sys.path.append(os.path.join(path, "..", "server", "great3")) # Appends the fold
 import evaluate
 
 NTEST = 1000
+NGALS_PER_IMAGE = 10000
 NOISE_SIGMA = {"ground": 0.15, "space": 0.10}
 CVALS = evaluate.CFID * 10.**(.5 * np.arange(5))
 MVALS = evaluate.MFID * 10.**(.5 * np.arange(5))
@@ -30,7 +31,9 @@ if __name__ == "__main__":
     # Dicts containing arrays for storing Q_c values versus m and c, for ground and space
     qc = {"ground": np.empty((NTEST, len(CVALS))), "space": np.empty((NTEST, len(CVALS)))}
     qm = {"ground": np.empty((NTEST, len(MVALS))), "space": np.empty((NTEST, len(MVALS)))}
-    for obs_type in ("ground", "space"):
+    coutfile = "tabulated_const_Q_c_versus_c_norm1.p"
+    moutfile = "tabulated_const_Q_c_versus_m_norm1.p"
+    for obs_type in ("ground", "space",):
 
         # First we build the truth table
         print "Building truth tables for control-"+obs_type+"-constant"
@@ -44,13 +47,52 @@ if __name__ == "__main__":
 
     			# Build the submission
     			g1sub, g2sub = g3metrics.make_submission_const_shear(
-                    cval, cval, evaluate.MFID, evaluate.MFID, g1true, g2true, 100000, NOISE_SIGMA[obs_type])
+                    cval, cval, evaluate.MFID, evaluate.MFID, g1true, g2true, NGALS_PER_IMAGE,
+                    NOISE_SIGMA[obs_type])
     			fdsub, subfile = tempfile.mkstemp(suffix=".dat")
     			with os.fdopen(fdsub, "wb") as fsub:
     				np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
     			# Then evaluate Q_c
     			qc[obs_type][itest, jc] = evaluate.q_constant(
     				subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
-    			print qc[obs_type][itest, jc]
+    			os.remove(subfile)
+    			print "Test %4d / %4d (c = %.3e) Q_c = %.4f" % (
+    				itest+1, NTEST, cval, qc[obs_type][itest, jc])
+
+    		print "Mean Q_c = "+str(qc[obs_type][:, jc].mean())+" for "+str(NTEST)+\
+    		    " sims (with c = "+str(cval)+", obs_type = "+str(obs_type)+")"
+    		print
+
+        for jm, mval in enumerate(MVALS):
+
+    		for itest in xrange(NTEST):
+
+    			# Build the submission
+    			g1sub, g2sub = g3metrics.make_submission_const_shear(
+                    evaluate.CFID, evaluate.CFID, mval, mval, g1true, g2true, NGALS_PER_IMAGE,
+                    NOISE_SIGMA[obs_type])
+    			fdsub, subfile = tempfile.mkstemp(suffix=".dat")
+    			with os.fdopen(fdsub, "wb") as fsub:
+    				np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
+    			# Then evaluate Q_c
+    			qc[obs_type][itest, jm] = evaluate.q_constant(
+    				subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
+    			os.remove(subfile)
+    			print "Test %4d / %4d (m = %.3e) Q_c = %.4f" % (
+    				itest+1, NTEST, mval, qc[obs_type][itest, jm])
+
+    		print "Mean Q_c = "+str(qc[obs_type][:, jm].mean())+" for "+str(NTEST)+\
+    		    " sims (with m = "+str(mval)+", obs_type = "+str(obs_type)+")"
+    		print
+
+    import cPickle
+    print "Saving pickled Q_c versus c dict to "+coutfile
+    with open(coutfile, "wb") as fout:
+      	cPickle.dump(qc, fout)
+   
+    print "Saving pickled Q_c versus m dict to "+moutfile
+    with open(moutfile, "wb") as fout:
+      	cPickle.dump(qc, fout)
+
 
 
