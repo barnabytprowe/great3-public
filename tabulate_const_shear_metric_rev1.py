@@ -76,13 +76,13 @@ if __name__ == "__main__":
     			with os.fdopen(fdsub, "wb") as fsub:
     				np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
     			# Then evaluate Q_c
-    			qc[obs_type][itest, jm] = evaluate.q_constant(
+    			qm[obs_type][itest, jm] = evaluate.q_constant(
     				subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
     			os.remove(subfile)
     			print "Test %4d / %4d (m = %.3e) Q_c = %.4f" % (
     				itest+1, NTEST, mval, qc[obs_type][itest, jm])
 
-    		print "Mean Q_c = "+str(qc[obs_type][:, jm].mean())+" for "+str(NTEST)+\
+    		print "Mean Q_c = "+str(qm[obs_type][:, jm].mean())+" for "+str(NTEST)+\
     		    " sims (with m = "+str(mval)+", obs_type = "+str(obs_type)+")"
     		print
 
