@@ -95,5 +95,35 @@ if __name__ == "__main__":
     with open(moutfile, "wb") as fout:
       	cPickle.dump(qc, fout)
 
+    print ""
+    print "Table of Q_c (ground sims) at constant m = mfid = "+str(evaluate.MFID)
+    print "    c        Q   "
+    for c, Q in zip(CVALS, np.mean(qc["ground"], axis=0)):
+
+        print "{:8f} {:8.3f}".format(c, Q)
+
+    print ""
+    print "Table of Q_c (space sims) at constant m = mfid = "+str(evaluate.MFID)
+    print "    c        Q   "
+    for c, Q in zip(CVALS, np.mean(qc["space"], axis=0)):
+
+        print "{:8f} {:8.3f}".format(c, Q)
+
+    print ""
+    print "Table of Q_c (ground sims) at constant c = cfid = "+str(evaluate.CFID)
+    print "    m        Q   "
+    for m, Q in zip(MVALS, np.mean(qm["ground"], axis=0)):
+
+        print "{:8f} {:8.3f}".format(m, Q)
+
+    print ""
+    print "Table of Q_c (space sims) at constant c = cfid = "+str(evaluate.CFID)
+    print "    m        Q   "
+    for m, Q in zip(MVALS, np.mean(qm["space"], axis=0)):
+
+        print "{:8f} {:8.3f}".format(m, Q)
+
+    
+
 
 
