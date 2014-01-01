@@ -124,7 +124,7 @@ MAPEINT_FILE_PREFIX = "mapEint_"
 MAPEOBS_FILE_PREFIX = "mapEobs_"
 
 NORMALIZATION_CONSTANT_GROUND = 1.8703497681736654 # These factors come from a run of 1000 sims
-NORMALIZATION_CONSTANT_SPACE =  1.0 # done on 1 Jan 2014
+NORMALIZATION_CONSTANT_SPACE =  1.3524155470455024 # done on 1 Jan 2014
 
 #NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
 #NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
