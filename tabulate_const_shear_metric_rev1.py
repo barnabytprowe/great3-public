@@ -35,65 +35,70 @@ if __name__ == "__main__":
     moutfile = os.path.join("results", "tabulated_const_Q_c_versus_m_norm1.pkl")
     for obs_type in ("ground", "space",):
 
-        # First we build the truth table
-        print "Building truth tables for control-"+obs_type+"-constant"
-        subfield_index, g1true, g2true = evaluate.get_generate_const_truth(
-        	EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
-        rotations = evaluate.get_generate_const_rotations(EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
-    	print "Calculating Q_c values versus c for control-"+obs_type+"-constant data in GREAT3"
-    	print "NOISE_SIGMA = "+str(NOISE_SIGMA[obs_type])
-    	for jc, cval in enumerate(CVALS):
+        if (not os.path.isfile(coutfile)) or (not os.path.isfile(moutfile)):
+            # First we build the truth table
+            print "Building truth tables for control-"+obs_type+"-constant"
+            subfield_index, g1true, g2true = evaluate.get_generate_const_truth(
+                EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
+            rotations = evaluate.get_generate_const_rotations(
+                EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
+            import cPickle # We'll need this below
 
-    		for itest in xrange(NTEST):
+        if not os.path.isfile(coutfile):
+            print "Calculating Q_c values versus c for control-"+obs_type+"-constant data in GREAT3"
+            print "NOISE_SIGMA = "+str(NOISE_SIGMA[obs_type])
+            for jc, cval in enumerate(CVALS):
 
-    			# Build the submission
-    			g1sub, g2sub = g3metrics.make_submission_const_shear(
-                    cval, cval, evaluate.MFID, evaluate.MFID, g1true, g2true, NGALS_PER_IMAGE,
-                    NOISE_SIGMA[obs_type], rotate_cs=rotations)
-    			fdsub, subfile = tempfile.mkstemp(suffix=".dat")
-    			with os.fdopen(fdsub, "wb") as fsub:
-    				np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
-    			# Then evaluate Q_c
-    			qc[obs_type][itest, jc] = evaluate.q_constant(
-    				subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
-    			os.remove(subfile)
-    			print "Test %4d / %4d (c = %.3e) Q_c = %.4f" % (
-    				itest+1, NTEST, cval, qc[obs_type][itest, jc])
+                for itest in xrange(NTEST):
 
-    		print "Mean Q_c = "+str(qc[obs_type][:, jc].mean())+" for "+str(NTEST)+\
-    		    " sims (with c = "+str(cval)+", obs_type = "+str(obs_type)+")"
-    		print
+                    # Build the submission
+                    g1sub, g2sub = g3metrics.make_submission_const_shear(
+                        cval, cval, evaluate.MFID, evaluate.MFID, g1true, g2true, NGALS_PER_IMAGE,
+                        NOISE_SIGMA[obs_type], rotate_cs=rotations)
+                    fdsub, subfile = tempfile.mkstemp(suffix=".dat")
+                    with os.fdopen(fdsub, "wb") as fsub:
+                        np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
+                    # Then evaluate Q_c
+                    qc[obs_type][itest, jc] = evaluate.q_constant(
+                        subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
+                    os.remove(subfile)
+                    print "Test %4d / %4d (c = %.3e) Q_c = %.4f" % (
+                        itest+1, NTEST, cval, qc[obs_type][itest, jc])
 
-        for jm, mval in enumerate(MVALS):
+                print "Mean Q_c = "+str(qc[obs_type][:, jc].mean())+" for "+str(NTEST)+\
+                    " sims (with c = "+str(cval)+", obs_type = "+str(obs_type)+")"
+                print
 
-    		for itest in xrange(NTEST):
+            print "Saving pickled Q_c versus c dict to "+coutfile
+            with open(coutfile, "wb") as fout:
+                cPickle.dump(qc, fout)
 
-    			# Build the submission
-    			g1sub, g2sub = g3metrics.make_submission_const_shear(
-                    evaluate.CFID, evaluate.CFID, mval, mval, g1true, g2true, NGALS_PER_IMAGE,
-                    NOISE_SIGMA[obs_type], rotate_cs=rotations)
-    			fdsub, subfile = tempfile.mkstemp(suffix=".dat")
-    			with os.fdopen(fdsub, "wb") as fsub:
-    				np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
-    			# Then evaluate Q_c
-    			qm[obs_type][itest, jm] = evaluate.q_constant(
-    				subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
-    			os.remove(subfile)
-    			print "Test %4d / %4d (m = %.3e) Q_c = %.4f" % (
-    				itest+1, NTEST, mval, qc[obs_type][itest, jm])
+        if not os.path.isfile(moutfile):
+            for jm, mval in enumerate(MVALS):
 
-    		print "Mean Q_c = "+str(qm[obs_type][:, jm].mean())+" for "+str(NTEST)+\
-    		    " sims (with m = "+str(mval)+", obs_type = "+str(obs_type)+")"
-    		print
+                for itest in xrange(NTEST):
 
-    import cPickle
-    print "Saving pickled Q_c versus c dict to "+coutfile
-    with open(coutfile, "wb") as fout:
-      	cPickle.dump(qc, fout)
-   
-    print "Saving pickled Q_c versus m dict to "+moutfile
-    with open(moutfile, "wb") as fout:
-      	cPickle.dump(qc, fout)
+                    # Build the submission
+                    g1sub, g2sub = g3metrics.make_submission_const_shear(
+                        evaluate.CFID, evaluate.CFID, mval, mval, g1true, g2true, NGALS_PER_IMAGE,
+                        NOISE_SIGMA[obs_type], rotate_cs=rotations)
+                    fdsub, subfile = tempfile.mkstemp(suffix=".dat")
+                    with os.fdopen(fdsub, "wb") as fsub:
+                        np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
+                    # Then evaluate Q_c
+                    qm[obs_type][itest, jm] = evaluate.q_constant(
+                        subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
+                    os.remove(subfile)
+                    print "Test %4d / %4d (m = %.3e) Q_c = %.4f" % (
+                        itest+1, NTEST, mval, qc[obs_type][itest, jm])
+
+                print "Mean Q_c = "+str(qm[obs_type][:, jm].mean())+" for "+str(NTEST)+\
+                    " sims (with m = "+str(mval)+", obs_type = "+str(obs_type)+")"
+                print
+
+            print "Saving pickled Q_c versus m dict to "+moutfile
+            with open(moutfile, "wb") as fout:
+                cPickle.dump(qc, fout)
 
     print ""
     print "Table of Q_c (ground sims) at constant m = mfid = "+str(evaluate.MFID)
