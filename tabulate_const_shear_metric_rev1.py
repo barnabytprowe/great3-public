@@ -31,14 +31,15 @@ if __name__ == "__main__":
     # Dicts containing arrays for storing Q_c values versus m and c, for ground and space
     qc = {"ground": np.empty((NTEST, len(CVALS))), "space": np.empty((NTEST, len(CVALS)))}
     qm = {"ground": np.empty((NTEST, len(MVALS))), "space": np.empty((NTEST, len(MVALS)))}
-    coutfile = "tabulated_const_Q_c_versus_c_norm1.p"
-    moutfile = "tabulated_const_Q_c_versus_m_norm1.p"
+    coutfile = os.path.join("results", "tabulated_const_Q_c_versus_c_norm1.pkl")
+    moutfile = os.path.join("results", "tabulated_const_Q_c_versus_m_norm1.pkl")
     for obs_type in ("ground", "space",):
 
         # First we build the truth table
         print "Building truth tables for control-"+obs_type+"-constant"
         subfield_index, g1true, g2true = evaluate.get_generate_const_truth(
         	EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
+        rotations = evaluate.get_generate_const_rotations(EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
     	print "Calculating Q_c values versus c for control-"+obs_type+"-constant data in GREAT3"
     	print "NOISE_SIGMA = "+str(NOISE_SIGMA[obs_type])
     	for jc, cval in enumerate(CVALS):
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     			# Build the submission
     			g1sub, g2sub = g3metrics.make_submission_const_shear(
                     cval, cval, evaluate.MFID, evaluate.MFID, g1true, g2true, NGALS_PER_IMAGE,
-                    NOISE_SIGMA[obs_type])
+                    NOISE_SIGMA[obs_type], rotate_cs=rotations)
     			fdsub, subfile = tempfile.mkstemp(suffix=".dat")
     			with os.fdopen(fdsub, "wb") as fsub:
     				np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     			# Build the submission
     			g1sub, g2sub = g3metrics.make_submission_const_shear(
                     evaluate.CFID, evaluate.CFID, mval, mval, g1true, g2true, NGALS_PER_IMAGE,
-                    NOISE_SIGMA[obs_type])
+                    NOISE_SIGMA[obs_type], rotate_cs=rotations)
     			fdsub, subfile = tempfile.mkstemp(suffix=".dat")
     			with os.fdopen(fdsub, "wb") as fsub:
     				np.savetxt(fsub, np.array((subfield_index, g1sub, g2sub)).T, fmt="%d %e %e")
