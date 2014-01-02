@@ -110,7 +110,7 @@ if __name__ == "__main__":
         import cPickle
         print "Saving pickled Q_c versus m dict to "+moutfile
         with open(moutfile, "wb") as fout:
-            cPickle.dump(qc, fout)
+            cPickle.dump(qm, fout)
         print
 
     print ""
