@@ -29,6 +29,7 @@ EXPERIMENT = "control" # Use the control truth values
 
 if __name__ == "__main__":
 
+    import cPickle
     # Dicts containing arrays for storing Q_c values versus m and c, for ground and space
     qc = {"ground": np.empty((NTEST, len(CVALS))), "space": np.empty((NTEST, len(CVALS)))}
     qm = {"ground": np.empty((NTEST, len(MVALS))), "space": np.empty((NTEST, len(MVALS)))}
@@ -69,11 +70,13 @@ if __name__ == "__main__":
                         " sims (with c = "+str(cval)+", obs_type = "+str(obs_type)+")"
                 print
 
-        import cPickle
         print "Saving pickled Q_v versus c dict to "+coutfile
         with open(coutfile, "wb") as fout:
             cPickle.dump(qc, fout)
         print
+    else:
+        with open(coutfile, "rb") as fin:
+            qc = cPickle.load(fin)
 
     if not os.path.isfile(moutfile):
         for obs_type in ("ground", "space",):
@@ -109,11 +112,13 @@ if __name__ == "__main__":
                     " sims (with m = "+str(mval)+", obs_type = "+str(obs_type)+")"
                 print
 
-        import cPickle
         print "Saving pickled Q_v versus m dict to "+moutfile
         with open(moutfile, "wb") as fout:
             cPickle.dump(qm, fout)
         print
+    else:
+        with open(moutfile, "rb") as fin:
+            qm = cPickle.load(fin)
 
     print ""
     print "Table of Q_v (ground sims) at constant m = mfid = "+str(evaluate.MFID)
