@@ -136,10 +136,10 @@ NORMALIZATION_CONSTANT_SPACE =  1.3482 # done on 1 Jan 2014
                                                    # on 600 runs and NOISE_SIGMA = 0.15, 17 Dec
                                                    # 2013, with sigma2_min = 2.e-6
 
-NORMALIZATION_VARIABLE_GROUND = 0.00041506829671444955 # Factor comes from tests with
-                                                       # test_evaluate.py on 600 runs and
-                                                       # NOISE_SIGMA = 0.15, 27 Dec 2013, with
-                                                       # sigma2_min = 1.8e-5
+NORMALIZATION_VARIABLE_GROUND = 0.00041507 # Factor comes from tests with
+                                           # test_evaluate.py on 600 runs and
+                                           # NOISE_SIGMA = 0.15, 27 Dec 2013, with
+                                           # sigma2_min = 1.8e-5
 
 #NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
 #NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
@@ -151,10 +151,10 @@ NORMALIZATION_VARIABLE_GROUND = 0.00041506829671444955 # Factor comes from tests
                                                  # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013,
                                                  # with sigma2_min = 1.e-6
 
-NORMALIZATION_VARIABLE_SPACE = 0.00022856010430161359 # Factor comes from tests with
-                                                      # test_evaluate.py on 600 runs and
-                                                      # NOISE_SIGMA = 0.10, 27 Dec 2013, with
-                                                      # sigma2_min = 8.e-6
+NORMALIZATION_VARIABLE_SPACE = 0.00022856 # Factor comes from tests with
+                                          # test_evaluate.py on 600 runs and
+                                          # NOISE_SIGMA = 0.10, 27 Dec 2013, with
+                                          # sigma2_min = 8.e-6
 
 # Values of sigma2_min to adopt as the defaults for the Q_c and Q_v metrics, as of 30 Dec 2013.
 # These parameters add a damping
