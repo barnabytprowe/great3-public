@@ -20,12 +20,12 @@ sys.path.append(("..")) # Add the parent directory to path so as to load up the 
 import great3sims.mapper
 
 
-def get_variable_gtrue(experiment, obs_type, logger=None):
+def get_variable_gtrue(experiment, obs_type, logger=None, truth_dir=evaluate.TRUTH_DIR):
     """Get the full catalog of shears and positions for all fields.
 
     @return id, x, y, g1, g2
     """
-    mapper = great3sims.mapper.Mapper(evaluate.TRUTH_DIR, experiment, obs_type, "variable")
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable")
     identifier = np.empty(
         (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS), dtype=int)
     g1true = np.empty(
@@ -38,7 +38,7 @@ def get_variable_gtrue(experiment, obs_type, logger=None):
         (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS))
     # Load the offsets
     subfield_indices, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
-        experiment, obs_type, storage_dir=evaluate.STORAGE_DIR, truth_dir=evaluate.TRUTH_DIR,
+        experiment, obs_type, storage_dir=evaluate.STORAGE_DIR, truth_dir=truth_dir,
         logger=logger)
     # Build basic x and y grids to use for coord positions
     xgrid_deg, ygrid_deg = np.meshgrid(
@@ -76,14 +76,14 @@ def get_variable_gtrue(experiment, obs_type, logger=None):
     return identifier, xx, yy, g1true, g2true
 
 def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", file_prefix="galaxy_catalog",
-                         logger=None):
+                         logger=None, truth_dir=evaluate.TRUTH_DIR):
     """Get the full catalog of intrinsic "shears" and positions for all fields.
 
     Gets "g1"+suffix and "g2"+suffix from the subfield_catalog files.
 
     @return id, x, y, g1, g2
     """
-    mapper = great3sims.mapper.Mapper(evaluate.TRUTH_DIR, experiment, obs_type, "variable")
+    mapper = great3sims.mapper.Mapper(truth_dir, experiment, obs_type, "variable")
     identifier = np.empty(
         (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS), dtype=int)
     g1int = np.empty(
@@ -96,7 +96,7 @@ def get_variable_gsuffix(experiment, obs_type, suffix="_intrinsic", file_prefix=
         (evaluate.NGALS_PER_SUBFIELD, evaluate.NSUBFIELDS_PER_FIELD, evaluate.NFIELDS))
     # Load the offsets
     subfield_indices, offset_deg_x, offset_deg_y = evaluate.get_generate_variable_offsets(
-        experiment, obs_type, storage_dir=evaluate.STORAGE_DIR, truth_dir=evaluate.TRUTH_DIR,
+        experiment, obs_type, storage_dir=evaluate.STORAGE_DIR, truth_dir=truth_dir,
         logger=logger)
     # Build basic x and y grids to use for coord positions
     xgrid_deg, ygrid_deg = np.meshgrid(
@@ -185,8 +185,15 @@ def make_variable_submission(x, y, g1true, g2true, g1int, g2int, c1, c2, m1, m2,
 
     # Finally save in ASCII format
     with open(outfile, "wb") as fout:
-        fout.write(
-            "# Simulated aperture mass statistics for "+experiment+"-"+obs_type+"-variable\n")
+
+        try:
+            hstring = \
+                "# Simulated aperture mass statistics for "+experiment+"-"+obs_type+"-variable\n"
+            fout.write(hstring)
+        except NameError: # If called externally then experiment and obs_type aren't defined.
+                          # Rather than recode all former uses of this func, simply handle the error
+                          # silently and move along...
+            pass
         fout.write("# field_index  theta [deg]  map_E  map_B  maperr\n")
         np.savetxt(
             fout, np.array((field, theta, map_E, map_B, maperr)).T,
@@ -201,8 +208,8 @@ if __name__ == "__main__":
     import tempfile
 
     truth_dir = "/Users/browe/great3/beta/truth" # Modify to wherever truth is unpacked
-    # Temporarily write this into evaluate.TRUTH_DIR - HACKY!
-    evaluate.TRUTH_DIR = truth_dir
+    # Temporarily write this into truth_dir - HACKY!
+    truth_dir = truth_dir
 
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
