@@ -16,7 +16,7 @@ sys.path.append(os.path.join(path, "..", "server", "great3")) # Appends the fold
 import evaluate
 import test_evaluate
 
-NTEST = 10
+NTEST = 1000
 NGALS_PER_IMAGE = 10000
 NOISE_SIGMA = {"ground": 0.15, "space": 0.10}
 CVALS = evaluate.CFID * 10.**(.5 * np.arange(5))
