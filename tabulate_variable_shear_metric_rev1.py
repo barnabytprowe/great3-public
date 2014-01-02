@@ -16,7 +16,7 @@ sys.path.append(os.path.join(path, "..", "server", "great3")) # Appends the fold
 import evaluate
 import test_evaluate
 
-NTEST = 1000
+NTEST = 10
 NGALS_PER_IMAGE = 10000
 NOISE_SIGMA = {"ground": 0.15, "space": 0.10}
 CVALS = evaluate.CFID * 10.**(.5 * np.arange(5))
@@ -43,8 +43,10 @@ if __name__ == "__main__":
             # First we build the truth table
             print "Building truth tables for control-"+obs_type+"-variable"
             # Get the x,y, true intrinsic ellips and shears for making fake submissions
-            _, x, y, g1true, g2true = test_evaluate.get_variable_gtrue(EXPERIMENT, obs_type)
-            _, _, _, g1int, g2int = test_evaluate.get_variable_gsuffix(EXPERIMENT, obs_type)           
+            _, x, y, g1true, g2true = test_evaluate.get_variable_gtrue(
+                EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
+            _, _, _, g1int, g2int = test_evaluate.get_variable_gsuffix(
+                EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)           
             for jc, cval in enumerate(CVALS):
 
                 for itest in xrange(NTEST):
@@ -81,8 +83,10 @@ if __name__ == "__main__":
             # First we build the truth table
             print "Building truth tables for control-"+obs_type+"-variable"
             # Get the x,y, true intrinsic ellips and shears for making fake submissions
-            _, x, y, g1true, g2true = test_evaluate.get_variable_gtrue(EXPERIMENT, obs_type)
-            _, _, _, g1int, g2int = test_evaluate.get_variable_gsuffix(EXPERIMENT, obs_type)
+            _, x, y, g1true, g2true = test_evaluate.get_variable_gtrue(
+                EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
+            _, _, _, g1int, g2int = test_evaluate.get_variable_gsuffix(
+                EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
             for jm, mval in enumerate(MVALS):
 
                 for itest in xrange(NTEST):
