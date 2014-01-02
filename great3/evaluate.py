@@ -808,7 +808,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
 
 def q_variable(submission_file, experiment, obs_type, normalization=None, truth_dir=TRUTH_DIR,
                storage_dir=STORAGE_DIR, logger=None, corr2_exec="corr2", poisson_weight=False,
-               usebins=USEBINS, fractional_diff=False, sigma2_min=0.):
+               usebins=USEBINS, fractional_diff=False, sigma2_min=None):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -847,9 +847,9 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
     # If the sigma2_min is not changed from `None`, set using defaults based on `obs_type`
     if sigma2_min is None:
         if obs_type == "ground":
-            sigma2_min = SIGMA2_MIN_CONSTANT_GROUND
+            sigma2_min = SIGMA2_MIN_VARIABLE_GROUND
         elif obs_type == "space":
-            sigma2_min = SIGMA2_MIN_CONSTANT_SPACE
+            sigma2_min = SIGMA2_MIN_VARIABLE_SPACE
         else:
             raise ValueError("Default sigma2_min cannot be set as obs_type not recognised")
     # Load the submission and label the slices we're interested in
