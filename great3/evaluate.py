@@ -160,8 +160,8 @@ NORMALIZATION_VARIABLE_SPACE = 0.00022856 # Factor comes from tests with
 # These parameters add a damping
 SIGMA2_MIN_CONSTANT_GROUND = 4.     # 2**2
 SIGMA2_MIN_CONSTANT_SPACE = 1.      # 1**2
-SIGMA2_MIN_VARIABLE_GROUND = 1.8e-5 # [2 * sqrt(2) * 1.e-3]**2
-SIGMA2_MIN_VARIABLE_SPACE = 8.e-6   # [3 * sqrt(2) * 1.e-3]**2
+SIGMA2_MIN_VARIABLE_GROUND = 1.8e-7 # [2 * sqrt(2) * 1.e-3]**2
+SIGMA2_MIN_VARIABLE_SPACE = 8.e-8   # [3 * sqrt(2) * 1.e-3]**2
 
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
@@ -915,7 +915,7 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
                     ((weight * (map_E_sub - map_E_ref) / map_E_ref)[usebins])[i::nactive])
 
         # Then take the weighted average abs(Q_v_fields)
-        Q_v = normalization * np.sum(weight[usebins]) / (np.sum(np.abs(Q_v_fields)) + sigma2_min)
+        Q_v = normalization / (sigma2_min + (np.sum(np.abs(Q_v_fields)) / np.sum(weight[usebins])))
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
