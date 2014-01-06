@@ -136,10 +136,9 @@ NORMALIZATION_CONSTANT_SPACE =  1.232 # done on 6 Jan 2014
                                                    # on 600 runs and NOISE_SIGMA = 0.15, 17 Dec
                                                    # 2013, with sigma2_min = 2.e-6
 
-NORMALIZATION_VARIABLE_GROUND = 0.00041507 # Factor comes from tests with
-                                           # test_evaluate.py on 600 runs and
-                                           # NOISE_SIGMA = 0.15, 27 Dec 2013, with
-                                           # sigma2_min = 1.8e-5
+NORMALIZATION_VARIABLE_GROUND = 0.0003141  # Factor comes from tests with
+                                           # tabulate_variable_shear_metric_rev1.py on 1000 runs and
+                                           # NOISE_SIGMA = 0.15, 6 Jan 2014, with sigma2_min = 9e-8
 
 #NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
 #NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
@@ -151,17 +150,16 @@ NORMALIZATION_VARIABLE_GROUND = 0.00041507 # Factor comes from tests with
                                                  # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013,
                                                  # with sigma2_min = 1.e-6
 
-NORMALIZATION_VARIABLE_SPACE = 0.00022856 # Factor comes from tests with
-                                          # test_evaluate.py on 600 runs and
-                                          # NOISE_SIGMA = 0.10, 27 Dec 2013, with
-                                          # sigma2_min = 8.e-6
+NORMALIZATION_VARIABLE_SPACE = 0.0001837  # Factor comes from tests with
+                                          # tabulate_variable_shear_metric_rev1.py on 1000 runs and
+                                          # NOISE_SIGMA = 0.10, 6 Jan 2015, with sigma2_min = 4.e-8
 
 # Values of sigma2_min to adopt as the defaults for the Q_c and Q_v metrics, as of 30 Dec 2013.
 # These parameters add a damping
 SIGMA2_MIN_CONSTANT_GROUND = 4.     # 2**2
 SIGMA2_MIN_CONSTANT_SPACE = 1.      # 1**2
-SIGMA2_MIN_VARIABLE_GROUND = 1.8e-7 # [2 * sqrt(2) * 1.e-3]**2
-SIGMA2_MIN_VARIABLE_SPACE = 8.e-8   # [3 * sqrt(2) * 1.e-3]**2
+SIGMA2_MIN_VARIABLE_GROUND = 9.e-8 # [2 * 1.e-3]**2
+SIGMA2_MIN_VARIABLE_SPACE = 4.e-8   # [3 * 1.e-3]**2
 
 
 def get_generate_const_truth(experiment, obs_type, truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR,
