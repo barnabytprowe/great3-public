@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
                     # Build the submission
                     g1sub, g2sub = g3metrics.make_submission_const_shear(
-                        cval, cval, evaluate.MFID, evaluate.MFID, g1true, g2true, NGALS_PER_IMAGE,
+                        cval, 0., evaluate.MFID, evaluate.MFID, g1true, g2true, NGALS_PER_IMAGE,
                         NOISE_SIGMA[obs_type], rotate_cs=rotations)
                     fdsub, subfile = tempfile.mkstemp(suffix=".dat")
                     with os.fdopen(fdsub, "wb") as fsub:
@@ -62,11 +62,11 @@ if __name__ == "__main__":
                     qc[obs_type][itest, jc] = evaluate.q_constant(
                         subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
                     os.remove(subfile)
-                    print "Test %4d / %4d (c = %.3e) Q_c = %.4f" % (
+                    print "Test %4d / %4d (c+ = %.3e) Q_c = %.4f" % (
                         itest+1, NTEST, cval, qc[obs_type][itest, jc])
 
                 print "Mean Q_c = "+str(qc[obs_type][:, jc].mean())+" for "+str(NTEST)+\
-                        " sims (with c = "+str(cval)+", obs_type = "+str(obs_type)+")"
+                        " sims (with c+ = "+str(cval)+", obs_type = "+str(obs_type)+")"
                 print
 
         print "Saving pickled Q_c versus c dict to "+coutfile
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
                     # Build the submission
                     g1sub, g2sub = g3metrics.make_submission_const_shear(
-                        evaluate.CFID, evaluate.CFID, mval, mval, g1true, g2true, NGALS_PER_IMAGE,
+                        evaluate.CFID, 0., mval, mval, g1true, g2true, NGALS_PER_IMAGE,
                         NOISE_SIGMA[obs_type], rotate_cs=rotations)
                     fdsub, subfile = tempfile.mkstemp(suffix=".dat")
                     with os.fdopen(fdsub, "wb") as fsub:
@@ -114,20 +114,20 @@ if __name__ == "__main__":
         with open(moutfile, "wb") as fout:
             cPickle.dump(qm, fout)
         print
-  else:
+    else:
         with open(moutfile, "rb") as fin:
             qm = cPickle.load(fin)
 
     print ""
     print "Table of Q_c (ground sims) at constant m = mfid = "+str(evaluate.MFID)
-    print "    c        Q   "
+    print "    c+       Q   "
     for c, Q in zip(CVALS, np.mean(qc["ground"], axis=0)):
 
         print "{:8f} {:8.3f}".format(c, Q)
 
     print ""
     print "Table of Q_c (space sims) at constant m = mfid = "+str(evaluate.MFID)
-    print "    c        Q   "
+    print "    c+       Q   "
     for c, Q in zip(CVALS, np.mean(qc["space"], axis=0)):
 
         print "{:8f} {:8.3f}".format(c, Q)
