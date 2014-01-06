@@ -123,8 +123,8 @@ MAPESHEAR_FILE_PREFIX = "mapEshear_"
 MAPEINT_FILE_PREFIX = "mapEint_"
 MAPEOBS_FILE_PREFIX = "mapEobs_"
 
-NORMALIZATION_CONSTANT_GROUND = 1.8642 # These factors come from a run of ~4000 sims
-NORMALIZATION_CONSTANT_SPACE =  1.3482 # done on 1 Jan 2014
+NORMALIZATION_CONSTANT_GROUND = 1.775 # These factors come from a run of ~1000 sims
+NORMALIZATION_CONSTANT_SPACE =  1.232 # done on 6 Jan 2014
 
 #NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
 #NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
