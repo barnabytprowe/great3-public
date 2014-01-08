@@ -5,7 +5,7 @@ import django.http
 
 
 def index(request):
-	boards = Board.objects.filter(enabled=True).order_by('-datafile__filename')
+	boards = Board.objects.filter(enabled=True).order_by('name')
 	misc_public_files = PublicDataFile.objects.filter(miscellaneous=True)
 	data = dict(boards=boards, public_files=misc_public_files)
 	if request.user and request.user.is_staff:
