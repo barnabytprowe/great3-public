@@ -4,10 +4,12 @@
 {% block content %}
 <H2>Too soon to submit again</H2>
 {% if excluded_teams|length == 1 %}
-<P> Sorry - your team, {{excluded_teams|first}}, has already submitted {{entry_limit}} entries in the last 24 hours to this leaderboard.  You cannot submit another entry right now.  Please wait to submit again.</P>
+<P> Sorry - your team, {{excluded_teams|first}}, has already submitted {{entry_limit}} entry in the last 24 hours to this leaderboard.  You cannot submit another entry right now.  Please wait to submit again.</P>
 {% else %}
-<P> Sorry - all of your teams ({{excluded_teams|join:", "}}) have already submitted {{entry_limit}} entries in the last 24 hours to this leaderboard.  You cannot submit another entry right now.  Please wait to submit again.</P>
+<P> Sorry - all of your teams ({{excluded_teams|join:", "}}) have already submitted {{entry_limit}} entry in the last 24 hours to this leaderboard.  You cannot submit another entry right now.  Please wait to submit again.</P>
 {% endif %}
+
+<P>This rule did not apply to the first few submissions to give you a chance to get used to the format.</P>
 
 <P><A href="{% url leaderboard.team_views.setup %}">See recent entries</A></P>
 {% endblock %}

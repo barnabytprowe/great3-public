@@ -26,11 +26,12 @@ def slugify(value):
 SUBMISSION_SAVE_PATH=os.path.join(os.path.split(__file__)[0], '..','..','results')
 PLACEHOLDER_SCORE = -1.0
 PLACEHOLDER_RANK = 1000
-MAXIMUM_ENTRIES_PER_DAY = 3
+MAXIMUM_ENTRIES_PER_DAY = 1
 MAX_BOARDS_FOR_SCORING = 5
 NO_TIEBREAK = 0
 TIEBREAK_ALL_SCORES = 1
 TIEBREAK_TIMESTAMP = 2
+ENTRIES_WITHOUT_SUBMISSION_RATE_RESTRICTION = 5
 
 EXPERIMENT_CHOICES = [
 	('Control','Control'),
@@ -395,13 +396,14 @@ def user_is_member_of_team(user, team):
 
 
 def too_many_entries_in_last_day(team, board):
+	recent_entries = Entry.objects.filter(team=team, board=board).order_by('-date')
+	if len(recent_entries)<ENTRIES_WITHOUT_SUBMISSION_RATE_RESTRICTION:
+		return False
 	try:
-		test_entry = Entry.objects.filter(team=team, board=board).order_by('-date')[MAXIMUM_ENTRIES_PER_DAY-1]
-		print Entry.objects.filter(team=team).order_by('-date')
+		test_entry = recent_entries[MAXIMUM_ENTRIES_PER_DAY-1]
 	except IndexError:
 		return False
 	one_day_ago = datetime.datetime.utcnow().replace(tzinfo=pytz.utc) - datetime.timedelta(days=1.0)
-	print "here", test_entry, test_entry.date, one_day_ago
 	#I know this looks odd - it does not mean "more than one day ago."
 	return test_entry.date > one_day_ago
 
