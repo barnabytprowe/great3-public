@@ -91,10 +91,9 @@ example above:
 ./msc_coadds/coadd_starfield_image-042.fits
 
 In the starfield image, only the lower-left PSF image (following standard FITS conventions) is
-coadded and output: the other (offset) PSF images are each given a different, unknown offset in
-each epoch.  This offset might be determined from the images themselves, and this information used
-to provide a coadd image of the full 3 x 3 starfield image, but this is left as an exercise for the
-interested reader!
+coadded and output.  The other, offset PSF images do have the same offset in each epoch, so they
+could be coadded too, but it is not strictly necessary and is left as an exercise for the interested
+reader!
 
 If wishing to coadd space branch images, don't forget to use the --space option to double the output
 coadd image resolution.  N.B. The output will still suffer from aliasing, see below.
@@ -323,6 +322,7 @@ def main(field, sim_dir, work_dir, upsampling=1, stars=False, n_split=n_split_de
     coadd /= float(n_epochs)
     # Write the output
     log("Writing coadd output to "+outprefix+("%03d.fits" % field))
+    coadd.setOrigin(0,0)
     coadd.write(outprefix+("%03d.fits" % field), clobber=True)
     return coadd
 
