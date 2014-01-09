@@ -3,27 +3,27 @@
 import numpy as np
 import galsim
 
-def make_const_truth_normal_dist(nfields, nims, true_sigma=0.03):
+def make_const_truth_normal_dist(nfields, nsubfields, true_sigma=0.03):
     """Generate truth catalogues with a N(0, `true_sigma`) distribution of input truth values in
     g1 and g2.
 
-    `nims` should be an integer multiple of `nfields`.
+    `nsubfields` should be an integer multiple of `nfields`.
     """
-    if (nims % nfields) != 0:
-        raise ValueError("nims must be divisible by nfields.")
-    g1true = np.repeat(np.random.randn(nfields) * true_sigma, nims / nfields)
-    g2true = np.repeat(np.random.randn(nfields) * true_sigma, nims / nfields)
+    if (nsubfields % nfields) != 0:
+        raise ValueError("nsubfields must be divisible by nfields.")
+    g1true = np.repeat(np.random.randn(nfields) * true_sigma, nsubfields / nfields)
+    g2true = np.repeat(np.random.randn(nfields) * true_sigma, nsubfields / nfields)
     return g1true, g2true
 
-def make_const_truth_uniform_annular(nfields, nims, range_min=0.02, range_max=0.05):
+def make_const_truth_uniform_annular(nfields, nsubfields, range_min=0.02, range_max=0.05):
     """Generate truth catalogues of shear with values distributed evenly in the annulus
     `range_min` < |g| <= `range_max`.
 
-    `nims` should be an integer multiple of `nfields`.
+    `nsubfields` should be an integer multiple of `nfields`.
     """
-    if (nims % nfields) != 0:
-        raise ValueError("nims must be divisible by nfields.")
-    nsubfields = nims / nfields
+    if (nsubfields % nfields) != 0:
+        raise ValueError("nsubfields must be divisible by nfields.")
+    nsubfields = nsubfields / nfields
     g1true_list = []
     g2true_list = []
     for i in range(nfields):
@@ -36,7 +36,7 @@ def make_const_truth_uniform_annular(nfields, nims, range_min=0.02, range_max=0.
                 break
         g1true_list.append(np.repeat(g1, nsubfields))
         g2true_list.append(np.repeat(g2, nsubfields))
-    # Make arrays of length nims
+    # Make arrays of length nsubfields
     g1true = np.concatenate(g1true_list)
     g2true = np.concatenate(g2true_list)
     return g1true, g2true
@@ -66,17 +66,18 @@ def read_ps(galsim_dir=None, scale=1.):
     ret = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
     return ret
 
-def make_var_truth_catalogs(nfields, nims, ps_list, ngrid=100, dx_grid=0.1,
+def make_var_truth_catalogs(nfields, nsubfields, ps_list, ngrid=100, dx_grid=0.1,
                             grid_units=galsim.degrees, rng=None):
-    """Generate truth catalogues of g1, g2 in a grid of galaxy locations for each of nims images.
+    """Generate truth catalogues of g1, g2 in a grid of galaxy locations for each of nsubfields
+    images.
 
     Inputs
     ------
     nfields    Number of underlying true power spectra to realize, must be the same as
                `len(ps_list)`.  Note this parameter is mostly retained for syntactical similarity
                with const truth table generation scripts, aiding checking.
-    nims       The number of images across which to make realizations of the power spectra in
-               `ps_list`. `nims` should be an integer multiple of `nfields`.
+    nsubfields The number of images across which to make realizations of the power spectra in
+               `ps_list`. `nsubfields` should be an integer multiple of `nfields`.
     ps_list    List of galsim.PowerSpectrum objects of length `nfields`, used to select the
                power spectra for use in the realizations of g1, g2.
     ngrid      Number of galaxies along a side of the (assumed square) image grid
@@ -85,12 +86,12 @@ def make_var_truth_catalogs(nfields, nims, ps_list, ngrid=100, dx_grid=0.1,
     rng        A galsim.BaseDeviate instance used to generate random numbers, if None one will be
                initialized internally.
 
-    Returns the tuple `(g1true_list, g2true_list)`, each element of which is a list of `nims` 2D
-    NumPy arrays of dimensions ngrid x ngrid, containg the realizations of the shear field g1 and g2
-    components at the grid points specified.
+    Returns the tuple `(g1true_list, g2true_list)`, each element of which is a list of `nsubfields`
+    2D NumPy arrays of dimensions ngrid x ngrid, containg the realizations of the shear field g1 and
+    g2 components at the grid points specified.
     """
-    if (nims % nfields) != 0:
-        raise ValueError("nims must be divisible by nfields.")
+    if (nsubfields % nfields) != 0:
+        raise ValueError("nsubfields must be divisible by nfields.")
     if len(ps_list) != nfields:
         raise ValueError("Input ps_list does not have nfields elements.")
     if rng is None:
@@ -98,7 +99,7 @@ def make_var_truth_catalogs(nfields, nims, ps_list, ngrid=100, dx_grid=0.1,
     if not isinstance(rng, galsim.BaseDeviate):
         raise TypeError("Input rng not a galsimBaseDeviate or derived class instance.") 
    # Number of subfields per field
-    nsubfields = nims / nfields
+    nsubfields = nsubfields / nfields
     # Setup empty lists for storing the g1, g2 NumPy arrays
     g1true_list = []
     g2true_list = []
@@ -127,8 +128,8 @@ def make_submission_var_shear_PS(c1, c2, m1, m2, g1true_list, g2true_list, noise
     Outputs a set of tables of k, P_E(k),... etc.
     """
     # Get the number of images from the truth table
-    nims = len(g1true_list)
-    if len(g2true_list) != nims:
+    nsubfields = len(g1true_list)
+    if len(g2true_list) != nsubfields:
         raise ValueError("Supplied g1true, g2true not matching length.")
     # Then ready an empty list (will store arrays) for the output submission
     if calculate_truth:
@@ -136,7 +137,7 @@ def make_submission_var_shear_PS(c1, c2, m1, m2, g1true_list, g2true_list, noise
         pBtrue_list = []
     pEsub_list = []
     pBsub_list = []
-    for i in range(nims):
+    for i in range(nsubfields):
         g1gals = (1. + m1) * g1true_list[i] + c1 + noise_sigma * np.random.randn(
             *g1true_list[i].shape) # pleasantly magic asterisk *args functionality
         g2gals = (1. + m2) * g2true_list[i] + c2 + noise_sigma * np.random.randn(
@@ -178,8 +179,8 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
         theta, ApMass_E(theta), Ap_Mass_B(theta), Ap_Mass_err(theta), ...
     """
     # Get the number of images from the truth table
-    nims = len(g1true_list)
-    if len(g2true_list) != nims:
+    nsubfields = len(g1true_list)
+    if len(g2true_list) != nsubfields:
         raise ValueError("Supplied g1true, g2true not matching length.")
     # Test for the size of a (square assumed) grid
     ngrid = g1true_list[0].shape[0]
@@ -193,8 +194,9 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
     mEsub_list = []
     mBsub_list = []
     merrsub_list = []
-    for i in range(nims):
-        if verbose: print "Generating aperture mass submission for image "+str(i + 1)+"/"+str(nims)
+    for i in range(nsubfields):
+        if verbose: print "Generating aperture mass submission for image "+str(i + 1)+"/"+str(
+            nsubfields)
         # Build the x, y grid
         x, y = np.meshgrid(np.arange(ngrid) * dx_grid, np.arange(ngrid) * dx_grid)
         g1gals = (1. + m1) * g1true_list[i] + c1 + noise_sigma * np.random.randn(
@@ -223,7 +225,7 @@ def make_submission_var_shear_CF(c1, c2, m1, m2, g1true_list, g2true_list, noise
         ret = theta, mEsub_list, mBsub_list, merrsub_list
     return ret
 
-def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
+def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_subfield, noise_sigma,
                                 label=None, rotate_cs=None):
     """Make a fake const shear submission.
 
@@ -234,7 +236,7 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
     ---------
     * Provided c1, c2, m1, m2 shear estimation bias values
     * Truth tables g1true, g2true
-    * The number of galaxies per image, ngals_per_im, represented by each truth table element
+    * The number of galaxies per image, ngals_per_subfield, represented by each truth table element
     * The noise_sigma standard deviation on the shear estimate for each galaxy due to noise
     * rotate_cs should be a vector of rotation angles by which to rotate c additive offsets (useful)
       for biases defined in PSF frame
@@ -242,16 +244,16 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
     Saves output to ./g3subs/g3_const_shear_sub.<label>.dat if label is not `None`
     """
     # Get the number of images from the truth table
-    nims = len(g1true)
-    if len(g2true) != nims:
+    nsubfields = len(g1true)
+    if len(g2true) != nsubfields:
         raise ValueError("Supplied g1true, g2true not matching length.")
 
     # Then ready some arrays for the output submission
-    g1sub = np.empty(nims)
-    g2sub = np.empty(nims)
+    g1sub = np.empty(nsubfields)
+    g2sub = np.empty(nsubfields)
     # Make the c1 and c2 an array for rotation if necessary
-    c1 = c1 * np.ones(nims)
-    c2 = c2 * np.ones(nims)
+    c1 = c1 * np.ones(nsubfields)
+    c2 = c2 * np.ones(nsubfields)
     if rotate_cs is not None:
         c1arr = c1 * np.cos(2. * rotate_cs) - c2 * np.sin(2. * rotate_cs)
         c2arr = c1 * np.sin(2. * rotate_cs) + c2 * np.cos(2. * rotate_cs)
@@ -260,9 +262,9 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
         c2arr = c2
     # Loop generating subs (doing this the long way - could use central limit theorem but this is
     # super safe!)
-    for i in range(nims):
-        g1gals = (1. + m1) * g1true[i] + c1arr[i] + np.random.randn(ngals_per_im) * noise_sigma
-        g2gals = (1. + m2) * g2true[i] + c2arr[i] + np.random.randn(ngals_per_im) * noise_sigma
+    for i in range(nsubfields):
+        g1gals = (1 + m1) * g1true[i] + c1arr[i] + np.random.randn(ngals_per_subfield) * noise_sigma
+        g2gals = (1 + m2) * g2true[i] + c2arr[i] + np.random.randn(ngals_per_subfield) * noise_sigma
         g1sub[i] = np.mean(g1gals)
         g2sub[i] = np.mean(g2gals)
     # Save output if requested
@@ -272,25 +274,26 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
             os.mkdir('g3subs')
         np.savetxt(
             './g3subs/g3_const_shear_sub.'+label+'.dat',
-            np.array((np.arange(nims), g1sub, g2sub)).T,
+            np.array((np.arange(nsubfields), g1sub, g2sub)).T,
             fmt=('%d', '%14.7f', '%14.7f'))
 
     return g1sub, g2sub
 
-def calculate_covariance_cholesky(n, diagonals=1., rho=0.):
-    """Returns the Cholesky decompostion of an `n` x `n` covariance matrix consisting of:
+def calculate_correlation_cholesky(n, rho=0.):
+    """Returns the Cholesky decompostion of a unit diagonals `n` x `n` covariance matrix consisting
+    of:
 
-        [[diagonals, rho, rho, rho, ... ],
-         [rho, diagonals, rho, rho, ... ],
-         [rho, rho, diagonals, rho, ... ]
-          ...]
+        [[1., rho, rho, rho, ... ],
+         [rho, 1., rho, rho, ... ],
+         [rho, rho, 1., rho, ... ]
+          ...] etc.
     """
     covariance = rho + (1. - rho) * np.identity(n)
     return np.linalg.cholesky(covariance)
 
-def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
-                                          label=None, rotate_cs=None, nsubmissions=1, rho=0., 
-                                          covariance_cholesky=None):
+def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_subfield,
+                                          noise_sigma, label=None, rotate_cs=None, nsubmissions=1,
+                                          rho=0., covariance_cholesky=None):
     """Make multiple fake const shear submissions.
 
     BARNEY NOTE: In the real data we should do this in the (x, y) coordinate frame determined
@@ -300,38 +303,50 @@ def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_
     ---------
     * Provided c1, c2, m1, m2 shear estimation bias values
     * Truth tables g1true, g2true
-    * The number of galaxies per image, ngals_per_im, represented by each truth table element
+    * The number of galaxies per subfield, ngals_per_subfield, represented by each truth table
+      element
     * The noise_sigma standard deviation on the shear estimate for each galaxy due to noise
     * rotate_cs should be a vector of rotation angles by which to rotate c additive offsets (useful)
       for biases defined in PSF frame
     * nsubmissions is the number of submissions to create (each output submission table will have,
       e.g., g1sub.shape = (len(g1true), nsubmissions)
-    * rho is the Pearson Product Moment Correlation Coefficient to assume between all submissions.
+    * rho is the Pearson Product Moment Correlation Coefficient to assume between all submissions,
+      value ignored if correlation_cholesky is supplied
+    * correlation_cholesky is the Cholesky decomposition of the nsubmissions x nsubmissions
+      covariance matrix with unity along the diagonals and rho elsewhere, as output by the function
+      calculate_correlation_cholesky... If supplied, rho is ignored
 
     Saves output to ./g3subs/g3_const_shear_sub.<label>_<i>.dat for i=1, nsubmissions if label is
     not `None`
     """
     # Get the number of images from the truth table
-    nims = len(g1true)
-    if len(g2true) != nims:
+    nsubfields = len(g1true)
+    if len(g2true) != nsubfields:
         raise ValueError("Supplied g1true, g2true not matching length.")
 
     # Then ready some arrays for the output submission
-    g1sub = np.empty(nims)
-    g2sub = np.empty(nims)
+    g1sub = np.empty((nsubfields, nsubmissions))
+    g2sub = np.empty((nsubfields, nsubmissions))
     # Make the c1 and c2 an array for rotation if necessary
-    c1 = c1 * np.ones(nims)
-    c2 = c2 * np.ones(nims)
+    c1 = c1 * np.ones(nsubfields)
+    c2 = c2 * np.ones(nsubfields)
     if rotate_cs is not None:
         c1arr = c1 * np.cos(2. * rotate_cs) - c2 * np.sin(2. * rotate_cs)
         c2arr = c1 * np.sin(2. * rotate_cs) + c2 * np.cos(2. * rotate_cs)
     else:
         c1arr = c1
         c2arr = c2
+    # Build the Cholesky decomposition of the unit diagonal, rho-off diagonal, covariance matrx
+    if covariance_cholesky is None:
+        correlation_cholesky = np.calculate_correlation_cholesky(nsubmissions, rho=rho)
+    else:
+        correlation_cholesky = covariance_cholesky
+
+    noise_sigma_subfield = noise_sigma / np.sqrt(ngals_per_subfield)
+
     # REWRITE BELOW
-    for i in range(nims):
-        #g1gals = (1. + m1) * g1true[i] + c1arr[i] + np.random.randn(ngals_per_im) * noise_sigma
-        #g2gals = (1. + m2) * g2true[i] + c2arr[i] + np.random.randn(ngals_per_im) * noise_sigma
+    for i in range(nsubfields):
+        
         #g1sub[i] = np.mean(g1gals)
         #g2sub[i] = np.mean(g2gals)
     # Save output if requested
@@ -341,7 +356,7 @@ def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_
             os.mkdir('g3subs')
         np.savetxt(
             './g3subs/g3_const_shear_sub.'+label+'.dat',
-            np.array((np.arange(nims), g1sub, g2sub)).T,
+            np.array((np.arange(nsubfields), g1sub, g2sub)).T,
             fmt=('%d', '%14.7f', '%14.7f'))
 
     return g1sub, g2sub
