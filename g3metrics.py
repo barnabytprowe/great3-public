@@ -292,8 +292,8 @@ def calculate_correlation_cholesky(n, rho=0.):
     return np.linalg.cholesky(covariance)
 
 def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_subfield,
-                                          noise_sigma, label=None, rotate_cs=None, nsubmissions=1,
-                                          rho=0., covariance_cholesky=None):
+                                          noise_sigma, rotate_cs=None, nsubmissions=1, rho=0.,
+                                          covariance_cholesky=None):
     """Make multiple fake const shear submissions.
 
     BARNEY NOTE: In the real data we should do this in the (x, y) coordinate frame determined
@@ -315,15 +315,11 @@ def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_
     * correlation_cholesky is the Cholesky decomposition of the nsubmissions x nsubmissions
       covariance matrix with unity along the diagonals and rho elsewhere, as output by the function
       calculate_correlation_cholesky... If supplied, rho is ignored
-
-    Saves output to ./g3subs/g3_const_shear_sub.<label>_<i>.dat for i=1, nsubmissions if label is
-    not `None`
     """
     # Get the number of images from the truth table
     nsubfields = len(g1true)
     if len(g2true) != nsubfields:
         raise ValueError("Supplied g1true, g2true not matching length.")
-
     # Then ready some arrays for the output submission
     g1sub = np.empty((nsubfields, nsubmissions))
     g2sub = np.empty((nsubfields, nsubmissions))
@@ -341,24 +337,16 @@ def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_
         correlation_cholesky = np.calculate_correlation_cholesky(nsubmissions, rho=rho)
     else:
         correlation_cholesky = covariance_cholesky
-
+    # Then scale noise sigma by 1/sqrt(N) to get per-subfield noise, and scale the Cholesky decomp
     noise_sigma_subfield = noise_sigma / np.sqrt(ngals_per_subfield)
-
-    # REWRITE BELOW
+    scaled_correlation_cholesky = noise_sigma_subfield * correlation_cholesky
+    # Loop over subfields and get sets of nsubmissions correlated answers
     for i in range(nsubfields):
-        
-        #g1sub[i] = np.mean(g1gals)
-        #g2sub[i] = np.mean(g2gals)
-    # Save output if requested
-    if label is not None:
-        import os
-        if not os.path.isdir('g3subs'):
-            os.mkdir('g3subs')
-        np.savetxt(
-            './g3subs/g3_const_shear_sub.'+label+'.dat',
-            np.array((np.arange(nsubfields), g1sub, g2sub)).T,
-            fmt=('%d', '%14.7f', '%14.7f'))
-
+        g1sub[i, :] = (1. + m1) * g1true[i, :] + c1arr[i] + np.dot(
+            scaled_correlation_cholesky, np.random.randn(nsubmissions))
+        g2sub[i, :] = (1. + m2) * g2true[i, :] + c2arr[i] + np.dot(
+            scaled_correlation_cholesky, np.random.randn(nsubmissions))
+    
     return g1sub, g2sub
 
 def _calculateSvalues(xarr, yarr, sigma2=1.):
