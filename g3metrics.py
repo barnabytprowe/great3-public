@@ -236,6 +236,8 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
     * Truth tables g1true, g2true
     * The number of galaxies per image, ngals_per_im, represented by each truth table element
     * The noise_sigma standard deviation on the shear estimate for each galaxy due to noise
+    * rotate_cs should be a vector of rotation angles by which to rotate c additive offsets (useful)
+      for biases defined in PSF frame
 
     Saves output to ./g3subs/g3_const_shear_sub.<label>.dat if label is not `None`
     """
@@ -263,6 +265,75 @@ def make_submission_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, no
         g2gals = (1. + m2) * g2true[i] + c2arr[i] + np.random.randn(ngals_per_im) * noise_sigma
         g1sub[i] = np.mean(g1gals)
         g2sub[i] = np.mean(g2gals)
+    # Save output if requested
+    if label is not None:
+        import os
+        if not os.path.isdir('g3subs'):
+            os.mkdir('g3subs')
+        np.savetxt(
+            './g3subs/g3_const_shear_sub.'+label+'.dat',
+            np.array((np.arange(nims), g1sub, g2sub)).T,
+            fmt=('%d', '%14.7f', '%14.7f'))
+
+    return g1sub, g2sub
+
+def calculate_covariance_cholesky(n, diagonals=1., rho=0.):
+    """Returns the Cholesky decompostion of an `n` x `n` covariance matrix consisting of:
+
+        [[diagonals, rho, rho, rho, ... ],
+         [rho, diagonals, rho, rho, ... ],
+         [rho, rho, diagonals, rho, ... ]
+          ...]
+    """
+    covariance = rho + (1. - rho) * np.identity(n)
+    return np.linalg.cholesky(covariance)
+
+def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_per_im, noise_sigma,
+                                          label=None, rotate_cs=None, nsubmissions=1, rho=0., 
+                                          covariance_cholesky=None):
+    """Make multiple fake const shear submissions.
+
+    BARNEY NOTE: In the real data we should do this in the (x, y) coordinate frame determined
+    by the primary direction of the PSF ellipticity.
+
+    Arguments
+    ---------
+    * Provided c1, c2, m1, m2 shear estimation bias values
+    * Truth tables g1true, g2true
+    * The number of galaxies per image, ngals_per_im, represented by each truth table element
+    * The noise_sigma standard deviation on the shear estimate for each galaxy due to noise
+    * rotate_cs should be a vector of rotation angles by which to rotate c additive offsets (useful)
+      for biases defined in PSF frame
+    * nsubmissions is the number of submissions to create (each output submission table will have,
+      e.g., g1sub.shape = (len(g1true), nsubmissions)
+    * rho is the Pearson Product Moment Correlation Coefficient to assume between all submissions.
+
+    Saves output to ./g3subs/g3_const_shear_sub.<label>_<i>.dat for i=1, nsubmissions if label is
+    not `None`
+    """
+    # Get the number of images from the truth table
+    nims = len(g1true)
+    if len(g2true) != nims:
+        raise ValueError("Supplied g1true, g2true not matching length.")
+
+    # Then ready some arrays for the output submission
+    g1sub = np.empty(nims)
+    g2sub = np.empty(nims)
+    # Make the c1 and c2 an array for rotation if necessary
+    c1 = c1 * np.ones(nims)
+    c2 = c2 * np.ones(nims)
+    if rotate_cs is not None:
+        c1arr = c1 * np.cos(2. * rotate_cs) - c2 * np.sin(2. * rotate_cs)
+        c2arr = c1 * np.sin(2. * rotate_cs) + c2 * np.cos(2. * rotate_cs)
+    else:
+        c1arr = c1
+        c2arr = c2
+    # REWRITE BELOW
+    for i in range(nims):
+        #g1gals = (1. + m1) * g1true[i] + c1arr[i] + np.random.randn(ngals_per_im) * noise_sigma
+        #g2gals = (1. + m2) * g2true[i] + c2arr[i] + np.random.randn(ngals_per_im) * noise_sigma
+        #g1sub[i] = np.mean(g1gals)
+        #g2sub[i] = np.mean(g2gals)
     # Save output if requested
     if label is not None:
         import os
