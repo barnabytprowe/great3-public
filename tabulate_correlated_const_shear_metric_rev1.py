@@ -71,8 +71,8 @@ if __name__ == "__main__":
                     qc[obs_type][itest, jc] = evaluate.q_constant(
                         subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
                     os.remove(subfile)
-                    print "Test %4d / %4d (c+ = %.3e) Q_c = %.4f" % (
-                        itest+1, NTEST, cval, qc[obs_type][itest, jc])
+                    #print "Test %4d / %4d (c+ = %.3e) Q_c = %.4f" % (
+                    #    itest+1, NTEST, cval, qc[obs_type][itest, jc])
 
                 print "std(Q_c) = "+str(qc[obs_type][:, jc].std())+" for "+str(NTEST)+\
                         " sims (with c+ = "+str(cval)+", obs_type = "+str(obs_type)+")"
@@ -115,10 +115,10 @@ if __name__ == "__main__":
                     qm[obs_type][itest, jm] = evaluate.q_constant(
                         subfile, EXPERIMENT, obs_type, just_q=True, truth_dir=TRUTH_DIR)
                     os.remove(subfile)
-                    print "Test %4d / %4d (m = %.3e) Q_c = %.4f" % (
-                        itest+1, NTEST, mval, qm[obs_type][itest, jm])
+                    #print "Test %4d / %4d (m = %.3e) Q_c = %.4f" % (
+                    #    itest+1, NTEST, mval, qm[obs_type][itest, jm])
 
-                print "Mean Q_c = "+str(qm[obs_type][:, jm].mean())+" for "+str(NTEST)+\
+                print "std(Q_c) = "+str(qm[obs_type][:, jm].std())+" for "+str(NTEST)+\
                     " sims (with m = "+str(mval)+", obs_type = "+str(obs_type)+")"
                 print
 
@@ -132,29 +132,29 @@ if __name__ == "__main__":
 
     print ""
     print "Table of Q_c (ground sims) at constant m = mfid = "+str(evaluate.MFID)
-    print "    c+       Q   "
-    for c, Q in zip(CVALS, np.mean(qc["ground"], axis=0)):
+    print "    c+       Q_c    std(Q_c)"
+    for c, Q in zip(CVALS, np.mean(qc["ground"], axis=0), np.std(qc["ground"], axis=0)):
 
         print "{:8f} {:8.3f}".format(c, Q)
 
     print ""
     print "Table of Q_c (space sims) at constant m = mfid = "+str(evaluate.MFID)
-    print "    c+       Q   "
-    for c, Q in zip(CVALS, np.mean(qc["space"], axis=0)):
+    print "    c+       Q_c    std(Q_c)"
+    for c, Q in zip(CVALS, np.mean(qc["space"], axis=0), np.std(qc["space"], axis=0)):
 
         print "{:8f} {:8.3f}".format(c, Q)
 
     print ""
     print "Table of Q_c (ground sims) at constant c = cfid = "+str(evaluate.CFID)
-    print "    m        Q   "
-    for m, Q in zip(MVALS, np.mean(qm["ground"], axis=0)):
+    print "    m        Q_c    std(Q_c)"
+    for m, Q in zip(MVALS, np.mean(qm["ground"], axis=0), np.std(qm["ground"], axis=0)):
 
         print "{:8f} {:8.3f}".format(m, Q)
 
     print ""
     print "Table of Q_c (space sims) at constant c = cfid = "+str(evaluate.CFID)
-    print "    m        Q   "
-    for m, Q in zip(MVALS, np.mean(qm["space"], axis=0)):
+    print "    m        Q_c    std(Q_c)"
+    for m, Q in zip(MVALS, np.mean(qm["space"], axis=0), np.std(qm["space"], axis=0)):
 
         print "{:8f} {:8.3f}".format(m, Q)
 

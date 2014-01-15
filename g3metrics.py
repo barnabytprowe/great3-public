@@ -346,7 +346,7 @@ def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_
             scaled_correlation_cholesky, np.random.randn(nsubmissions))
         g2sub[i, :] = (1. + m2) * g2true[i] + c2arr[i] + np.dot(
             scaled_correlation_cholesky, np.random.randn(nsubmissions))
-    
+
     return g1sub, g2sub
 
 def _calculateSvalues(xarr, yarr, sigma2=1.):
