@@ -334,7 +334,7 @@ def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_
         c2arr = c2
     # Build the Cholesky decomposition of the unit diagonal, rho-off diagonal, covariance matrx
     if covariance_cholesky is None:
-        correlation_cholesky = np.calculate_correlation_cholesky(nsubmissions, rho=rho)
+        correlation_cholesky = calculate_correlation_cholesky(nsubmissions, rho=rho)
     else:
         correlation_cholesky = covariance_cholesky
     # Then scale noise sigma by 1/sqrt(N) to get per-subfield noise, and scale the Cholesky decomp
@@ -342,9 +342,9 @@ def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_
     scaled_correlation_cholesky = noise_sigma_subfield * correlation_cholesky
     # Loop over subfields and get sets of nsubmissions correlated answers
     for i in range(nsubfields):
-        g1sub[i, :] = (1. + m1) * g1true[i, :] + c1arr[i] + np.dot(
+        g1sub[i, :] = (1. + m1) * g1true[i] + c1arr[i] + np.dot(
             scaled_correlation_cholesky, np.random.randn(nsubmissions))
-        g2sub[i, :] = (1. + m2) * g2true[i, :] + c2arr[i] + np.dot(
+        g2sub[i, :] = (1. + m2) * g2true[i] + c2arr[i] + np.dot(
             scaled_correlation_cholesky, np.random.randn(nsubmissions))
     
     return g1sub, g2sub
