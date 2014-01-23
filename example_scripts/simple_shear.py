@@ -629,7 +629,6 @@ def EstimateAllShears(subfield, sim_dir, output_dir, output_prefix="output_catal
             if sn_weight:
                 weight[index] = use_weight[use_index]
             use_index += 1
-        index += 1
     catalog["g1"] = g1
     catalog["g2"] = g2
     catalog["weight"] = weight
