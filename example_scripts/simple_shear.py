@@ -249,7 +249,7 @@ def extractPSF(starfield_im):
     ps_size = shape[0] / 3
 
     # Cut out the lower-left postage stamp.
-    psf_im = starfield_im[galsim.BoundsI(1,ps_size,1,ps_size)]
+    psf_im = starfield_im[galsim.BoundsI(0,ps_size-1,0,ps_size-1)]
     return psf_im
 
 def estimateVariance(gal_im):
