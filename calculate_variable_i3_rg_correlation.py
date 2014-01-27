@@ -7,15 +7,19 @@ import evaluate
 
 EXPERIMENT = "control"
 OBS_TYPE = "ground"
-SHEAR_TYPE = "constant"
+SHEAR_TYPE = "variable"
 
-# Paths to control-ground-constant filenames (im3shape score ~225, regauss score ~ 68), make sure
-# these are present!
-I3FILE = os.path.join("results", "cogs-im3shape-im3shape-0-2013-10-18T15:46:28.199250+00:00.g3")
+# Paths to control-ground-variable filenames (im3shape score ~XXX, regauss score ~YYY; TODO: update
+# these!), make sure these are present!
+I3FILE = os.path.join("results", "im3shape-great3-beta_control-ground-variable.asc")
 RGFILE = os.path.join(
-    "results", "great3_ec-regauss-example-example_1-2013-12-27T15:24:57.472170+00:00.g3")
+    "results", "great3_ec-regauss-example-example_1_cgv-2013-12-27T15:32:20.450921+00:00.g3")
 
 TRUTH_DIR = "/Users/browe/great3/beta/truth" # Modify to wherever truth is unpacked
+CORR2_EXEC = "corr2" # Mike's corr2 executable
+MAPESHEAR_FILE_PREFIX = "mapEshear_" # \
+MAPEINT_FILE_PREFIX = "mapEint_"     #  } Prefixes for the different types of variable truth cats
+MAPEOBS_FILE_PREFIX = "mapEobs_"     # /
 
 
 if __name__ == "__main__":
@@ -23,42 +27,47 @@ if __name__ == "__main__":
     # Load up relevant data
     i3data = np.loadtxt(I3FILE)
     rgdata = np.loadtxt(RGFILE)
-    subfield_index, g1true, g2true = evaluate.get_generate_const_truth(
-        EXPERIMENT, OBS_TYPE, truth_dir=TRUTH_DIR)
-    rotations = evaluate.get_generate_const_rotations(EXPERIMENT, OBS_TYPE, truth_dir=TRUTH_DIR)
-    # Calculate m and c factors
-    qi3, cpi3, mpi3, cxi3, mxi3, sigcpi3, sigmpi3, sigmxi3, sigcxi3 = evaluate.q_constant(
-        I3FILE, EXPERIMENT, OBS_TYPE, truth_dir=TRUTH_DIR)
-    qrg, cprg, mprg, cxrg, mxrg, sigcprg, sigmprg, sigmxrg, sigcxrg = evaluate.q_constant(
-        RGFILE, EXPERIMENT, OBS_TYPE, truth_dir=TRUTH_DIR)
-    # Rotate these c and m
-    c1i3 = cpi3 * np.cos(2. * rotations) - cxi3 * np.sin(2. * rotations)
-    c2i3 = cpi3 * np.sin(2. * rotations) + cxi3 * np.cos(2. * rotations)
-    m1i3 = mpi3 * np.cos(2. * rotations) - mxi3 * np.sin(2. * rotations)
-    m2i3 = mpi3 * np.sin(2. * rotations) + mxi3 * np.sin(2. * rotations)
-    c1rg = cprg * np.cos(2. * rotations) - cxrg * np.sin(2. * rotations)
-    c2rg = cprg * np.sin(2. * rotations) + cxrg * np.cos(2. * rotations)
-    m1rg = mprg * np.cos(2. * rotations) - mxrg * np.sin(2. * rotations)
-    m2rg = mprg * np.sin(2. * rotations) + mxrg * np.sin(2. * rotations)
-    # Calculate bias model using these m and c values
-    g1i3model = (1. + m1i3) * g1true + c1i3 
-    g2i3model = (1. + m2i3) * g2true + c2i3
-    g1rgmodel = (1. + m1rg) * g1true + c1rg 
-    g2rgmodel = (1. + m2rg) * g2true + c2rg
-    # Then get the bias model corrected differences
-    g1i3 = i3data[:, 1]
-    g2i3 = i3data[:, 2]
-    g1rg = rgdata[:, 1]
-    g2rg = rgdata[:, 2]
-    d1i3 = g1i3 - g1i3model
-    d2i3 = g2i3 - g2i3model
-    d1rg = g1rg - g1rgmodel
-    d2rg = g2rg - g2rgmodel
+    # Extract the salient parts of the submissions from data
+    field_i3 = i3data[:, 0].astype(int)
+    theta_i3 = i3data[:, 1]
+    map_E_i3 = i3data[:, 2]
+    field_rg = rgdata[:, 0].astype(int)
+    theta_rg = rgdata[:, 1]
+    map_E_rg = rgdata[:, 2]
+    # Load/generate the truth shear signal
+    field_shear, theta_shear, map_E_shear, _, maperr_shear = evaluate.get_generate_variable_truth(
+        EXPERIMENT, OBS_TYPE, truth_dir=TRUTH_DIR, logger=None, corr2_exec=CORR2_EXEC,
+        mape_file_prefix=MAPESHEAR_FILE_PREFIX, suffixes=("",), make_plots=False)
+    # Then generate the intrinsic only map_E, useful for examinging plots, including the maperr
+    # (a good estimate of the relative Poisson errors per bin) which we will use to provide a weight
+    field_int, theta_int, map_E_int, _, maperr_int = evaluate.get_generate_variable_truth(
+        EXPERIMENT, OBS_TYPE, truth_dir=TRUTH_DIR, logger=None, corr2_exec=CORR2_EXEC,
+        mape_file_prefix=MAPEINT_FILE_PREFIX, suffixes=("_intrinsic",), make_plots=False)
+    # Then generate the theory observed = int + shear combined map signals - these are our reference
+    # Note this uses the new functionality of get_generate_variable_truth for adding shears
+    field_ref, theta_ref, map_E_ref, _, maperr_ref = evaluate.get_generate_variable_truth(
+        EXPERIMENT, OBS_TYPE, truth_dir=TRUTH_DIR, logger=None, corr2_exec=CORR2_EXEC,
+        mape_file_prefix=MAPEOBS_FILE_PREFIX, file_prefixes=("galaxy_catalog", "galaxy_catalog"),
+        suffixes=("_intrinsic", ""), make_plots=False)
+
+    # Now, previous experience tells me that, without taking inter-bin correlations into account, it
+    # is difficult to get an unbiased simultaneous estimate of m and c from correlation function
+    # results.  Given the current setup it *might* be worth retrying, as there have been many
+    # changes since the last time.  But for now I am going to not correct, and see how we do...
+    
+    # Get the differences
+    dEi3 = (map_E_i3 - map_E_ref)
+    dErg = (map_E_rg - map_E_ref)
+    
+    # Define cov_theta
+    cov_theta = np.empty(evaluate.NBINS_THETA)
+    for i in range(evaluate.NBINS_THETA):
+        
     # Calculate covariance matrices
-    cov1 = np.cov(d1i3, d1rg) 
-    cov2 = np.cov(d2i3, d2rg)
+    cov = np.cov(dEi3, dErg)
+    #cov2 = np.cov(d2i3, d2rg)
     # Calculate correlation coefficient
-    rho1 = cov1[1, 0] / np.sqrt(cov1[0, 0] * cov1[1, 1])
-    rho2 = cov2[1, 0] / np.sqrt(cov2[0, 0] * cov2[1, 1])
-    print "Correlation coefficient (g1) rho = "+str(rho1) 
-    print "Correlation coefficient (g2) rho = "+str(rho2) 
+    rho = cov[1, 0] / np.sqrt(cov[0, 0] * cov[1, 1])
+    #rho2 = cov2[1, 0] / np.sqrt(cov2[0, 0] * cov2[1, 1])
+    #print "Correlation coefficient (g1) rho = "+str(rho1) 
+    #print "Correlation coefficient (g2) rho = "+str(rho2) 
