@@ -59,11 +59,27 @@ if __name__ == "__main__":
     dEi3 = (map_E_i3 - map_E_ref)
     dErg = (map_E_rg - map_E_ref)
     
-    # Define cov_theta
-    cov_theta = np.empty(evaluate.NBINS_THETA)
+    # Define cov_theta, covariance as a function of angular bin
+    cov_theta = np.empty((2, 2, evaluate.NBINS_THETA))
+    rho_theta = np.empty(evaluate.NBINS_THETA)
     for i in range(evaluate.NBINS_THETA):
-        
-    # Calculate covariance matrices
+
+        cov_theta[:, :, i] = np.cov(dEi3[i::evaluate.NBINS_THETA], dErg[i::evaluate.NBINS_THETA])
+        rho_theta[i] = cov_theta[1, 0, i] / np.sqrt(cov_theta[0, 0, i] * cov_theta[1, 1, i])
+    
+    # Make a plot of these results: use the overall standard deviation as the error estimate
+    import matplotlib.pyplot as plt
+    plt.clf()
+    plt.errorbar(
+        evaluate.EXPECTED_THETA[:evaluate.NBINS_THETA], rho_theta, yerr=rho_theta.std(), fmt='+')
+    plt.xscale("log")
+    plt.axhline(ls='--', color='k')
+    plt.xlabel(r"$\theta$ [deg]", size="large")
+    plt.ylabel(r"Product moment correlation coefficient $\rho$", size="large")
+    plt.savefig("./plots/rho_vs_theta_variable.png")
+    plt.show()
+
+    # Calculate covariance matrix for all data
     cov = np.cov(dEi3, dErg)
     #cov2 = np.cov(d2i3, d2rg)
     # Calculate correlation coefficient
