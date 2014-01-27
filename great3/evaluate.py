@@ -158,7 +158,7 @@ NORMALIZATION_VARIABLE_SPACE = 0.0001837  # Factor comes from tests with
 # These parameters add a damping
 SIGMA2_MIN_CONSTANT_GROUND = 4.     # 2**2
 SIGMA2_MIN_CONSTANT_SPACE = 1.      # 1**2
-SIGMA2_MIN_VARIABLE_GROUND = 9.e-8 # [2 * 1.e-3]**2
+SIGMA2_MIN_VARIABLE_GROUND = 9.e-8  # [2 * 1.e-3]**2
 SIGMA2_MIN_VARIABLE_SPACE = 4.e-8   # [3 * 1.e-3]**2
 
 
@@ -866,7 +866,6 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
         experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
         corr2_exec=corr2_exec, mape_file_prefix=MAPESHEAR_FILE_PREFIX, suffixes=("",),
         make_plots=False)
-    #print map_E_shear
     # Then generate the intrinsic only map_E, useful for examinging plots, including the maperr
     # (a good estimate of the relative Poisson errors per bin) which we will use to provide a weight
     field_int, theta_int, map_E_int, _, maperr_int = get_generate_variable_truth(
