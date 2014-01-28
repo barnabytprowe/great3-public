@@ -23,8 +23,8 @@ MAPESHEAR_FILE_PREFIX = "mapEshear_" # \
 MAPEINT_FILE_PREFIX = "mapEint_"     #  } Prefixes for the different types of variable truth cats
 MAPEOBS_FILE_PREFIX = "mapEobs_"     # /
 
-USE_ALL_BINS = True # If set, does not simply stick to the evaluate.USEBINS bin selection for
-                    # estimating the product moment correlation coefficient rho
+USE_ALL_BINS = True  # If set, does not simply stick to the evaluate.USEBINS bin selection for
+                     # estimating the product moment correlation coefficient rho
 
 if __name__ == "__main__":
 
@@ -162,17 +162,27 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     plt.clf()
     plt.errorbar(
-        evaluate.EXPECTED_THETA[evaluate.USEBINS][:ntouse], rho_theta, yerr=rho_theta.std(),
+        evaluate.EXPECTED_THETA[evaluate.USEBINS][:ntouse], rho_theta,
+        yerr=np.ones(ntouse) * np.sqrt(1. / (evaluate.NFIELDS - 3.)), # Fisher approx derived from
+                                                                      # Wikipedia page on PMCC
         fmt='+')
     plt.xscale("log")
     plt.axhline(ls='--', color='k')
     plt.xlabel(r"$\theta$ [deg]", size="large")
     plt.ylabel(r"Product moment correlation coefficient $\rho$", size="large")
-    plt.savefig("./plots/rho_vs_theta_variable.png")
+    plotfile = "./plots/rho_vs_theta_variable"
+    plt.ylim(-0.5, 1.2)
+    if USE_ALL_BINS:
+        plt.title("Per bin PMCC for all angular bins")
+        plotfile += "_allbins"
+    else:
+        plt.title("Per bin PMCC for only angular bins used by metric")
+        plotfile += "_usebins"
+    plt.savefig(plotfile+".png")
     plt.show()
 
     # Calculate covariance matrix for all data
     cov = np.cov(dEi3, dErg)
     # Calculate correlation coefficient
     rho = cov[1, 0] / np.sqrt(cov[0, 0] * cov[1, 1])
-    print "PMCC rho = "+str(rho)
+    print "PMCC rho = %.3f +/- %.3f" % (rho, np.sqrt(1. / (evaluate.NFIELDS * ntouse - 3.)))
