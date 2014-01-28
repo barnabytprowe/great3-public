@@ -312,7 +312,7 @@ def make_multiple_submissions_const_shear(c1, c2, m1, m2, g1true, g2true, ngals_
       e.g., g1sub.shape = (len(g1true), nsubmissions)
     * rho is the Pearson Product Moment Correlation Coefficient to assume between all submissions,
       value ignored if correlation_cholesky is supplied
-    * correlation_cholesky is the Cholesky decomposition of the nsubmissions x nsubmissions
+    * covariance_cholesky is the Cholesky decomposition of the nsubmissions x nsubmissions
       covariance matrix with unity along the diagonals and rho elsewhere, as output by the function
       calculate_correlation_cholesky... If supplied, rho is ignored
     """
