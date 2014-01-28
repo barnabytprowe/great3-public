@@ -16,7 +16,7 @@ sys.path.append(os.path.join(path, "..", "server", "great3")) # Appends the fold
 import evaluate
 import test_evaluate
 
-NTEST = 100 # Should do AT LEAST 1000
+NTEST = 1000 # Should do AT LEAST 1000
 NGALS_PER_IMAGE = 10000
 NOISE_SIGMA = {"ground": 0.15, "space": 0.10}
 TRUTH_DIR = "/Users/browe/great3/beta/truth" # Modify to wherever truth is unpacked
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     mapE = {
         "ground": np.empty((evaluate.NBINS_THETA * evaluate.NFIELDS, NTEST)),
         "space":  np.empty((evaluate.NBINS_THETA * evaluate.NFIELDS, NTEST))}
-    mapEoutfile = os.path.join("results", "tabulated_map_E.pkl")
+    mapEoutfile = os.path.join("results", "tabulated_map_E_N"+str(NTEST)+".pkl")
     # Start the loop over ground/space
     if not os.path.isfile(mapEoutfile):
         for obs_type in ("ground", "space",):
@@ -71,11 +71,21 @@ if __name__ == "__main__":
         "space":  np.empty((evaluate.NBINS_THETA, evaluate.NBINS_THETA, evaluate.NFIELDS))}
     for obs_type in ("ground", "space"):
 
+        # Calculate each field's covariance matrix
         for ifield in range(evaluate.NFIELDS):
 
             mapE_field = mapE[obs_type][
                 ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA, :]
             cov[obs_type][:, :, ifield] = np.cov(mapE_field)
+
+        # Plot the mean covariance matrix across all fields, log10(abs(C))
+        import matplotlib.pyplot as plt
+        plt.clf()
+        plt.imshow(np.log10(np.abs(np.mean(cov[obs_type], axis=2))), interpolation="nearest")
+        plt.colorbar()
+        plt.title(
+            r"log$_{10}$|<C$_{ij}>$| for "+obs_type+" sims (NTEST="+str(NTEST)+", all fields)")
+        plt.savefig(os.path.join("plots", "cov_mean_"+obs_type+"_N"+str(NTEST)+".png"))
 
 
 
