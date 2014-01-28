@@ -2,8 +2,10 @@
 import os
 import sys
 import numpy as np
+import numpy.linalg as linalg
 sys.path.append(os.path.join("..", "server", "great3"))
 import evaluate
+import test_evaluate
 
 EXPERIMENT = "control"
 OBS_TYPE = "ground"
@@ -21,6 +23,8 @@ MAPESHEAR_FILE_PREFIX = "mapEshear_" # \
 MAPEINT_FILE_PREFIX = "mapEint_"     #  } Prefixes for the different types of variable truth cats
 MAPEOBS_FILE_PREFIX = "mapEobs_"     # /
 
+USE_ALL_BINS = True # If set, does not simply stick to the evaluate.USEBINS bin selection for
+                    # estimating the product moment correlation coefficient rho
 
 if __name__ == "__main__":
 
@@ -50,28 +54,116 @@ if __name__ == "__main__":
         mape_file_prefix=MAPEOBS_FILE_PREFIX, file_prefixes=("galaxy_catalog", "galaxy_catalog"),
         suffixes=("_intrinsic", ""), make_plots=False)
 
-    # Now, previous experience tells me that, without taking inter-bin correlations into account, it
-    # is difficult to get an unbiased simultaneous estimate of m and c from correlation function
-    # results.  Given the current setup it *might* be worth retrying, as there have been many
-    # changes since the last time.  But for now I am going to not correct, and see how we do...
-    
-    # Get the differences
-    dEi3 = (map_E_i3 - map_E_ref)
-    dErg = (map_E_rg - map_E_ref)
-    
-    # Define cov_theta, covariance as a function of angular bin
-    cov_theta = np.empty((2, 2, evaluate.NBINS_THETA))
-    rho_theta = np.empty(evaluate.NBINS_THETA)
-    for i in range(evaluate.NBINS_THETA):
+    # We can use this information to construct the linear model
+    # c**2 + (1 + 2 * m + m**2) * <map_E_ref> = a + b * <map_E_ref>
+    # ...and fit it to the submissions
 
-        cov_theta[:, :, i] = np.cov(dEi3[i::evaluate.NBINS_THETA], dErg[i::evaluate.NBINS_THETA])
+    # Hmmm actually a linear model doesn't work because we do want to constrain c**2 to be
+    # positive... Try using optimize instead
+
+    if USE_ALL_BINS:
+        # HACKY: Temporarily set evaluate.USEBINS to be all true to use *all* angular bins for
+        # calculating the product moment correlation coeff
+        evaluate.USEBINS = np.ones(evaluate.USEBINS.shape, dtype=bool)
+
+    # Get truth as a full catalog
+    _, x, y, g1true, g2true = test_evaluate.get_variable_gtrue(
+        EXPERIMENT, OBS_TYPE, truth_dir=TRUTH_DIR)
+    # Then make a variable submission to learn what pure c1 and c2 look like in map^2
+    import tempfile
+    fdtmp, tmpfile = tempfile.mkstemp(suffix=".dat")
+    result = test_evaluate.make_variable_submission(
+        x, y, np.zeros_like(g1true), np.zeros_like(g2true), np.zeros_like(g1true),
+        np.zeros_like(g2true), 1., 0., 0., 0., outfile=tmpfile, noise_sigma=0.)
+    os.close(fdtmp)
+    map_E_c1 = np.loadtxt(tmpfile)[:, 2]
+    os.remove(tmpfile)
+    fdtmp, tmpfile = tempfile.mkstemp(suffix=".dat")
+    result = test_evaluate.make_variable_submission(
+        x, y, np.zeros_like(g1true), np.zeros_like(g2true), np.zeros_like(g1true),
+        np.zeros_like(g2true), 0., 1., 0., 0., outfile=tmpfile, noise_sigma=0.)
+    os.close(fdtmp)
+    map_E_c2 = np.loadtxt(tmpfile)[:, 2]
+    os.remove(tmpfile)
+    # Then sum these to get our "unit c" term for the modelling
+    map_E_unitc = map_E_c1 + map_E_c2
+
+    # Then we quickly define the error normalized difference vector (essentially gets used as chisq
+    # later by optimize).  Note this defines the model we are making of the submissions:
+    #
+    #  <map_E_model> = <map_E_unitc> * c^2 + <map_E_ref> * (1 + 2 * m + m^2)
+    def map_diff_func(cm_array, mapEsub, maperrsub, mapEref, mapEunitc):
+        """Difference of an m-c model of the aperture mass statistic and the submission.
+        """
+        retval = (
+                mapEunitc * cm_array[0]**2 + mapEref * (1. + 2. * cm_array[1] + cm_array[1]**2)
+                - mapEsub
+            ) / maperrsub
+        return retval
+
+    # Use optimize to determmine the (non-linear) model parameters and covariance matrix using the
+    # variance of the model residuals
+    import scipy.optimize
+    # First im3shape
+    results_i3 = scipy.optimize.leastsq(
+        map_diff_func, np.array([0., 0.]),
+        args=(
+            map_E_i3[evaluate.USEBINS],
+            maperr_ref[evaluate.USEBINS],
+            map_E_ref[evaluate.USEBINS], # Note we use the reference errors, this will appropriately
+                                         # weight different bins and is not noisy
+            map_E_unitc[evaluate.USEBINS]), full_output=True)
+    ci3 = results_i3[0][0]
+    mi3 = results_i3[0][1]
+    map_E_i3_model = map_E_unitc * ci3**2 + map_E_ref * (1. + 2. * mi3 + mi3**2)
+    residual_variance_i3 = np.var(((map_E_i3 - map_E_i3_model) / maperr_ref)[evaluate.USEBINS])
+    covcm_i3 = results_i3[1] * residual_variance_i3
+    sigc_i3 = np.sqrt(covcm_i3[0, 0])
+    sigm_i3 = np.sqrt(covcm_i3[1, 1])
+    # Then REGAUSS
+    results_rg = scipy.optimize.leastsq(
+        map_diff_func, np.array([0., 0.]),
+        args=(
+            map_E_rg[evaluate.USEBINS],
+            maperr_ref[evaluate.USEBINS],
+            map_E_ref[evaluate.USEBINS], # Note we use the reference errors, this will appropriately
+                                         # weight different bins and is not noisy
+            map_E_unitc[evaluate.USEBINS]), full_output=True)
+    crg = results_rg[0][0]
+    mrg = results_rg[0][1]
+    map_E_rg_model = map_E_unitc * crg**2 + map_E_ref * (1. + 2. * mrg + mrg**2)
+    residual_variance_rg = np.var(((map_E_rg - map_E_rg_model) / maperr_ref)[evaluate.USEBINS])
+    covcm_rg = results_rg[1] * residual_variance_rg
+    sigc_rg = np.sqrt(covcm_rg[0, 0])
+    sigm_rg = np.sqrt(covcm_rg[1, 1])
+
+    # Print a summary of the results
+    print "c_i3 = %+.5f +/- %.5f" % (ci3, sigc_i3)
+    print "c_rg = %+.5f +/- %.5f" % (crg, sigc_rg)
+    print "m_i3 = %+.5f +/- %.5f" % (mi3, sigm_i3)
+    print "m_rg = %+.5f +/- %.5f" % (mrg, sigm_rg)
+    
+    # Get the model corrected differences ()
+    dEi3 = (map_E_i3 - map_E_i3_model)[evaluate.USEBINS]
+    dErg = (map_E_rg - map_E_rg_model)[evaluate.USEBINS]
+    
+    # Number of bins we're going to use (those for which evaluate.USEBINS == True)
+    ntouse = np.sum(evaluate.USEBINS) / evaluate.NFIELDS
+
+    # Define cov_theta, covariance as a function of angular bin
+    cov_theta = np.empty((2, 2, ntouse))
+    rho_theta = np.empty(ntouse)
+    for i in range(ntouse):
+
+        cov_theta[:, :, i] = np.cov(dEi3[i::ntouse], dErg[i::ntouse])
         rho_theta[i] = cov_theta[1, 0, i] / np.sqrt(cov_theta[0, 0, i] * cov_theta[1, 1, i])
     
     # Make a plot of these results: use the overall standard deviation as the error estimate
     import matplotlib.pyplot as plt
     plt.clf()
     plt.errorbar(
-        evaluate.EXPECTED_THETA[:evaluate.NBINS_THETA], rho_theta, yerr=rho_theta.std(), fmt='+')
+        evaluate.EXPECTED_THETA[evaluate.USEBINS][:ntouse], rho_theta, yerr=rho_theta.std(),
+        fmt='+')
     plt.xscale("log")
     plt.axhline(ls='--', color='k')
     plt.xlabel(r"$\theta$ [deg]", size="large")
@@ -81,9 +173,6 @@ if __name__ == "__main__":
 
     # Calculate covariance matrix for all data
     cov = np.cov(dEi3, dErg)
-    #cov2 = np.cov(d2i3, d2rg)
     # Calculate correlation coefficient
     rho = cov[1, 0] / np.sqrt(cov[0, 0] * cov[1, 1])
-    #rho2 = cov2[1, 0] / np.sqrt(cov2[0, 0] * cov2[1, 1])
-    #print "Correlation coefficient (g1) rho = "+str(rho1) 
-    #print "Correlation coefficient (g2) rho = "+str(rho2) 
+    print "PMCC rho = "+str(rho)
