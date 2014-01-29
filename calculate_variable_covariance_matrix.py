@@ -22,6 +22,50 @@ NOISE_SIGMA = {"ground": 0.15, "space": 0.10}
 TRUTH_DIR = "/Users/browe/great3/beta/truth" # Modify to wherever truth is unpacked
 EXPERIMENT = "control" # Use the control truth values
 
+def decompose_cov(cov, dumb=False):
+    """Take in a covariance matrix, and return the tuple `(diag, correlation_matrix)`.
+
+    I think this is a much better way to visualize covariance matrices, by splitting them into a
+    dimensionless matrix specifying correlations and a dimensional vector of diagonal variances.
+
+    What I call the `correlation_matrix` above is simply the matrix of product moment correlation
+    coefficients (PMCCs) relating to an input covariance matrix `cov`, defined as:
+
+        correlation_matrix[i, j] = cov[i, j] / math.sqrt(cov[i, i] * cov[j, j])
+
+    i.e. just a square matrix with unity on the diagonals and the relevant PMCC on off-diagonals.
+
+    To preserve the full information content of `cov` this code also returns
+
+        diag = numpy.diag(cov)
+
+    These are diagonal variance values of the input covariance matrix.  `diag` together with
+    `correlation_matrix` fully specifies `cov`.
+
+    If the kwarg `dumb` is set then the code does this calculation the dumbest and least efficient
+    way possible in Python, an optional behaviour used for checking results.
+    """
+    if cov.shape[0] != cov.shape[1]:
+        raise ValueError("Input covariance matrix must be square!")
+    if not dumb:
+        raise NotImplementedError("Sorry decompose_cov only does dumb at the moment!")
+    else:
+        dim = cov.shape[0]
+        diag = np.diag(cov)
+        sqrt_diag = np.sqrt(diag)
+        correlation_matrix = np.identity(dim)
+        for i in xrange(cov.shape[0]):
+
+            for j in xrange(cov.shape[1]):
+
+                if i == j:
+                    pass
+                else:
+                    correlation_matrix[i, j] = cov[i, j] / (sqrt_diag[i] * sqrt_diag[j])
+
+    # Return diag values and correlation matrix
+    return diag, correlation_matrix
+
 if __name__ == "__main__":
 
     import cPickle
@@ -77,8 +121,21 @@ if __name__ == "__main__":
             mapE_field = mapE[obs_type][
                 ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA, :]
             cov[obs_type][:, :, ifield] = np.cov(mapE_field)
+            # Inspect field to field variation in covariance matrix
+            #import matplotlib.pyplot as plt
+            #plt.clf()
+            #plt.imshow(np.log10(np.abs(cov[obs_type][:, :, ifield])), interpolation="nearest")
+            #plt.colorbar()
+            #plt.show()
+            # Results: no appearance of strong systematic differences between fields, using mean
+            # for sims is fine I think...
 
-        # Plot the mean covariance matrix across all fields, log10(abs(C))
+
+        # Plot the mean covariance matrix across all fields, log10(abs(C)), the correlations and the
+        # diagonal errors
+        cov_mean = np.mean(cov[obs_type], axis=2)
+        diag_mean, corr_mean = decompose_cov(cov_mean, dumb=True)
+
         import matplotlib.pyplot as plt
         plt.clf()
         plt.imshow(np.log10(np.abs(np.mean(cov[obs_type], axis=2))), interpolation="nearest")
@@ -86,6 +143,24 @@ if __name__ == "__main__":
         plt.title(
             r"log$_{10}$|<C$_{ij}>$| for "+obs_type+" sims (NTEST="+str(NTEST)+", all fields)")
         plt.savefig(os.path.join("plots", "cov_mean_"+obs_type+"_N"+str(NTEST)+".png"))
+
+        plt.clf()
+        plt.imshow(corr_mean, interpolation="nearest")
+        plt.colorbar()
+        plt.title(
+            r"$\rho_{ij}$ for "+obs_type+" sims (NTEST="+str(NTEST)+", all fields)")
+        plt.savefig(os.path.join("plots", "corr_mean_"+obs_type+"_N"+str(NTEST)+".png"))
+
+        plt.clf()
+        plt.loglog(evaluate.EXPECTED_THETA[:evaluate.NBINS_THETA], np.sqrt(diag_mean),
+            label="NTEST = "+str(NTEST))
+        plt.xlabel(r"$\theta$ [degrees]", fontsize="large")
+        plt.ylabel(r"$\sigma_{M(\theta_i)}$", fontsize="x-large")
+        plt.title(r"Uncertainties (diagonal only) on $M(\theta_i)$ for "+obs_type+" data")
+        plt.legend()
+        plt.savefig(os.path.join("plots", "diag_cov_mean_"+obs_type+"_N"+str(NTEST)+".png"))
+        #plt.show()
+
 
 
 
