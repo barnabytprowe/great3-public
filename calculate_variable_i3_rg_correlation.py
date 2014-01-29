@@ -85,8 +85,10 @@ if __name__ == "__main__":
     os.close(fdtmp)
     map_E_c2 = np.loadtxt(tmpfile)[:, 2]
     os.remove(tmpfile)
-    # Then sum these to get our "unit c" term for the modelling
-    map_E_unitc = map_E_c1 + map_E_c2
+    # Then average these (I checked they are very similar as you would expect) to get our "unit c"
+    # term for the modelling.  Note that previously I summed these, but I think this was an error as
+    # that actually corresponds approximately to a shear field with g1 = g2 = 1, i.e. |g| = sqrt(2)
+    map_E_unitc = .5 * (map_E_c1 + map_E_c2)
 
     # Then we quickly define the error normalized difference vector (essentially gets used as chisq
     # later by optimize).  Note this defines the model we are making of the submissions:
