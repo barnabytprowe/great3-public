@@ -447,18 +447,13 @@ def writeOutput(output_dir, output_prefix, subfield, output_type, catalog, clobb
         # First print lines with column names.  This goes into a separate file for now.
         f1, tmp_1 = tempfile.mkstemp(dir=output_dir)
         with open(tmp_1, 'w') as f:
-            # Note: this is a stupid way to get it to list the names, but I can't figure out a
-            # simpler way.  For example, just `catalog.names` doesn't work.
-            name_list = pyfits.new_table(catalog).data.names
-            formats = pyfits.new_table(catalog).data.columns.formats
+            name_list = catalog.dtype.names
             for name in name_list:
-                f.write(comment_pref + " %s\n"%name)
+                f.write(comment_pref+" "+name+"\n")
 
         # Then save catalog itself.
         f2, tmp_2 = tempfile.mkstemp(dir=output_dir)
-        # TODO: get format string from column description, so that we can print IDs as ints instead
-        # of floats.  This seems to be hard, but I'm not sure why.
-        numpy.savetxt(tmp_2, catalog)
+        numpy.savetxt(tmp_2, catalog, ["%d","%.8f","%.8f","%.8f"])
 
         # Finally, concatenate, and remove tmp files
         with open(output_file, 'wb') as destination:
