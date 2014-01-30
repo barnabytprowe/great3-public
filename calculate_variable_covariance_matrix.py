@@ -113,6 +113,11 @@ if __name__ == "__main__":
     cov = {
         "ground": np.empty((evaluate.NBINS_THETA, evaluate.NBINS_THETA, evaluate.NFIELDS)),
         "space":  np.empty((evaluate.NBINS_THETA, evaluate.NBINS_THETA, evaluate.NFIELDS))}
+    # Dicts for storing the mean (across fields) covariance, diagonal variances and correlation
+    # matrix
+    cov_mean = {}
+    diag_mean = {}
+    corr_mean = {}
     for obs_type in ("ground", "space"):
 
         # Calculate each field's covariance matrix
@@ -133,9 +138,10 @@ if __name__ == "__main__":
 
         # Plot the mean covariance matrix across all fields, log10(abs(C)), the correlations and the
         # diagonal errors
-        cov_mean = np.mean(cov[obs_type], axis=2)
-        diag_mean, corr_mean = decompose_cov(cov_mean, dumb=True)
+        cov_mean[obs_type] = np.mean(cov[obs_type], axis=2)
+        diag_mean[obs_type], corr_mean[obs_type] = decompose_cov(cov_mean[obs_type], dumb=True)
 
+        print "Plotting results for "+obs_type
         import matplotlib.pyplot as plt
         plt.clf()
         plt.imshow(np.log10(np.abs(np.mean(cov[obs_type], axis=2))), interpolation="nearest")
@@ -145,21 +151,23 @@ if __name__ == "__main__":
         plt.savefig(os.path.join("plots", "cov_mean_"+obs_type+"_N"+str(NTEST)+".png"))
 
         plt.clf()
-        plt.imshow(corr_mean, interpolation="nearest")
+        plt.imshow(corr_mean[obs_type], interpolation="nearest")
         plt.colorbar()
         plt.title(
             r"$\rho_{ij}$ for "+obs_type+" sims (NTEST="+str(NTEST)+", all fields)")
         plt.savefig(os.path.join("plots", "corr_mean_"+obs_type+"_N"+str(NTEST)+".png"))
 
         plt.clf()
-        plt.loglog(evaluate.EXPECTED_THETA[:evaluate.NBINS_THETA], np.sqrt(diag_mean),
+        plt.loglog(evaluate.EXPECTED_THETA[:evaluate.NBINS_THETA], np.sqrt(diag_mean[obs_type]),
             label="NTEST = "+str(NTEST))
         plt.xlabel(r"$\theta$ [degrees]", fontsize="large")
         plt.ylabel(r"$\sigma_{M(\theta_i)}$", fontsize="x-large")
         plt.title(r"Uncertainties (diagonal only) on $M(\theta_i)$ for "+obs_type+" data")
         plt.legend()
         plt.savefig(os.path.join("plots", "diag_cov_mean_"+obs_type+"_N"+str(NTEST)+".png"))
-        #plt.show()
+
+
+
 
 
 
