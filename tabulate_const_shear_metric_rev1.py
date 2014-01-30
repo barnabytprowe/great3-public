@@ -32,8 +32,8 @@ if __name__ == "__main__":
     # Dicts containing arrays for storing Q_c values versus m and c, for ground and space
     qc = {"ground": np.empty((NTEST, len(CVALS))), "space": np.empty((NTEST, len(CVALS)))}
     qm = {"ground": np.empty((NTEST, len(MVALS))), "space": np.empty((NTEST, len(MVALS)))}
-    coutfile = os.path.join("results", "tabulated_const_Q_c_versus_c_norm1.pkl")
-    moutfile = os.path.join("results", "tabulated_const_Q_c_versus_m_norm1.pkl")
+    coutfile = os.path.join("results", "tabulated_const_Q_c_versus_c_norm2.pkl")
+    moutfile = os.path.join("results", "tabulated_const_Q_c_versus_m_norm2.pkl")
 
     if not os.path.isfile(coutfile):
         for obs_type in ("ground", "space",):
