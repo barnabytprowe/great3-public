@@ -203,7 +203,5 @@ if __name__ == "__main__":
 
             print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
 
-
-
     with open(CSTDOUTFILE, "wb") as fout: cPickle.dump(sqcmean, fout)
     with open(MSTDOUTFILE, "wb") as fout: cPickle.dump(sqmmean, fout)
