@@ -175,10 +175,10 @@ if __name__ == "__main__":
         qmlist.append(qm)
 
     # Then tabulate the average statistics across these NRUNS runs
-    qcmean = {"ground": np.empty(len(CVALS)), "space": np.empty(len(CVALS))}
-    sqcmean = {"ground": np.empty(len(CVALS)), "space": np.empty(len(CVALS))}
-    qmmean = {"ground": np.empty(len(MVALS)), "space": np.empty(len(MVALS))}
-    sqmmean = {"ground": np.empty(len(MVALS)), "space": np.empty(len(MVALS))}
+    qcmean = {"ground": np.zeros(len(CVALS)), "space": np.zeros(len(CVALS))}
+    sqcmean = {"ground": np.zeros(len(CVALS)), "space": np.zeros(len(CVALS))}
+    qmmean = {"ground": np.zeros(len(MVALS)), "space": np.zeros(len(MVALS))}
+    sqmmean = {"ground": np.zeros(len(MVALS)), "space": np.zeros(len(MVALS))}
     for obs_type in ("ground", "space"):
 
         for qc, qm in zip(qclist, qmlist):
@@ -191,17 +191,19 @@ if __name__ == "__main__":
         print
         print
         print "OVERALL table of average Q_c and std(Q_c) from NRUNS = "+str(NRUNS)+" tests"
-        print "At constant m1 = m2 = mfid = "+str(evaluate.MFID)
+        print "At constant m1 = m2 = mfid = "+str(evaluate.MFID)+", "+obs_type+" sims"
         print "    c        Q_c    std(Q_c)"
         for c, Q, dQ in zip(CVALS, qcmean[obs_type], sqcmean[obs_type]):
 
             print "{:8f} {:8.3f} {:8.3f}".format(c, Q, dQ)
 
-        print "At constant c1 = cfid = "+str(evaluate.CFID)
+        print "At constant c1 = cfid = "+str(evaluate.CFID)+", "+obs_type+" sims"
         print "    m        Q_c    std(Q_c)"
-        for c, Q, dQ in zip(CVALS, qcmean[obs_type], sqcmean[obs_type]):
+        for m, Q, dQ in zip(MVALS, qmmean[obs_type], sqmmean[obs_type]):
 
             print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
+
+
 
     with open(CSTDOUTFILE, "wb") as fout: cPickle.dump(sqcmean, fout)
     with open(MSTDOUTFILE, "wb") as fout: cPickle.dump(sqmmean, fout)
