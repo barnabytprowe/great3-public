@@ -922,3 +922,163 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
             raise err
     # Then return Q_v
     return Q_v
+
+def map_diff_func(cm_array, mapEsub, maperrsub, mapEref, mapEunitc):
+        """Difference between an m,c model of a biased aperture mass statistic submission and the 
+        submission itself, as a vector corresponding to the theta vector.
+
+        The model of the biased submission is simply:
+
+            mapEmodel = mapEunitc * c^2 + mapEref * (1 + 2 * m + m^2)
+
+        where c, m = cm_array[0], cm_array[1].  This code returns
+
+            (mapEmodel - mapEsub) / maperrsub
+
+        for the use of scipy.optimize.leastsq() within q_variable_by_mc().
+        """
+        ret = (
+            mapEunitc * cm_array[0]**2 + mapEref * (1. + 2. * cm_array[1] + cm_array[1]**2)
+            - mapEsub) / maperrsub
+        return ret
+
+def q_variable_by_mc(submission_file, experiment, obs_type, map_E_unitc, normalization=None,
+                     truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR, logger=None, corr2_exec="corr2",
+                     sigma2_min=None, cfid=CFID, mfid=MFID, just_q=False):
+    """Calculate the Q_v for a variable shear branch submission.
+
+    @param submission_file  File containing the user submission.
+    @param experiment       Experiment for this branch, one of 'control', 'real_galaxy',
+                            'variable_psf', 'multiepoch', 'full'
+    @param obs_type         Observation type for this branch, one of 'ground' or 'space'
+    @param normalization    Normalization factor for the metric, default will be set differently for
+                            obs_type='space' and obs_type='ground'
+    @param storage_dir      Directory from/into which to load/store rotation files
+    @param truth_dir        Root directory in which the truth information for the challenge is
+                            stored
+    @param logger           Python logging.Logger instance, for message logging
+    @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
+    @param poisson_weight   If `True`, use the relative Poisson errors in each bin of map_E
+                            to form an inverse variance weight for the difference metric
+                            [default = `False`]
+    @param sigma2_min       Damping term to put into the denominator of metric (default `None`
+                            uses either `SIGMA2_MIN_VARIABLE_GROUND` or `SIGMA2_MIN_VARIABLE_SPACE`
+                            depending on `obs_type`)
+    @param cfid             Fiducial, target c value
+    @param mfid             Fiducial, target m value
+    @param just_q           Set `just_q = True` (default is `False`) to only return Q_v rather than
+                            the default behaviour of returning a tuple including best fitting |c|,
+                            m, uncertainties etc.
+    @return The metric Q_v
+    """
+    if not os.path.isfile(submission_file):
+        raise ValueError("Supplied submission_file '"+submission_file+"' does not exist.")
+    # Set the default normalization based on whether ground or space data
+    if normalization is None:
+        if obs_type == "ground":
+            normalization = NORMALIZATION_VARIABLE_GROUND
+        elif obs_type == "space":
+            normalization = NORMALIZATION_VARIABLE_SPACE
+        else:
+            raise ValueError("Default normalization cannot be set as obs_type not recognised")
+    # If the sigma2_min is not changed from `None`, set using defaults based on `obs_type`
+    if sigma2_min is None:
+        if obs_type == "ground":
+            sigma2_min = SIGMA2_MIN_VARIABLE_GROUND
+        elif obs_type == "space":
+            sigma2_min = SIGMA2_MIN_VARIABLE_SPACE
+        else:
+            raise ValueError("Default sigma2_min cannot be set as obs_type not recognised")
+    # Load the submission and label the slices we're interested in
+    if logger is not None:
+        logger.info("Calculating Q_v metric (by m & c) for "+submission_file)
+    data = np.loadtxt(submission_file)
+    # We are stating that we want at least 4 and up to 5 columns, so check for this
+    if data.shape not in ((NBINS_THETA * NFIELDS, 4), (NBINS_THETA * NFIELDS, 5)):
+        raise ValueError("Submission "+str(submission_file)+" is not the correct shape!")
+    # Extract the salient parts of the submission from data
+    field_sub = data[:, 0].astype(int)
+    theta_sub = data[:, 1]
+    map_E_sub = data[:, 2]
+    # Load/generate the truth shear signal
+    field_shear, theta_shear, map_E_shear, _, maperr_shear = get_generate_variable_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
+        corr2_exec=corr2_exec, mape_file_prefix=MAPESHEAR_FILE_PREFIX, suffixes=("",),
+        make_plots=False)
+    # Then generate the intrinsic only map_E, useful for examinging plots, including the maperr
+    # (a good estimate of the relative Poisson errors per bin) which we will use to provide a weight
+    field_int, theta_int, map_E_int, _, maperr_int = get_generate_variable_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
+        corr2_exec=corr2_exec, mape_file_prefix=MAPEINT_FILE_PREFIX, suffixes=("_intrinsic",),
+        make_plots=False)
+    # Then generate the theory observed = int + shear combined map signals - these are our reference
+    # Note this uses the new functionality of get_generate_variable_truth for adding shears
+    field_ref, theta_ref, map_E_ref, _, maperr_ref = get_generate_variable_truth(
+        experiment, obs_type, truth_dir=truth_dir, storage_dir=storage_dir, logger=logger,
+        corr2_exec=corr2_exec, mape_file_prefix=MAPEOBS_FILE_PREFIX,
+        file_prefixes=("galaxy_catalog", "galaxy_catalog"), suffixes=("_intrinsic", ""),
+        make_plots=False)
+    # Set up the weight
+    if poisson_weight:
+        weight = max(maperr_int**2) / maperr_int**2 # Inverse variance weight
+    else:
+        weight = np.ones_like(map_E_ref)
+    # Set up the usebins to use if `usebins == None` (use all bins)
+    if usebins is None:
+        usebins = np.repeat(True, NBINS_THETA * NFIELDS)
+    # Get the total number of active bins per field
+    nactive = sum(usebins) / NFIELDS
+    try: # Put this in a try except block to handle funky submissions better
+        np.testing.assert_array_almost_equal( # Sanity check out truth / expected theta bins
+            theta_shear, EXPECTED_THETA, decimal=3,
+            err_msg="BIG SNAFU! Truth theta does not match the EXPECTED_THETA, failing...")
+        np.testing.assert_array_equal(
+            field_sub, field_ref, err_msg="User field array does not match truth.")
+        np.testing.assert_array_almost_equal(
+            theta_sub, theta_ref, decimal=3, err_msg="User theta array does not match truth.")
+        # Use optimize.leastsq to find the best fitting linear bias model params, and covariances
+        import scipy.optimize
+        optimize_results = scipy.optimize.leastsq(
+            map_diff_func, np.array([0., 0.]),
+            args=(
+                map_E_sub[evaluate.USEBINS],
+                maperr_ref[evaluate.USEBINS],
+                map_E_ref[evaluate.USEBINS],  # Note use of ref errors: this will appropriately
+                                              # weight different bins and is not itself noisy
+                map_E_unitc[evaluate.USEBINS]), full_output=True)
+        csub = optimize_results[0][0]
+        msub = optimize_results[0][1]
+        map_E_model = map_E_unitc * csub**2 + map_E_ref * (1. + 2. * msub + msub**2)
+        residual_variance = np.var(
+            ((map_E_i3 - map_E_i3_model) / maperr_ref)[evaluate.USEBINS], ddof=1)
+        covcm = optimize_results[1] * residual_variance
+        sigcsub = np.sqrt(covcm[0, 0])
+        sigmsub = np.sqrt(covcm[1, 1])
+        # Then we define the Q_v
+        Q_v = 1000. * sqrt(3.) / np.sqrt(
+            (csub / cfid)**2 + (msub / mfid)**2 + sigma2_min)
+    except Exception as err:
+        Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
+        if logger is not None:
+            logger.warn(err.message) # ...But let's warn if there's a logger!
+        else:                        # ...And raise the exception if not
+            raise err
+    # Then return
+    # Then return
+    if just_q:
+        ret = Q_v
+    else:
+        if pretty_print:
+            print
+            print "Evaluated results for submission "+str(submission_file)
+            print "Using..."
+            print "sigma_min = "+str(sigma_min)
+            print "cfid = "+str(cfid)
+            print "mfid = "+str(mfid)
+            print
+            print "Q_v =  %.4f" % Q_c
+            print "|c| = %+.5f +/- %.5f" % (csub, sigcsub)
+            print " m  = %+.5f +/- %.5f" % (msub, sigmsub)
+            print
+        ret = (Q_v, csub, msub, sigcsub, sigmsub)
+    return ret
