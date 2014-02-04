@@ -313,7 +313,7 @@ if __name__ == "__main__":
                 qfrac = evaluate.q_variable(
                     subfile, experiment, obs_type, logger=None, usebins=usebins[0],
                     poisson_weight=poisson[0], fractional_diff=True, truth_dir=truth_dir,
-                    sigma2_min=sigma2_min, normalization=1955.02406903) # Norm from first test run
+                    sigma2_min=sigma2_min, normalization=1000.)
                 print "%3d/%3d: Q_v_frac (c = %.4f, m = %.4f) = %.5e" % (
                     k + 1, NTEST, cval, mval, qfrac)
                 qabslarr[k, ic, jm] = qabsl
@@ -390,3 +390,10 @@ if __name__ == "__main__":
         usebins[1]+"_"+poisson[1]+"_mc_N"+str(NTEST)+".npy")
     print "Saving to "+filename
     np.save(filename, qbymcarr)
+    filename = os.path.join(
+        evaluate.STORAGE_DIR, "testing_mcresults_"+obs_type+"_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+
+        "_"+usebins[1]+"_"+poisson[1]+"_mc_N"+str(NTEST)+".pkl")
+    mcresults = {
+        "c": carr, "m": marr, "cerr": cerrarr, "merr": merrarr, "covcm": covcmarr, "qbymc": qbymc}
+    import cPickle
+    with open(filename, "wb") as fout: cPickle.dump(mcresults, fout)
