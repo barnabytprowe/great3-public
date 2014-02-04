@@ -213,7 +213,7 @@ if __name__ == "__main__":
 
     # Set the experiment and observation type to test (both shear_types will be explored)
     experiment = 'control'
-    obs_type = 'space'
+    obs_type = 'ground'
 
     # Setup the logger
     logging.basicConfig(stream=sys.stderr)
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     poisson = (False, "noweight") 
 
     NTEST = 300
-    NOISE_SIGMA = 0.10
+    NOISE_SIGMA = 0.15
     cvals = (evaluate.CFID, 10. * evaluate.CFID, 100. * evaluate.CFID) 
     mvals = (evaluate.MFID, 10. * evaluate.MFID, 100. * evaluate.MFID)
 
