@@ -222,27 +222,61 @@ if __name__ == "__main__":
 
     usebins = (evaluate.USEBINS, "subbins") #(evaluate.USEBINS, "subbins")
     poisson = (False, "noweight") 
-    fractional = (False, "absdiffs")
 
-    NTEST = 600
+    NTEST = 300
     NOISE_SIGMA = 0.15
-    cvals = (evaluate.CFID,)# 10. * evaluate.CFID, 100. * evaluate.CFID) 
-    mvals = (evaluate.MFID,)# 10. * evaluate.MFID, 100. * evaluate.MFID) 
-    qarr = np.empty((NTEST, len(cvals), len(mvals)))
+    cvals = (evaluate.CFID, 10. * evaluate.CFID, 100. * evaluate.CFID) 
+    mvals = (evaluate.MFID, 10. * evaluate.MFID, 100. * evaluate.MFID)
 
-    sigma2_min = {"ground": 1.8e-5, "space": 8.e-6}[obs_type]
+    # Then define arrays for storing the absolute difference results, the fractional difference
+    # results, and the by-m,c results
+    qabslarr = np.empty((NTEST, len(cvals), len(mvals)))
+    qfracarr = np.empty((NTEST, len(cvals), len(mvals)))
+    carr = np.empty((NTEST, len(cvals), len(mvals)))
+    marr = np.empty((NTEST, len(cvals), len(mvals)))
+    cerrarr = np.empty((NTEST, len(cvals), len(mvals)))
+    merrarr = np.empty((NTEST, len(cvals), len(mvals)))
+    covcmarr = np.empty((NTEST, len(cvals), len(mvals)))
+    qbymcarr = np.empty((NTEST, len(cvals), len(mvals)))
+
+    # Set the sigma2_min for the qabsl and qfrac results:
+    sigma2_min = {
+        "ground": evaluate.SIGMA2_MIN_VARIABLE_GROUND,
+        "space": evaluate.SIGMA2_MIN_VARIABLE_SPACE}[obs_type]
+    # And the for the bymc metric, using same values as constant
+    sigma2_min_bymc = {
+        "ground": evaluate.SIGMA2_MIN_CONSTANT_GROUND,
+        "space": evaluate.SIGMA2_MIN_CONSTANT_SPACE}[obs_type]
 
     print usebins[1]
     print poisson[1]
-    print fractional[1]
     print obs_type
     print NOISE_SIGMA
-    print sigma2_min
 
     # Get the x,y, true intrinsic ellips and shears for making fake submissions
-    _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type)
-    _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type)
+    _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type, truth_dir=truth_dir)
+    _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type, truth_dir=truth_dir)
 
+    # Then make a variable submission to learn what pure c1 and c2 look like in map^2
+    fdtmp, tmpfile = tempfile.mkstemp(suffix=".dat")
+    result = make_variable_submission(
+        x, y, np.zeros_like(g1true), np.zeros_like(g2true), np.zeros_like(g1true),
+        np.zeros_like(g2true), 1., 0., 0., 0., outfile=tmpfile, noise_sigma=0.)
+    os.close(fdtmp)
+    map_E_c1 = np.loadtxt(tmpfile)[:, 2]
+    os.remove(tmpfile)
+    fdtmp, tmpfile = tempfile.mkstemp(suffix=".dat")
+    result = make_variable_submission(
+        x, y, np.zeros_like(g1true), np.zeros_like(g2true), np.zeros_like(g1true),
+        np.zeros_like(g2true), 0., 1., 0., 0., outfile=tmpfile, noise_sigma=0.)
+    os.close(fdtmp)
+    map_E_c2 = np.loadtxt(tmpfile)[:, 2]
+    os.remove(tmpfile)
+    # Then average these (I checked they are very similar as you would expect) to get our "unit c"
+    # term for the modelling.
+    map_E_unitc = .5 * (map_E_c1 + map_E_c2)
+
+    # Then start main loop
     for ic, cval in enumerate(cvals):
 
         for jm, mval in enumerate(mvals):
@@ -261,39 +295,98 @@ if __name__ == "__main__":
             #os.remove(subfile)
             #print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (1, NTEST, cval, mval, q)
 
-            qlist = []
-            for i in range(NTEST):
+            for k in range(NTEST):
     
                 fdsub, subfile = tempfile.mkstemp(suffix=".dat")
                 result = make_variable_submission(
                     x, y, g1true, g2true, g1int, g2int, cval, cval, mval, mval,
                     outfile=subfile, noise_sigma=NOISE_SIGMA)
                 os.close(fdsub)
-                q = evaluate.q_variable(
+                # First estimate the absolute metric
+                qabsl = evaluate.q_variable(
                     subfile, experiment, obs_type, logger=None, usebins=usebins[0],
-                    poisson_weight=poisson[0], fractional_diff=fractional[0], truth_dir=truth_dir,
+                    poisson_weight=poisson[0], fractional_diff=False, truth_dir=truth_dir,
                     sigma2_min=sigma2_min)
-                os.remove(subfile)
-                print "%3d/%3d: Q_v (c = %.4f, m = %.4f) = %.5e" % (i + 1, NTEST, cval, mval, q)
-                qlist.append(q)
+                print "%3d/%3d: Q_v_absl (c = %.4f, m = %.4f) = %.5e" % (
+                    k + 1, NTEST, cval, mval, qabsl)
+                # Then the fractional
+                qfrac = evaluate.q_variable(
+                    subfile, experiment, obs_type, logger=None, usebins=usebins[0],
+                    poisson_weight=poisson[0], fractional_diff=True, truth_dir=truth_dir,
+                    sigma2_min=sigma2_min, normalization=1955.02406903) # Norm from first test run
+                print "%3d/%3d: Q_v_frac (c = %.4f, m = %.4f) = %.5e" % (
+                    k + 1, NTEST, cval, mval, qfrac)
+                qabslarr[k, ic, jm] = qabsl
+                qfracarr[k, ic, jm] = qfrac
+                # Then the m,c-derived metric
+                qbymc, cest, mest, cerr, merr, covcm = evaluate.q_variable_by_mc(
+                    subfile, experiment, obs_type, map_E_unitc, logger=None, truth_dir=truth_dir,
+                    cfid=evaluate.CFID, mfid=2.e-2, pretty_print=True, sigma2_min=sigma2_min_bymc)
+                print (
+                    "%3d/%3d: Q_v_frac (Estimated c = %.4f +/- %.4f, m = %.4f +/- %.4f) = %.4f" % (
+                        k + 1, NTEST, cest, cerr, mest, merr, qbymc))
+                carr[k, ic, jm] = cest
+                marr[k, ic, jm] = mest
+                cerrarr[k, ic, jm] = cerr
+                merrarr[k, ic, jm] = merr
+                covcmarr[k, ic, jm] = covcm
+                qbymcarr[k, ic, jm] = qbymc
+                print
 
             # Collate and print results
-            qarr[:, ic, jm] = np.asarray(qlist)
-            print "Mean of Q_v values = %.5e +/- %.5e" % (
-                np.mean(qarr[:, ic, jm]), np.std(qarr[:, ic, jm]) / np.sqrt(len(qarr[:, ic, jm])))
-            print "Std of Q_v values = %.5e +/- %.5e " % (
-                np.std(qarr[:, ic, jm]),
-                np.std(qarr[:, ic, jm]) / np.sqrt(2 * (len(qarr[:, ic, jm]) - 1)))
-            print "Fractional uncertainty on Q_v values = %.5e +/- %.5e " % (
-                np.std(qarr[:, ic, jm]) / np.mean(qarr[:, ic, jm]),
-                np.std(qarr[:, ic, jm]) / np.sqrt((len(qarr[:, ic, jm]) - 1))
-                / np.mean(qarr[:, ic, jm]))
-            print "Best estimate of normalization factor = "+str(1000. / np.mean(qarr[:, ic, jm]))
+            print "Mean of Q_v_absl values = %.5e +/- %.5e" % (
+                np.mean(qabslarr[:, ic, jm]),
+                np.std(qabslarr[:, ic, jm]) / np.sqrt(len(qabslarr[:, ic, jm])))
+            print "Mean of Q_v_frac values = %.5e +/- %.5e" % (
+                np.mean(qfracarr[:, ic, jm]),
+                np.std(qfracarr[:, ic, jm]) / np.sqrt(len(qfracarr[:, ic, jm])))
+            print "Mean of Q_v_bymc values = %.5e +/- %.5e" % (
+                np.mean(qbymcarr[:, ic, jm]),
+                np.std(qbymcarr[:, ic, jm]) / np.sqrt(len(qbymcarr[:, ic, jm])))
+
+            print "Std of Q_v_absl values = %.5e +/- %.5e " % (
+                np.std(qabslarr[:, ic, jm]),
+                np.std(qabslarr[:, ic, jm]) / np.sqrt(2 * (len(qabslarr[:, ic, jm]) - 1)))
+            print "Std of Q_v_frac values = %.5e +/- %.5e " % (
+                np.std(qfracarr[:, ic, jm]),
+                np.std(qfracarr[:, ic, jm]) / np.sqrt(2 * (len(qfracarr[:, ic, jm]) - 1)))
+            print "Std of Q_v_bymc values = %.5e +/- %.5e " % (
+                np.std(qbymcarr[:, ic, jm]),
+                np.std(qbymcarr[:, ic, jm]) / np.sqrt(2 * (len(qbymcarr[:, ic, jm]) - 1)))
+
+            print "Fractional uncertainty on Q_v_absl values = %.5e +/- %.5e " % (
+                np.std(qabslarr[:, ic, jm]) / np.mean(qabslarr[:, ic, jm]),
+                np.std(qabslarr[:, ic, jm]) / np.sqrt((len(qabslarr[:, ic, jm]) - 1))
+                / np.mean(qabslarr[:, ic, jm]))
+            print "Fractional uncertainty on Q_v_absl values = %.5e +/- %.5e " % (
+                np.std(qfracarr[:, ic, jm]) / np.mean(qfracarr[:, ic, jm]),
+                np.std(qfracarr[:, ic, jm]) / np.sqrt((len(qfracarr[:, ic, jm]) - 1))
+                / np.mean(qfracarr[:, ic, jm]))
+            print "Fractional uncertainty on Q_v_absl values = %.5e +/- %.5e " % (
+                np.std(qbymcarr[:, ic, jm]) / np.mean(qbymcarr[:, ic, jm]),
+                np.std(qbymcarr[:, ic, jm]) / np.sqrt((len(qbymcarr[:, ic, jm]) - 1))
+                / np.mean(qbymcarr[:, ic, jm]))
+
+            print "Best estimate of Q_v_absl normalization factor = "+str(
+                1000. / np.mean(qabslarr[:, ic, jm]))
+            print "Best estimate of Q_v_frac normalization factor = "+str(
+                1000. / np.mean(qfracarr[:, ic, jm]))
+            print "Best estimate of Q_v_bymc normalization factor = "+str(
+                1000. / np.mean(qbymcarr[:, ic, jm]))
 
     # Save the arrays
     filename = os.path.join(
-        evaluate.STORAGE_DIR,
-        "newmetric_sigma2_min_18_"+obs_type+"_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+usebins[1]+
-        "_"+poisson[1]+"_"+fractional[1]+"_mc_N"+str(NTEST)+".npy")
+        evaluate.STORAGE_DIR, "testing_qabsl_"+obs_type+"_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+
+        usebins[1]+"_"+poisson[1]+"_mc_N"+str(NTEST)+".npy")
     print "Saving to "+filename
-    np.save(filename, qarr)
+    np.save(filename, qabslarr)
+    filename = os.path.join(
+        evaluate.STORAGE_DIR, "testing_qfrac_"+obs_type+"_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+
+        usebins[1]+"_"+poisson[1]+"_mc_N"+str(NTEST)+".npy")
+    print "Saving to "+filename
+    np.save(filename, qfracarr)
+    filename = os.path.join(
+        evaluate.STORAGE_DIR, "testing_qbymc_"+obs_type+"_NOISE_SIGMA"+("%.2f" % NOISE_SIGMA)+"_"+
+        usebins[1]+"_"+poisson[1]+"_mc_N"+str(NTEST)+".npy")
+    print "Saving to "+filename
+    np.save(filename, qbymcarr)
