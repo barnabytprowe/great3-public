@@ -794,7 +794,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
         if pretty_print:
             print
             print "Evaluated results for submission "+str(submission_file)
-            print "Using sigma_min = "+str(sigma_min)
+            print "Using sigma2_min = "+str(sigma2_min)
             print
             print "Q_c =  %.4f" % Q_c
             print "c+  = %+.5f +/- %.5f" % (c1, sigc1)
@@ -943,8 +943,9 @@ def map_diff_func(cm_array, mapEsub, maperrsub, mapEref, mapEunitc):
         return ret
 
 def q_variable_by_mc(submission_file, experiment, obs_type, map_E_unitc, normalization=None,
-                     truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR, logger=None, corr2_exec="corr2",
-                     sigma2_min=None, cfid=CFID, mfid=MFID, just_q=False):
+                     truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR, logger=None, usebins=None,
+                     corr2_exec="corr2", sigma2_min=None, cfid=CFID, mfid=MFID, just_q=False,
+                     pretty_print=False):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -957,10 +958,10 @@ def q_variable_by_mc(submission_file, experiment, obs_type, map_E_unitc, normali
     @param truth_dir        Root directory in which the truth information for the challenge is
                             stored
     @param logger           Python logging.Logger instance, for message logging
+    @param usebins          An array the same shape as EXPECTED_THETA specifying which bins to
+                            use in the calculation of Q_v [default = `USEBINS`].  If set to `None`,
+                            uses all bins
     @param corr2_exec       Path to Mike Jarvis' corr2 exectuable
-    @param poisson_weight   If `True`, use the relative Poisson errors in each bin of map_E
-                            to form an inverse variance weight for the difference metric
-                            [default = `False`]
     @param sigma2_min       Damping term to put into the denominator of metric (default `None`
                             uses either `SIGMA2_MIN_VARIABLE_GROUND` or `SIGMA2_MIN_VARIABLE_SPACE`
                             depending on `obs_type`)
@@ -1018,17 +1019,12 @@ def q_variable_by_mc(submission_file, experiment, obs_type, map_E_unitc, normali
         corr2_exec=corr2_exec, mape_file_prefix=MAPEOBS_FILE_PREFIX,
         file_prefixes=("galaxy_catalog", "galaxy_catalog"), suffixes=("_intrinsic", ""),
         make_plots=False)
-    # Set up the weight
-    if poisson_weight:
-        weight = max(maperr_int**2) / maperr_int**2 # Inverse variance weight
-    else:
-        weight = np.ones_like(map_E_ref)
     # Set up the usebins to use if `usebins == None` (use all bins)
     if usebins is None:
         usebins = np.repeat(True, NBINS_THETA * NFIELDS)
     # Get the total number of active bins per field
     nactive = sum(usebins) / NFIELDS
-    try: # Put this in a try except block to handle funky submissions better
+    if True: # Put this in a try except block to handle funky submissions better
         np.testing.assert_array_almost_equal( # Sanity check out truth / expected theta bins
             theta_shear, EXPECTED_THETA, decimal=3,
             err_msg="BIG SNAFU! Truth theta does not match the EXPECTED_THETA, failing...")
@@ -1041,22 +1037,30 @@ def q_variable_by_mc(submission_file, experiment, obs_type, map_E_unitc, normali
         optimize_results = scipy.optimize.leastsq(
             map_diff_func, np.array([0., 0.]),
             args=(
-                map_E_sub[evaluate.USEBINS],
-                maperr_ref[evaluate.USEBINS],
-                map_E_ref[evaluate.USEBINS],  # Note use of ref errors: this will appropriately
+                map_E_sub[usebins],
+                maperr_ref[usebins],
+                map_E_ref[usebins],  # Note use of ref errors: this will appropriately
                                               # weight different bins and is not itself noisy
-                map_E_unitc[evaluate.USEBINS]), full_output=True)
+                map_E_unitc[usebins]), full_output=True)
         csub = optimize_results[0][0]
         msub = optimize_results[0][1]
         map_E_model = map_E_unitc * csub**2 + map_E_ref * (1. + 2. * msub + msub**2)
         residual_variance = np.var(
-            ((map_E_i3 - map_E_i3_model) / maperr_ref)[evaluate.USEBINS], ddof=1)
-        covcm = optimize_results[1] * residual_variance
-        sigcsub = np.sqrt(covcm[0, 0])
-        sigmsub = np.sqrt(covcm[1, 1])
+            ((map_E_sub - map_E_model) / maperr_ref)[usebins], ddof=1)
+        if optimize_results[1] is not None:
+            covcm = optimize_results[1] * residual_variance
+            sigcsub = np.sqrt(covcm[0, 0])
+            sigmsub = np.sqrt(covcm[1, 1])
+            covcm = covcm[0, 1]
+        else:
+            sigcsub = 0.
+            sigmsub = 0.
+            covcm = 0.
         # Then we define the Q_v
-        Q_v = 1000. * sqrt(3.) / np.sqrt(
+        Q_v = 2449. / np.sqrt(
             (csub / cfid)**2 + (msub / mfid)**2 + sigma2_min)
+    try:
+        pass
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
@@ -1069,16 +1073,13 @@ def q_variable_by_mc(submission_file, experiment, obs_type, map_E_unitc, normali
         ret = Q_v
     else:
         if pretty_print:
-            print
             print "Evaluated results for submission "+str(submission_file)
-            print "Using..."
-            print "sigma_min = "+str(sigma_min)
-            print "cfid = "+str(cfid)
-            print "mfid = "+str(mfid)
-            print
-            print "Q_v =  %.4f" % Q_c
+            print "Using sigma2_min = "+str(sigma2_min)
+            print "Q_v =  %.4f" % Q_v
             print "|c| = %+.5f +/- %.5f" % (csub, sigcsub)
             print " m  = %+.5f +/- %.5f" % (msub, sigmsub)
-            print
-        ret = (Q_v, csub, msub, sigcsub, sigmsub)
+            print "Cov(0, 0) = %+.4e" % sigcsub**2
+            print "Cov(0, 1) = %+.4e" % covcm
+            print "Cov(1, 1) = %+.4e" % sigmsub**2
+        ret = (Q_v, csub, msub, sigcsub, sigmsub, covcm)
     return ret
