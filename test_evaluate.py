@@ -324,18 +324,9 @@ if __name__ == "__main__":
                     normalization=evaluate.NORMALIZATION_VARIABLE_SPACE * 4.687e-6)
                 print "%3d/%3d: Q_v_sqrd (c = %.4f, m = %.4f) = %.5e" % (
                     k + 1, NTEST, cval, mval, qsqrd)
-                # Then the quad
-                qquad = evaluate.q_variable(
-                    subfile, experiment, obs_type, logger=None, usebins=usebins[0],
-                    poisson_weight=poisson[0], fractional_diff=False, squared_diff=True, quad=True,
-                    truth_dir=truth_dir, sigma2_min=sigma2_min * 3.e-5,
-                    normalization=evaluate.NORMALIZATION_VARIABLE_SPACE * 4.687e-6)
-                print "%3d/%3d: Q_v_sqrd (c = %.4f, m = %.4f) = %.5e" % (
-                    k + 1, NTEST, cval, mval, qsqrd)
                 qabslarr[k, ic, jm] = qabsl
                 qfracarr[k, ic, jm] = qfrac
                 qsqrdarr[k, ic, jm] = qsqrd
-                qquadarr[k, ic, jm] = qquad
                 # Then the m,c-derived metric
                 qbymc, cest, mest, cerr, merr, covcm = evaluate.q_variable_by_mc(
                     subfile, experiment, obs_type, map_E_unitc, logger=None, truth_dir=truth_dir,
