@@ -62,10 +62,7 @@ if __name__ == "__main__":
         # Normalize data which needs it to Q=1000 for unbiased case in *space* (leave tricky qbymc
         # to later)
         qfrac[obs_type] *= 1000. / qfrac["space"][:, 0, 0].mean()
-        if obs_type == "space":
-            qsqrd["space"] *= 1000. / qsqrd["space"][:, 0, 0].mean()
-        else:
-            qsqrd["ground"] *= qsqrd["space"][:, -1, -1].mean() / qsqrd["ground"][:, -1, -1].mean()
+        qsqrd[obs_type] *= 1000. / qsqrd["space"][:, 0, 0].mean()
         # QABSL results first...
         # Let's do the by c then m
         plt.clf()
