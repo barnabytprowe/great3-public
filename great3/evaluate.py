@@ -807,7 +807,8 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
 
 def q_variable(submission_file, experiment, obs_type, normalization=None, truth_dir=TRUTH_DIR,
                storage_dir=STORAGE_DIR, logger=None, corr2_exec="corr2", poisson_weight=False,
-               usebins=USEBINS, fractional_diff=False, squared_diff=False, sigma2_min=None):
+               usebins=USEBINS, fractional_diff=False, squared_diff=False, quad=False, 
+               sigma2_min=None):
     """Calculate the Q_v for a variable shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -918,8 +919,12 @@ def q_variable(submission_file, experiment, obs_type, normalization=None, truth_
             Q_v = normalization / (
                 sigma2_min + (np.sum(np.abs(Q_v_fields)) / np.sum(weight[usebins])))
         else:
-            Q_v = normalization / (
-                sigma2_min + (np.sum(Q_v_fields**2) / np.sum(weight[usebins])))
+            if not quad:
+                Q_v = normalization / (
+                    sigma2_min + (np.sum(Q_v_fields**2) / np.sum(weight[usebins])))
+            else:
+                Q_v = normalization / (
+                    np.sqrt(sigma2_min + (np.sum(Q_v_fields**2) / np.sum(weight[usebins]))))
     except Exception as err:
         Q_v = 0. # If the theta or field do not match, let's be strict and force Q_v...
         if logger is not None:
