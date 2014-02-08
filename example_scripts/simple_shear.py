@@ -537,7 +537,7 @@ def EstimateAllShears(subfield, sim_dir, output_dir, output_prefix="output_catal
         # want to do it all the time.  Instead, we check once for failure of adaptive moments for
         # the PSF, and if it fails, then we adopt a smaller initial guess.
         try:
-            galsim.hsm.FindAdaptiveMom(psf_im)
+            galsim.hsm.FindAdaptiveMom(psf_im, guess_sig=guess_sig)
         except:
             guess_sig = 2.0
             try:
