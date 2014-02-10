@@ -22,6 +22,11 @@ NOISE_SIGMA = {"ground": 0.15, "space": 0.10}
 TRUTH_DIR = "/Users/browe/great3/beta/truth" # Modify to wherever truth is unpacked
 EXPERIMENT = "control" # Use the control truth values
 
+COV_MEAN_OUTFILE = { # Where to save mean covariance matrix
+    "ground": os.path.join("results", "cov_mean_ground_N"+str(NTEST)+".npy"),
+    "space":  os.path.join("results", "cov_mean_space_N"+str(NTEST)+".npy")}
+
+
 def decompose_cov(cov, dumb=False):
     """Take in a covariance matrix, and return the tuple `(diag, correlation_matrix)`.
 
@@ -65,6 +70,7 @@ def decompose_cov(cov, dumb=False):
 
     # Return diag values and correlation matrix
     return diag, correlation_matrix
+
 
 if __name__ == "__main__":
 
@@ -140,6 +146,10 @@ if __name__ == "__main__":
         # diagonal errors
         cov_mean[obs_type] = np.mean(cov[obs_type], axis=2)
         diag_mean[obs_type], corr_mean[obs_type] = decompose_cov(cov_mean[obs_type], dumb=True)
+
+        # Save the mean covariance matrix
+        print "Saving mean covariance matrix to "+COV_MEAN_OUTFILE[obs_type]
+        np.save(COV_MEAN_OUTFILE[obs_type], cov_mean[obs_type])
 
         print "Plotting results for "+obs_type
         import matplotlib.pyplot as plt
