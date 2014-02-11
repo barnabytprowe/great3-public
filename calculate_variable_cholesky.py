@@ -22,6 +22,7 @@ RHO = 0.45
 CHOLESKY_GROUND_OUTFILE = os.path.join("results", "cholesky_ground.npy")
 CHOLESKY_SPACE_OUTFILE = os.path.join("results", "cholesky_space.npy")
 
+
 def construct_full_covariance(cov, ntest, rho=0.):
     """Take an input covariance, and make an ntest * cov.shape dimensioned-covariance matrix.
     """
