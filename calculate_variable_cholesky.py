@@ -19,8 +19,9 @@ import tabulate_variable_shear_metric_rev1
 NTEST = tabulate_variable_shear_metric_rev1.NTEST
 RHO = 0.45
 
-CHOLESKY_GROUND_OUTFILE = os.path.join("results", "cholesky_ground.npy")
-CHOLESKY_SPACE_OUTFILE = os.path.join("results", "cholesky_space.npy")
+CHOLESKY_OUTFILE = {
+    "ground": os.path.join("results", "cholesky_ground.npy"),
+    "space": os.path.join("results", "cholesky_space.npy")}
 
 
 def construct_full_covariance(cov, ntest, rho=0.):
@@ -50,7 +51,7 @@ def construct_full_covariance(cov, ntest, rho=0.):
 def get_full_covs(ntest, rho,
                   inground=calculate_variable_covariance_matrix.COV_MEAN_OUTFILE["ground"],
                   inspace=calculate_variable_covariance_matrix.COV_MEAN_OUTFILE["space"],
-                  outground=CHOLESKY_GROUND_OUTFILE, outspace=CHOLESKY_SPACE_OUTFILE):
+                  outground=CHOLESKY_OUTFILE["ground"], outspace=CHOLESKY_OUTFILE["space"]):
     """Get and save the full size Cholesky matrices for both ground and space.
     """
     # First do ground
