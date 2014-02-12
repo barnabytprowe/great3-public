@@ -89,6 +89,7 @@ if __name__ == "__main__":
 
     import cPickle
     import tempfile
+    import pyfits
     import g3metrics
     import calculate_variable_cholesky
     import test_evaluate
@@ -115,7 +116,7 @@ if __name__ == "__main__":
                     "-constant data in GREAT3"
                 print "Loading Cholesky decomposition matrix from "+\
                     calculate_variable_cholesky.CHOLESKY_OUTFILE[obs_type]
-                cholesky = np.load(calculate_variable_cholesky.CHOLESKY_OUTFILE[obs_type])
+                cholesky = pyfits.getdata(calculate_variable_cholesky.CHOLESKY_OUTFILE[obs_type])
                 print "RHO = "+str(RHO)
                 # First we build the truth table
                 print "Getting/generating truth tables for control-"+obs_type+"-constant"
