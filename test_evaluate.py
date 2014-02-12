@@ -201,6 +201,32 @@ def make_variable_submission(x, y, g1true, g2true, g1int, g2int, c1, c2, m1, m2,
     # Job done, return
     return
 
+def make_unitc(experiment, obs_type, truth_dir=evaluate.TRUTH_DIR):
+    """Make a variable submission to learn what a pure c1 or c2 looks like in map^2
+    """
+    import tempfile
+    # Get the x,y, true intrinsic ellips and shears for making fake submissions
+    _, x, y, g1true, g2true = get_variable_gtrue(experiment, obs_type, truth_dir=truth_dir)
+    _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type, truth_dir=truth_dir)
+    fdtmp, tmpfile = tempfile.mkstemp(suffix=".dat")
+    result = make_variable_submission(
+        x, y, np.zeros_like(g1true), np.zeros_like(g2true), np.zeros_like(g1true),
+        np.zeros_like(g2true), 1., 0., 0., 0., outfile=tmpfile, noise_sigma=0.)
+    os.close(fdtmp)
+    map_E_c1 = np.loadtxt(tmpfile)[:, 2]
+    os.remove(tmpfile)
+    fdtmp, tmpfile = tempfile.mkstemp(suffix=".dat")
+    result = make_variable_submission(
+        x, y, np.zeros_like(g1true), np.zeros_like(g2true), np.zeros_like(g1true),
+        np.zeros_like(g2true), 0., 1., 0., 0., outfile=tmpfile, noise_sigma=0.)
+    os.close(fdtmp)
+    map_E_c2 = np.loadtxt(tmpfile)[:, 2]
+    os.remove(tmpfile)
+    # Then average these (I checked they are very similar as you would expect) to get our "unit c"
+    # term for the modelling.
+    map_E_unitc = .5 * (map_E_c1 + map_E_c2)
+    return map_E_unitc
+
 
 if __name__ == "__main__":
 
@@ -259,23 +285,7 @@ if __name__ == "__main__":
     _, _, _, g1int, g2int = get_variable_gsuffix(experiment, obs_type, truth_dir=truth_dir)
 
     # Then make a variable submission to learn what pure c1 and c2 look like in map^2
-    fdtmp, tmpfile = tempfile.mkstemp(suffix=".dat")
-    result = make_variable_submission(
-        x, y, np.zeros_like(g1true), np.zeros_like(g2true), np.zeros_like(g1true),
-        np.zeros_like(g2true), 1., 0., 0., 0., outfile=tmpfile, noise_sigma=0.)
-    os.close(fdtmp)
-    map_E_c1 = np.loadtxt(tmpfile)[:, 2]
-    os.remove(tmpfile)
-    fdtmp, tmpfile = tempfile.mkstemp(suffix=".dat")
-    result = make_variable_submission(
-        x, y, np.zeros_like(g1true), np.zeros_like(g2true), np.zeros_like(g1true),
-        np.zeros_like(g2true), 0., 1., 0., 0., outfile=tmpfile, noise_sigma=0.)
-    os.close(fdtmp)
-    map_E_c2 = np.loadtxt(tmpfile)[:, 2]
-    os.remove(tmpfile)
-    # Then average these (I checked they are very similar as you would expect) to get our "unit c"
-    # term for the modelling.
-    map_E_unitc = .5 * (map_E_c1 + map_E_c2)
+    map_E_unitc = make_unitc(experiment, obs_type, truth_dir=truth_dir)
 
     # Then start main loop
     for ic, cval in enumerate(cvals):
