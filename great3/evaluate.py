@@ -123,9 +123,10 @@ MAPESHEAR_FILE_PREFIX = "mapEshear_"
 MAPEINT_FILE_PREFIX = "mapEint_"
 MAPEOBS_FILE_PREFIX = "mapEobs_"
 
-NORMALIZATION_CONSTANT_GROUND = 1.232 # These factors come from a run of ~1000 sims
-NORMALIZATION_CONSTANT_SPACE =  1.232 # done on 6 Jan 2014, modified on 30 Jan 2014 to bring space
-                                      # and ground into agreement at the *low* end of the bias scale
+# These constant normalization factors come from a run of ~1000 sims done on 6 Jan 2014, modified on
+# 30 Jan 2014 to bring space and ground into agreement at high bias
+NORMALIZATION_CONSTANT_SPACE = 1.232
+NORMALIZATION_CONSTANT_GROUND = NORMALIZATION_CONSTANT_SPACE
 
 #NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
 #NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
@@ -136,10 +137,6 @@ NORMALIZATION_CONSTANT_SPACE =  1.232 # done on 6 Jan 2014, modified on 30 Jan 2
 #NORMALIZATION_VARIABLE_GROUND = 0.000237155945476 # Factor comes from tests with test_evaluate.py
                                                    # on 600 runs and NOISE_SIGMA = 0.15, 17 Dec
                                                    # 2013, with sigma2_min = 2.e-6
-
-NORMALIZATION_VARIABLE_GROUND = 0.0003141  # Factor comes from tests with
-                                           # tabulate_variable_shear_metric_rev1.py on 1000 runs and
-                                           # NOISE_SIGMA = 0.15, 6 Jan 2014, with sigma2_min = 9e-8
 
 #NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
 #NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
@@ -154,6 +151,7 @@ NORMALIZATION_VARIABLE_GROUND = 0.0003141  # Factor comes from tests with
 NORMALIZATION_VARIABLE_SPACE = 0.0001837  # Factor comes from tests with
                                           # tabulate_variable_shear_metric_rev1.py on 1000 runs and
                                           # NOISE_SIGMA = 0.10, 6 Jan 2015, with sigma2_min = 4.e-8
+NORMALIZATION_VARIABLE_GROUND = NORMALIZATION_VARIABLE_SPACE  # Bring space=ground at high bias
 
 # Values of sigma2_min to adopt as the defaults for the Q_c and Q_v metrics, as of 30 Dec 2013.
 # These parameters add a damping
