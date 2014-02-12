@@ -20,8 +20,8 @@ NTEST = tabulate_variable_shear_metric_rev1.NTEST
 RHO = 0.45
 
 CHOLESKY_OUTFILE = {
-    "ground": os.path.join("results", "cholesky_ground.npy"),
-    "space": os.path.join("results", "cholesky_space.npy")}
+    "ground": os.path.join("results", "cholesky_ground.fits"),
+    "space": os.path.join("results", "cholesky_space.fits")}
 
 
 def construct_full_covariance(cov, ntest, rho=0.):
@@ -54,26 +54,28 @@ def get_full_covs(ntest, rho,
                   outground=CHOLESKY_OUTFILE["ground"], outspace=CHOLESKY_OUTFILE["space"]):
     """Get and save the full size Cholesky matrices for both ground and space.
     """
+    import pyfits
     # First do ground
     print "Loading covariance matrix from "+inground+"..."
     cov_ground = np.load(inground)
     print "Constructing full covariance matrix..."
     full_cov_ground = construct_full_covariance(cov_ground, ntest, rho=rho)
     # DEBUG: Write out for checking
-    #import pyfits
-    #pyfits.writeto("full_cov_ground.fits", full_cov_ground, clobber=True)
+    pyfits.writeto(inground+".fits", full_cov_ground, clobber=True)
     print "Performing Cholesky decomposition..."
     cholesky_ground = np.linalg.cholesky(full_cov_ground)
-    np.save(outground, cholesky_ground)
+    pyfits.writeto(outground, cholesky_ground)
     print "Saved Cholesky decomposition to "+outground
     # Then do space
     print "Loading covariance matrix from "+inspace+"..."
     cov_space = np.load(inspace)
     print "Constructing full covariance matrix..."
     full_cov_space = construct_full_covariance(cov_space, ntest, rho=rho)
+    # DEBUG: Write out for checking
+    pyfits.writeto(inspace+".fits", full_cov_space, clobber=True)
     print "Performing Cholesky decomposition..."
     cholesky_space = np.linalg.cholesky(full_cov_space)
-    np.save(outspace, cholesky_space)
+    pyfits.writeto(outspace, cholesky_space)
     print "Saved Cholesky decomposition to "+outspace
     return
 
