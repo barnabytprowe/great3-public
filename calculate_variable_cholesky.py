@@ -61,7 +61,7 @@ def get_full_covs(ntest, rho,
     print "Constructing full covariance matrix..."
     full_cov_ground = construct_full_covariance(cov_ground, ntest, rho=rho)
     # DEBUG: Write out for checking
-    pyfits.writeto(inground+".fits", full_cov_ground, clobber=True)
+    #pyfits.writeto(inground+".full.fits", full_cov_ground, clobber=True)
     print "Performing Cholesky decomposition..."
     cholesky_ground = np.linalg.cholesky(full_cov_ground)
     pyfits.writeto(outground, cholesky_ground)
@@ -72,7 +72,7 @@ def get_full_covs(ntest, rho,
     print "Constructing full covariance matrix..."
     full_cov_space = construct_full_covariance(cov_space, ntest, rho=rho)
     # DEBUG: Write out for checking
-    pyfits.writeto(inspace+".fits", full_cov_space, clobber=True)
+    #pyfits.writeto(inspace+".full.fits", full_cov_space, clobber=True)
     print "Performing Cholesky decomposition..."
     cholesky_space = np.linalg.cholesky(full_cov_space)
     pyfits.writeto(outspace, cholesky_space)
