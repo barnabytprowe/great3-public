@@ -48,7 +48,7 @@ def construct_full_covariance(cov, ntest, rho=0.):
     # Return
     return full_cov
 
-def get_full_covs(ntest, rho,
+def get_full_covs(ntest=NTEST, rho=RHO,
                   inground=calculate_variable_covariance_matrix.COV_MEAN_OUTFILE["ground"],
                   inspace=calculate_variable_covariance_matrix.COV_MEAN_OUTFILE["space"],
                   outground=CHOLESKY_OUTFILE["ground"], outspace=CHOLESKY_OUTFILE["space"]):
@@ -82,4 +82,4 @@ def get_full_covs(ntest, rho,
 
 if __name__ == "__main__":
 
-    get_full_covs(NTEST, RHO)
+    get_full_covs(ntest=NTEST, rho=RHO)
