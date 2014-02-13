@@ -127,7 +127,8 @@ if __name__ == "__main__":
                         file_prefixes=("galaxy_catalog", "galaxy_catalog"),
                         suffixes=("_intrinsic", ""), make_plots=False)
                 # Get the unitc term
-                map_E_unitc = test_evaluate.make_unitc(EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
+                map_E_unitc = 2. * test_evaluate.make_unitc(
+                    EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
                 # Loop over c values
                 for jc, cval in enumerate(CVALS):
 
