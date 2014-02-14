@@ -167,7 +167,7 @@ if __name__ == "__main__":
                         qc[obs_type][itest, jc] = evaluate.q_variable(
                             subfile, EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
                         os.remove(subfile)
-                        print qc[obs_type][itest, jc]
+                        #print qc[obs_type][itest, jc]
 
                     print "mean(Q_v), std(Q_v) = "+str(qc[obs_type][:, jc].mean())+", "+\
                         str(qc[obs_type][:, jc].std())+" for "+str(NTEST)+" sims (with c = "+\
