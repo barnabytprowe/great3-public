@@ -63,10 +63,20 @@ def make_multiple_variable_submissions(nsubmissions, map_E_ref, map_E_unitc, c, 
             np.dot(cholesky, np.random.randn(evaluate.NBINS_THETA * nsubmissions)))
         map_E_submissions[:, :, ifield] = np.reshape(
             map_E_subs_field, (evaluate.NBINS_THETA, nsubmissions), order='F')
+        #import pdb; pdb.set_trace()
 
     # Reshape and return
-    return np.reshape(
-        map_E_submissions, (evaluate.NBINS_THETA * evaluate.NFIELDS, nsubmissions), order='F')
+    # DEBUGGING
+    if True:
+        ret = np.reshape(
+            map_E_submissions, (evaluate.NBINS_THETA * evaluate.NFIELDS, nsubmissions), order='F')
+    else:
+        ret = np.reshape(
+            np.transpose(map_E_submissions, (0, 2, 1)),
+            (evaluate.NBINS_THETA * evaluate.NFIELDS, nsubmissions), order='F')
+    import pdb; pdb.set_trace()
+    return ret
+
 
 def write_submission(map_E_submission, outfile="test_submission.asc"):
     """Make a fake ASCII submission given an input vector of map_E values, and save it to outfile
@@ -135,6 +145,19 @@ if __name__ == "__main__":
                     # Build the submissions
                     map_E_field_subs = make_multiple_variable_submissions(
                         NTEST, map_E_ref, map_E_unitc, cval, evaluate.MFID, cholesky)
+                    # DEBUGGING
+                    import matplotlib.pyplot as plt
+                    covref = np.load(os.path.join("results", "cov_mean_"+obs_type+"_N1000.npy"))
+                    # Calculate each field's covariance matrix
+                    covtest = np.zeros_like(covref)
+                    for ifield in range(evaluate.NFIELDS):
+
+                        map_E_field = map_E_field_subs[
+                            ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA, :]
+                        covtest += np.cov(map_E_field)
+
+                    covtest /= evaluate.NFIELDS
+                    import pdb; pdb.set_trace()
                     # Loop over submissions evaluating metric
                     for itest in xrange(NTEST):
 
