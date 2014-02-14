@@ -214,65 +214,37 @@ if __name__ == "__main__":
         else:
             with open(moutfile, "rb") as fin: qm = cPickle.load(fin)
 
-        print
-        print "Table of Q_c (ground sims) at constant m = mfid = "+str(evaluate.MFID)
-        print "    c+       Q_c    std(Q_c)"
-        for c, Q, dQ in zip(CVALS, np.mean(qc["ground"], axis=0), np.std(qc["ground"], axis=0)):
-
-            print "{:8f} {:8.3f} {:8.3f}".format(c, Q, dQ)
-
-        print
-        print "Table of Q_c (space sims) at constant m = mfid = "+str(evaluate.MFID)
-        print "    c+       Q_c    std(Q_c)"
-        for c, Q, dQ in zip(CVALS, np.mean(qc["space"], axis=0), np.std(qc["space"], axis=0)):
-
-            print "{:8f} {:8.3f} {:8.3f}".format(c, Q, dQ)
-
-        print
-        print "Table of Q_c (ground sims) at constant c = cfid = "+str(evaluate.CFID)
-        print "    m        Q_c    std(Q_c)"
-        for m, Q, dQ in zip(MVALS, np.mean(qm["ground"], axis=0), np.std(qm["ground"], axis=0)):
-
-            print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
-
-        print
-        print "Table of Q_c (space sims) at constant c = cfid = "+str(evaluate.CFID)
-        print "    m        Q_c    std(Q_c)"
-        for m, Q, dQ in zip(MVALS, np.mean(qm["space"], axis=0), np.std(qm["space"], axis=0)):
-
-            print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
-
         qclist.append(qc)
         qmlist.append(qm)
 
     # Then tabulate the average statistics across these NRUNS runs
-    #qcmean = {"ground": np.zeros(len(CVALS)), "space": np.zeros(len(CVALS))}
-    #sqcmean = {"ground": np.zeros(len(CVALS)), "space": np.zeros(len(CVALS))}
-    #qmmean = {"ground": np.zeros(len(MVALS)), "space": np.zeros(len(MVALS))}
-    #sqmmean = {"ground": np.zeros(len(MVALS)), "space": np.zeros(len(MVALS))}
-    #for obs_type in ("ground", "space"):
+    qcmean = {"ground": np.zeros(len(CVALS)), "space": np.zeros(len(CVALS))}
+    sqcmean = {"ground": np.zeros(len(CVALS)), "space": np.zeros(len(CVALS))}
+    qmmean = {"ground": np.zeros(len(MVALS)), "space": np.zeros(len(MVALS))}
+    sqmmean = {"ground": np.zeros(len(MVALS)), "space": np.zeros(len(MVALS))}
+    for obs_type in ("ground", "space"):
 
-    #    for qc, qm in zip(qclist, qmlist):
+        for qc, qm in zip(qclist, qmlist):
 
-    #        qcmean[obs_type] += np.mean(qc[obs_type], axis=0) / float(NRUNS)
-    #        qmmean[obs_type] += np.mean(qm[obs_type], axis=0) / float(NRUNS)
-    #        sqcmean[obs_type] += np.std(qc[obs_type], axis=0) / float(NRUNS)
-    #        sqmmean[obs_type] += np.std(qm[obs_type], axis=0) / float(NRUNS)
+            qcmean[obs_type] += np.mean(qc[obs_type], axis=0) / float(NRUNS)
+            qmmean[obs_type] += np.mean(qm[obs_type], axis=0) / float(NRUNS)
+            sqcmean[obs_type] += np.std(qc[obs_type], axis=0) / float(NRUNS)
+            sqmmean[obs_type] += np.std(qm[obs_type], axis=0) / float(NRUNS)
 
-    #    print
-    #    print
-    #    print "OVERALL table of average Q_c and std(Q_c) from NRUNS = "+str(NRUNS)+" tests"
-    #    print "At constant m1 = m2 = mfid = "+str(evaluate.MFID)+", "+obs_type+" sims"
-    #    print "    c        Q_c    std(Q_c)"
-    #    for c, Q, dQ in zip(CVALS, qcmean[obs_type], sqcmean[obs_type]):
+        print
+        print
+        print "OVERALL table of average Q_c and std(Q_c) from NRUNS = "+str(NRUNS)+" tests"
+        print "At constant m1 = m2 = mfid = "+str(evaluate.MFID)+", "+obs_type+" sims"
+        print "    c        Q_c    std(Q_c)"
+        for c, Q, dQ in zip(CVALS, qcmean[obs_type], sqcmean[obs_type]):
 
-    #        print "{:8f} {:8.3f} {:8.3f}".format(c, Q, dQ)
+            print "{:8f} {:8.3f} {:8.3f}".format(c, Q, dQ)
 
-    #    print "At constant c1 = cfid = "+str(evaluate.CFID)+", "+obs_type+" sims"
-    #    print "    m        Q_c    std(Q_c)"
-    #    for m, Q, dQ in zip(MVALS, qmmean[obs_type], sqmmean[obs_type]):
+        print "At constant c1 = cfid = "+str(evaluate.CFID)+", "+obs_type+" sims"
+        print "    m        Q_c    std(Q_c)"
+        for m, Q, dQ in zip(MVALS, qmmean[obs_type], sqmmean[obs_type]):
 
-    #        print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
+            print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
 
-    #with open(CSTDOUTFILE, "wb") as fout: cPickle.dump(sqcmean, fout)
-    #with open(MSTDOUTFILE, "wb") as fout: cPickle.dump(sqmmean, fout)
+    with open(CSTDOUTFILE, "wb") as fout: cPickle.dump(sqcmean, fout)
+    with open(MSTDOUTFILE, "wb") as fout: cPickle.dump(sqmmean, fout)
