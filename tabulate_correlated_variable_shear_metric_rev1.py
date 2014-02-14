@@ -67,14 +67,14 @@ def make_multiple_variable_submissions(nsubmissions, map_E_ref, map_E_unitc, c, 
 
     # Reshape and return
     # DEBUGGING
-    if True:
+    if False:
         ret = np.reshape(
             map_E_submissions, (evaluate.NBINS_THETA * evaluate.NFIELDS, nsubmissions), order='F')
     else:
         ret = np.reshape(
             np.transpose(map_E_submissions, (0, 2, 1)),
             (evaluate.NBINS_THETA * evaluate.NFIELDS, nsubmissions), order='F')
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     return ret
 
 
@@ -146,18 +146,18 @@ if __name__ == "__main__":
                     map_E_field_subs = make_multiple_variable_submissions(
                         NTEST, map_E_ref, map_E_unitc, cval, evaluate.MFID, cholesky)
                     # DEBUGGING
-                    import matplotlib.pyplot as plt
-                    covref = np.load(os.path.join("results", "cov_mean_"+obs_type+"_N1000.npy"))
+                    #import matplotlib.pyplot as plt
+                    #covref = np.load(os.path.join("results", "cov_mean_"+obs_type+"_N1000.npy"))
                     # Calculate each field's covariance matrix
-                    covtest = np.zeros_like(covref)
-                    for ifield in range(evaluate.NFIELDS):
+                    #covtest = np.zeros_like(covref)
+                    #for ifield in range(evaluate.NFIELDS):
 
-                        map_E_field = map_E_field_subs[
-                            ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA, :]
-                        covtest += np.cov(map_E_field)
+                    #    map_E_field = map_E_field_subs[
+                    #        ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA, :]
+                    #    covtest += np.cov(map_E_field)
 
-                    covtest /= evaluate.NFIELDS
-                    import pdb; pdb.set_trace()
+                    #covtest /= evaluate.NFIELDS
+                    #import pdb; pdb.set_trace()
                     # Loop over submissions evaluating metric
                     for itest in xrange(NTEST):
 
