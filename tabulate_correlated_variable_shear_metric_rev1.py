@@ -119,6 +119,7 @@ if __name__ == "__main__":
             "results", "tabulated_correlated_variable_Q_v_versus_c_norm"+str(krun)+".pkl")
         moutfile = os.path.join(
             "results", "tabulated_correlated_variable_Q_v_versus_m_norm"+str(krun)+".pkl")
+        # Test to see if coutfile is already made, if not make it, if so load it
         if not os.path.isfile(coutfile):
             for obs_type in ("ground", "space"):
 
@@ -142,22 +143,9 @@ if __name__ == "__main__":
                 # Loop over c values
                 for jc, cval in enumerate(CVALS):
 
-                    # Build the submissions
+                    # Build the submissions (includes inter-method and inter-bin correlations)
                     map_E_field_subs = make_multiple_variable_submissions(
                         NTEST, map_E_ref, map_E_unitc, cval, evaluate.MFID, cholesky)
-                    # DEBUGGING
-                    #import matplotlib.pyplot as plt
-                    #covref = np.load(os.path.join("results", "cov_mean_"+obs_type+"_N1000.npy"))
-                    # Calculate each field's covariance matrix
-                    #covtest = np.zeros_like(covref)
-                    #for ifield in range(evaluate.NFIELDS):
-
-                    #    map_E_field = map_E_field_subs[
-                    #        ifield * evaluate.NBINS_THETA: (ifield + 1) * evaluate.NBINS_THETA, :]
-                    #    covtest += np.cov(map_E_field)
-
-                    #covtest /= evaluate.NFIELDS
-                    #import pdb; pdb.set_trace()
                     # Loop over submissions evaluating metric
                     for itest in xrange(NTEST):
 
@@ -167,7 +155,6 @@ if __name__ == "__main__":
                         qc[obs_type][itest, jc] = evaluate.q_variable(
                             subfile, EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
                         os.remove(subfile)
-                        #print qc[obs_type][itest, jc]
 
                     print "mean(Q_v), std(Q_v) = "+str(qc[obs_type][:, jc].mean())+", "+\
                         str(qc[obs_type][:, jc].std())+" for "+str(NTEST)+" sims (with c = "+\
@@ -179,9 +166,53 @@ if __name__ == "__main__":
             print
         else:
             with open(coutfile, "rb") as fin: qc = cPickle.load(fin)
+        # Test to see if moutfile is already made, if not make it, if so load it
         if not os.path.isfile(moutfile):
-            pass
+            for obs_type in ("ground", "space"):
 
+                print "Calculating Q_v values versus m for control-"+obs_type+\
+                    "-constant data in GREAT3"
+                print "Loading Cholesky decomposition matrix from "+\
+                    calculate_variable_cholesky.CHOLESKY_OUTFILE[obs_type]
+                cholesky = pyfits.getdata(calculate_variable_cholesky.CHOLESKY_OUTFILE[obs_type])
+                print "RHO = "+str(RHO)
+                # First we build the truth table
+                print "Getting/generating truth tables for control-"+obs_type+"-constant"
+                field_ref, theta_ref, map_E_ref, _, maperr_ref = \
+                    evaluate.get_generate_variable_truth(
+                        EXPERIMENT, obs_type, truth_dir=TRUTH_DIR,
+                        mape_file_prefix=evaluate.MAPEOBS_FILE_PREFIX,
+                        file_prefixes=("galaxy_catalog", "galaxy_catalog"),
+                        suffixes=("_intrinsic", ""), make_plots=False)
+                # Get the unitc term
+                map_E_unitc = 2. * test_evaluate.make_unitc(
+                    EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
+                # Loop over m values
+                for jm, mval in enumerate(MVALS):
+
+                    # Build the submissions (includes inter-method and inter-bin correlations)
+                    map_E_field_subs = make_multiple_variable_submissions(
+                        NTEST, map_E_ref, map_E_unitc, evaluate.CFID, mval, cholesky)
+                    # Loop over submissions evaluating metric
+                    for itest in xrange(NTEST):
+
+                        fdsub, subfile = tempfile.mkstemp(suffix=".dat")
+                        os.close(fdsub)
+                        write_submission(map_E_field_subs[:, itest], outfile=subfile)
+                        qm[obs_type][itest, jm] = evaluate.q_variable(
+                            subfile, EXPERIMENT, obs_type, truth_dir=TRUTH_DIR)
+                        os.remove(subfile)
+
+                    print "mean(Q_v), std(Q_v) = "+str(qm[obs_type][:, jm].mean())+", "+\
+                        str(qm[obs_type][:, jm].std())+" for "+str(NTEST)+" sims (with m = "+\
+                        str(mval)+", obs_type = "+str(obs_type)+")"
+                    print
+
+            print "Saving pickled Q_v versus c dict to "+coutfile
+            with open(moutfile, "wb") as fout: cPickle.dump(qm, fout)
+            print
+        else:
+            with open(moutfile, "rb") as fin: qm = cPickle.load(fin)
 
         print
         print "Table of Q_c (ground sims) at constant m = mfid = "+str(evaluate.MFID)
@@ -197,22 +228,22 @@ if __name__ == "__main__":
 
             print "{:8f} {:8.3f} {:8.3f}".format(c, Q, dQ)
 
-        #print
-        #print "Table of Q_c (ground sims) at constant c = cfid = "+str(evaluate.CFID)
-        #print "    m        Q_c    std(Q_c)"
-        #for m, Q, dQ in zip(MVALS, np.mean(qm["ground"], axis=0), np.std(qm["ground"], axis=0)):
+        print
+        print "Table of Q_c (ground sims) at constant c = cfid = "+str(evaluate.CFID)
+        print "    m        Q_c    std(Q_c)"
+        for m, Q, dQ in zip(MVALS, np.mean(qm["ground"], axis=0), np.std(qm["ground"], axis=0)):
 
-        #    print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
+            print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
 
-        #print
-        #print "Table of Q_c (space sims) at constant c = cfid = "+str(evaluate.CFID)
-        #print "    m        Q_c    std(Q_c)"
-        #for m, Q, dQ in zip(MVALS, np.mean(qm["space"], axis=0), np.std(qm["space"], axis=0)):
+        print
+        print "Table of Q_c (space sims) at constant c = cfid = "+str(evaluate.CFID)
+        print "    m        Q_c    std(Q_c)"
+        for m, Q, dQ in zip(MVALS, np.mean(qm["space"], axis=0), np.std(qm["space"], axis=0)):
 
-        #    print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
+            print "{:8f} {:8.3f} {:8.3f}".format(m, Q, dQ)
 
-        #qclist.append(qc)
-        #qmlist.append(qm)
+        qclist.append(qc)
+        qmlist.append(qm)
 
     # Then tabulate the average statistics across these NRUNS runs
     #qcmean = {"ground": np.zeros(len(CVALS)), "space": np.zeros(len(CVALS))}
