@@ -14,7 +14,6 @@ sys.path.append(os.path.join(path, "..", "server", "great3")) # Appends the fold
 import evaluate
 import tabulate_variable_shear_metric_rev1
 
-
 # Set the following module-scope constants equal to the uncorrelated tabulator code values, they
 # are unlikely to change
 TRUTH_DIR = tabulate_variable_shear_metric_rev1.TRUTH_DIR
@@ -29,7 +28,7 @@ MVALS = evaluate.MFID * 10.**(.5 * np.arange(5))
 RHO = 0.45
 
 NTEST = tabulate_variable_shear_metric_rev1.NTEST
-NRUNS = 30 # Number of runs to do from which to estimate the average std(Q_v), see comment below.
+NRUNS = 100 # Number of runs to do from which to estimate the average std(Q_v), see comment below.
 
 # Filenames for final mean standard deviation results averaged over NRUNS runs:
 CSTDOUTFILE = os.path.join(
@@ -208,7 +207,7 @@ if __name__ == "__main__":
                         str(mval)+", obs_type = "+str(obs_type)+")"
                     print
 
-            print "Saving pickled Q_v versus c dict to "+coutfile
+            print "Saving pickled Q_v versus m dict to "+moutfile
             with open(moutfile, "wb") as fout: cPickle.dump(qm, fout)
             print
         else:
