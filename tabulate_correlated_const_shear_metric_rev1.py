@@ -33,7 +33,7 @@ MVALS = evaluate.MFID * 10.**(.5 * np.arange(5))
 # im3shape, see calculate_im3shape_regauss_correlation.py)
 RHO = 0.6
 
-NRUNS = 30 # Number of runs to do from which to estimate the average std(Q_c), see comment below.
+NRUNS = 100 # Number of runs to do from which to estimate the average std(Q_c), see comment below.
 
 # Filenames for final mean standard deviation results averaged over NRUNS runs:
 CSTDOUTFILE = os.path.join(
