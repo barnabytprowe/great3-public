@@ -105,7 +105,10 @@ class Command(BaseCommand):
                 shear_type = "constant"
                 entry.score = evaluate.q_constant(
                     filename, experiment, obs_type,  cfid=evaluate.CFID, mfid=evaluate.MFID,
-                    normalization=evaluate.NORMALIZATION_CONSTANT, just_q=True, truth_dir=TRUTH_DIR,
+                    normalization={
+                        "ground": evaluate.NORMALIZATION_CONSTANT_GROUND,
+                        "space": evaluate.NORMALIZATION_CONSTANT_SPACE}[obs_type],
+                    just_q=True, truth_dir=TRUTH_DIR,
                     sigma2_min={ # As above, explicitly set sigma2_min here, although this is also
                                  # the default...
                         "ground": evaluate.SIGMA2_MIN_CONSTANT_GROUND,
