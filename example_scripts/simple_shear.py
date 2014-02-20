@@ -48,7 +48,8 @@ physically meaningful, but the per-object shear is not - it's only the average s
 ensemble that is meaningful.
 
 The method of PSF correction that is used by default is the re-Gaussianization method proposed by
-Hirata & Seljak (2004).  However, other options are available (see below for more information).
+Hirata & Seljak (2003, MNRAS, 343, 459).  However, other options are available (see below for more
+information).
 
 The default shear calibration factor of 0.98 is meant to be applicable for the re-Gaussianization
 method and is based on previously published work.  A brief explanation of the source of this factor
