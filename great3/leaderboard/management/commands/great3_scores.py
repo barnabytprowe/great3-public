@@ -89,14 +89,30 @@ class Command(BaseCommand):
                 shear_type = "variable"
                 entry.score = evaluate.q_variable(
                     filename, experiment, obs_type, 
-                    normalization=evaluate.NORMALIZATION_VARIABLE, truth_dir=TRUTH_DIR,
+                    normalization={ # Explicitly set the normalization here, although this is also
+                                    # the default... I'm just a bit nervous about hiding things in
+                                    # defaults!
+                        "ground": evaluate.NORMALIZATION_VARIABLE_GROUND,
+                        "space": evaluate.NORMALIZATION_VARIABLE_SPACE}[obs_type],
+                    sigma2_min={ # As above, explicitly set sigma2_min here, although this is also
+                                 # the default...
+                        "ground": evaluate.SIGMA2_MIN_VARIABLE_GROUND,
+                        "space": evaluate.SIGMA2_MIN_VARIABLE_SPACE}[obs_type],
+                    truth_dir=TRUTH_DIR,
                     storage_dir=STORAGE_DIR, logger=logger, corr2_exec=CORR2_EXEC,
                     poisson_weight=POISSON_WEIGHT, usebins=USEBINS)
             else:
                 shear_type = "constant"
                 entry.score = evaluate.q_constant(
                     filename, experiment, obs_type,  cfid=evaluate.CFID, mfid=evaluate.MFID,
-                    normalization=evaluate.NORMALIZATION_CONSTANT, just_q=True, truth_dir=TRUTH_DIR,
+                    normalization={
+                        "ground": evaluate.NORMALIZATION_CONSTANT_GROUND,
+                        "space": evaluate.NORMALIZATION_CONSTANT_SPACE}[obs_type],
+                    just_q=True, truth_dir=TRUTH_DIR,
+                    sigma2_min={ # As above, explicitly set sigma2_min here, although this is also
+                                 # the default...
+                        "ground": evaluate.SIGMA2_MIN_CONSTANT_GROUND,
+                        "space": evaluate.SIGMA2_MIN_CONSTANT_SPACE}[obs_type],
                     storage_dir=STORAGE_DIR, logger=logger, pretty_print=False)
             datestamp = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
             outfile.write('%s\t%s\t%r\t%s\n' % (entry.name,filename,entry.score,datestamp))
