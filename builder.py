@@ -1110,10 +1110,15 @@ class SimBuilder(object):
                                                       gal_epoch_use_cols,
                                                       new_template =
                                                       "deep_galaxy_catalog-%(subfield_index)03d")
-                outfile = root_rel_mapper.copySub(sub_mapper, 'subfield_catalog', tmp_dict,
-                                                  gal_use_cols,
-                                                  new_template =
-                                                  "deep_galaxy_catalog-%(deep_subfield_index)03d")
+                else:
+                    # If this line is not in an 'else' statement, then it will simply overwrite the
+                    # correct FITS catalog with one that lacks some important columns that are
+                    # necessary for variable PSF experiments!  Oops.  And then those incorrect
+                    # catalogs will be converted to the text versions, which will also be wrong.
+                    outfile = root_rel_mapper.copySub(sub_mapper, 'subfield_catalog', tmp_dict,
+                                                      gal_use_cols,
+                                                      new_template =
+                                                      "deep_galaxy_catalog-%(deep_subfield_index)03d")
             tar.add(outfile)
             # ... and also copy to text file that gets added
             outfile_no_ext = os.path.splitext(outfile)[0]
