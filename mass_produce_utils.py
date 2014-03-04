@@ -37,7 +37,7 @@ def pbs_script_yaml(filename, configname, rootname):
         f.write("/home/rmandelb/software/bin/galsim "+configname+" -v1\n")
 
 def python_script(filename, root, subfield_min, subfield_max, experiment, obs_type, shear_type,
-                  gal_dir, ps_dir, seed, n_config_per_branch, preload, my_step):
+                  gal_dir, ps_dir, seed, n_config_per_branch, preload, my_step, public_dir='public'):
     """A utility to write a python script that just imports GREAT3 and does some steps of simulation
     generation.
     """
@@ -53,7 +53,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
                 ", subfield_max=" + str(subfield_max) + ", experiments=['" + experiment + \
                 "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
                 "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
-                ", public_dir='" + os.path.join(root, 'public') + \
+                ", public_dir='" + os.path.join(root, public_dir) + \
                 "', truth_dir='" + os.path.join(root, 'truth') + \
                 "', steps = ['metaparameters', 'catalogs'], preload=" + str(preload) + ")\n"
             f.write(command_str)
@@ -83,7 +83,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
                     ", subfield_max=" + str(last) + ", experiments=['" + experiment + \
                     "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
                     "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
-                    ", public_dir='" + os.path.join(root, 'public') + \
+                    ", public_dir='" + os.path.join(root, public_dir) + \
                     "', truth_dir='" + os.path.join(root, 'truth') + \
                     "', steps = ['config'], nproc=" + str(nproc) + ", preload=" + str(preload) + \
                     ")\n"
@@ -105,7 +105,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
                 ", subfield_max=" + str(subfield_max) + ", experiments=['" + experiment + \
                 "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
                 "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
-                ", public_dir='" + os.path.join(root, 'public') + \
+                ", public_dir='" + os.path.join(root, public_dir) + \
                 "', truth_dir='" + os.path.join(root, 'truth') + \
                 "', steps = ['config'], preload=" + str(preload) + ")\n"
             f.write(command_str)
@@ -123,7 +123,7 @@ def python_script(filename, root, subfield_min, subfield_max, experiment, obs_ty
                 ", subfield_max=" + str(subfield_max) + ", experiments=['" + experiment + \
                 "'], obs_type=['" + obs_type + "'], shear_type=['" + shear_type + \
                 "'], gal_dir='" + gal_dir + "', ps_dir='" + ps_dir + "', seed=" + str(seed) + \
-                ", public_dir='" + os.path.join(root, 'public') + \
+                ", public_dir='" + os.path.join(root, public_dir) + \
                 "', truth_dir='" + os.path.join(root, 'truth') + \
                 "', steps = ['star_params', 'packages'], preload=" + str(preload) + ")\n"
             f.write(command_str)
