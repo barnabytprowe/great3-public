@@ -184,14 +184,27 @@ def getAtmosPSFGrid(k, Pk, ngrid=20, dtheta_arcsec=360., kmin_factor=15,
     # Take subset of the overly huge grid.  Since the grid is periodic, can just take one corner, don't
     # have to try to be in the middle.
     if return_basic is False:
-        return e1, e2, kappa
+        # make grid positions
+        ntot = ngrid*kmin_factor*subsample
+        grid_spacing = dtheta_arcsec/subsample/60.
+        min = (-ntot/2 + 0.5) * grid_spacing
+        max = (ntot/2 - 0.5) * grid_spacing
+        x, y = np.meshgrid(np.arange(min,max+grid_spacing,grid_spacing),
+                           np.arange(min,max+grid_spacing,grid_spacing))
+
+        return e1, e2, kappa, x, y
     else:
         n_use = ngrid*subsample
-        return e1[0:n_use, 0:n_use], e2[0:n_use, 0:n_use], kappa[0:n_use, 0:n_use]
+        grid_spacing = dtheta_arcsec/subsample/60.
+        min = (-n_use/2 + 0.5) * grid_spacing
+        max = (n_use/2 - 0.5) * grid_spacing
+        x, y = np.meshgrid(np.arange(min,max+grid_spacing,grid_spacing),
+                           np.arange(min,max+grid_spacing,grid_spacing))
+        return e1[0:n_use, 0:n_use], e2[0:n_use, 0:n_use], kappa[0:n_use, 0:n_use], x-min, y-min
 
 # A routine to make whisker plots for the atmospheric PSF
-def drawWhiskerShear(g1, g2, title=None):
-    """Draw shear whisker plots from an array of g1, g2 values.  Write to file `outfile`.
+def drawWhiskerShear(g1, g2, x, y, title=None):
+    """Draw shear whisker plots from an array of g1, g2 values.
     """
     g = (g1**2 + g2**2)**0.5
     theta = 0.5*np.arctan2(g2, g1)
@@ -199,23 +212,57 @@ def drawWhiskerShear(g1, g2, title=None):
     gy = g*np.sin(theta)
     pylab.figure()
     magnify = 50.
-    pylab.quiver(magnify*gx, magnify*gy, scale=16, headwidth=0, pivot='middle')
+    res=pylab.quiver(x, y, magnify*gx, magnify*gy, scale=16, headwidth=0, pivot='middle', units='width')
+    #pylab.quiverkey(res, 0.9, 0.95, 0.005*magnify, r'0.005', labelpos='E',
+    #                coordinates='figure',
+    #                fontproperties={'weight': 'bold'})
     tmpstr = str(np.median(g))
     if title is not None:
-        pylab.title(title+', median shear='+tmpstr)
-    pylab.show()
+        titlestr = ", median shear = {0:.4}".format(np.median(g))
+        pylab.title(title+titlestr)
+    pylab.xlabel('X position [arcmin]')
+    pylab.ylabel('Y position [arcmin]')
+    pylab.show()        
 
 # A routine to look at the PSF size variation
-def drawSizeVariation(kappa, title=None):
+def drawSizeVariation(kappa, x, y, title=None):
     """Show variation in PSF size across the field of view, based on a grid of "kappa" values.
-    Write to file `outfile`.
     """
     pylab.figure()
-    pylab.pcolor(kappa)
+    pylab.pcolor(x, y, kappa)
     pylab.colorbar()
     if title is not None:
         pylab.title(title)
+    pylab.xlabel('X position [arcmin]')
+    pylab.ylabel('Y position [arcmin]')
     pylab.show()
+
+# A routine to make whisker plots for the atmospheric PSF
+def drawBoth(g1, g2, kappa, x, y, title=None, outfile=None):
+    """Draw both types of plots from arrays of g1, g2, kappa values.  Write to file `outfile`.
+    """
+    g = (g1**2 + g2**2)**0.5
+    theta = 0.5*np.arctan2(g2, g1)
+    gx = g*np.cos(theta)
+    gy = g*np.sin(theta)
+    pylab.figure()
+    magnify = 50.
+    pylab.pcolor(x/60., y/60., kappa)
+    pylab.colorbar()
+    res=pylab.quiver(x/60., y/60., magnify*gx, magnify*gy, scale=16, headwidth=0, pivot='middle', units='width')
+    #pylab.quiverkey(res, 0.9, 0.95, 0.005*magnify, r'0.005', labelpos='E',
+    #                coordinates='figure',
+    #                fontproperties={'weight': 'bold'})
+    tmpstr = str(np.median(g))
+    if title is not None:
+        titlestr = ", median shear = {0:.4}".format(np.median(g))
+        pylab.title(title+titlestr)
+    pylab.xlabel('X position [deg]')
+    pylab.ylabel('Y position [deg]')
+    if outfile is None:
+        pylab.show()
+    else:
+        pylab.savefig(outfile)
 
 # Main function:
 #    Given an exposure time and telescope size, generate a random P(k), use it to simulate PSF
@@ -223,8 +270,10 @@ def drawSizeVariation(kappa, title=None):
 if __name__ == "__main__":
 
     # Define some defaults
-    t_exp = 150.0 # exposure time in seconds
+    t_exp = 120.0 # exposure time in seconds
     diam = 4.0    # telescope size
+    handbook = True # are we doing a combined size/whisker plot for handbook?
+    outfile = '../../handbook/figs/great3_atmos_psf.png'
 
     # Currently set up to do a random realization with seed initialized from the time.
     A, theta_0, seeing = atmosPSFParams(t_exp=t_exp, diam=diam)
@@ -243,9 +292,13 @@ if __name__ == "__main__":
     print "Getting the gridded PSF parameters"
     # Will want in general to subsample by 10 so we can have multiple grids sampling the same PSF.
     # But for the sake of easy viewing, use subsample=3.
-    e1, e2, kappa = getAtmosPSFGrid(k, Pk, subsample=3)
+    e1, e2, kappa, x, y = getAtmosPSFGrid(k, Pk, subsample=3)
 
-    print "Plotting the PSF shear as a whisker plot"
-    drawWhiskerShear(e1/2., e2/2., title='PSF shear in 2x2 degree field')
-    print "Plotting the PSF kappa as a color plot"
-    drawSizeVariation(kappa, title='PSF size variation in 2x2 degree field')
+    if handbook:
+        print "Plotting PSF shear, kappa in a single plot"
+        drawBoth(e1/2., e2/2., kappa, x, y, title="PSF patterns in 2x2 degree field", outfile=outfile)
+    else:
+        print "Plotting the PSF shear as a whisker plot"
+        drawWhiskerShear(e1/2., e2/2., x, y, title='PSF shear in 2x2 degree field')
+        print "Plotting the PSF kappa as a color plot"
+        drawSizeVariation(kappa, x, y, title='PSF size variation in 2x2 degree field')
