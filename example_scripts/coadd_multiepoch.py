@@ -31,7 +31,7 @@ DEPENDENCIES
 
 Python 2.6.x-2.7.x
 NumPy 1.6+
-GalSim 0.4+
+GalSim 1.0
 PyFITS 1.0+ / Astropy v0.1+
 
 
