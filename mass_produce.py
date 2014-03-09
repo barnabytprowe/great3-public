@@ -14,20 +14,21 @@ import great3sims
 
 # Define some basic parameters.  This includes some system-dependent things like directories for
 # output.
-root = '/physics/rmandelb/great3-v12'
+root = '/physics/rmandelb/great3-v11'
 n_config_per_branch = 10 # Number of config files to be run per branch.
-subfield_min = 0
+subfield_min = 200
 subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
 gal_dir = '/lustre/rmandelb/great3_fit_data'
 ps_dir = '/home/rmandelb/git/great3-private/inputs/ps/tables'
 seed = 31415
+public_dir = 'addendum' # normally 'public' to create the big public tarfiles
 delta_seed = 137 # amount to increment seed for each successive branch
 sleep_time = 30 # seconds between checks for programs to be done
-package_only = False # only do the packaging and nothing else
-do_images = True  # Make images or not?  If False with package_only also False, then just skip the
+package_only = True # only do the packaging and nothing else
+do_images = False  # Make images or not?  If False with package_only also False, then just skip the
                   # image-making step: remake catalogs but do not delete files / dirs with images,
                   # then package it all up.
-do_gal_images = True # Make galaxy images?  If do_images = True, then do_gal_images becomes
+do_gal_images = False # Make galaxy images?  If do_images = True, then do_gal_images becomes
 # relevant; it lets us only remake star fields if we wish (by having do_images = True, do_gal_images
 # = False).
 preload = False # preloading for real galaxy branches - irrelevant for others
@@ -43,9 +44,9 @@ queue_nicely = 13
 experiments = [
     #'control',
     #'real_galaxy',
-    #'variable_psf',
-    'multiepoch',
-    #'full',
+    'variable_psf',
+    #'multiepoch',
+    'full',
 ]
 obs_types = [
     'ground',
@@ -151,7 +152,7 @@ for experiment, obs_type, shear_type in branches:
     mass_produce_utils.pbs_script_python(pbs_file, pbs_name)
     mass_produce_utils.python_script(python_file, root, subfield_min, subfield_max, experiment,
                                      obs_type, shear_type, gal_dir, ps_dir, seed,
-                                     n_config_per_branch, preload, my_step=3)
+                                     n_config_per_branch, preload, my_step=3, public_dir=public_dir)
     # And then submit them
     command_str = 'qsub '+pbs_file
     p = subprocess.Popen(command_str,shell=True, close_fds=True)
