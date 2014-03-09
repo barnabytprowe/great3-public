@@ -77,7 +77,12 @@ Sersic profile with free n.  The array entries are:
 
        To relate these quantities to the object total flux that is needed to define the object in
        GalSim, use the value of b_n for that Sersic n, and define
-       flux = 2pi*n*Gamma[2n]*exp(b_n)*hlr^2*I/(b_n^(2n)).
+       flux = 2pi*n*Gamma[2n]*exp(b_n)*q*R_{1/2}^2*I/(b_n^(2n)).
+       The factor of q is necessary because of how the light profile was defined using the intensity
+       and R_{1/2} along the major axis.  Also note that this flux will give an image that looks
+       like the HST image when the draw() method uses 'flux' normalization (the default setting).
+       If you want to use the 'surface brightness' normalization, then you must multiply this flux
+       by 0.03^2 if you want the drawn image to look like the HST image.
 
 BULGEFIT: An array of 16 numbers which are the results of fitting the galaxy image to a de
 Vaucouleurs bulge plus an exponential disk.  The array entries are the same as for SERSICFIT, with 8
