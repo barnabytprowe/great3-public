@@ -5,7 +5,7 @@
 {% block admin_content %} {% endblock %}
 
 <H4> Challenge Data Sets</H4>
-<P>Below are links to download the currently available data.  The main links are to files hosted in London, and the US mirror are hosted in Pasadena, CA. 16 of the 20 branches are available in both places; the 4 branches in the `full' experiment are only hosted in London as of mid-December.</P>
+<P>Below are links to download the currently available data.  The main links are to files hosted in London, and the US mirror are hosted in Pasadena, CA. 16 of the 20 branches are available in both places.</P>
 
 <P>Please report any problems downloading the datasets to <a href="mailto:challenge@great3challenge.info">challenge@great3challenge.info</a> or <a href="https://github.com/barnabytprowe/great3-public/issues">post an issue at github.</P>
 
@@ -14,6 +14,8 @@
 <P>Please sign up to the <a href="https://lists.andrew.cmu.edu/mailman/listinfo/great3-participants">great3-participants mailing list</a> for regular updates on challenge status and to receive notification of any changes in the data.</P>
 
 <P>For details about the properties of the different leader boards, see <A href="{% url leaderboard.board_views.index %}">their individual pages.</A> </P>
+
+<P><font color="red" >Those who wish to use the <i>deep fields</i> for the <i>variable PSF</i> or <i>full</i> branches will find that the galaxy catalog files for the deep fields in those branches are missing some important information. To get that missing information, users should also download the supplementary files at the bottom of this page, which can be unpacked to get the galaxy catalogs for deep fields with all the necessary information. </font></P>
 
 <UL>{% if boards %}{% for board in boards %}<LI>{% if board.datafile%}
 <A href="{% url leaderboard.data_views.public_file board.datafile.filename %}">Branch {{board}}</A> {{board.datafile.info}}. {% if board.datafile.mirror1 %}  <A href={{board.datafile.mirror1}}>US Mirror</A> {% endif %}
