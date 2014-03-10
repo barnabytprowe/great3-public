@@ -21,7 +21,7 @@ if __name__ == "__main__":
     plt.hist(snr1, bins=100, range=(0, 1000), label=label1, histtype="step")
     import itertools
     for x, y, snr in itertools.izip(data1['X_IMAGE'], data1['Y_IMAGE'], snr1):
-        if snr > 100.: print "%.4f %.4f %.4f" % (int(idd), snr)
+        if snr > 100.: print "%.4f %.4f %.4f" % (x, y, snr)
 
     if len(sys.argv) == 4:
         infile2 = sys.argv[2]
