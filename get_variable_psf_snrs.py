@@ -49,15 +49,19 @@ if __name__ == "__main__":
         for shear_type in constants.shear_types:
 
             cats = make_cats(EXPERIMENT, obs_type, shear_type)
-            quantiles = {}
+            min_quantiles = {}
+            max_quantiles = {}
             i = 0
             for imfile, cat in cats.iteritems():
 
                 snr = cat["FLUX_AUTO"] / cat["FLUXERR_AUTO"]
                 snr_sorted = np.sort(snr)
-                quantiles[imfile] = {
+                min_quantiles[imfile] = {
                     80: snr_sorted[2000], 90: snr_sorted[1000], 95: snr_sorted[500],
                     99: snr_sorted[100]}
+                max_quantiles[imfile] = {
+                    80: snr_sorted[-2000], 90: snr_sorted[-1000], 95: snr_sorted[-500],
+                    99: snr_sorted[-100]}
                 outfile = os.path.join(
                     "./counts",
                     "snrhist_"+EXPERIMENT[0]+obs_type[0]+shear_type[0]+"_"+
@@ -66,7 +70,7 @@ if __name__ == "__main__":
                     plt.clf()
                     plt.hist(
                         snr, bins=100, range=(0, 100), histtype="step",
-                        label="95% SNR > "+str(quantiles[imfile][95]))
+                        label="95% SNR > "+str(min_quantiles[imfile][95]))
                     plt.xlabel("FLUX_AUTO / FLUXERR_AUTO")
                     plt.ylabel("Counts")
                     plt.title(EXPERIMENT+"/"+obs_type+"/"+shear_type+"/"+os.path.split(imfile)[-1])
@@ -76,8 +80,12 @@ if __name__ == "__main__":
 
             import cPickle
             with open(
-                "./counts/quantiles_"+EXPERIMENT[0]+obs_type[0]+shear_type[0]+".p", "wb") as fout:
+                "./counts/min_quantiles_"+EXPERIMENT[0]+obs_type[0]+shear_type[0]+".p", 
+                "wb") as fout:
                 print "Saving quantile dict to "+fout.name
-                cPickle.dump(quantiles, fout)
-
-
+                cPickle.dump(min_quantiles, fout)
+            with open(
+                "./counts/max_quantiles_"+EXPERIMENT[0]+obs_type[0]+shear_type[0]+".p",
+                "wb") as fout:
+                print "Saving quantile dict to "+fout.name
+                cPickle.dump(max_quantiles, fout)
