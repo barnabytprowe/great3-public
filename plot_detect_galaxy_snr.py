@@ -10,7 +10,7 @@ import great3sims.mapper
 
 if __name__ == "__main__":
 
-    if len(sys.argv) == 1 or len(sys.argv) > 4:
+    if len(sys.argv) <= 2 or len(sys.argv) > 4:
         print "usage: ./plot_detect_galaxy_snr.py FITSFILE1 [... FITSFILE2] OUTFILE"
         sys.exit(1)
     infile1 = sys.argv[1]
@@ -19,7 +19,10 @@ if __name__ == "__main__":
     infilesplit1 = infile1.split("/")
     label1 = infilesplit1[-4]+"/"+infilesplit1[-3]+"/"+infilesplit1[-2]+"/"+infilesplit1[-1]
     plt.hist(snr1, bins=100, range=(0, 1000), label=label1, histtype="step")
-    print np.max(snr1)
+    import itertools
+    for idd, snr in itertools.izip(data1[:, 0], snr1):
+        print "%09d %f" % (int(idd), snr)
+
     if len(sys.argv) == 4:
         infile2 = sys.argv[2]
         outfile = sys.argv[3]
