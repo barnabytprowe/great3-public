@@ -605,7 +605,7 @@ def EstimateAllShears(subfield, sim_dir, output_dir, output_prefix="output_catal
     responsivity = 2.*(1.-e_rms_per_component**2)
     if responsivity > 2. or responsivity < 1.:
         raise RuntimeError("Error: responsivity is %f"%responsivity)
-    log("Shear responsivity (2 for round objects, 1 for perfectly flat): %f"%responsivity)
+    log("Shear responsivity (2 for round objects, 0 for perfectly flat): %f"%responsivity)
 
     # Now put outputs into the format that we want.  For default values of g1 and g2, we put 100,
     # to indicate failure.  Then we will change them to some more sensible value if a shape was
