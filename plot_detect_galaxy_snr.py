@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+"""@file plot_detect_galaxy_snr.py
+
+Quick and dirty command line tool for making plots of either a single FITS image file's SExtractor
+SNR distribution, or two distributions for two separate FITS files, overlaid.  This latter
+functionality was useful for validating that the multiepoch branch image SNRs were smaller than
+the control etc. SNRs by an appropriate factor.
+"""
+
 import os
 import sys
 import numpy as np
