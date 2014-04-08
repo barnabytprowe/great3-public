@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""@file plot_variable_submission.py
+
+Handy command line executable script for plotting up a GREAT3 variable shear submission.
+"""
+
 # Constants
 NFIELDS = 10
 NBINS_THETA = 15
