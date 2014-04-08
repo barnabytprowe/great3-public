@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+"""@file get_plot_snr_stats.py
+
+Run SExtractor on all files in a given experiment (set below as EXPERIMENT), but doing only the
+shear type and observation type specified in the `constants.py` module in this directory).  Uses
+SExtractor output FLUX_AUTO and FLUXERR_AUTO to defined an "observed" SNR.
+
+Makes some plots, saves some info about the 80%, 90%, 95% and 99% quantiles of the distributions
+of observed SNR.
+"""
+
+
 import os
 import sys
 import numpy as np
