@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+"""@file fitsverify.py 
+
+Use the fitsvery exectuable to check basic FITS properties for all the files in a GalSim release 
+specified by the `constants.py` module in this same directory.
+"""
 
 import os
 import sys
