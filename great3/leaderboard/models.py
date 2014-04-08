@@ -29,6 +29,7 @@ PLACEHOLDER_RANK = 1000
 MAXIMUM_ENTRIES_PER_DAY = 1
 MAX_BOARDS_FOR_SCORING = 5
 NO_TIEBREAK = 0
+MIN_SCORE_FOR_POINTS = 1.0
 TIEBREAK_ALL_SCORES = 1
 TIEBREAK_TIMESTAMP = 2
 ENTRIES_WITHOUT_SUBMISSION_RATE_RESTRICTION = 5
@@ -251,6 +252,8 @@ class Entry(models.Model):
 			return score
 
 	def get_points(self):
+		if self.score<MIN_SCORE_FOR_POINTS:
+			return 0
 		return score_for_rank(self.rank)
 
 
