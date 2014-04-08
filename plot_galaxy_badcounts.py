@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+"""@file plot_galaxy_badcounts.py
+
+Convenience script for finding and plotting the histogram of object SNRs for the GREAT3 galaxy image
+with an object number count furthest from the 10000 required.  Uses a "badcount" dict as output by 
+`count_objects.py`
+"""
+
 # usage: ./plot_galaxy_badcounts.py DICTFILE
 import os
 from sys import argv
