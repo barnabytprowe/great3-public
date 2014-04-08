@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+"""@file count_objects.py
+
+A command line executable script for running SExtractor on all FITS files in a given GREAT3
+experiment (using a sensible default config, chosen after some trial and error) to determine object
+counts for GREAT3 images.  The idea is there are supposed to be 10000 galaxy objects per image.
+
+Saves output stored into dictionaries into a counts/ subdirectory for later checking.
+"""
+
 import os
 import sys
 import glob
