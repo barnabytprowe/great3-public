@@ -236,9 +236,13 @@ def run_corr2_ascii(x, y, e1, e2, w, min_sep=min_sep, max_sep=max_sep, nbins=nbi
     subprocess.Popen([
         corr2_executable, str(paramsfile), 'file_name='+str(catfile), 'm2_file_name='+str(m2file),
         ]).wait()
-    results = readfile(m2file)
     os.remove(paramsfile)
     os.remove(catfile)
+    if not os.path.isfile(m2file):
+        raise RuntimeError('Corr2 output file does not exist--this usually indicates an error '
+                           'within corr2 itself.  Please check output stream for error '
+                           'messages.')
+    results = readfile(m2file)
     os.remove(m2file)
     return results
 
@@ -278,9 +282,13 @@ def run_corr2(x, y, e1, e2, w, min_sep=min_sep, max_sep=max_sep, nbins=nbins,
     subprocess.Popen([
         corr2_executable, str(paramsfile), 'file_name='+str(catfile), 'm2_file_name='+str(m2file)
         ]).wait()
-    results = readfile(m2file)
     os.remove(paramsfile)
     os.remove(catfile)
+    if not os.path.isfile(m2file):
+        raise RuntimeError('Corr2 output file does not exist--this usually indicates an error '
+                           'within corr2 itself.  Please check output stream for error '
+                           'messages.')
+    results = readfile(m2file)
     os.remove(m2file)
     return results
 
