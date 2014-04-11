@@ -20,7 +20,7 @@ except:
     n_deep_subfields = 20
 
 nproc = 8
-threshhold = 3 # Report deviations >= this many sigma for the means, medians, etc
+threshold = 3 # Report deviations >= this many sigma for the means, medians, etc
 n_histogram_bins = 40
 n_curves_per_histogram_plot = 20 
 histogram_root_filename = 'pixel_histograms/histogram'
@@ -226,10 +226,10 @@ def check_all(root_dir, experiments=constants.experiments, obs_types=constants.o
                             # [0] since numpy.where returns a tuple with an element for each
                             # dimension, but we only have (and care about) one.
                             outliers = numpy.where(
-                                numpy.abs((quantity-mean)/stddev)>threshhold)[0]
+                                numpy.abs((quantity-mean)/stddev)>threshold)[0]
                             if len(outliers)>0:
                                 for outlier in outliers:
-                                    print "WARNING: Outlier (>"+str(threshhold)+' sigma) for',
+                                    print "WARNING: Outlier (>"+str(threshold)+' sigma) for',
                                     print 'quantity', qname,':', fitsfiles[outlier],
                                     print 'value =', quantity[outlier], 'for mean',mean,
                                     print 'and standard deviation', stddev

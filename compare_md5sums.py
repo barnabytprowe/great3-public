@@ -5,7 +5,7 @@ Reads in two full md5sum output files each with entries in the format
 
     <MD5 checksum> <filename>
 
-and compares the MD5 column for consistency. The filenames columnm, which may be different on
+and compares the MD5 column for consistency. The filenames column, which may be different on
 different systems, is ignored for the purpose of this comparison.
 """
 

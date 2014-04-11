@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 description="""
-Get all the md5sums for the all the branches in the experiments, obs_types, shear_types lists in
+Get all the md5sums for all the branches in the experiments, obs_types, shear_types lists in
 validation/constants.py.
 
 Writes a full md5sum output file with each entry in the format <MD5 checksum> <filename> to the

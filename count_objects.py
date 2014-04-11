@@ -54,11 +54,12 @@ def count_all(root_dir, experiments=constants.experiments, obs_types=constants.o
 
     Assumes all FITS files end in suffix .fits.
 
-    @return good  If all checks pass, returns a dictionay containing the object totals that were
+    @return good  If all checks pass, returns a dictionary containing the object totals that were
                   counted by this tool, itemized by the filename.  Any files
-                  found to contain neither 9 or 10 0000 objects are judged as failed.  All failed
-                  filenames are printed and the function raises a ValueError exception with all
-                  the failed filenames listed in the error message.
+                  found to contain neither 9 or 10 0000 objects (for star fields and galaxy fields,
+                  respectively) are judged as failed.  All failed filenames are printed and the
+                  function raises a ValueError exception with all the failed filenames listed in the
+                  error message.
     """
     # Set storage lists
     good = {}

@@ -153,7 +153,7 @@ def subtract_submissions(sub1file, sub2file, outfile):
     return
 
 def run_variable_tests():
-    """Run some variable shear tests (tests that were happening aroud ~30 Sep - 6 Oct 2013, so
+    """Run some variable shear tests (tests that were happening around ~30 Sep - 6 Oct 2013, so
     removed from the main module text and retired here)"
     """
     # Make intermediate catalogues for control space variable
