@@ -9,6 +9,7 @@ import random
 import pytz
 import unicodedata
 import re
+import itertools
 
 
 # This function taken from django and slightly modified
@@ -101,6 +102,74 @@ class Team(models.Model):
 		self.save()
 		return new_score
 
+	@classmethod
+	@transaction.commit_manually()
+	def break_ties(cls):
+		# go through the scores and break any ties by adding
+		# single points to the winner of them.
+		teams = cls.objects.order_by('-score')
+		scores = [team.score for team in teams]
+		#now we need to iterate through groups
+		#of teams with the same score and break any ties
+		first_element = lambda x: x[0]
+		pairs = zip(scores, teams)
+		#Okay, this is a bit complicated.
+		#First go through all the teams, grouped by their score
+		for (score, teams_with_score) in itertools.groupby(pairs, first_element):
+			teams_with_score = list(teams_with_score)
+			# If there is only one team with that score then nothing to worry about;
+			# we just carry on - no change to the score.  This is the usual case
+			if len(teams_with_score)==1:
+				continue
+			#We also ignore teams with a score of zero.
+			#one the grounds that it is not important what happens there
+			if score==0:
+				continue
+
+			#If there is more than one team with that score we will need
+			#the tiebreak scores, in sorted order
+			tiebreak_scores = [(team.calculate_tiebreak_score(), team) for (_,team) in teams_with_score]
+			tiebreak_scores.sort()
+
+			# But now there can be a double tiebreak!
+			# So we need to group up these scores again.
+			# I'm sure this could be done much more elegantly.
+			# We will get an ordering for all the teams with the same base
+			#(non-tiebroken) score
+			tiebroken_order = []
+			# and now the grouping again:
+			for tiebreak_score, doubly_tied_teams in itertools.groupby(tiebreak_scores, first_element):
+				doubly_tied_teams = list(doubly_tied_teams)
+				#Once again, it is most likely that there is only one
+				#team with each tiebreak score. In that case the ordering
+				#is clear - just the tiebreak score itself.
+				#So the element in tiebroken_score is the first and only team.
+				if len(doubly_tied_teams)==1:
+					tiebroken_order.append(doubly_tied_teams[0][1])
+					continue
+				#On the other hand it is possible there is more than one
+				#team with the same tiebreak score.  In that case we will need
+				#an ordering within them.  We use the earliest ranked entry time.
+				timestamps = [(team.earliest_ranked_entry_time(), team) for (_,team) in doubly_tied_teams]
+				timestamps.sort()
+				#Now we have a sorted list of the timestamps.
+				#So the ordering in the tiebroken_order is the same as in this list.
+				#the "_" is the timestamp itself that we used to sort
+				for _, team in timestamps:
+					tiebroken_order.append(team)
+			#Now we have a tiebroken order.  We give the teams extra
+			#individual points to break the tie.  Then we are done.
+			for i,team in enumerate(tiebroken_order):
+				team.score += i
+				team.save()
+		#Save!  We do this manually because there are a bunch of commits here
+		#all to be done at once.
+		transaction.commit()
+
+
+
+
+
 	def top_entries_by_rank(self, n=MAX_BOARDS_FOR_SCORING):
 		return self.entry_set.order_by('rank','date')[:n]
 
@@ -128,6 +197,7 @@ class Team(models.Model):
 	def update_scores_and_ranks(cls):
 		for team in cls.objects.all():
 			team.calculate_score()
+		cls.break_ties()
 		cls.update_ranks()
 
 	@classmethod
