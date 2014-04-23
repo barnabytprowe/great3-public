@@ -239,7 +239,7 @@ class VariableShearBuilder(ShearBuilder):
                                      units = galsim.degrees,
                                      rng = rng,
                                      center = (grid_center, grid_center),
-                                     kmin_factor = 3)
+                                     kmin_factor=3)
             # Now that our cached PS has a grid of shears / convergences, we can use getLensing() to
             # get the quantities we need for a lensing measurement at any position, so this part of
             # the calculation is done.
