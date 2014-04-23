@@ -11,6 +11,9 @@ import unicodedata
 import re
 import itertools
 
+#Setting this to true will suspend all submissions!
+SUBMISSION_SUSPENDED = False
+
 
 # This function taken from django and slightly modified
 def slugify(value):

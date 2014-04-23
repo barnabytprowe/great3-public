@@ -1,9 +1,8 @@
-from leaderboard.models import Board, Entry, Team, save_submission_file, too_many_entries_in_last_day, MAXIMUM_ENTRIES_PER_DAY, Method
+from leaderboard.models import Board, Entry, Team, save_submission_file, too_many_entries_in_last_day, MAXIMUM_ENTRIES_PER_DAY, Method, SUBMISSION_SUSPENDED
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django import forms
 from django.contrib.auth.decorators import login_required
-
 
 def check_unique_submission_name(name):
 	if Entry.objects.filter(name=name).exists():
@@ -96,6 +95,8 @@ def methods_for_teams(*teams):
 
 @login_required
 def submit(request, board_id):
+	if SUBMISSION_SUSPENDED:
+		return render(request, 'leaderboard/contest_finished.html')
 	try:
 		board = Board.objects.get(id=board_id)
 	except Board.DoesNotExist:
