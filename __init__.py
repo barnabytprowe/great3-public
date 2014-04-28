@@ -57,11 +57,13 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
         'metaparameters' = building the global parameters of the catalogs for a given branch
         'catalogs' = writing the per-subfield and per-epoch catalogs listing the characteristics 
                        of each object
-        'config' = writing the config files for galsim_yaml to building the images
-        'gal_images' = making the galaxy images within this script
-        'psf_images' = making the PSF images within this script
+        'config' = writing the config files for galsim to build the images using the config
+                       interface
+        'gal_images' = making the galaxy images within this script, rather than via config
+        'psf_images' = making the PSF images within this script, rather than via config
         'star_params' = measure the HSM shapes for the PSF images
-        'packages' = packing up the tarballs to be distributed publicly and for metric evaluation
+        'packages' = packing up the tarballs to be distributed publicly and the truth tarballs for
+                         metric evaluation
     In order to carry out the later stages without the former, the script must have
     already produced output files for the first stages in the specified directory.
 
@@ -75,7 +77,7 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
 
     epoch - a single observation of a given subfield at some epoch (i.e., in the single epoch
     experiments, there is one observation per subfield, whereas in the multi-epoch case, there are
-    >1, as determined in constants.py)
+    >1 epochs, as determined in constants.py)
 
     tile - a 2x2 degree subset of a subfield on which PSF properties are determined for the variable
     PSF case.  This terminology is only needed by the PSF builders, not __init__.py or builder.py
@@ -86,38 +88,43 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
     determine how many of each is in a branch are in constants.py (number of subfields per branch,
     number of subfields per field, number of epochs per subfield).
 
-    @param[in] root          root directory for generated files
-    @param[in] experiments   sequence of simulation experiments to build
-                             (None == all 5 experiments)
-    @param[in] obs_type      observation type for simulations, one of 'ground' or 'space'
-                             (None == both)
-    @param[in] shear_type    shear field type for simulations, one of 'constant' or 'variable'
-                             (None == both)
-    @param[in] seed          first random number seed (ignored if the steps parameter does not
+    @param[in] root          Root directory for generated files
+    @param[in] experiments   Sequence of simulation experiments to build
+                             [default None == all 5 experiments]
+    @param[in] obs_type      Observation type for simulations, one of 'ground' or 'space'
+                             [default None == both]
+    @param[in] shear_type    Shear field type for simulations, one of 'constant' or 'variable'
+                             [default None == both]
+    @param[in] seed          First random number seed (ignored if the `steps` parameter does not
                              include 'metaparameters'); random number generators will be seeded with
                              this number *and* the integers immediately after it.  Note that seed
                              should not be 0, since this does not result in a repeatable random
                              number sequence.
-    @param[in] steps         a sequence of steps to simulate; valid entries are 'metaparameters',
+    @param[in] steps         A sequence of steps to simulate; valid entries are 'metaparameters',
                              'catalogs', 'config', 'gal_images', 'psf_images', 'star_params',
-                             'packages' (None == all steps). 
-                             Previous steps must have already been run with the same root.
-    @param[in] subfield_min  Minimum range "subfield index" to limit the number of catalogs/images
-                             produced e.g. when testing.
-    @param[in] subfield_max  Maximum range "subfield index" to limit the number of catalogs/images
-                             produced e.g. when testing.
+                             'packages'.  [default None == all steps] 
+                             If not beginning with 'metaparameters', then previous steps must have
+                             already been run with the same 'root'.
+    @param[in] subfield_min  Minimum subfield, to limit the number of catalogs/images produced
+                             e.g. when testing. [default 0]
+    @param[in] subfield_max  Maximum subfield, to limit the number of catalogs/images produced
+                             e.g. when testing. [default is the maximum subfield index given the
+                             settings in constants.py]
     @param[in] gal_dir       Directory containing real galaxy catalogs.
     @param[in] ps_dir        Directory containing cosmological power spectrum inputs from iCosmo.
     @param[in] opt_psf_dir   Directory containing the optical PSF models for ground and space
                              variable PSF simulations.
     @param[in] atmos_ps_dir  Directory containing atmospheric power spectrum inputs based on
                              Mathematica numerical integration.
-    @param[in] public_dir    Directory containing files to be distributed publicly.
-    @param[in] truth_dir     Directory containing files used for metric evaluation.
+    @param[in] public_dir    Directory into which files to be distributed publicly should be
+                             placed.
+    @param[in] truth_dir     Directory into which files to be used for metric evaluation should be
+                             placed.
     @param[in] preload       Preload the RealGalaxyCatalog images to speed up generation of large
-                             numbers of real galaxies? (default=False)  Note that for parametric
+                             numbers of real galaxies? [default=False]  Note that for parametric
                              galaxy branches, the catalog is never preloaded.
-    @param[in] nproc         How many processes to use in the config file.  (default = -1)
+    @param[in] nproc         How many processes to use in the config file.  [default = -1, which
+                             means that GalSim will automatically decide on a value to use]
     """
     import sys
 
