@@ -76,9 +76,9 @@ generate simulated data for those branches:
   ../inputs/atmospsf/pk_math.  You should give the path to that directory to the
   `atmos_ps_dir` keyword argument when you call `great3sims.run()`.
 - The variable PSF simulations (ground and space) require optical PSF models.
-  The relevant files are in this repositry, in ../psfs.  You should give the
-  path to that directory to the `optical_psf_dir` keyword argument when you call
-  `great3sims.run()`.
+  The relevant files are in this repositry, in ../inputs/optical-psfs.  You should
+  give the path to that directory to the `optical_psf_dir` keyword argument when
+  you call `great3sims.run()`.
 
 ## Getting help
 

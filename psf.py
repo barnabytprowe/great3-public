@@ -1019,7 +1019,7 @@ class VariablePSFBuilder(PSFBuilder):
         #
         # Need to import the optical PSF modules for space or ground depending on obs_type.
         import sys
-        sys.path.append('../psfs')
+        sys.path.append('../inputs/optical-psfs')
         if self.obs_type == "ground":
             import ground_optical_psf
         else:
@@ -1064,7 +1064,7 @@ class VariablePSFBuilder(PSFBuilder):
                     new_model = \
                         ground_optical_psf.OpticalPSFModel(
                             position_list_filename = \
-                            '../psfs/ground_optical_psf_zernike_coefficients_41x41/ZEMAXInput.dat',
+                            '../inputs/optical-psfs/ground_optical_psf_zernike_coefficients_41x41/ZEMAXInput.dat',
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
@@ -1079,7 +1079,7 @@ class VariablePSFBuilder(PSFBuilder):
                     new_model = \
                         space_optical_psf.OpticalPSFModel(
                             filename = \
-                            '../psfs/afta_wfirst_example_psf_exaggerated.fields_and_coefs.fits',
+                            '../inputs/optical-psfs/afta_wfirst_example_psf_exaggerated.fields_and_coefs.fits',
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
