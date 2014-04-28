@@ -5,37 +5,42 @@ The scripts in this directory were used to generate the simulations for the
 GREAT3 challenge.
 
 In particular, the following files form the core of the 'great3sims' package:
-1. __init__.py includes the top-level driver.
-2. builder.py contains the SimBuilder class and the routines that do the heavy
+
+1. `__init__.py` includes the top-level driver.
+
+2. `builder.py` contains the SimBuilder class and the routines that do the heavy
    lifting: figuring out how to generate parameters, catalogs, config files,
    images, and packages for each branch.
-3. constants.py contains definitions for a number of constants related to the
+
+3. `constants.py` contains definitions for a number of constants related to the
    simulations that are produced, such as the number of galaxies per field and
    the number of fields per branch.
-4. galaxies.py, shear.py, psf.py, and noise.py contain the detailed
+
+4. `galaxies.py`, `shear.py`, `psf.py`, and `noise.py` contain the detailed
    implementation of the galaxy populations, shear fields, PSFs, and noise
    models, respectively.
-5. mapper.py contains functionality related to i/o.
 
-The scripts mass_produce.py and utilities in mass_produce_utils.py can be used
-to generate large sets of simulations; they were used to drive the production of
-the GREAT3 simulations on a large cluster with many cores and lots of storage
-space.
+5. `mapper.py` contains functionality related to i/o.
+
+The scripts `mass_produce.py` and utilities in `mass_produce_utils.py` can be
+used to generate large sets of simulations; they were used to drive the
+production of the GREAT3 simulations on a large cluster with many cores and lots
+of storage space.
 
 ## How do these scripts work?
 
 The scripts are heavily commented with detailed docstrings.  For example, you
-can import the great3sims package and do help(great3.run) to get a top-level
-docstring.  We recommend going through these directly; for those who wish to
-reproduce simulations similar to those in GREAT3, you may simply want to use
-mass_produce.py or ../tests/test_run.py as an example of how to carry out all
-steps of the simulation generation process.  For those who wish to try something
-very simple, the docstrong for the `great3sims.run()` command gives an example
-of basic usage.
+can import the `great3sims` package and do `help(great3sims.run)` to get a
+top-level docstring.  We recommend going through these directly; for those who
+wish to reproduce simulations similar to those in GREAT3, you may simply want to
+use `mass_produce.py` or `../tests/test_run.py` as an example of how to carry
+out all steps of the simulation generation process.  For those who wish to try
+something very simple, the docstrong for the `great3sims.run()` command gives an
+example of basic usage.
 
 ## What software is required?
 
-The 'great3sims' package uses
+The `great3sims` package uses
 [GalSim](https://github.com/GalSim-developers/GalSim) to generate the
 simulations.  In particular, it is set up to work with GalSim v1.0.1, which has
 a few necessary bug fixes beyond v1.0.0.  To get GalSim v1.0.1, either download
@@ -43,7 +48,7 @@ and install the code package from the GalSim [tags
 page](https://github.com/GalSim-developers/GalSim/releases), or if you have
 cloned the GalSim repository, you can do `git checkout v1.0.1` to get and
 install that tagged version.  Note that due to a number of API changes, the
-'great3sims' package is not compatible with the latest version of GalSim on the
+`great3sims` package is not compatible with the latest version of GalSim on the
 master branch.
 
 Other requirements are NumPy, PyFITS (both of which are GalSim dependencies in
