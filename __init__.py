@@ -35,6 +35,7 @@ builders = {
 def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=None,
         subfield_min=0, subfield_max=(constants.n_subfields-1),
         gal_dir='/Users/rmandelb/great3/data-23.5', ps_dir='inputs/ps/tables',
+        opt_psf_dir = '../inputs/optical-psfs',
         atmos_ps_dir = '../inputs/atmospsf/pk_math',
         public_dir='public', truth_dir='truth', preload=False, nproc=-1):
     """Top-level driver for GREAT3 simulation code.
@@ -107,6 +108,8 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
                              produced e.g. when testing.
     @param[in] gal_dir       Directory containing real galaxy catalogs.
     @param[in] ps_dir        Directory containing cosmological power spectrum inputs from iCosmo.
+    @param[in] opt_psf_dir   Directory containing the optical PSF models for ground and space
+                             variable PSF simulations.
     @param[in] atmos_ps_dir  Directory containing atmospheric power spectrum inputs based on
                              Mathematica numerical integration.
     @param[in] public_dir    Directory containing files to be distributed publicly.
@@ -152,8 +155,8 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
     # possible branches.
     branches = [ (experiment, obs_type, shear_type,
                   builders[experiment](root, obs_type, shear_type,
-                                       gal_dir, ps_dir, atmos_ps_dir, public_dir, truth_dir,
-                                       preload, nproc))
+                                       gal_dir, ps_dir, opt_psf_dir, atmos_ps_dir, public_dir,
+                                       truth_dir, preload, nproc))
                         for experiment in experiments
                         for obs_type in obs_types
                         for shear_type in shear_types ]

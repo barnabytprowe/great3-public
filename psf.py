@@ -26,7 +26,7 @@ import galsim
 import numpy as np
 from . import constants
 
-def makeBuilder(obs_type, variable_psf, multiepoch, shear_type, atmos_ps_dir):
+def makeBuilder(obs_type, variable_psf, multiepoch, shear_type, opt_psf_dir, atmos_ps_dir):
     """Return a PSFBuilder appropriate for the given options.
 
     @param[in] obs_type     Observation type: either "ground" or "space".
@@ -38,11 +38,13 @@ def makeBuilder(obs_type, variable_psf, multiepoch, shear_type, atmos_ps_dir):
                             determination of how many subfields to use per field, and whether there
                             are so few PSFs that we have to force them to follow the seeing
                             distribution, not any other reason.
+    @param[in] opt_psf_dir  Directory with the optical PSF models for ground and space
+                            variable PSF simulations.
     @param[in] atmos_ps_dir Directory with tabulated atmospheric PSF anisotropy power spectra.
     """
     if obs_type == "space" or obs_type == "ground":
         if variable_psf:
-            return VariablePSFBuilder(obs_type, multiepoch, shear_type, atmos_ps_dir)
+            return VariablePSFBuilder(obs_type, multiepoch, shear_type, opt_psf_dir, atmos_ps_dir)
         else:
             return ConstPSFBuilder(obs_type, multiepoch, shear_type)
     else:
@@ -780,7 +782,7 @@ class VariablePSFBuilder(PSFBuilder):
     dlog_theta_0 = (log_max_theta_0 - log_min_theta_0) / (n_theta_0 - 1)
     theta_0_grid = np.logspace(np.log10(min_theta_0), np.log10(max_theta_0), n_theta_0)
 
-    def __init__(self, obs_type, multiepoch, shear_type, atmos_ps_dir):
+    def __init__(self, obs_type, multiepoch, shear_type, opt_psf_dir, atmos_ps_dir):
         # First, a sanity check: we require nrows == ncols for the GalSim lensing engine (in order
         # to have a square grid), so we check for that before attempting any calculations for
         # variable PSF, ground-based sims.
@@ -793,6 +795,7 @@ class VariablePSFBuilder(PSFBuilder):
         self.variable_psf = True # by definition, so it doesn't get passed in as an arg
         self.shear_type = shear_type
         self.atmos_ps_dir = atmos_ps_dir
+        self.opt_psf_dir = opt_psf_dir
 
         # Now that we've specified an obs_type, we can figure out the tile structure:
         self.n_tiles = self.n_tile_linear[self.obs_type]**2
@@ -1019,7 +1022,7 @@ class VariablePSFBuilder(PSFBuilder):
         #
         # Need to import the optical PSF modules for space or ground depending on obs_type.
         import sys
-        sys.path.append('../inputs/optical-psfs')
+        sys.path.append(self.opt_psf_dir)
         if self.obs_type == "ground":
             import ground_optical_psf
         else:
@@ -1064,7 +1067,8 @@ class VariablePSFBuilder(PSFBuilder):
                     new_model = \
                         ground_optical_psf.OpticalPSFModel(
                             position_list_filename = \
-                            '../inputs/optical-psfs/ground_optical_psf_zernike_coefficients_41x41/ZEMAXInput.dat',
+                                os.path.join(self.opt_psf_dir,
+                                             'ground_optical_psf_zernike_coefficients_41x41/ZEMAXInput.dat'),
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],
@@ -1079,7 +1083,8 @@ class VariablePSFBuilder(PSFBuilder):
                     new_model = \
                         space_optical_psf.OpticalPSFModel(
                             filename = \
-                            '../inputs/optical-psfs/afta_wfirst_example_psf_exaggerated.fields_and_coefs.fits',
+                                os.path.join(self.opt_psf_dir,
+                                             'afta_wfirst_example_psf_exaggerated.fields_and_coefs.fits'),
                             lam = self.lam[self.obs_type],
                             diameter = self.diam[self.obs_type],
                             obscuration = self.obscuration[self.obs_type],

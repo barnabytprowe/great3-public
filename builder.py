@@ -58,8 +58,8 @@ class SimBuilder(object):
             cls.multiepoch = multiepoch
         return cls
 
-    def __init__(self, root, obs_type, shear_type, gal_dir, ps_dir, atmos_ps_dir, public_dir,
-                 truth_dir, preload=False, nproc=-1):
+    def __init__(self, root, obs_type, shear_type, gal_dir, ps_dir, opt_psf_dir, atmos_ps_dir,
+                 public_dir, truth_dir, preload=False, nproc=-1):
         """Initialize a builder for the given obs_type and shear_type.
 
         @param[in] root         Root directory for generated files
@@ -67,6 +67,8 @@ class SimBuilder(object):
         @param[in] shear_type   Type of shear field to generate: either "constant" or "variable"
         @param[in] gal_dir      Directory with real galaxy catalog information
         @param[in] ps_dir       Directory with tabulated iCosmo shear power spectra.
+        @param[in] opt_psf_dir  Directory with the optical PSF models for ground and space
+                                variable PSF simulations.
         @param[in] atmos_ps_dir Directory with tabulated atmospheric PSF anisotropy power spectra.
         @param[in] public_dir   Directory for placing files to be distributed publicly.
         @param[in] truth_dir    Directory containing files used for metric evaluation.
@@ -84,6 +86,7 @@ class SimBuilder(object):
                                                       variable_psf=self.variable_psf,
                                                       multiepoch=self.multiepoch,
                                                       shear_type=self.shear_type,
+                                                      opt_psf_dir=opt_ps_dir,
                                                       atmos_ps_dir=atmos_ps_dir)
         self.shear_builder = great3sims.shear.makeBuilder(shear_type=shear_type, obs_type=obs_type,
                                                           multiepoch=self.multiepoch, ps_dir=ps_dir)
