@@ -22,6 +22,7 @@
 # DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""File containing the classes that generate parameters and catalogs for shear."""
 import galsim
 import numpy as np
 from . import constants
@@ -29,8 +30,8 @@ from . import constants
 def makeBuilder(shear_type, obs_type, multiepoch, ps_dir):
     """Return a ShearBuilder appropriate for the given options.
 
-    @param[in] shear_type  Shear field type: either "constant" or "variable"
-    @param[in] obs_type    Observation type: either "ground" or "space"
+    @param[in] shear_type  Shear field type: either "constant" or "variable".
+    @param[in] obs_type    Observation type: either "ground" or "space".
     @param[in] multiepoch  Multiepoch?  True or False
     @param[in] ps_dir      Directory with tabulated iCosmo shear power spectra.
     """
@@ -42,41 +43,41 @@ def makeBuilder(shear_type, obs_type, multiepoch, ps_dir):
         raise ValueError("Invalid shear_type: %s - must be 'constant' or 'variable'" % shear_type)
 
 class ShearBuilder(object):
+    """A ShearBuilder is a class that can carry out the steps necessary to define a shear field for
+    some galaxy population in GREAT3.  It must be able to generate parameters of the shear field,
+    and assign them to galaxies in a catalog."""
 
     def generateFieldParameters(self, rng, field_index):
-        """Return a dict of metaparameters for the given field.
-        These will be passed to generateCatalog when it is called.
+        """Return a dict of metaparameters for the given field. These will be passed to
+        generateCatalog() when it is called.
 
-        @param[in] rng          A galsim.BaseDeviate to be used for
-                                any random numbers.
-        @param[in] field_index  Index of the field of images being simulated
+        @param[in] rng          A galsim.BaseDeviate to be used for any random numbers.
+        @param[in] field_index  Index of the field of images being simulated.
         """
         raise NotImplementedError("ShearBuilder is abstract.")
 
     def generateSubfieldParameters(self, rng, subfield_index, field_parameters):
-        """Return a dict of metaparameters for the given subfield.
-        These will be passed to generateCatalog when it is called.
+        """Return a dict of metaparameters for the given subfield. These will be passed to
+        generateCatalog() when it is called.
 
-        @param[in] rng                     A galsim.BaseDeviate to be used for
-                                           any random numbers.
-        @param[in] subfield_index          Index of patch of sky being simulated
-        @param[in] field_parameters        Output from generateFieldParameters.
+        @param[in] rng                     A galsim.BaseDeviate to be used for any random numbers.
+        @param[in] subfield_index          Index of patch of sky being simulated.
+        @param[in] field_parameters        Output from generateFieldParameters().
         """
         raise NotImplementedError("ShearBuilder is abstract.")
 
     def generateEpochParameters(self, rng, subfield_index, epoch_index):
-        """Return a dict of metaparameters for the given epoch.
-        These will be passed to generateCatalog when it is called.
+        """Return a dict of metaparameters for the given epoch. These will be passed to
+        generateCatalog() when it is called.
 
-        @param[in] rng          A galsim.BaseDeviate to be used for
-                                any random numbers.
+        @param[in] rng          A galsim.BaseDeviate to be used for any random numbers.
         @param[in] epoch_index  Index of the epoch of a given subfield being simulated.
         """
         raise NotImplementedError("ShearBuilder is abstract.")
 
     def generateCatalog(self, rng, catalog, parameters, offsets, subfield_index):
-        """Fill the g1 and g2 columns of the given catalog with the
-        lensing shear values to apply at each point.
+        """Fill the g1 and g2 columns of the given catalog with the lensing shear and magnification
+        values to apply at each point.
 
         @param[in]     rng         A galsim.BaseDeviate to be used for any random numbers.
         @param[in,out] catalog     A structured NumPy array to fill.  The 'index', 'x',
@@ -85,9 +86,9 @@ class ShearBuilder(object):
                                    shear.  The 'g1' and 'g2' columns should be filled with this
                                    method.  Other columns may be present as well, and should be
                                    ignored.
-        @param[in]     parameters  A dict of metaparameters, as returned by the
-                                   generateParameters() method.
-        @param[in]     offsets     Offsets of this subfield with respect to the first in the field.
+        @param[in]     parameters  A dict of metaparameters, as returned by the generateParameters()
+                                   method.
+        @param[in]     offsets     Offset of this subfield with respect to the first in the field.
         @param[in] subfield_index  Index of this subfield within the branch, used to construct a
                                    unique object ID for each galaxy.
         """
@@ -95,6 +96,10 @@ class ShearBuilder(object):
 
 class ConstantShearBuilder(ShearBuilder):
     """ShearBuilder for constant shear fields.
+
+    We assume that constant shear branches contain a number of fields, each with a randomly oriented
+    shear with some minimum and maximum possible value.  Shear magnitudes are chosen randomly within
+    the unit disk, which emphasizes somewhat larger shear values.
     """
 
     def __init__(self, obs_type, multiepoch, min_g=1E-2, max_g=5E-2):
@@ -104,6 +109,7 @@ class ConstantShearBuilder(ShearBuilder):
         self.multiepoch = multiepoch
 
     def generateFieldParameters(self, rng, field_index):
+        """Generate the constant shear values (two components) for this field."""
         theta = 2.0*rng()*np.pi
         shear_rng = galsim.DistDeviate(rng, function = lambda g : g,
                                        x_min = self.min_g, x_max = self.max_g)
@@ -111,16 +117,20 @@ class ConstantShearBuilder(ShearBuilder):
         return dict(g1=g*np.cos(2.0*theta), g2=g*np.sin(2.0*theta), mu=1.)
 
     def generateSubfieldParameters(self, rng, subfield_index, field_parameters):
-        # For the constant shear case, the results for the subfield are the same as those for the
-        # field.  So just pass the field_parameters along without doing anything else.
+        """Generate the constant shear values (two components) for this subfield.  For constant
+        shear, these are the same as the shear values for the field to which the subfield
+        belongs."""
         return field_parameters
 
     def generateEpochParameters(self, rng, subfield_index, epoch_index):
         raise NotImplementedError("ConstantShearBuilder makes shear parameters at field level!")
 
     def generateCatalog(self, rng, catalog, parameters, offsets, subfield_index):
-        # offsets is not actually relevant yet, but we put it as a placeholder for variable shear,
-        # where it's necessary.
+        """Put the shear value for this field into the galaxy catalog.
+
+        For constant shear within the field, the offset of the subfield within the field is not
+        relevant, so this argument does nothing.
+        """
         xsize = constants.xsize[self.obs_type][self.multiepoch]
         ysize = constants.ysize[self.obs_type][self.multiepoch]
         catalog["x_field_pos"] = (catalog["x"]+1+0.5*xsize)/xsize-1
@@ -133,6 +143,10 @@ class ConstantShearBuilder(ShearBuilder):
 
 class VariableShearBuilder(ShearBuilder):
     """ShearBuilder for variable shear fields.
+
+    For variable shear, we assume that each field has an underlying shear field which is sampled at
+    a different subset of positions for each subfield.  The shears are drawn according to a
+    cosmological shear power spectrum multiplied by some nuisance function.
     """
     # Define some basic parameters related to our grid settings.  Note that the real ell_max is not
     # as given here, because we use multiple offset grids to access smaller scales / higher ell.
@@ -144,7 +158,7 @@ class VariableShearBuilder(ShearBuilder):
     # We define a pivot/central scale for the nuisance function based on a geometric mean of the
     # min, max usable ell values.
     ell_piv = np.sqrt(ell_min*ell_max)
-    # Define some things we need to construct filenames for tabulated cosmological shear power
+    # Define some variables we need to construct filenames for tabulated cosmological shear power
     # spectra.
     infile_pref = 'cosmo-fid.zmed'
     zmed_str = ['0.75', '1.00', '1.25']
@@ -158,8 +172,8 @@ class VariableShearBuilder(ShearBuilder):
     cached_ps_tab = None
     cached_ps_nuisance = None
     cached_ps = None
-    # Include a multiplicative factor for the shear power spectrum to make metric more sensitive to
-    # m.  This will be applied to all randomly-constructed shear power spectra.
+    # Include a multiplicative factor for the shear power spectrum to make the metric more sensitive
+    # to m.  This will be applied to all randomly-constructed shear power spectra.
     mult_factor = 2.
 
     def __init__(self, ps_dir, obs_type, multiepoch):
@@ -168,6 +182,7 @@ class VariableShearBuilder(ShearBuilder):
         self.multiepoch = multiepoch
 
     def generateFieldParameters(self, rng, field_index):
+        """Generate the parameters that determine the shear power spectrum for this field."""
         # Need to decide on parameters for the cosmological part of the power spectrum first.
         # For this, we just need to choose a single random number to interpolate between our
         # cosmological P(k) that are tabulated from iCosmo.
@@ -185,16 +200,16 @@ class VariableShearBuilder(ShearBuilder):
         return dict(ps_tab=ps_tab, ps_nuisance=ps_nuisance)
 
     def generateSubfieldParameters(self, rng, subfield_index, field_parameters):
-        # For the variable shear case, the power spectrum for each subfield is the same as for the
-        # subfield overall.  So just pass the field_parameters along without doing anything else.
+        """Generate the shear power spectrum parameters for this subfield.  This is the same as for
+        the field, so this function is a no-op."""
         return field_parameters
 
     def generateEpochParameters(self, rng, subfield_index, epoch_index):
         raise NotImplementedError("VariableShearBuilder makes shear parameters at field level!")
 
     def generateCatalog(self, rng, catalog, parameters, offsets, subfield_index):
-        # Here's where most of the work happens.
-        #
+        """For a galaxy catalog with positions included, determine the lensing shear and
+        magnification to assign to each galaxy in the catalog."""
         # We need a cache for a grid of shear values covering the entire field, i.e., including all
         # possible positions in all subfields (modulo sub-pixel offsets from the subfield grid -
         # we're not trying to take those into account).  If there is nothing in the cache for this
@@ -243,7 +258,7 @@ class VariableShearBuilder(ShearBuilder):
 
             # Define the grid on which we want to get shears.
             # This is a little tricky: we have a setup for subfield locations within the field that
-            # is defined in builder.py function generateSubfieldOffsets.  The first subfield is
+            # is defined in builder.py function generateSubfieldOffsets().  The first subfield is
             # located at the origin, and to represent it alone, we would need a constants.nrows x
             # constants.ncols grid of shears.  But since we subsample by a parameter given as
             # constants.subfield_grid_subsampling, each grid dimension must be larger by that
@@ -269,7 +284,7 @@ class VariableShearBuilder(ShearBuilder):
             # the calculation is done.
 
         # Now get the shears/convergences for each galaxy position in the
-        # catalog.  This is fastest if done all at once, with one call to getLensing.  And this is
+        # catalog.  This is fastest if done all at once, with one call to getLensing().  And this is
         # actually slightly tricky, because we have to take into account: 
         #    (1) The position of the galaxy within the subfield.
         #    (2) The offset of the subfield with respect to the field.
