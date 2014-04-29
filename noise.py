@@ -22,6 +22,7 @@
 # DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""File containing the classes that generate parameters for pixel noise in the images."""
 import galsim.noise
 import numpy
 
@@ -31,29 +32,30 @@ def makeBuilder(obs_type, multiepoch, variable_psf):
     """Return a NoiseBuilder appropriate for the given options.
 
     @param[in] obs_type      Observation type: either "ground" or "space"
-    @param[in] multiepoch    If True, this is a multiepoch simulation, and this
-                             is just the noise of a single exposure.  If False,
-                             the noise should be that of a coadd with
+    @param[in] multiepoch    If True, this is a multiepoch simulation, and this is just the noise of
+                             a single exposure.  If False, the noise should be that of a coadd with
                              constants.n_epochs epochs
-    @param[in] variable_psf  If True, this is a variable PSF branch, which affects the seeing
-                             within a given image.
+    @param[in] variable_psf  If True, this is a variable PSF branch, which affects the seeing within
+                             a given image.
     """
     return PlaceholderNoiseBuilder(
         obs_type=obs_type, multiepoch=multiepoch, variable_psf=variable_psf)
 
 class NoiseBuilder(object):
+    """A NoiseBuilder is a class that can carry out the steps necessary to define the pixel noise
+    model for GREAT3."""
 
     def generateEpochParameters(self, rng, subfield_index, epoch_index, seeing, noise_mult):
-        """Return a dict of metaparameters for the given subfield and
-        epoch.  These will be passed to generateCatalog when it
-        is called.
+        """Return a dict of metaparameters for the given subfield and epoch.  These will be passed
+        to generateCatalog() when it is called.
 
         @param[in] rng             A galsim.UniformDeviate to be used for any random numbers.
         @param[in] subfield_index  Index of the simulated patch of sky we are "observing" with this
                                    PSF.
         @param[in] epoch_index     Index of this "epoch" among those of the same subfield.
         @param[in] seeing          PSF FWHM in arcsec for ground-based data.  This quantity is
-                                   ignored for space-based data.
+                                   ignored for space-based data. In poor seeing, less noise is
+                                   necessary to achieve a given galaxy S/N.
         @param[in] noise_mult      A factor by which to multiply the noise variance when actually
                                    generating the noise.  The other quantities stored internally in
                                    the noise builder are not modified.  Do not use this to change
@@ -75,25 +77,15 @@ class NoiseBuilder(object):
         raise NotImplementedError("NoiseBuilder is abstract.")
 
     def addStarImageNoise(self, rng, parameters, snr, image):
-        """Add noise to a real-PSF star postage stamp.
+        """Add noise to a star postage stamp in a variable PSF branch.
         """
         raise NotImplementedError("NoiseBuilder is abstract.")
 
 class PlaceholderNoiseBuilder(NoiseBuilder):
     """
-    Some notes from MJ about what the real thing (non-placeholder) ought to look like:
-
-    I think it should just have the parameters for CCDNoise: sky_level, gain, read_noise.
-
-    For ground, the sky_level should definitely vary. We could keep the other two constant probably.
-
-    For space, I guess sky_level is either 0 or very low. And probably everything stays constant.
-
-    Also, we discussed having the galaxies have a minimum S/N, so we need to somehow couple the
-    parameters here to the range of flux values we choose for the galaxies. We can do it by hand if
-    we have to, but it might be nice to have the "maximum variance" be accessible to the galaxy
-    builder. So perhaps a getMaxVariance() function here. And then we could pass the noise_builder
-    to galaxy_builder.generateSubfieldParameters.
+    A PlaceholderNoiseBuilder includes a simple noise model: just Gaussian noise with the same
+    variance throughout the entire image.  While this is overly simplistic, it is what was used for
+    GREAT3, so we never made a more complex NoiseBuilder.
     """
     def __init__(self, obs_type, multiepoch, variable_psf):
         self.obs_type = obs_type
@@ -105,12 +97,13 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
             self.max_var_tab = galsim.LookupTable(self.fwhm_vals, max_var_vals, f_log=True)
 
     def generateEpochParameters(self, rng, subfield_index, epoch_index, seeing, noise_mult):
+        """Generate the noise parameters for this epoch, given its seeing."""
         if self.multiepoch:
             n_epochs = constants.n_epochs
-            # The next line accounts for the fact that we've defined good values of noise variance
-            # for single-epoch data, so if we change the pixel scale in the multiepoch data (as we
-            # do for space) then the noise variance in the multiepoch sims should be made 4x as
-            # large (corresponding to collection of 4x as many sky photons in a given pixel).
+            # The next line accounts for the fact that we've defined values of noise variance for
+            # single-epoch data, so if we change the pixel scale in the multiepoch data (as we do
+            # for space) then the noise variance in the multiepoch sims should be made 4x as large
+            # (corresponding to collection of 4x as many sky photons in a given pixel).
             noise_mult *= \
                 (constants.pixel_scale[self.obs_type][True]/constants.pixel_scale[self.obs_type][False])**2
         else:
@@ -123,11 +116,11 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
             self.min_variance = 1.35e-3
             self.max_variance = 1.40e-3
         else:
-            # Interpolate between tabulated values.  Note that (I believe) changing the value of
-            # noise variance based on the per-epoch seeing is not what we want; we want to preserve
-            # the fact that S/N differs for good- and bad-seeing images.  So for single epoch, we
-            # use the seeing in that epoch.  For multi-epoch or variable PSF (where there are
-            # multiple values per tile), we use some effective seeing, the harmonic mean.
+            # Interpolate between tabulated values.  Note that changing the value of noise variance
+            # based on the per-epoch seeing is not what we want; we want to preserve the fact that
+            # S/N differs for good- and bad-seeing images.  So for single epoch, we use the seeing
+            # in that epoch.  For multi-epoch or variable PSF (where there are multiple values per
+            # tile), we use some effective seeing, the harmonic mean.
             if not self.multiepoch and not self.variable_psf:
                 effective_seeing = seeing
             else:
@@ -154,8 +147,11 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
         return dict(variance=variance*self.noise_mult)
 
     def addNoise(self, rng, parameters, image, current_var):
+        """Actually add noise according to our noise model and the given variance to a postage stamp
+        image.  This includes whitening the noise if it's a real galaxy image."""
         # Depending on the path we've taken here, this could be an array of length 1, or a scalar.
-        # Make sure it's just a scalar so galsim doesn't barf later on.
+        # Make sure it's just a scalar (not a length-1 NumPy array) so that we don't run into issues
+        # later on.
         variance = parameters['variance']
         if isinstance(variance, numpy.ndarray):
             variance = variance[0]
@@ -166,7 +162,7 @@ class PlaceholderNoiseBuilder(NoiseBuilder):
         new_noise.applyTo(image)
 
     def addStarImageNoise(self, rng, parameters, snr, image):
-        """Add noise to a star postage stamp image.
+        """Add noise to a star postage stamp image in a variable PSF branch.
         """
         if self.variable_psf:
             # Add noise with the same variance as in the galaxy image for this epoch, and adjust
