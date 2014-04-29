@@ -25,6 +25,7 @@
 """File containing the classes that generate parameters and catalogs for PSFs."""
 import galsim
 import numpy as np
+import os
 from . import constants
 
 def makeBuilder(obs_type, variable_psf, multiepoch, shear_type, opt_psf_dir, atmos_ps_dir):
