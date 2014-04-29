@@ -22,6 +22,11 @@
 # DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+This file contains the SimBuilder class that does the heavy lifting; it coordinates all the steps
+that are needed to generate parameters, catalogs, config files, images, and image packages for a
+given GREAT3 branch (experiment, data type, shear type).
+"""
 import os
 import datetime
 import getpass
@@ -46,7 +51,7 @@ class SimBuilder(object):
     @staticmethod
     def customize(experiment, real_galaxy=None, variable_psf=None, multiepoch=None):
         """Create a custom subclass of SimBuilder with class variables overridden from
-        their default (control experiment) values.
+        their default (control experiment) values depending on what keyword arguments are set.
         """
         cls = type(experiment, (SimBuilder,), dict())
         cls.experiment = experiment
@@ -60,28 +65,31 @@ class SimBuilder(object):
 
     def __init__(self, root, obs_type, shear_type, gal_dir, ps_dir, opt_psf_dir, atmos_ps_dir,
                  public_dir, truth_dir, preload=False, nproc=-1):
-        """Initialize a builder for the given obs_type and shear_type.
+        """Initialize a builder for the given `obs_type` and `shear_type`.
 
-        @param[in] root         Root directory for generated files
-        @param[in] obs_type     Type of observation to simulate: either "ground" or "space"
-        @param[in] shear_type   Type of shear field to generate: either "constant" or "variable"
-        @param[in] gal_dir      Directory with real galaxy catalog information
+        @param[in] root         Root directory for generated files.
+        @param[in] obs_type     Type of observation to simulate: either "ground" or "space".
+        @param[in] shear_type   Type of shear field to generate: either "constant" or "variable".
+        @param[in] gal_dir      Directory with real galaxy catalog information.
         @param[in] ps_dir       Directory with tabulated iCosmo shear power spectra.
         @param[in] opt_psf_dir  Directory with the optical PSF models for ground and space
                                 variable PSF simulations.
         @param[in] atmos_ps_dir Directory with tabulated atmospheric PSF anisotropy power spectra.
         @param[in] public_dir   Directory for placing files to be distributed publicly.
-        @param[in] truth_dir    Directory containing files used for metric evaluation.
+        @param[in] truth_dir    Directory for placing files to be used for metric evaluation.
         @param[in] preload      Preload the RealGalaxyCatalog images to speed up generation of large
                                 numbers of real galaxies?  Note that for parametric galaxy branches,
-                                the catalog is never preloaded. (default = False)
-        @param[in] nproc        How many processes to use in the config file.  (default = -1)
+                                the catalog is never preloaded. [default = False]
+        @param[in] nproc        How many processes to use in the config file.  [default = -1]
         """
         self.obs_type = obs_type
         self.shear_type = shear_type
         self.public_dir = public_dir
         self.truth_dir = truth_dir
         self.preload = preload
+        # Below we initialize the builders for the PSF, shear, galaxy population, and noise field.
+        # They each require various bits of information as appropriate (e.g., only the PSF builder
+        # needs to know where information about atmospheric PSFs lives).
         self.psf_builder = great3sims.psf.makeBuilder(obs_type=obs_type,
                                                       variable_psf=self.variable_psf,
                                                       multiepoch=self.multiepoch,
@@ -99,7 +107,11 @@ class SimBuilder(object):
         self.noise_builder = great3sims.noise.makeBuilder(obs_type=obs_type,
                                                           multiepoch=self.multiepoch,
                                                           variable_psf = self.variable_psf)
+        # We also initialize a mapper, which assists with i/o for this branch.  It knows how to make
+        # directory and file names depending on the branch, and what types of files need to be
+        # output for that branch.
         self.mapper = great3sims.mapper.Mapper(root, self.experiment, obs_type, shear_type)
+        # And store some additional necessary information.
         self.n_epochs = constants.n_epochs if self.multiepoch else 1
         self.nproc = nproc
 
@@ -128,7 +140,7 @@ class SimBuilder(object):
                                    (n_subfields, n_subfields_per_field) )
         n_fields = n_subfields / n_subfields_per_field
 
-        # Also check some things about the deep fields.
+        # Also check some things about the deep fields.  We need to figure out how many to make.
         n_deep_subfields = constants.n_deep_subfields
         if n_deep_subfields % n_subfields_per_field != 0:
             raise RuntimeError("%d deep subfields does not divide evenly into %d fields!" %\
@@ -145,39 +157,51 @@ class SimBuilder(object):
         # carried out in the same way.  The only difference comes in the noise builder, when
         # choosing the level of noise to add (all the way down at the level of epochs).  Even then,
         # we use the same typical noise variance for all stored quantities - so that galaxy
-        # selection can use them - and use a multiplicative factor to tell it to add less noise.
+        # selection can use them - and use a multiplicative factor to tell it to add less noise for
+        # the deep field.
 
-        # put together the basic parameters to be stored in metaparameters file
+        # Put together the basic parameters to be stored in the metaparameters file.
         self.parameters = {"metadata": metadata, "seed": seed, "pixel_scale": pixel_scale,
                            "n_fields": n_fields}
+        # And use the mapper to write them out.
         self.mapper.write(self.parameters, 'parameters', self.parameters)
+        # Now, initialize a RNG with the required seed.  We'll use that to set up seeds for
+        # everything else that follows.
         rng = galsim.UniformDeviate(seed)
+        # We also have to set up schema for catalogs and such.  We'll set up a basic schema here, as
+        # well as schema to be used for shear-related parameters.
         base_schema = [("index", int), ("x", int), ("y", int),
                        ("xshift", float), ("yshift", float),
                        ("xmin", int), ("xmax", int), ("ymin", int), ("ymax", int)]
         shear_schema = [("g1", float), ("g2", float), ("mu", float),
                        ("x_field_pos", int), ("y_field_pos", int), ("ID", int)]
-        seed += 1  # we could also draw random integers to set seeds, but based on a discussion, it
+        seed += 1  # We could also draw random integers to set seeds, but based on a discussion, it
                    # does not seem necessary
 
-        # Start a separate sequence for noise_seed.  The second number is just a random
-        # number that is much larger than the plausible number of items in the original
-        # seed sequence.  (It is phi * 10^6)
+        # Start a separate sequence for noise_seed, which will be used to make the noise fields in
+        # the images.  The second number is just a random number that is much larger than the
+        # plausible number of items in the original seed sequence.  (It is phi * 10^6.)
         noise_seed = seed + 1618033
 
         # Now we begin to loop over successively smaller units - starting with field, then subfield,
-        # then epoch.
+        # then epoch.  For each of these, we will generate the necessary parameters.
         for field_index in xrange(n_fields):
-            # A given field has the same shear and per-epoch PSF.
-            # The builders can decide what format to use for the results of generateFieldParameters.
-            # We don't actually care what that format is out here - we will just pass it along to
-            # generateSubfieldParameters or generateEpochParameters.  So we require internal
-            # consistency between the various generate*Parameters, but we should be able to switch
-            # parameter selection between the field/subfield/epoch layer without modifying this
-            # code, just modifying the builders themselves (in psf.py, shear.py, noise.py, or
-            # galaxies.py).
+            # A given field has the same shear and per-epoch PSF.  Thus, we set up the shear and PSF
+            # parameters at the field level.
+            #
+            # The builders can decide what format to use for the results of
+            # generateFieldParameters().  We don't actually care what that format is out here - we
+            # will just pass it along to generateSubfieldParameters() or generateEpochParameters(),
+            # which are other methods of the builders.  So we require internal consistency between
+            # the various generate*Parameters() methods, but we should be able to switch parameter
+            # selection between the field/subfield/epoch layer without modifying this code, just
+            # modifying the builders themselves (in psf.py, shear.py, noise.py, or galaxies.py).
             field_shear_parameters = self.shear_builder.generateFieldParameters(rng, field_index)
             field_psf_parameters = self.psf_builder.generateFieldParameters(rng, field_index)
+            # Now we set up a `field_parameters` dict which includes the field parameters we just
+            # generated for the shear and PSF, as well as other basic info like "which field is
+            # this", the offsets of subfields within the field (see call to
+            # generateSubfieldOffsets() below), the random seed, and some metadata.
             field_parameters = {
                 "shear": field_shear_parameters,
                 "psf": field_psf_parameters,
@@ -189,16 +213,22 @@ class SimBuilder(object):
                 "seed": seed,
                 }
             seed += 1
+            # Use the mapper to write the field parameters to file.
             self.mapper.write(field_parameters, 'field_parameters', field_parameters)
 
+            # Now loop over subfields within this field.
             field_min_subfield = field_index * n_subfields_per_field
             field_max_subfield = field_min_subfield + n_subfields_per_field - 1
             for subfield_index in xrange(field_min_subfield, field_max_subfield+1):
                 # A given subfield has the same shear (already determined at field level) and
                 # galaxies.  But to allow for flexibility later on, we'll have a
-                # generateSubfieldParameters for the shear builder anyway; it has to take the output
-                # of generateFieldParameters as an input.  For now, it's a no-op, but that might not
-                # be the case later on.
+                # generateSubfieldParameters() for the shear builder anyway; it has to take the
+                # output of generateFieldParameters() as an input.  For now, it's a no-op, returning
+                # the input as output - but that might not be the case later on.
+                #
+                # As at the field level, we then collect the subfield parameters (which are the
+                # field-level shear parameters and the galaxy parameters determined at the subfield
+                # level), plus some other necessary bits of data.
                 subfield_parameters = {
                     "shear": self.shear_builder.generateSubfieldParameters(rng, subfield_index,
                                                                            field_shear_parameters),
@@ -211,9 +241,12 @@ class SimBuilder(object):
                     "seed": seed,
                     }
                 seed += 1
+                # Include schema for the subfield-level parameters.
                 subfield_parameters["subfield_schema"] = \
                     (base_schema + shear_schema + subfield_parameters["galaxy"]["schema"])
+                # Use the mapper to write the subfield parameters to file.
                 self.mapper.write(subfield_parameters, 'subfield_parameters', subfield_parameters)
+                # Finally, loop over the epoch.
                 for epoch_index in xrange(self.n_epochs):
                     # Each epoch has its own PSF (already determined at field level) and noise.
                     # But the galaxies and shears were determined at the subfield level, so nothing
@@ -222,10 +255,11 @@ class SimBuilder(object):
                     epoch_parameters["psf"] = \
                         self.psf_builder.generateEpochParameters(rng, subfield_index, epoch_index,
                                                                  field_psf_parameters)
-                    # Determine multiplying factor for the sky variance based on whether we are in a
-                    # deep field or not.  Note that sky variance changes due to single
-                    # vs. multiepoch images are handled directly in the noise_builder, so they do
-                    # not need to be included here.
+                    # We also determine noise-related parameters at the epoch level.  So, here we
+                    # determine a multiplying factor for the sky variance based on whether we are in
+                    # a deep field or not.  Note that changes in the sky variance due to single
+                    # vs. multiepoch images are handled directly in the noise_builder (which knows
+                    # what branch we're in), so they do not need to be included here.
                     if subfield_index < n_reg_subfields:
                         noise_mult = 1.
                     else:
@@ -251,11 +285,12 @@ class SimBuilder(object):
                                                         + epoch_parameters["psf"]["schema"])
                     epoch_parameters["star_schema"] = \
                         base_schema + epoch_parameters["psf"]["schema"]
-                    # xdither, ydither say the amount of dithering between epochs of this subfield.
-                    # In contrast, epoch_offset (a tuple) is the amount of offsetting between this
-                    # subfield and the first one in the field.  This is not truly a per-epoch
-                    # parameter, however, it is included here so that the per-epoch catalog maker
-                    # (specifically, for PSFs) will be able to do its job.
+                    # `xdither`, `ydither` are the amount of dithering between epochs of this
+                    # subfield.  In contrast, `epoch_offset` (a tuple) is the amount of offsetting
+                    # between this subfield and the first one in the field, i.e., it's the same as
+                    # `subfield_offset`.  This is not truly a per-epoch parameter, however, it is
+                    # included here so that the per-epoch catalog maker (specifically, for PSFs)
+                    # will be able to do its job.
                     if self.multiepoch:
                         epoch_parameters["xdither"] = (2.0 * rng() - 1.0) * \
                                                       constants.epoch_shift_max
@@ -269,19 +304,25 @@ class SimBuilder(object):
         return seed
 
     def writeSubfieldCatalog(self, subfield_index):
-        """Given the subfield index, load the corresponding metaparameters and generate a catalog of
-        galaxies and shear values.
+        """Given the subfield index, load the corresponding metaparameters (previously generated by
+        writeParameters()), and use them to generate a catalog of galaxies and shear values.
         """
+        # Read the subfield and field parameters.
         subfield_parameters = self.mapper.read("subfield_parameters", subfield_index=subfield_index)
         field_parameters = self.mapper.read(
             "field_parameters",
             field_index = ( subfield_index / 
                             constants.n_subfields_per_field[self.shear_type][self.variable_psf] ) 
         )
+        # Set up a catalog with the appropriate schema.
         catalog = numpy.zeros(constants.nrows * constants.ncols,
                               dtype=numpy.dtype(subfield_parameters["subfield_schema"]))
         index = 0
+        # Use the given seed to initialize a RNG.
         rng = galsim.UniformDeviate(subfield_parameters["seed"])
+        # Loop over the galaxies and generate some basic numbers like where they belong in the image
+        # corresponding to this subfield, what is their centroid shift compared to the nominal
+        # position, etc.
         for row in xrange(constants.nrows):
             for col in xrange(constants.ncols):
                 # The numbers below are all in pixels.
@@ -300,21 +341,22 @@ class SimBuilder(object):
                 index += 1
 
         # Determine multiplying factor for the sky variance based on whether we are in a deep field
-        # or not.  Note that sky variance changes due to single vs. multiepoch images do not need to
-        # be included at all at this stage, because we want to impose our cuts based on whether the
-        # S/N would be 20 in a single combined image, not based on its value in the individual epoch
-        # images.  Also note that while the noise variance parameter output into the
-        # epoch_parameters files by the noise builder already includes this noise_mult for the deep
-        # fields (and any factors due to single vs. multiepoch which we do *not* want here), we have
-        # to recalculate the deep field noise multiplying factor because we're just going to use the
+        # or not.  Note that sky variance changes due to single vs. multiepoch images are not
+        # included at this stage, because we want to impose our cuts based on whether the S/N would
+        # be 20 in a single combined image, not based on its value in the individual epoch images.
+        # Also note that while the noise variance parameter output into the epoch_parameters files
+        # by the noise builder already includes this noise_mult for the deep fields (and any factors
+        # due to single vs. multiepoch which we do *not* want here), we have to recalculate the deep
+        # field noise multiplying factor because we're just going to use the
         # noise_builder.typical_variance which does not include any of those factors.
         if subfield_index < constants.n_subfields - constants.n_deep_subfields:
             noise_mult = 1.
         else:
             noise_mult = constants.deep_variance_mult
 
-        # We give it a value for seeing to use when selecting galaxies.  This calculation becomes
-        # more complex in the multi-epoch case since we have to decide on a relevant effective FWHM.
+        # We give the galaxy catalog generation routine a value for seeing to use when selecting
+        # galaxies.  This calculation becomes more complex in the multi-epoch case since we have to
+        # decide on a relevant effective FWHM.
         if self.obs_type == "space":
             effective_seeing = None
         else:
@@ -322,67 +364,85 @@ class SimBuilder(object):
             # we use the seeing as a proxy for it, so we don't have to start generating images.  If
             # this seems really worrisome, we could make some simple sims, derive approximate rules
             # for total PSF size including optics as well (which will mainly affect really
-            # good-seeing images), and use those instead of just the seeing.
+            # good-seeing images), and use those instead of just the atmospheric seeing.
             if not self.multiepoch and not self.variable_psf:
-                # This is just a scalar value.
+                # For single epoch images with a constant PSF, the FWHM is just a single (scalar)
+                # value for the entire subfield.
                 effective_seeing = field_parameters["psf"]["atmos_psf_fwhm"]
             else:
-                # This is a 1d numpy array of length n_epochs.
+                # This is a 1d numpy array of FWHM values.  We determine a single effective seeing
+                # value from it.
                 seeing = field_parameters["psf"]["atmos_psf_fwhm"]
                 effective_seeing = 1. / numpy.mean(1./seeing)
+        # The galaxy builder generates a catalog given some noise variance information (which
+        # determines galaxy S/N), and the effective seeing (for selecting galaxies that are
+        # resolved).
         self.galaxy_builder.generateCatalog(rng, catalog, subfield_parameters,
                                             self.noise_builder.typical_variance, noise_mult,
                                             effective_seeing)
+        # The shear builder generates shear values for the catalog.
         self.shear_builder.generateCatalog(rng, catalog, subfield_parameters["shear"],
                                            subfield_parameters["subfield_offset"], subfield_index)
+        # The mapper writes out the galaxy catalog for this subfield in the appropriate directory
+        # and file.
         self.mapper.write(catalog, "subfield_catalog", subfield_parameters)
 
     def writeEpochCatalog(self, subfield_index, epoch_index):
         """Given the subfield and epoch indices, load the epoch metaparameters and a
-        previously-generated subfield catalog, add per-object PSF parameter information (and
+        previously-generated subfield catalog.  Then, add per-object PSF parameter information (and
         possibly shift the centroids) to create and save an epoch catalog.
         """
+        # First, read in the stored parameter information and subfield catalog.
         epoch_parameters = self.mapper.read('epoch_parameters', subfield_index=subfield_index,
                                             epoch_index=epoch_index)
         subfield_catalog = self.mapper.read('subfield_catalog', epoch_parameters)
+        # Make a catalog for this epoch, according to the stored schema.
         epoch_catalog = numpy.zeros(constants.nrows * constants.ncols,
                                     dtype=numpy.dtype(epoch_parameters["epoch_schema"]))
+        # Initialize a RNG with the given seed.
         rng = galsim.UniformDeviate(epoch_parameters["seed"])
+        # First, just carry over values from the subfield catalog into the epoch catalog.
         for name, _ in epoch_parameters["subfield_schema"]:
             epoch_catalog[name] = subfield_catalog[name]
+        # Then, generate the PSF information for the catalog, given the parameters for this epoch.
         self.psf_builder.generateCatalog(rng, epoch_catalog, epoch_parameters,
                                          epoch_parameters["epoch_offset"], normalized=True)
+        # Write out the epoch-level catalog for the galaxies.
         self.mapper.write(epoch_catalog, "epoch_catalog", epoch_parameters)
+
+        # We also need a star catalog for this epoch.  To set up the positions in the catalog,
+        # figure out the size that each star postage stamp will cover.  (These should be the same as
+        # the sizes covered by galaxy postage stamps.)
         xsize = constants.xsize[self.obs_type][self.multiepoch]
         ysize = constants.ysize[self.obs_type][self.multiepoch]
+        # Then write star catalog entries, which depends on whether this is a variable PSF branch or
+        # not.
         if self.variable_psf:
-            # We have to write catalog entries indicating the "true" position within the **field**
-            # (not subfield).  We also have to write x, y entries that are used to place the objects
-            # on an image grid, the parameters of which are to be defined here.  Finally, let's
-            # define a DistDeviate to use to draw random values of S/N.  I decided on the function
-            # to use via the super-duper-scientific method of reading points off of Chihway's second
-            # dN/dmag plot in
-            # https://github.com/rmandelb/great3-private/issues/2#issuecomment-20482730 for the
-            # range of magnitudes where that function is roughly linear (i.e., excluding the bits
-            # where it's not linear since stars are often saturated and not used for PSF
-            # estimation).  On this plot, dN/dmag ~ 1000 (mag - 18).  To get dN/d(S/N), I used
-            # dN/d(S/N) ~ dN/dmag dmag/d(S/N),
-            # plus the fact that at fixed sky level, we can say
-            # mag = -2.5 log10(S/N) + A.
-            # I assumed S/N(mag=25)=25, so A=28.5.  Putting this together, we have
+            # We have to write catalog entries indicating the "true" star position within the
+            # **field** (not subfield).  We also have to write x, y entries that are used to place
+            # the objects on an image grid, the parameters of which are to be defined here.
+            #
+            # Finally, let's define a galsim.DistDeviate to use to draw random values of S/N for
+            # each star.  The distribution of S/N values comes from a catalog of main sequence stars
+            # for galactic longitude=180 degrees, in the I band, from the LSST imSim.  Reading
+            # numbers off a plot from Chihway Chang and assuming that the S/N of an I=25 star is 25,
+            # the function we get is
             # dN/d(S/N) ~ (mag - 18) / S/N
             #           ~ (-2.5 log10(S/N) + 10.5) / S/N.
+            # We assume that the distribution of star S/N values can go from 25 to 400, with higher
+            # S/N stars being excluded due to saturation.
             dist_deviate = galsim.DistDeviate(
                 rng,
                 function = lambda x : (-2.5*numpy.log10(x)+10.5)/x, x_min=25., x_max=400.)
 
-            # First, determine how many stars, which will determine the size of the catalog to
-            # write.  Note that this is for a single epoch/subfield, which means the number of stars
-            # should be 1/20 of those for the entire field.
+            # First, determine how many stars should be in this subfield, which will determine the
+            # size of the catalog to write.  Note that this is for a single subfield, which means
+            # the number of stars should be 1/20 of those for the entire field.
             n_star_linear = epoch_parameters["psf"]["n_star_linear"]
             star_catalog = numpy.zeros(n_star_linear * n_star_linear,
                                        dtype=numpy.dtype(epoch_parameters["star_schema"]))
             index = 0
+            # Loop over the entries in the star catalog.
             for row in xrange(n_star_linear):
                 for col in xrange(n_star_linear):
                     # The numbers below are in pixels, and are used to define image positions.
@@ -396,8 +456,10 @@ class SimBuilder(object):
                     record['ymax'] = (row + 1) * constants.ysize[self.obs_type][self.multiepoch] - 1
                     record['x'] = (record['xmin'] + record['xmax']) / 2
                     record['y'] = (record['ymin'] + record['ymax']) / 2
-                    # Here are some numbers that we'll only compute if it's the first epoch,
-                    # otherwise pull from cache:
+                    # Here are some numbers that we'll only compute if it's the first epoch.  Since
+                    # we want to represent the same star population in each epoch, we store them in
+                    # the cache after generating the first epoch, and read from the cache if it's
+                    # not the first epoch.
                     if epoch_index == 0:
                         record['xshift'] = sx
                         record['yshift'] = sy
@@ -415,7 +477,7 @@ class SimBuilder(object):
                         # estimate the PSF per exposure, they would legitimately select different
                         # sets of stars in the two cases.  (e.g., in the one long exposure, some
                         # stars might be saturated and unusable, whereas for fewer short exposures,
-                        # they could be used) We are glossing over the slight difference in star
+                        # they could be used.) We are glossing over the slight difference in star
                         # number density that should also occur, and just using the fact that the
                         # S/N distribution should be similar.
                         record['star_snr'] = dist_deviate()
@@ -434,6 +496,7 @@ class SimBuilder(object):
                 star_catalog['star_snr'] = self.cached_star_snr
 
         else:
+            # For constant PSF branches, the star catalog generation is much simpler.
             star_catalog = numpy.zeros(constants.nx_constpsf * constants.ny_constpsf,
                                        dtype=numpy.dtype(epoch_parameters["star_schema"]))
             index = 0
@@ -468,13 +531,17 @@ class SimBuilder(object):
             else:
                 star_catalog['xshift'] = self.cached_xshift
                 star_catalog['yshift'] = self.cached_yshift
+        # Given the basic catalog information generated above, make the catalog of PSF parameters
+        # (e.g., optical PSF and atmospheric PSF parameters) for each star.
         self.psf_builder.generateCatalog(rng, star_catalog, epoch_parameters,
                                          epoch_parameters["epoch_offset"], normalized=False)
+        # Write the star catalog to file in the appropriate location and format.
         self.mapper.write(star_catalog, "star_catalog", epoch_parameters)
 
     def writeStarTestCatalog(self, subfield_min, subfield_max):
         """Given a range of subfield and epoch indices, write a test catalog for generating star
-        images to check for oddities."""
+        images to check for oddities.  We want a small set of objects (suitable for eyeballing)
+        chosen in a representative way."""
         n_subfields = subfield_max + 1 - subfield_min
 
         # Define a final catalog with some additional information about subfield / epoch.  That
@@ -487,22 +554,26 @@ class SimBuilder(object):
         test_schema.append(("star_catalog_entry", int))
         test_catalog = numpy.zeros(n_subfields * self.n_epochs, dtype=numpy.dtype(test_schema))
 
-        # Now loop over subfields and epochs
+        # Now loop over subfields and epochs.
         test_ind = 0
         for subfield_index in xrange(subfield_min, subfield_max+1):
             for epoch_index in xrange(self.n_epochs):
-                # Read in star catalog
+                # Read in the epoch parameters and star catalog.
                 epoch_parameters = self.mapper.read('epoch_parameters',
                                                     subfield_index=subfield_index,
                                                     epoch_index=epoch_index)
                 star_catalog = self.mapper.read("star_catalog", epoch_parameters)
-                # What we do with the catalog depends on whether it's constant or variable PSF.  We
-                # have to choose which star in the catalog we want to use differently in these cases.
+                # What we do with the catalog depends on whether it's a constant or variable PSF
+                # branch.  We have to choose which star in the catalog we want to use differently in
+                # these cases.
                 if not self.variable_psf:
-                    # Transfer first entry (non-offset one) to test_catalog.
+                    # For constant PSF, just transfer the first entry (i.e., the non-offset one) to
+                    # the test catalog.
                     star_cat_ind = 0
                 else:
-                    # Find the index of the most aberrated PSF.
+                    # For variable PSF, find the index of the most aberrated PSF in the catalog.  In
+                    # general, more aberrated PSFs are the ones that might have the most numerical
+                    # difficulties in the rendering process.
                     tot_aber = numpy.zeros(len(star_catalog))
                     for aber in self.psf_builder.use_aber:
                         tot_aber += star_catalog[self.psf_builder.opt_schema_pref+aber]**2
@@ -519,10 +590,12 @@ class SimBuilder(object):
                 test_catalog["epoch"][test_ind] = epoch_index
                 test_catalog["star_catalog_entry"][test_ind] = star_cat_ind
                 test_ind += 1
-        # Write to file.
+        # Write to the appropriate file and directory as specified by the mapper.
         self.mapper.write(test_catalog, "star_test_catalog", epoch_parameters)
 
     def writeConfig(self, experiment, obs_type, shear_type, subfield_min, subfield_max):
+        """This function writes yaml-style config files that can be used by GalSim to automatically
+        generate the galaxy, star, and test images for this branch and range of subfields."""
 
         # Build the dictionary, which we'll output with yaml.dump()
         # We start with the PSF dict, which has much in common with the gal dict.
@@ -705,7 +778,7 @@ class SimBuilder(object):
             del d['output']['nproc']
 
         if self.real_galaxy:
-            # Need to add the RealGalaxyCatalog to input
+            # Need to add the RealGalaxyCatalog to input.
             d['input']['real_catalog'] = {
                 'dir' : os.path.abspath(self.galaxy_builder.gal_dir),
                 'file_name' : self.galaxy_builder.rgc_file,
@@ -721,7 +794,7 @@ class SimBuilder(object):
             yaml.dump(d, f, indent=4, Dumper=Dumper)
 
         #
-        # (3) Finally, make a config file for the "StarTest" images
+        # (3) Finally, make a config file for the "StarTest" images.
         #
 
         # Easiest to just start over here.
@@ -771,40 +844,53 @@ class SimBuilder(object):
 
 
     def writeGalImage(self, subfield_index, epoch_index):
-        """This method builds and writes the galaxy images to disk.
+        """This method builds and writes the galaxy images for a given subfield and epoch to disk.
+        It was not used for generation of the GREAT3 simulations, since the GalSim config interface
+        allows for the work done here to be parallelized much more.  However, for testing and
+        generation of small images this method can be useful.
         """
+        # Read in the epoch parameters and catalog.
         epoch_parameters = self.mapper.read("epoch_parameters", subfield_index=subfield_index,
                                             epoch_index=epoch_index)
         epoch_catalog = self.mapper.read("epoch_catalog", epoch_parameters)
         seed = epoch_parameters["noise_seed"]
 
+        # Define basic numbers like pixel scale and size of postage stamps.
         pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
         xsize = constants.xsize[self.obs_type][self.multiepoch]
         ysize = constants.ysize[self.obs_type][self.multiepoch]
 
-        # Setup full image on which to place the postage stamps
+        # Set up the full image on which to place the postage stamps.
         galaxy_image = galsim.ImageF(constants.ncols * xsize, constants.nrows * ysize,
                                      scale=pixel_scale)
         galaxy_image.setOrigin(0,0)
 
-        # maximum sizes for padding RealGalaxy objects with noise
+        # Define the maximum sizes for padding RealGalaxy objects with noise.  This is necessary for
+        # 'real_galaxy' and 'full' branches.
         max_xsize = xsize + 2*(constants.centroid_shift_max + constants.epoch_shift_max)
         max_ysize = ysize + 2*(constants.centroid_shift_max + constants.epoch_shift_max)
 
-        # The GSObjects that are returned by the builders are in arcsec, so our galsim.Pixel needs
-        # to use arcsec as well.  However, some of the later manipulations (shifts of the centroid
-        # within the image carried out by the draw() function) will be in pixels.
+        # The GSObjects that are returned by the builders have scale sizes in arcsec, so our
+        # galsim.Pixel needs to use arcsec as well.  However, some of the later manipulations
+        # (shifts of the centroid within the image carried out by the draw() function) will be in
+        # pixels.
         pixel = galsim.Pixel(pixel_scale)
 
-        # We sometimes need a bit larger FFT than usual.
+        # We sometimes need a larger FFT than allowed by the default GSParams, so define a new
+        # GSParams that will allow the larger FFT.
         params = galsim.GSParams(maximum_fft_size=10240)
 
+        # We'll make a cache for the PSF object, since in constant PSF branches the PSF is the same
+        # for all galaxies.  This way, we only build the PSF object once.
         cached_psf_obj = None
+        # Loop over the objects in the galaxy catalog for this epoch.
         for record in epoch_catalog:
+            # Make the RNG.
             rng = galsim.UniformDeviate(seed)
             seed = seed + 1
 
-            # Build PSF (or take cached value if possible)
+            # Build PSF (or take cached value if possible).  If we have to build the PSF for the
+            # constant PSF branch, then save it to the cache.
             if not self.variable_psf:
                 if cached_psf_obj is None:
                     psf = self.psf_builder.makeGalSimObject(record, epoch_parameters["psf"])
@@ -814,17 +900,19 @@ class SimBuilder(object):
             else:
                 psf = self.psf_builder.makeGalSimObject(record, epoch_parameters["psf"])
 
-            # Build galaxy
+            # Build galaxy, apply the lensing shear and magnification, and convolve with the PSF.
             galaxy = self.galaxy_builder.makeGalSimObject(
                 record, epoch_parameters["galaxy"], xsize=max_xsize, ysize=max_ysize, rng=rng)
             galaxy.applyLensing(g1=record['g1'], g2=record['g2'], mu=record['mu'])
             final = galsim.Convolve([psf, pixel, galaxy], gsparams=params)
 
-            # Apply both offsets
+            # Apply both offsets: the one related to dithering between epochs (same for all objects
+            # in a given epoch), and the random shift of this particular object from the center of
+            # the postage stamp.
             offset = galsim.PositionD(epoch_parameters['xdither'] + record['xshift'],
                                       epoch_parameters['ydither'] + record['yshift'])
 
-            # Draw postage stamp
+            # Define postage stamp.
             bbox = galsim.BoundsI(
                 xmin=int(record['xmin']), ymin=int(record['ymin']),
                 xmax=int(record['xmax']), ymax=int(record['ymax']),
@@ -833,14 +921,16 @@ class SimBuilder(object):
             # Draw into the postage stamp.
             final.draw(stamp, normalization='f', dx=pixel_scale, offset=offset)
 
-            # Apply whitening if necessary:
+            # Apply whitening if necessary (i.e., for 'real_galaxy' and 'full' branches, which use
+            # real HST images).
             if hasattr(final, 'noise'):
                 current_var = final.noise.applyWhiteningTo(stamp)
             else:
                 current_var = 0.
 
             # The lines below are diagnostics that can be used to check that the actual S/N is
-            # fairly consistent with the estimated one.
+            # fairly consistent with the estimated one.  Turn it to True if you want to run this
+            # code.
             if False:
                 # G08 is the best possible S/N estimate:
                 #   S = sum W(x,y) I(x,y) / sum W(x,y)
@@ -893,25 +983,35 @@ class SimBuilder(object):
                     sn_size = -10.
                 print 'SN: ', record['gal_sn'], actual_sn_g08, sn_ellip_gauss, sn_size, \
                     record['bulge_n'], record['bulge_hlr'], record['bulge_flux']
+
+            # Now, actually add the noise to this postage stamp.
             self.noise_builder.addNoise(rng, epoch_parameters['noise'], stamp, current_var)
 
+        # Write the entire big image to the appropriate file, as determined by the mapper.
         self.mapper.write(galaxy_image, "image", epoch_parameters)
 
 
     def writePSFImage(self, subfield_index, epoch_index):
-        """This method builds and writes the star field images to disk.
+        """This method builds and writes the star field images for a particular subfield and epoch
+        to disk.  It was not used for generation of the GREAT3 simulations, since the GalSim config
+        interface allows for the work done here to be parallelized much more.  However, for testing
+        and generation of small images this method can be useful.
         """
+        # Read in the epoch parameters and star catalog.
         epoch_parameters = self.mapper.read("epoch_parameters", subfield_index=subfield_index,
                                             epoch_index=epoch_index)
         star_catalog = self.mapper.read("star_catalog", epoch_parameters)
         seed = epoch_parameters["noise_seed"]
 
+        # Define basic numbers like pixel scale and size of postage stamps.
         pixel_scale = constants.pixel_scale[self.obs_type][self.multiepoch]
         xsize = constants.xsize[self.obs_type][self.multiepoch]
         ysize = constants.ysize[self.obs_type][self.multiepoch]
+        # Make a galsim.Pixel representing the top-hat pixel.
         pixel = galsim.Pixel(pixel_scale)
 
-        # Make PSF image
+        # Set up the image for the star field.  Its size depends on whether this is a constant PSF
+        # or variable PSF branch.
         if self.variable_psf:
             n_star_linear = epoch_parameters["psf"]["n_star_linear"]
             star_image = galsim.ImageF(n_star_linear * xsize,
@@ -923,18 +1023,21 @@ class SimBuilder(object):
                                        scale=pixel_scale)
         star_image.setOrigin(0, 0)
 
+        # Set up a cache for the galsim.GSObject corresponding to this star.  This is useful for
+        # constant PSF branches, for which the star is the same in each star image (just shifted).
         cached_psf_obj = None
         for record in star_catalog:
             rng = galsim.UniformDeviate(seed)
             seed = seed + 1
 
+            # Define the bounds of this postage stamp.
             bbox = galsim.BoundsI(
                 xmin=int(record['xmin']), ymin=int(record['ymin']),
                 xmax=int(record['xmax']), ymax=int(record['ymax']),
             )
             stamp = star_image.subImage(bbox)
 
-            # Build PSF (or take cached value if possible)
+            # Build PSF (or take cached value if possible).
             if not self.variable_psf:
                 if cached_psf_obj is None:
                     psf = self.psf_builder.makeGalSimObject(record, epoch_parameters["psf"])
@@ -944,28 +1047,40 @@ class SimBuilder(object):
             else:
                 psf = self.psf_builder.makeGalSimObject(record, epoch_parameters["psf"])
 
+            # Convolve with the pixel response.
             final = galsim.Convolve([psf, pixel])
             offset = galsim.PositionD(record['xshift'],record['yshift'])
+            # Draw into the postage stamp, including the centroid shift with the draw() method
+            # (rather than actually shifting the GSObject).  The draw() `offset` keyword takes pixel
+            # units, rather than arcsec.
             final.draw(stamp, normalization='f', offset=offset)
+            # Only the variable PSF branches have noisy star fields, so add noise in that case.
             if self.variable_psf:
                 self.noise_builder.addStarImageNoise(
                     rng, epoch_parameters['noise'], record['star_snr'], stamp)
 
+        # Write the entire star field image to file.
         self.mapper.write(star_image, "starfield_image", epoch_parameters)
 
     def writeStarParameters(self, subfield_index, epoch_index):
-        """This method writes out a dict for the PSF shapes needed for metric calculation.
+        """This method writes out a dict for the PSF shapes needed for metric calculation.  The
+        metric calculation for constant shear requires us to know the direction of PSF anisotropy,
+        so we measure some of the star shapes from the star images.  (We cannot do this based on the
+        catalogs since the stars are the composition of an aberrated optical PSF and an atmospheric
+        PSF, for which the composite shape is not obvious.)
         """
         # Only do this for constant shear, not variable shear!  The star shapes are needed to create
         # the metric for the constant shear branch fits to (m, c) values.
         if self.shear_type == "variable":
             return
 
+        # Read in epoch parameters and a star catalog.
         epoch_parameters = self.mapper.read("epoch_parameters", subfield_index=subfield_index,
                                             epoch_index=epoch_index)
         star_catalog = self.mapper.read("star_catalog", epoch_parameters)
         seed = epoch_parameters["noise_seed"]
 
+        # Read in the star image.
         star_image = self.mapper.read("starfield_image", epoch_parameters)
 
         starshape_parameters = None
@@ -991,8 +1106,8 @@ class SimBuilder(object):
         # For variable PSF, choose a random subset of the stars to measure.  We can just use the
         # first N in the catalog, since they correspond to completely random positions in the field.
         if self.variable_psf:
-            # Barney suggested using 1% of the stars.  Use ceil() to make sure that we don't end
-            # up with zero for test runs with few stars.
+            # We will use 1% of the stars.  Use ceil() to make sure that we don't end up with zero
+            # for test runs with few stars.
             n_star_use = int(numpy.ceil(0.01*len(star_catalog)))
             sub_catalog = star_catalog[0:n_star_use]
             for record in sub_catalog:
@@ -1029,10 +1144,12 @@ class SimBuilder(object):
                                         "epoch_index": epoch_index,
                                         "n_star_actual": 0}
 
+        # Write the results to the appropriate file using the mapper.
         self.mapper.write(starshape_parameters, "starshape_parameters", starshape_parameters)
 
     def packagePublic(self, subfield_min, subfield_max):
-        """This method packages up the public outputs."""
+        """This method packages up the public outputs (no truth values) into a single big tarfile
+        for this branch.  We can choose to use a subset of the subfields if we wish."""
         import shutil
         import tarfile
 
@@ -1147,7 +1264,7 @@ class SimBuilder(object):
                                                       new_template =
                                                       "deep_galaxy_catalog-%(deep_subfield_index)03d")
             tar.add(outfile)
-            # ... and also copy to text file that gets added
+            # ... and also copy to text file that gets added to the tarball.
             outfile_no_ext = os.path.splitext(outfile)[0]
             great3sims.mapper.fitsToTextCatalog(outfile_no_ext)
             tar.add(outfile_no_ext + '.txt')
@@ -1174,7 +1291,7 @@ class SimBuilder(object):
                 outfile = root_rel_mapper.copySub(
                     sub_mapper, 'star_catalog', tmp_dict, star_use_cols,
                     new_template="deep_star_catalog-%(deep_subfield_index)03d")
-            # ... and also copy to text file that gets added 
+            # ... and also copy to text file that gets added to the tarball.
             outfile_no_ext = os.path.splitext(outfile)[0]
             great3sims.mapper.fitsToTextCatalog(outfile_no_ext)
             tar.add(outfile)
@@ -1208,8 +1325,8 @@ class SimBuilder(object):
             # all branches, we include this even for single epoch branches (for which the dithers
             # are all 0 since each image IS the first and only epoch).  We extract the xdither and
             # ydither from the epoch_parameters, and write a file for each subfield and epoch.
-            # These files are
-            # tiny, so let's write one for each subfield and epoch, in both yaml and txt format.
+            # These files are tiny, so let's write one for each subfield and epoch, in both yaml and
+            # txt format.
             for epoch_index in xrange(self.n_epochs):
                 tmp_dict["epoch_index"] = epoch_index
                 template, reader, writer = root_rel_mapper.mappings['epoch_parameters']
@@ -1369,11 +1486,12 @@ class SimBuilder(object):
 
         Currently, the offsets are required to be regular, so that the shear and PSF builders can
         simply make an overly dense grid compared to what's needed for a subfield, and use a subset
-        of its grid points.  We assume that the options for offsetting are on an
-        subfield_grid_subsampling x subfield_grid_subsampling grid.  This then gives
-        subfield_grid_subsampling^2 possible locations.  We then choose a random
-        n_subfields_per_field-1 of those options for the subfields that are not the first in the
-        field.
+        of its grid points.  (This eliminates the need to interpolate the shears, which is useful
+        since interpolation of shear fields was not tested in GalSim until after the GREAT3 sims
+        were made.)  We assume that the options for offsetting are on an subfield_grid_subsampling x
+        subfield_grid_subsampling grid.  This then gives subfield_grid_subsampling^2 possible
+        locations.  We then choose a random n_subfields_per_field-1 of those options for the
+        subfields that are not the first in the field.
 
         Offsets between subfields in a field are first specified as integers and are defined as the
         offset with respect to the first subfield in the field.  Then, we divide by the amount of
