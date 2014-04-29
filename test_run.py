@@ -1,4 +1,31 @@
 #!/sw64/bin/python2.7
+# Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted
+# provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions
+# and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+# conditions and the following disclaimer in the documentation and/or other materials provided with
+# the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to
+# endorse or promote products derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""Example script that can be used to run small amounts of GREAT3-like simulations (typically with
+fewer galaxies to save time).  This is useful for someone who is trying out the simulation code for
+the first time, or making small modifications that they want to test out before mass production."""
 
 import time
 import os
@@ -10,55 +37,67 @@ import numpy
 sys.path.append('..')
 import great3sims
 
-# Set which branches to test...
+# Set which branches to test.  Currently, it does all 20.
 experiments = [
-    #'variable_psf',
+    'variable_psf',
     'control',
-    #'multiepoch',
-#    'real_galaxy',
-    #'full',
+    'multiepoch',
+    'real_galaxy',
+    'full',
 ]
 obs_type = [
     'ground',
     'space',
 ]
 shear_type = [
-    #'constant',
+    'constant',
     'variable',
 ]
 
+# Here are a set of variables that users might need to change depending on what they want to do:
+# Define a root directory for the simulations to be produced.
 root = 'test_run'
-n_config = 50        # Build 50 separate config files to be run separately.
+# Decide how many config files to run separately.
+n_config = 2
+# Decide on a minimum and maximum subfield to generate.  These will be split up into `n_config`
+# config files.
 subfield_min = 0
-subfield_max = 199    # Total of 4x50 sub-fields  (4 per config file)
-data_dir = './great3_data'    # This should be set up as a sim-link to the folder
-                                                 # containing the catalogs, fits, and actual images.
-ps_dir = '../inputs/ps/tables' 
-seed = 12345                    # Whatever.  (But not zero.)
-do_catalogs = True  # Remake the catalogs?
-do_images = False    # Make the images in great3 builder code?
-do_config = False    # Do config-related steps?
-do_final = False     # Do final packaging steps?
+subfield_max = 1
+# `data_dir` should be set up as a sim-link to the folder containing the catalogs, fits, and actual
+# images.
+data_dir = './great3_data'
+# Choose a random seed.  Can be whatever you want, but if you choose 0 then GalSim will choose a
+# seed based on the current time, so outputs will not be deterministic.
+seed = 12345
+
+# Now make some decisions about what parts of the simulation process to do:
+do_catalogs = True    # Remake the catalogs?
+do_images = False     # Make the images in great3 builder code?
+do_config = True      # Do config-related steps?
+do_final = True       # Do final packaging steps?
 preload_real = False  # preload images for RealGalaxy branches?  [always False for parametric branches]
+
+# Choose how many processes to launch simultaneously.  -1 means to let GalSim decide for itself
+# (based on the parameters of the system).
 nproc = -1
 
-# Note: these definitions have to happen up front.  They affect image generation in addition to
-# catalog generation.
-# Reduce number of galaxies so it won't take so long
-great3sims.constants.nrows = 100
-great3sims.constants.ncols = 100
-# Reduce number of stars so it won't take so long
+# Note: these definitions have to happen up front.  The purpose is to override the settings in
+# great3sims.constants so that the images that are produced are smaller (fewer objects), so that our
+# tests run quickly.  These definitions affect image generation in addition to catalog generation.
+# Reduce the number of galaxies so it won't take so long.
+great3sims.constants.nrows = 10
+great3sims.constants.ncols = 10
+# Likewise, reduce the number of stars so it won't take so long.
 great3sims.constants.min_star_density = 0.01 # per arcmin^2
 great3sims.constants.max_star_density = 0.03
 
-# All kwargs for the run command that don't need to change below.
+# All kwargs for the run command that don't need to change are below.
 kwargs = {
     'root' : root,
     'experiments' : experiments,
     'obs_type' : obs_type,
     'shear_type' : shear_type,
     'gal_dir' : data_dir,
-    'ps_dir' : ps_dir,
     'seed' : seed,
     'preload' : preload_real,
     'nproc' : nproc
