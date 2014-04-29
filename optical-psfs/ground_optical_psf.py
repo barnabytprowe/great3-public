@@ -1,3 +1,35 @@
+# Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted
+# provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions
+# and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+# conditions and the following disclaimer in the documentation and/or other materials provided with
+# the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to
+# endorse or promote products derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""This file contains the classes needed to represent ground-based optical PSFs for an early DECam
+model, namely the OpticalPSFModel class and the OpticalPSFMisalignment class.  The former reads in
+tabulated information about an optical PSF model, and can interpolate to get information about the
+PSF at a particular position in the field of view.  The latter can include the effects of tilts and
+misalignments on the PSF as a function of position.
+
+These classes are imported and used by the GREAT3 simulation software."""
+
 import os
 import codecs
 import numpy as np
@@ -5,7 +37,7 @@ import galsim
 
 def loadZernikeCoefficients(filename_coeff):
     """
-    Helper function to read Zernike coefficients from a ZEMAX output.
+    Helper function to read Zernike coefficients from a ZEMAX output file.
     """
     defocus = 0.
     a1 = 0.
@@ -63,6 +95,7 @@ class OpticalPSFMisalignment:
     - astigmatism depends on (dx, dy, tx, ty), and also depends on (x,y)
     - coma depends on (dx, dy, tx, ty), but does not depend on (x,y)
     - trefoil and spherical do not depend on misalignments.
+
     In addition, we also found some symmetries, and Eq. (1) can be changed as
     1) separate defocus part as delta_defocus = a * dz
     2) define matrix M as
@@ -79,7 +112,6 @@ class OpticalPSFMisalignment:
     These findings agree with Aaron's model.
     We implemented these responses based on the ZEMAX simulations we made.
     """
-
     def __init__(self, lam, dz, dx, dy, tx, ty):
         """
         Inputs
