@@ -22,6 +22,7 @@
 # DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""File containing the classes that generate parameters and catalogs for PSFs."""
 import galsim
 import numpy as np
 from . import constants
@@ -38,8 +39,8 @@ def makeBuilder(obs_type, variable_psf, multiepoch, shear_type, opt_psf_dir, atm
                             determination of how many subfields to use per field, and whether there
                             are so few PSFs that we have to force them to follow the seeing
                             distribution, not any other reason.
-    @param[in] opt_psf_dir  Directory with the optical PSF models for ground and space
-                            variable PSF simulations.
+    @param[in] opt_psf_dir  Directory with the optical PSF models for ground and space variable PSF
+                            simulations.
     @param[in] atmos_ps_dir Directory with tabulated atmospheric PSF anisotropy power spectra.
     """
     if obs_type == "space" or obs_type == "ground":
@@ -51,13 +52,14 @@ def makeBuilder(obs_type, variable_psf, multiepoch, shear_type, opt_psf_dir, atm
         raise ValueError("Invalid obs_type: %s - must be 'ground' or 'space'" % obs_type)
 
 class PSFBuilder(object):
+    """A PSFBuilder is a class that can carry out the steps necessary to define PSFs for GREAT3.  It
+    must be able to generate parameters of the PSFs for objects in a star or galaxy catalog."""
 
     def generateFieldParameters(self, rng, field_index):
         """Return a list of dicts of metaparameters for the given field of observations.  These
-        will be passed to generateCatalog when it is called.
+        will be passed to generateCatalog() when it is called.
 
-        @param[in] rng          A galsim.UniformDeviate to be used for
-                                any random numbers.
+        @param[in] rng          A galsim.UniformDeviate to be used for any random numbers.
         @param[in] field_index  Index of the field of images being simulated.
 
         Each entry in the list corresponds to one of the epochs (i.e., a single entry for single
@@ -66,23 +68,18 @@ class PSFBuilder(object):
         raise NotImplementedError("PSFBuilder is abstract.")
 
     def generateEpochParameters(self, rng, subfield_index, epoch_index, field_parameters):
-        """Return a dict of metaparameters for the given subfield and
-        epoch.  These will be passed to generateCatalog when it
-        is called.
+        """Return a dict of metaparameters for the given subfield and epoch.  These will be passed
+        to generateCatalog() when it is called.
 
-        @param[in] rng               A galsim.UniformDeviate to be used for
-                                     any random numbers.
-        @param[in] subfield_index    Index of the simulated patch of sky
-                                     we are "observing" with this PSF.
-        @param[in] epoch_index       Index of this "epoch" among
-                                     those of the same subfield.
-        @param[in] field_parameters  Output from generateFieldParameters.
+        @param[in] rng               A galsim.UniformDeviate to be used for any random numbers.
+        @param[in] subfield_index    Index of the simulated patch of sky we are "observing" with this PSF.
+        @param[in] epoch_index       Index of this "epoch" among those of the same subfield.
+        @param[in] field_parameters  Output from generateFieldParameters().
 
-        A "schema" entry is required in the returned dict: a list of
-        (name, type) tuples that define the catalog fields that will
-        be filled by this builder.  These field names may be used
-        in catalogs that also have fields from other builders, so
-        care should be taken to ensure that each schema entry are unique.
+        A "schema" entry is required in the returned dict: a list of (name, type) tuples that define
+        the catalog fields that will be filled by this builder.  These field names may be used in
+        catalogs that also have fields from other builders, so care should be taken to ensure that
+        schema entries are unique.
         """
         raise NotImplementedError("PSFBuilder is abstract.")
 
@@ -90,16 +87,13 @@ class PSFBuilder(object):
         """Fill columns of the given catalog with per-position PSF parameters.
 
         @param[in]     rng         A galsim.UniformDeviate to be used for any random numbers.
-        @param[in,out] catalog     A structured NumPy array to fill.  The 'index', 'x',
-                                   and 'y' columns will already be filled, and should be
-                                   used as the points at which to evaluate the PSF
-                                   spatial variation (if any).
-                                   All columns defined by the 'schema' entry in the dict
-                                   returned by generateParameters() will also be present,
-                                   and should be filled.  Other columns may be present as
-                                   well, and should be ignored.
-        @param[in]     parameters  A dict of metaparameters, as returned by the
-                                   generateParameters() method.
+        @param[in,out] catalog     A structured NumPy array to fill.  The 'index', 'x', and 'y'
+                                   columns will already be filled, and should be used as the points
+                                   at which to evaluate the PSF spatial variation (if any). All
+                                   columns defined by the 'schema' entry in the dict returned by
+                                   generateParameters() will also be present, and should be filled.
+                                   Other columns may be present as well, and should be ignored.
+        @param[in]     parameters  A dict of metaparameters, as returned by generateParameters().
         @param[in]     offsets     Offsets of this subfield with respect to the first in the field.
         @param[in]     normalized  Whether star objects should be flux-normalized (as
                                    appropriate for convolving galaxies) or have a distribution
@@ -108,19 +102,20 @@ class PSFBuilder(object):
         raise NotImplementedError("PSFBuilder is abstract.")
 
     def makeConfigDict(self):
-        """Make the 'psf' portion of the config dict.
+        """Make the 'psf' portion of the config dict that will be used by GalSim to generate the
+        images.
         """
         raise NotImplementedError("PSFBuilder is abstract.")
 
     def makeGalSimObject(self, record, parameters):
-        """Given a catalog record and a dict of metaparameters (as generated
-        by generateCatalog() and generateParameters(), respectively), create
-        a galsim.GSObject that represents the PSF (not including the pixel
-        component).
+        """Given a catalog record and a dict of metaparameters (as generated by generateCatalog()
+        and generateParameters(), respectively), create a galsim.GSObject that represents the PSF
+        (not including the pixel component).
 
-        NOTE: if we want to use the galsim config interface to create images,
-        we should replace this method with one that writes the relevant
-        section of a config file.
+        NOTE: This function was not used when making the GREAT3 images, since we used the GalSim
+        config interface rather than generating the images in python scripts.  However, this
+        function can be used in small-scale tests for which it's not too expensive to generate the
+        images in python in a non-parallel way.
         """
         raise NotImplementedError("PSFBuilder is abstract.")
 
@@ -140,16 +135,16 @@ def UseZeroIndex(d):
 class ConstPSFBuilder(PSFBuilder):
     """PSFBuilder for experiments with uniform PSF across the images.
 
-    Depending on obs_type and multiepoch, outputs are slightly different.
+    Depending on `obs_type` and `multiepoch`, outputs are slightly different.
     """
     # Set some basic parameters here.  For optical PSFs, this should include some dicts for space
     # vs. ground using the obs_type parameter.
 
-    # For lam/diam, Euclid has 0.1375".
+    # For lam/diam, Euclid has ~0.1375".
     #               WFIRST has a range for the different bands, but with 2.4m mirror and 1.1 micron,
     #               it is 0.0945".
     # In terms of sampling, we use the correspondence between OpticalPSF <-> Airy 
-    # and FWHM >~ 2 pix. For an Airy, FWHM is very close to lam/diam.  We want to be
+    # and FWHM >~ 2 pix. For an Airy, the FWHM is very close to lam/diam.  We want to be
     # Nyquist sampled at 0.05" pixels, so we need lam/diam > 0.1" (roughly).  For the multiepoch
     # case in space, we want to be undersampled by a factor of 2 at 0.1" pixels, so we need
     # lam/diam < 0.2".  Let's give a cushion on these numbers as well.
@@ -178,14 +173,13 @@ class ConstPSFBuilder(PSFBuilder):
         }
 
     # Aberrations for space telescopes: the baseline WFIRST2.4 PSF model (without tilt,
-    # misalignment, etc.) seem to have aberrations roughly in the range [-0.01, 0.01] (per
+    # misalignment, etc.) seems to have aberrations roughly in the range [-0.01, 0.01] (per
     # aberration).  This gives a RMS summed over all 8 aberrations of ~0.03 in units of wavelength.
-    # I'm going to assume they are uncorrelated (not necessarily true!).  Furthermore, an additional
-    # RMS of 0.07 is allowed above the design.  So for now, let's give a total RMS of 0.08.  Euclid
-    # may allow larger aberrations when considered in units of wavelength.
+    # We assume they are uncorrelated (not necessarily true!).  Furthermore, an additional RMS of
+    # 0.07 is allowed above the design.  So for now, let's give a total RMS of 0.08.  Euclid may
+    # allow larger aberrations when considered in units of wavelength.
     #
-    # Ground telescopes tend to have larger aberrations.  For now I'm putting in 4x larger than
-    # space, but I need to check out Hironao's PR to get a better number for this.
+    # Ground telescopes tend to have larger aberrations, so that's where the 0.41 comes from.
     rms_aberration = {
         "space" : 0.08,
         "ground" : 0.41,
@@ -210,22 +204,20 @@ class ConstPSFBuilder(PSFBuilder):
         }
     opt_schema_pref = "opt_psf_"
 
-    # Struts: we choose an integer number of struts from the values on the following list.
-    # The angle from vertical is chosen at random.
-    # For now the thickness is not a free parameter, though it could be.  The possible number of
-    # struts differs for space and ground.  Because of issues with accuracy of rendering PSFs with
-    # struts in the latter case (see discussion on
-    # https://github.com/rmandelb/great3-private/pull/53), we do not have any struts for
-    # ground-based sims.
+    # Struts: we choose an integer number of struts from the values on the following list.  The
+    # angle from vertical is chosen at random.  For now the thickness is not a free parameter,
+    # though it could be.  The possible number of struts differs for space and ground.  Because of
+    # issues with accuracy of rendering PSFs with struts in the latter case, we do not have any
+    # struts for ground-based sims.
     strut_list = {
         "space" : [0, 2, 3, 4, 6],
         "ground" : [0],
         }
 
-    # For space-based PSFs only: include jitter and charge diffusion.  The plan as stated on #42,
-    # based on discussion with Lance Miller and several WFIRST people, is to make jitter a Gaussian
-    # with RMS of 0.005-0.015" per axis, e=0-0.3 (uniform distribution), and a random direction.  So
-    # let's make a total sigma in the range sqrt(2)*(0.005-0.015).
+    # For space-based PSFs only: include jitter and charge diffusion.  The plan, based on discussion
+    # with Lance Miller and several WFIRST people, is to make jitter a Gaussian with RMS of
+    # 0.005-0.015" per axis, e=0-0.3 (uniform distribution), and a random direction.  So let's make
+    # a total sigma in the range sqrt(2)*(0.005-0.015).
     min_jitter_sigma = np.sqrt(2.)*0.005 # arcsec
     max_jitter_sigma = np.sqrt(2.)*0.005
     min_jitter_e = 0.
@@ -294,13 +286,14 @@ class ConstPSFBuilder(PSFBuilder):
             self.force_distribution = False
 
     def generateFieldParameters(self, rng, field_index):
+        """Generate PSF parameters for this field."""
         # Define some constants that we will need throughout.
         if self.multiepoch:
             n_epochs = constants.n_epochs
         else:
             n_epochs = 1
 
-        # Make RNG
+        # Make RNG.
         uniform_deviate = galsim.UniformDeviate(rng)
         gaussian_deviate = galsim.GaussianDeviate(rng)
         if self.obs_type == "ground":
@@ -308,10 +301,8 @@ class ConstPSFBuilder(PSFBuilder):
                 rng,
                 function = galsim.LookupTable(self.fwhm_arcsec, self.freq, interpolant='linear'))
 
-        # Get the basic parameters per epoch.  In previous versions of the code, the parameters also
-        # depended on the subfield.  However, now we keep all subfields within the field the same,
-        # and change the number of subfields per field if we want to change things around.  So these
-        # arrays only have one dimension with length n_epochs.
+        # Get the basic parameters of the field for all epochs, so these arrays have one dimension
+        # with length n_epochs.
         aber_dict = dict()
         for aber in self.use_aber:
             aber_dict[aber]=np.zeros(n_epochs)
@@ -394,7 +385,7 @@ class ConstPSFBuilder(PSFBuilder):
                 aber_dict[self.use_aber[ind_ab]][i_epoch] = tmp_vec[ind_ab]
 
             if self.obs_type == "ground":
-                # for seeing values, check whether we need to force them to follow the distribution
+                # For seeing values, check whether we need to force them to follow the distribution
                 # (because there are very few PSFs in the branch) or not.
                 if not self.force_distribution:
                     atmos_psf_fwhm[i_epoch] = dist_deviate()
@@ -423,17 +414,16 @@ class ConstPSFBuilder(PSFBuilder):
                         test_rand = 0.4 + 0.2 * uniform_deviate()
                         atmos_psf_fwhm[i_epoch] = dist_deviate.val(test_rand)
 
-                # for other atmospheric PSF parameters, just draw at random even if there are
-                # only a few PSFs per branch
+                # For other atmospheric PSF parameters, just draw at random even if there are
+                # only a few PSFs per branch.
                 atmos_psf_e[i_epoch] = \
                     uniform_deviate()*(self.max_atmos_psf_e - self.min_atmos_psf_e) \
                     + self.min_atmos_psf_e
                 atmos_psf_beta[i_epoch] = uniform_deviate()*180.0
             else:
-                # Note: I am letting the jitter vary per epoch, since based on comments from Lance I
-                # got the impression that (at least for Euclid) this can depend on some temporally
-                # localized conditions.  Per Barney's suggestion, charge diffusion is fixed across
-                # epochs.
+                # Note: the jitter varies per epoch, since in some cases (such as for Euclid) this
+                # can depend on some temporally localized conditions.  However, charge diffusion is
+                # fixed across epochs.
                 jitter_sigma[i_epoch] = \
                     uniform_deviate() * (self.max_jitter_sigma - \
                                              self.min_jitter_sigma) + self.min_jitter_sigma
@@ -490,8 +480,10 @@ class ConstPSFBuilder(PSFBuilder):
         return psf_dict
 
     def generateEpochParameters(self, rng, subfield_index, epoch_index, field_parameters):
-        # At the field level we already pre-determined the results for the different epochs, so just
-        # return the result for this epoch.
+        """Determine the PSF parameters for this epoch.
+
+        generateFieldParameters() already pre-determined the results for all epochs, so this
+        function simply takes those outputs and returns the results for the requested epoch."""
 
         psf_dict = \
             dict(lam_over_diam=field_parameters["lam_over_diam"][epoch_index],
@@ -516,6 +508,8 @@ class ConstPSFBuilder(PSFBuilder):
         return psf_dict
 
     def generateCatalog(self, rng, catalog, parameters, offsets, normalized):
+        """Assign the PSF parameters to a galaxy catalog.  This is very simple for constant PSF
+        branches, where the PSF is the same for each galaxy in the image."""
         psf_parameters = parameters["psf"]
         for record in catalog:
             record["opt_psf_lam_over_diam"] = psf_parameters["lam_over_diam"]
@@ -537,6 +531,8 @@ class ConstPSFBuilder(PSFBuilder):
                 record["opt_psf_charge_e1"] = psf_parameters["charge_e1"]
 
     def makeConfigDict(self, use_zero_index=True):
+        """Routine to write the PSF-related parts of the config file used by GalSim to generate
+        images."""
         d = {
             'type' : 'OpticalPSF',
             'lam_over_diam' : { 'type' : 'Catalog', 'col' : 'opt_psf_lam_over_diam' },
@@ -610,6 +606,8 @@ class ConstPSFBuilder(PSFBuilder):
         return d
 
     def makeGalSimObject(self, record, parameters):
+        """Routine to return a galsim.GSObject corresponding to a particular PSF (without the pixel
+        response)."""
         # Size is specified in arcsec.
 
         # Choose which aberrations to use based on what should be in catalog
@@ -649,11 +647,11 @@ class VariablePSFBuilder(PSFBuilder):
     This class basically functions as follows:
     (1) When initialized, it sets up some basic parameters like the number of tiles across the
         field-of-view.
-    (2) generateFieldParameters draws all random numbers that are needed for generation of the PSF
+    (2) generateFieldParameters() draws all random numbers that are needed for generation of the PSF
         models.  These will be 2d arrays (indexed by tile and epoch).
-    (3) generateEpochParameters just takes the generateFieldParameters outputs and extracts the ones
+    (3) generateEpochParameters() just takes the generateFieldParameters() outputs and extracts the ones
         for the epoch we care about.
-    (4) generateCatalog does the heavy lifting: make (or take from the cache) the array of
+    (4) generateCatalog() does the heavy lifting: make (or take from the cache) the array of
         OpticalPSFModels and atmospheric PSFs to get the aberrations etc. interpolated to various
         positions.
     """
@@ -704,7 +702,7 @@ class VariablePSFBuilder(PSFBuilder):
     # according to some RMS that we define.
     space_rms_additional_aber = 0.075
     # For ground, our additional aberrations come from defocus, tilt, and decenter.
-    # According to Hironao's notes, some expected values that Aaron Roodman gave him are
+    # Some expected values from Aaron Roodman are
     # - decenter(dx, dy): 0.15 mm
     # - tilt(tx, ty): 10 arcsec
     # We found typical value of defocus is likely
@@ -715,18 +713,16 @@ class VariablePSFBuilder(PSFBuilder):
     ground_defocus_rms = 0.06 # mm along z
 
     # Struts: we choose an integer number of struts corresponding to our models.  Based on the
-    # discussion about accuracy of rendering PSFs with struts for ground-based sims on
-    # https://github.com/rmandelb/great3-private/pull/53, we use n_struts=0 for ground-based sims,
-    # unlike our DECam optical model which has 4 struts.
+    # discussion about accuracy of rendering PSFs with struts for ground-based sims, we use
+    # n_struts=0 for ground-based sims, unlike our DECam optical model which has 4 struts.
     n_struts = {
         "space" : 6,
         "ground" : 0,
         }
 
-    # For space-based PSFs only: include jitter and charge diffusion.  The plan as stated on #42,
-    # based on discussion with Lance Miller and several WFIRST people, is to make jitter a Gaussian
-    # with RMS of 0.005-0.015" per axis, e=0-0.3 (uniform distribution), and a random direction.  So
-    # let's make a total sigma in the range sqrt(2)*(0.005-0.015).
+    # For space-based PSFs only: include jitter and charge diffusion.  The plan is to make jitter a
+    # Gaussian with RMS of 0.005-0.015" per axis, e=0-0.3 (uniform distribution), and a random
+    # direction.  So let's make a total sigma in the range sqrt(2)*(0.005-0.015).
     min_jitter_sigma = np.sqrt(2.)*0.005 # arcsec
     max_jitter_sigma = np.sqrt(2.)*0.005
     min_jitter_e = 0.
@@ -775,7 +771,7 @@ class VariablePSFBuilder(PSFBuilder):
     cached_atmos = None
     cached_optics = []
     cached_field = None
-    # set up grid needed to make filenames and interpolate
+    # Set up grid needed to make filenames and interpolate.
     log_min_theta_0 = np.log10(min_theta_0)
     log_max_theta_0 = np.log10(max_theta_0)
     n_theta_0 = 11
@@ -810,13 +806,14 @@ class VariablePSFBuilder(PSFBuilder):
                                    self.tile_size_deg)
 
     def generateFieldParameters(self, rng, field_index):
+        """Generate PSF parameters for this field."""
         # Define some constants that we will need throughout.
         if self.multiepoch:
             n_epochs = constants.n_epochs
         else:
             n_epochs = 1
 
-        # Make RNG
+        # Make RNG.
         uniform_deviate = galsim.UniformDeviate(rng)
         gaussian_deviate = galsim.GaussianDeviate(rng)
         if self.obs_type == "ground":
@@ -985,8 +982,10 @@ class VariablePSFBuilder(PSFBuilder):
         return psf_dict
 
     def generateEpochParameters(self, rng, subfield_index, epoch_index, field_parameters):
-        # At the field level we already pre-determined the results for the different epochs, so just
-        # return the result for this epoch.
+        """Determine the PSF parameters for this epoch.
+
+        generateFieldParameters() already pre-determined the results for all epochs, so this
+        function simply takes those outputs and returns the results for the requested epoch."""
 
         psf_dict = \
             dict(lam_over_diam=field_parameters["lam_over_diam"],
@@ -1018,8 +1017,8 @@ class VariablePSFBuilder(PSFBuilder):
         return psf_dict
 
     def generateCatalog(self, rng, catalog, parameters, offsets, normalized):
-        # Here's where most of the work happens.
-        #
+        """Assign the PSF parameters to a catalog, given the individual positions of the objects in
+        the catalog."""
         # Need to import the optical PSF modules for space or ground depending on obs_type.
         import sys
         sys.path.append(self.opt_psf_dir)
@@ -1030,7 +1029,7 @@ class VariablePSFBuilder(PSFBuilder):
 
         # If this is the first subfield in a field, then loop over tiles, making an OpticalPSFModel
         # for each one.  Save it so we have a list of OpticalPSFModels for which we can get PSF info
-        # as a function of position.  We should save one for each epoch as well, so generateCatalog
+        # as a function of position.  We should save one for each epoch as well, so generateCatalog()
         # has a lot of caching to do for the first subfield in a field (or, the first subfield that
         # we choose to run), but then for the other subfields in the field, it can just use the
         # cached values.
