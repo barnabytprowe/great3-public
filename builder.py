@@ -94,7 +94,7 @@ class SimBuilder(object):
                                                       variable_psf=self.variable_psf,
                                                       multiepoch=self.multiepoch,
                                                       shear_type=self.shear_type,
-                                                      opt_psf_dir=opt_ps_dir,
+                                                      opt_psf_dir=opt_psf_dir,
                                                       atmos_ps_dir=atmos_ps_dir)
         self.shear_builder = great3sims.shear.makeBuilder(shear_type=shear_type, obs_type=obs_type,
                                                           multiepoch=self.multiepoch, ps_dir=ps_dir)
