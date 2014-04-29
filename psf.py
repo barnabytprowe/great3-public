@@ -25,7 +25,6 @@
 """File containing the classes that generate parameters and catalogs for PSFs."""
 import galsim
 import numpy as np
-import os
 from . import constants
 
 def makeBuilder(obs_type, variable_psf, multiepoch, shear_type, opt_psf_dir, atmos_ps_dir):
@@ -1022,6 +1021,7 @@ class VariablePSFBuilder(PSFBuilder):
         the catalog."""
         # Need to import the optical PSF modules for space or ground depending on obs_type.
         import sys
+        import os
         sys.path.append(self.opt_psf_dir)
         if self.obs_type == "ground":
             import ground_optical_psf
