@@ -1,4 +1,3 @@
-#!/sw64/bin/python2.7
 # Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
 # All rights reserved.
 #
