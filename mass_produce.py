@@ -22,10 +22,11 @@
 # DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-# This is a script that can be used for mass-production of sims on a cluster.  Currently it is set
-# up for the Warp and Coma clusters at CMU, but hopefully should not be too painful to repurpose
-# elsewhere.
+"""This is a script that can be used for mass-production of sims on a cluster (and was used to
+generate the simulations for GREAT3).  Currently it is set up for the Warp and Coma clusters at CMU,
+but hopefully should not be too painful to repurpose elsewhere, particularly on a machine that also
+uses PBS for the queueing system.  At minimum, there are some directories and such that will have to
+be changed to point to the right place on other systems."""
 import time
 import os
 import subprocess
@@ -40,23 +41,27 @@ import great3sims
 # Define some basic parameters.  This includes some system-dependent things like directories for
 # output.
 root = '/physics/rmandelb/great3-v11'
-n_config_per_branch = 10 # Number of config files to be run per branch.
-subfield_min = 200
-subfield_max = 204 # The total number of subfields is split up into n_config_per_branch config files.
+# Number of config files to be run per branch.
+n_config_per_branch = 10
+# The total number of subfields is split up into n_config_per_branch config files.
+subfield_min = 0
+subfield_max = 204
 gal_dir = '/lustre/rmandelb/great3_fit_data'
 ps_dir = '/home/rmandelb/git/great3-private/inputs/ps/tables'
 seed = 31415
-public_dir = 'addendum' # normally 'public' to create the big public tarfiles
-delta_seed = 137 # amount to increment seed for each successive branch
-sleep_time = 30 # seconds between checks for programs to be done
-package_only = True # only do the packaging and nothing else
-do_images = False  # Make images or not?  If False with package_only also False, then just skip the
+public_dir = 'public'
+# amount to increment seed for each successive branch
+delta_seed = 137
+# seconds between checks for programs to be done
+sleep_time = 30
+package_only = False # only do the packaging and nothing else
+do_images = True  # Make images or not?  If False with package_only also False, then just skip the
                   # image-making step: remake catalogs but do not delete files / dirs with images,
                   # then package it all up.
-do_gal_images = False # Make galaxy images?  If do_images = True, then do_gal_images becomes
-# relevant; it lets us only remake star fields if we wish (by having do_images = True, do_gal_images
-# = False).
-preload = False # preloading for real galaxy branches - irrelevant for others
+do_gal_images = True # Make galaxy images?  If do_images = True, then do_gal_images becomes
+                     # relevant; it lets us only remake star fields if we wish (by having do_images
+                     # = True, do_gal_images = False).
+preload = False # preloading for real galaxy branches - irrelevant for others.
 # Do we want to be nice to others in the queue by rationing the number of image generation scripts
 # to be submitted simultaneously?  Or just submit them all, perhaps because there are so few that it
 # isn't rude to do them all at once?  If `queue_nicely = False`, then dump them all at once.  If
@@ -64,13 +69,12 @@ preload = False # preloading for real galaxy branches - irrelevant for others
 # queue at once.
 queue_nicely = 13
 
-# Set which branches to test.  For now we do the control experiment (all four branches), but nothing
-# else.
+# Set which branches to test.
 experiments = [
-    #'control',
-    #'real_galaxy',
+    'control',
+    'real_galaxy',
     'variable_psf',
-    #'multiepoch',
+    'multiepoch',
     'full',
 ]
 obs_types = [
