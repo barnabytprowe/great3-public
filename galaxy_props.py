@@ -1,5 +1,30 @@
-# A quick utility to successively impose some cuts based on what's in great3sims/galaxies.py, and
-# see what happens to various properties of the galaxies.
+# Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted
+# provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions
+# and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+# conditions and the following disclaimer in the documentation and/or other materials provided with
+# the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to
+# endorse or promote products derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""A quick utility to successively impose some cuts based on what's in great3sims/galaxies.py, and
+see what happens to various properties of the galaxies.  Can be a useful diagnostic of the galaxy
+population."""
 import numpy as np
 import matplotlib.pyplot as plt
 import galsim
@@ -10,7 +35,7 @@ import os
 plot_vals = ["e", "sn", "hlr", "mag", "bt", "zphot", "flux_radius"]
 plot_min_val = [0, 0, 0, 18, 0, 0, 0]
 plot_max_val = [1, 6, 2, 23.5, 1, 2, 2]
-obs_type = "space"
+obs_type = "space" # could also do "ground"
 is_deep = True # deep field?
 n_vals = len(plot_vals)
 gal_dir = "./great3_data"
@@ -60,7 +85,8 @@ bt = shapes_catalog["bulge_tot"]
 zphot = fit_catalog["zphot"]
 flux_radius = 0.03*fit_catalog["flux_radius"]
 
-# Define the numbers that will be used for cuts.
+# Define the numbers that will be used for cuts.  These are hard-coded, based on what is in
+# ../great3sims/galaxies.py.
 min_flux_frac = 0.99
 min_resolution = 1./3
 approx_sn_gal = np.zeros(rgc.nobjects)
