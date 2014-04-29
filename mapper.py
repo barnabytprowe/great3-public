@@ -22,18 +22,20 @@
 # DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""Helper classes and encapsulation for I/O
+"""Helper classes and encapsulation for I/O.  The classes defined in this file know how to set up
+directory structures and filenames for each branch.
 """
 
 import os
 import galsim
 import shutil
 
-# We'll read and write a lot of dictionaries below, using yaml to save them right now.  But all the
-# I/O goes through these functions, so we can switch to some other format easily.
+# We'll read and write a lot of dictionaries below.  Several file formats are supported, and since
+# all the I/O goes through these functions, we can switch to (or add) some other format easily.
 
 def readDict(path, yaml_dict = True):
-    """Read a dict from disk; 'path' should not include file extension.
+    """Read a dict from disk; 'path' should not include file extension.  By default, this function
+    expects a yaml format, but if `yaml_dict` is False then it will try to read a pickled .p file.
     """
     if yaml_dict:
         import yaml
@@ -47,7 +49,7 @@ def readDict(path, yaml_dict = True):
 def writeDict(d, path, type = 'yaml', comment_pref = '#'):
     """Write a dict to disk; 'path' should not include file extension.
 
-    Type is either yaml dict ('yaml'), pickle ('p'), or text ('txt').
+    The keyword `type` is either yaml dict ('yaml'), pickle ('p'), or text ('txt').
     """
     if type == 'yaml':
         import yaml
@@ -81,8 +83,8 @@ def readCatalog(path, fits_catalog = True):
     extensions.
 
     Technically, when reading in a fits catalog, the result is not a NumPy array; it is a
-    pyfits.FITSrec, which has all the methods we need to use the data in the same way as we would
-    use a NumPy array.
+    pyfits.FITSrec object, which has all the methods we need to use the data in the same way as we
+    would use a NumPy array.
 
     @param[in] fits_catalog        Read a FITS catalog?  If True, file extension is assumed to be
                                    .fits.  If False, it is assumed to be a pickle dump with
@@ -98,6 +100,9 @@ def readCatalog(path, fits_catalog = True):
 
 def writeCatalog(catalog, path, type = 'fits', comment_pref = '#', format = None):
     """Write a catalog (structured NumPy array) to disk; 'path' should not include file extension.
+
+    This method also does some basic sanity checking for NaN and Inf values in the catalog before
+    writing it to file; it will throw a RuntimeError if it finds any.
 
     @param[in] type        Type of file to write.  options are 'fits', 'p' (pickle dump), 'txt' 
                            [Default: 'fits']
@@ -184,11 +189,14 @@ class Mapper(object):
     def __init__(self, root, experiment, obs_type, shear_type):
         """Initialize a Mapper with the given root and experiment parameters.
 
+        This will create the directory into which files will be saved, if it does not already
+        exist.
+
         @param[in] root        Root for the entire simulation set.
         @param[in] experiment  Experiment parameter: "control", "real_galaxy", "variable_psf",
-                               "multiepoch", or "full"
-        @param[in] obs_type    Type of observation to simulate: either "ground" or "space"
-        @param[in] shear_type  Type of shear field: "constant" or "variable"
+                               "multiepoch", or "full".
+        @param[in] obs_type    Type of observation to simulate: either "ground" or "space".
+        @param[in] shear_type  Type of shear field: "constant" or "variable".
         """
         self.root = root
         self.dir = os.path.join(experiment, obs_type, shear_type)
@@ -199,10 +207,10 @@ class Mapper(object):
     def read(self, dataset, data_id=None, **kwds):
         """Read a dataset from disk.
 
-        @param[in] dataset    dataset name to get; one of the keys in self.mappings
-        @param[in] data_id    a dict of values with which to expand the path template
+        @param[in] dataset    Type of dataset to get; must be one of the keys in self.mappings.
+        @param[in] data_id    A dict of values with which to expand the path template
                               (the first value in self.mappings).
-        Additional keyword arguments are included in the data_id dict.
+        Additional keyword arguments are included in the `data_id` dict.
 
         @return the loaded object.
         """
@@ -214,11 +222,11 @@ class Mapper(object):
     def write(self, obj, dataset, data_id=None, **kwds):
         """Write a dataset to disk.
 
-        @param[in] obj        object to write
-        @param[in] dataset    dataset name to get; one of the keys in self.mappings
-        @param[in] data_id    a dict of values with which to expand the path template
+        @param[in] obj        Object to write.
+        @param[in] dataset    Type of dataset to get; must be one of the keys in self.mappings.
+        @param[in] data_id    A dict of values with which to expand the path template
                               (the first value in self.mappings).
-        Additional keyword arguments are included in the data_id dict.
+        Additional keyword arguments are included in the `data_id` dict.
         """
         if data_id is None: data_id = dict()
         data_id.update(kwds)
@@ -231,8 +239,8 @@ class Mapper(object):
 
         @param[in] other_mapper    The mapper defining the directory structure to which the file
                                    should be copied.
-        @param[in] dataset         dataset name to get; one of the keys in self.mappings
-        @param[in] data_id         a dict of values with which to expand the path template
+        @param[in] dataset         Type of dataset to get; must be one of the keys in self.mappings.
+        @param[in] data_id         A dict of values with which to expand the path template
                                    (the first value in self.mappings).
         @param[out] outfile        The new file name.
         """
@@ -247,33 +255,33 @@ class Mapper(object):
         return outfile
 
     def copySub(self, other_mapper, dataset, data_id, use_cols, new_template=None):
-        """Copy subsets of files in the directory structure defined by this mapper to the same
-        location in a directory structure defined by some other mapper.
+        """Copy a subset of a particular file in the directory structure defined by this mapper to
+        the same location in a directory structure defined by some other mapper.
 
         @param[in] other_mapper    The mapper defining the directory structure to which the file
                                    should be copied.
-        @param[in] dataset         dataset name to get; one of the keys in self.mappings
-        @param[in] data_id         a dict of values with which to expand the path template
+        @param[in] dataset         Type of dataset to get; must be one of the keys in self.mappings.
+        @param[in] data_id         A dict of values with which to expand the path template
                                    (the first value in self.mappings).
-        @param[in] use_cols        a list of columns to copy over (i.e., neglect the others)
-        @param[in] new_template    naming template to use for output catalog, if different from
+        @param[in] use_cols        A list of columns to copy over (i.e., neglect the others).
+        @param[in] new_template    Naming template to use for output catalog, if different from
                                    previous.
         @param[out] outfile        The new file name.
         """
         import numpy
         import pyfits
-        # read in the catalog
+        # Read in the catalog.
         template, reader, writer = self.mappings[dataset]
         infile = os.path.join(self.full_dir, template % data_id)
         incat = readCatalog(infile)
 
-        # choose the subset of data to save
+        # Choose the subset of data to save.
         outcat = numpy.zeros(len(incat),
                              dtype=numpy.dtype(use_cols))
         for col in use_cols:
             outcat[col[0]] = incat[col[0]]
 
-        # write to output file
+        # Write to output file.
         if new_template is None:
             new_template = template
         outfile = os.path.join(other_mapper.full_dir, new_template % data_id)
@@ -289,14 +297,16 @@ class Mapper(object):
 
         @param[in] other_mapper    The mapper defining the directory structure to which the file
                                    should be copied.
-        @param[in] dataset         dataset name to get; one of the keys in self.mappings
-        @param[in] dataset_2       2nd dataset name to get; one of the keys in self.mappings
-        @param[in] data_id         a dict of values with which to expand the path template
+        @param[in] dataset         Type of dataset to get; must be one of the keys in self.mappings.
+        @param[in] dataset_2       Type of the second dataset to get; must be one of the keys in
+                                   self.mappings.
+        @param[in] data_id         A dict of values with which to expand the path template
                                    (the first value in self.mappings).
-        @param[in] use_cols        a list of columns to copy over (i.e., neglect the others)
-        @param[in] use_cols_2      a list of columns to copy over (i.e., neglect the others) for
-                                   second dataset
-        @param[in] new_template    naming template to use for output catalog, if different from
+        @param[in] use_cols        A list of columns to copy over (i.e., neglect the others) from
+                                   the first dataset.
+        @param[in] use_cols_2      A list of columns to copy over (i.e., neglect the others) from
+                                   the second dataset
+        @param[in] new_template    Naming template to use for output catalog, if different from
                                    previous.
         @param[out] outfile        The new file name.
         """
