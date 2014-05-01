@@ -34,7 +34,7 @@ builders = {
 
 def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=None,
         subfield_min=0, subfield_max=(constants.n_subfields-1),
-        gal_dir='/Users/rmandelb/great3/data-23.5', ps_dir='../inputs/ps/tables',
+        gal_dir='/Users/rmandelb/great3/data-23.5', ps_dir='../inputs/shear-ps/tables',
         opt_psf_dir = '../inputs/optical-psfs',
         atmos_ps_dir = '../inputs/atmospsf/pk_math',
         public_dir='public', truth_dir='truth', preload=False, nproc=-1):

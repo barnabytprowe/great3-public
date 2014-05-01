@@ -47,7 +47,7 @@ n_config_per_branch = 10
 subfield_min = 0
 subfield_max = 204
 gal_dir = '/lustre/rmandelb/great3_fit_data'
-ps_dir = '/home/rmandelb/git/great3-private/inputs/ps/tables'
+ps_dir = '/home/rmandelb/git/great3-private/inputs/shear-ps/tables'
 seed = 31415
 public_dir = 'public'
 # amount to increment seed for each successive branch

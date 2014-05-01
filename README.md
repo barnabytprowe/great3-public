@@ -67,7 +67,7 @@ generate simulated data for those branches:
   galaxy images from HST.  A tarball with all required files is available from
   the [GREAT3 download page](http://great3.projects.phys.ucl.ac.uk/leaderboard/data).
 - The variable shear branches require tabulated shear power spectra as
-  inputs.  The ones used for GREAT3 are in ../inputs/ps/tables/, so if you have
+  inputs.  The ones used for GREAT3 are in ../inputs/shear-ps/tables/, so if you have
   cloned or downloaded the contents of the great3-public repository, you should
   already have these.  You will just have to give the path to that directory to
   the `ps_dir` keyword argument when you call `great3sims.run()`.
