@@ -1,8 +1,35 @@
+# Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted
+# provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions
+# and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+# conditions and the following disclaimer in the documentation and/or other materials provided with
+# the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to
+# endorse or promote products derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""This script randomly draws an atmospheric PSF anisotropy field using the outputs in pk_math/, and
+makes some whisker plots and other sanity checks.  Some of this code was later used in the GREAT3
+simulation scripts.
+"""
 import galsim
 import numpy as np
 import pylab
 
-# A subroutine to generate random parameters for the atmospheric PSF
 def atmosPSFParams(t_exp=20, diam=6.7, rng=None, N=1):
     """A subroutine to generate random parameters for the atmospheric PSF.
 
@@ -170,15 +197,15 @@ def getAtmosPSFGrid(k, Pk, ngrid=20, dtheta_arcsec=360., kmin_factor=15,
     tab_pk = galsim.LookupTable(k, Pk, x_log=True, f_log=True)
     ps = galsim.PowerSpectrum(tab_pk, tab_pk, units=galsim.arcsec)
 
-    # use buildGrid to get the grid.  Note that with the code in GalSim issue #377, this code could
-    # be simplified.  It automatically takes care of the kmin_factor expansion of the grid.  This
+    # Use buildGrid() to get the grid.  Note that with the code in GalSim issue #377, this code could
+    # be simplified.  It automatically takes care of the `kmin_factor` expansion of the grid.  This
     # would also lead to simplification of the code below where the return values are selected based
     # on return_basic.
     e1, e2, kappa = ps.buildGrid(grid_spacing = dtheta_arcsec/subsample,
                                  ngrid = ngrid*kmin_factor*subsample,
                                  get_convergence = True,
                                  rng = rng)
-    # redefine the kappa's
+    # Redefine the kappa's
     kappa /= 2.
 
     # Take subset of the overly huge grid.  Since the grid is periodic, can just take one corner, don't
@@ -202,7 +229,6 @@ def getAtmosPSFGrid(k, Pk, ngrid=20, dtheta_arcsec=360., kmin_factor=15,
                            np.arange(min,max+grid_spacing,grid_spacing))
         return e1[0:n_use, 0:n_use], e2[0:n_use, 0:n_use], kappa[0:n_use, 0:n_use], x-min, y-min
 
-# A routine to make whisker plots for the atmospheric PSF
 def drawWhiskerShear(g1, g2, x, y, title=None):
     """Draw shear whisker plots from an array of g1, g2 values.
     """
@@ -213,9 +239,6 @@ def drawWhiskerShear(g1, g2, x, y, title=None):
     pylab.figure()
     magnify = 50.
     res=pylab.quiver(x, y, magnify*gx, magnify*gy, scale=16, headwidth=0, pivot='middle', units='width')
-    #pylab.quiverkey(res, 0.9, 0.95, 0.005*magnify, r'0.005', labelpos='E',
-    #                coordinates='figure',
-    #                fontproperties={'weight': 'bold'})
     tmpstr = str(np.median(g))
     if title is not None:
         titlestr = ", median shear = {0:.4}".format(np.median(g))
@@ -224,7 +247,6 @@ def drawWhiskerShear(g1, g2, x, y, title=None):
     pylab.ylabel('Y position [arcmin]')
     pylab.show()        
 
-# A routine to look at the PSF size variation
 def drawSizeVariation(kappa, x, y, title=None):
     """Show variation in PSF size across the field of view, based on a grid of "kappa" values.
     """
@@ -237,7 +259,6 @@ def drawSizeVariation(kappa, x, y, title=None):
     pylab.ylabel('Y position [arcmin]')
     pylab.show()
 
-# A routine to make whisker plots for the atmospheric PSF
 def drawBoth(g1, g2, kappa, x, y, title=None, outfile=None):
     """Draw both types of plots from arrays of g1, g2, kappa values.  Write to file `outfile`.
     """
@@ -250,9 +271,6 @@ def drawBoth(g1, g2, kappa, x, y, title=None, outfile=None):
     pylab.pcolor(x/60., y/60., kappa)
     pylab.colorbar()
     res=pylab.quiver(x/60., y/60., magnify*gx, magnify*gy, scale=16, headwidth=0, pivot='middle', units='width')
-    #pylab.quiverkey(res, 0.9, 0.95, 0.005*magnify, r'0.005', labelpos='E',
-    #                coordinates='figure',
-    #                fontproperties={'weight': 'bold'})
     tmpstr = str(np.median(g))
     if title is not None:
         titlestr = ", median shear = {0:.4}".format(np.median(g))
@@ -272,8 +290,8 @@ if __name__ == "__main__":
     # Define some defaults
     t_exp = 120.0 # exposure time in seconds
     diam = 4.0    # telescope size
-    handbook = True # are we doing a combined size/whisker plot for handbook?
-    outfile = '../../handbook/figs/great3_atmos_psf.png'
+    handbook = False # are we doing a combined size/whisker plot for handbook?
+    outfile = 'test.png'
 
     # Currently set up to do a random realization with seed initialized from the time.
     A, theta_0, seeing = atmosPSFParams(t_exp=t_exp, diam=diam)

@@ -11,7 +11,8 @@ various sets of parameters, and test the use of GalSim to generate the PSF
 ellipticities to make sure that the output correlation functions are as
 expected.
 
-More specifically, the imSim-based xi_+ tends to have the form 
+More specifically, the imSim-based xi_+ (defined for ellipticities corresponding
+to distortions) tends to have the form
 xi_+ = A / (1 + theta/theta_0)
 for some amplitude A and scale length theta_0.  xi_- tends to be zero,
 suggesting comparable E and B-mode power in the PSF anisotropies.
