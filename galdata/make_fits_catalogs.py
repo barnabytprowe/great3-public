@@ -1,9 +1,33 @@
-# script for making catalogs of galaxy fit data corresponding to a real galaxy training set used by
-# GalSim
+# Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted
+# provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions
+# and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+# conditions and the following disclaimer in the documentation and/or other materials provided with
+# the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to
+# endorse or promote products derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""Script for making catalogs of galaxy fit data corresponding to a real galaxy training set used by
+GalSim.  It has to collect information from several large files."""
 import pyfits
 import numpy as np
 
-# define variables etc.
+# Define filenames, etc.
 galsim_catfile = 'real_galaxy_catalog_23.5.fits'
 fit_catfiles = ['BRIGHTtotalRAW00000.26113.fits',
                 'totalRAW00000.29949.fits.gz']
@@ -12,15 +36,15 @@ cosmos_catfile = 'lensing14.fits.gz'
 out_fitfile = 'real_galaxy_catalog_23.5_fits.fits'
 out_catfile = 'real_galaxy_catalog_23.5.fits'
 
-# read in real galaxy catalog
+# Read in real galaxy catalog.
 galsim_cat = pyfits.getdata(galsim_catfile)
 n_galsim_cat = len(galsim_cat)
 print 'Read in ',n_galsim_cat,' from GalSim catalog ',galsim_catfile
 galsim_ident = galsim_cat.field('ident')
 # Fields: ('IDENT', 'RA', 'DEC', 'MAG', 'BAND', 'WEIGHT', 'GAL_FILENAME', 'PSF_FILENAME', 'GAL_HDU',
-# 'PSF_HDU', 'PIXEL_SCALE', 'NOISE_MEAN', 'NOISE_VARIANCE')
+#          'PSF_HDU', 'PIXEL_SCALE', 'NOISE_MEAN', 'NOISE_VARIANCE')
 
-# read in COSMOS catalog
+# Read in the full COSMOS catalog.
 cosmos_cat = pyfits.getdata(cosmos_catfile)
 n_cosmos_cat = len(cosmos_cat)
 print 'Read in ',n_cosmos_cat,' from COSMOS catalog ',cosmos_catfile
@@ -53,20 +77,22 @@ print 'Read in ',n_cosmos_cat,' from COSMOS catalog ',cosmos_catfile
 # 'AUTO_FLAG', 'MNUV', 'MU', 'MB', 'MV', 'MG', 'MR', 'MI', 'MJ', 'MK', 'MNUV_MR', 'SFR_MED',
 # 'STR_INF', 'SFR_SUP', 'SSFR_MED', 'SSFR_INF', 'SSFR_SUP', 'MATCH_S', 'MASK_S', 'GOOD_ZPHOT_LENS',
 # 'GOOD_ZPHOT_SOURCE')
+# That's a lot of info, so let's just pick out the things we care about: galaxy identifier, apparent
+# magnitude, size, photo-z.
 cos_ident = cosmos_cat.field('ident')
 cos_mag_auto = cosmos_cat.field('mag_auto')
 cos_flux_rad = cosmos_cat.field('flux_radius')
 cos_zphot = cosmos_cat.field('zphot')
 
-# read in catalogs with fit parameters
+# Read in catalogs with fit parameters from Lackner & Gunn.
 print "Reading in catalogs of fit parameters"
 n_fit_tot = 0
 for i_cat in range(n_catfiles):
-    # get this catalog
+    # Get this catalog
     dat = pyfits.getdata(fit_catfiles[i_cat])
     n = len(dat)
     print "Read in ",n," fit results from file ",fit_catfiles[i_cat]
-    # just extract the columns we want, and append to previous if i_cat!=0
+    # Just extract the columns we want, and append to previous if i_cat!=0.
     if i_cat == 0:
         fit_ident = dat.field('ident')
         fit_sersicfit = dat.field('sersicfit')
@@ -86,10 +112,11 @@ for i_cat in range(n_catfiles):
         fit_mad_b = np.append(fit_mad_b, dat.field('mad_dvcb_mask'), axis=0)
         fit_dvc_btt = np.append(fit_dvc_btt, dat.field('dvc_btt'), axis=0)
 
-    # increment counter
+    # Increment counter.
     n_fit_tot += n
 
-    # fields in first: ('IDENT', 'MAG_AUTO', 'FLUX_AUTO', 'MAGERR_AUTO', 'FLUX_RADIUS',
+    # Unfortunately, the files do not have the same column names.   Here are their contents -
+    # Fields in first file: ('IDENT', 'MAG_AUTO', 'FLUX_AUTO', 'MAGERR_AUTO', 'FLUX_RADIUS',
     # 'FLUXERR_AUTO', 'KRON_RADIUS', 'MU_MAX', 'MU_CLASS', 'CLEAN', 'GOOD', 'FLAGS', 'SN',
     # 'SN_NON_CORR', 'FWHM_IMAGE', 'ALPHA_J2000', 'DELTA_J2000', 'X_IMAGE', 'Y_IMAGE', 'A_IMAGE',
     # 'B_IMAGE', 'THETA_IMAGE', 'PETRO_RADIUS', 'D', 'E1_R', 'E2_R', 'E1_RU', 'E2_RU', 'GAMMA1',
@@ -160,11 +187,11 @@ out_mag_auto = cos_mag_auto[cos_ind[use_ind]]
 out_flux_rad = cos_flux_rad[cos_ind[use_ind]]
 out_zphot = cos_zphot[cos_ind[use_ind]]
 test_mag_auto = fit_mag_auto[fit_ind[use_ind]]
-print 'mag auto test:'
+print 'Mag auto test:'
 print out_mag_auto[0:9]
 print test_mag_auto[0:9]
 
-# rearrange the FIT arrays with fit quantities in the same order as galsim_ident
+# Rearrange the FIT arrays with fit quantities in the same order as galsim_ident.
 out_sersicfit = fit_sersicfit[fit_ind[use_ind],:]
 out_bulgefit = fit_bulgefit[fit_ind[use_ind],:]
 out_fit_status = fit_status[fit_ind[use_ind],:]
@@ -172,9 +199,9 @@ out_fit_mad_s = fit_mad_s[fit_ind[use_ind],:]
 out_fit_mad_b = fit_mad_b[fit_ind[use_ind],:]
 out_fit_dvc_btt = fit_dvc_btt[fit_ind[use_ind],:]
 
-# make output data structure
-# here's what we want:
-# IDENT, photo-z, magnitude, flux_radius, SERSICFIT, BULGEFIT, fit status
+# Make output data structure with IDENT, photo-z, magnitude, flux_radius, SERSICFIT, BULGEFIT, fit
+# status.  SERSICFIT and BULGEFIT are actually arrays of fit parameters from single Sersic fits and
+# two-component fits, respectively.
 tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
                                                        format='J',
                                                        array=out_ident),
@@ -207,11 +234,11 @@ tbhdu = pyfits.new_table(pyfits.ColDefs([pyfits.Column(name='IDENT',
                                                        array=out_fit_dvc_btt)]
                                         ))
 
-# write outputs
+# Write outputs.
 print "Writing to file ",out_fitfile
 tbhdu.writeto(out_fitfile, clobber=True)
 
-# write new subset of catalog file
+# Write new subset of catalog file.
 print "Re-writing to file ",out_catfile
 galsim_cat = pyfits.BinTableHDU(galsim_cat[use_ind])
 galsim_cat.writeto(out_catfile, clobber=True)

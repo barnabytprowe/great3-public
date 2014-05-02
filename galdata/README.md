@@ -48,7 +48,20 @@ their noise properties (variance).
 
 5. `makecatalog_many_var.pro` is the third script driven by `run_many.pro`.  It
 adds the noise variances from step (4) to the catalogs from step (3).
+After this step, we have a catalog that GalSim can read and use, along with the
+galaxy postage stamp images and PSF images.
 
+6. `make_fits_catalog.py` takes information about parametric fits to the galaxy
+light profiles, and combines the info from several files into a single coherent
+catalog with entries in an order corresponding to the output of (5).  Users will
+not be able to run it because they won't have the inputs, but it is provided as
+a record of how this process was done.
+
+7. `check_catalog.py` is a script with some sanity checks of the catalog
+properties: histograms of galaxy properties, and so on.  It is run on the
+catalogs that are publicly available, so people who are interested can run it
+themselves (after changing a single line in the script to specify the location
+of the catalogs on their system).
 
 
 ## Files related to the additional selection criteria

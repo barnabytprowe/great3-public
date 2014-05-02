@@ -1,27 +1,55 @@
-# Utility to check the catalogs for a training dataset, including the
-# following questions:
-# * check the contents (what fields are included)
-# * make sure we can use it with GalSim
-# * pick a random entry and check all info to make sure that it makes
-#   sense.  This should include an image of the galaxy and PSF in
-#   addition to entries in catalog.
-# * histograms of various quantities
-# * 2d scatter plots of various quantities
-# * failure patterns for fits
+# Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted
+# provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions
+# and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+# conditions and the following disclaimer in the documentation and/or other materials provided with
+# the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to
+# endorse or promote products derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+This is a utility to check the catalogs for a training dataset, including the following questions:
+
+* check the contents (what fields are included)
+* make sure we can use it with GalSim
+* pick a random entry and check all info to make sure that it makes sense.  This should include an
+  image of the galaxy and PSF in addition to entries in catalog.
+* histograms of various quantities
+* 2d scatter plots of various quantities
+* failure patterns for fits
+
+Users will have to modify it to point to the location of the COSMOS catalogs on their system.
+"""
 import pyfits
 import numpy as np
 import galsim
 import os
 import matplotlib.pyplot as plt
 
-# file name definitions, etc.
+# File name definitions, etc.  Users must change the first one to point to the proper location!
 in_dir = '/Users/rmandelb/great3/data-23.5'
-cat_file = 'real_galaxy_catalog_23.5_sub.fits'
-fit_file = 'real_galaxy_catalog_23.5_sub_fits.fits'
+cat_file = 'real_galaxy_catalog_23.5.fits'
+fit_file = 'real_galaxy_catalog_23.5_fits.fits'
 out_dir = 'diagnostics'
-out_pref = 'sub_'
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
 
-# check contents
+# Check contents of catalog file.
 filename = os.path.join(in_dir, cat_file)
 print "Information about catalog file :"
 print pyfits.info(filename)
@@ -29,16 +57,15 @@ filename = os.path.join(in_dir, fit_file)
 print "Information about file with galaxy fits:"
 print pyfits.info(filename)
 
-# make sure we can read in the catalogs / images into GalSim
-# but don't bother preloading, we're not using a ton of them
+# Make sure we can read in the catalogs / images into GalSim.
 real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file, dir=in_dir)
 gal = galsim.RealGalaxy(real_galaxy_catalog, random = True)
 print "Read in RealGalaxyCatalog with ",real_galaxy_catalog.nobjects
 print "index used: ",gal.index
 print "corresponding IDENT: ",real_galaxy_catalog.ident[gal.index]
 
-# make sure we can read in the catalog with info about Claire's fits
-# check correspondence in number of objects
+# Make sure we can read in the catalog with info about Claire's fits.
+# Check correspondence in number of objects.
 fit_catalog = pyfits.getdata(filename)
 print "Read in catalog of ",len(fit_catalog)," fits from file ",filename
 print "Field names: ",fit_catalog.names
@@ -122,7 +149,7 @@ print "Writing 2d scatter plots to file ",outfile
 fig.tight_layout()
 plt.savefig(outfile)
 
-# failure rates
+# Failure rates:
 sersicfit_status = fit_catalog.field('fit_status')[:,4]
 bulgefit_status = fit_catalog.field('fit_status')[:,0]
 s_fail_ind = np.where((sersicfit_status == 0) | (sersicfit_status == 5))[0]
@@ -131,7 +158,7 @@ b_fail_ind = np.where((bulgefit_status == 0) | (bulgefit_status == 5))[0]
 print "Number of 2 component fit failures: ",len(b_fail_ind)
 other_fail_ind = np.where((sersic_n < 0) & (sersicfit_status != 0) & (sersicfit_status != 5))[0]
 print "Number of Sersic fit failures that were not properly flagged: ",len(other_fail_ind)
-# let's check distribution of size, mag for failures vs. for everything
+# Let's check distribution of size, mag for failures vs. for everything.
 fig = plt.figure()
 ax1 = fig.add_subplot(211)
 ax1.hist(fit_catalog.field('mag_auto'), normed=True, facecolor='blue', alpha=0.5, label='All')
