@@ -1,20 +1,44 @@
+;# Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
+;# All rights reserved.
+;#
+;# Redistribution and use in source and binary forms, with or without modification, are permitted
+;# provided that the following conditions are met:
+;#
+;# 1. Redistributions of source code must retain the above copyright notice, this list of conditions
+;# and the following disclaimer.
+;#
+;# 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+;# conditions and the following disclaimer in the documentation and/or other materials provided with
+;# the distribution.
+;#
+;# 3. Neither the name of the copyright holder nor the names of its contributors may be used to
+;# endorse or promote products derived from this software without specific prior written permission.
+;#
+;# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+;# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+;# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+;# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+;# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+;# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+;# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+;# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+;
+; This script is the third script driven by `run_many.pro`.  It adds the noise variances to the
+; catalogs.
+;
 PRO makecatalog_many_var,label,start,n,per,varfile,seed
 
-;; program used by Rachel to generate the catalogs for the first N
-;; real galaxies.  Assign different files to each "per" number of
-;; of galaxies.  Read in a precomputed mean and variance for
-;; for each file
-
-; define input catalog, output file
+; Define input (and output) catalog filenames, and a temp file for intermediate outputs.  This
+; should be checked manually before copying it over the input file.
 outcat = './real_galaxy_catalog'+label+'.fits'
 tmpoutcat = 'foo.fits'
 
-; read input / output catalog
+; Read input / output catalog.
 mycat = mrdfits(outcat, 1)
 nlines = n_elements(mycat)
 print,'Read in ',nlines,' from file ',outcat
 
-; 
+; Read file with variances.
 OPENR,1,varfile
 H=FLTARR(2,nlines)
 READF,1,H
@@ -22,7 +46,7 @@ CLOSE,1
 mean = H(0,*)
 var = H(1,*)
 
-; make new data structure
+; Make new data structure with room for noise variances.
 datastr = {ident: 0L, $
            RA: 0.D, $
            DEC: 0.D, $
@@ -39,7 +63,7 @@ datastr = {ident: 0L, $
            noise_filename: ''}
 data = replicate(datastr, nlines)
            
-; populate the data structure from the input catalog
+; Populate the data structure from the input catalogs.
 data.ident = mycat.ident
 data.ra = mycat.ra
 data.dec = mycat.dec
@@ -58,10 +82,7 @@ for i=0L,nlines-1 do begin
    data[i].noise_filename = 'acs_I_unrot_sci_20_cf.fits'
 endfor
 
-;data.gal_hdu = indices
-;data.PSF_hdu = indices
-           
-; write output catalog
+; Write output catalog.
 print,'Writing to file ',tmpoutcat
 mwrfits,data,tmpoutcat,/create
 

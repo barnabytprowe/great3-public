@@ -1,41 +1,65 @@
+;# Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
+;# All rights reserved.
+;#
+;# Redistribution and use in source and binary forms, with or without modification, are permitted
+;# provided that the following conditions are met:
+;#
+;# 1. Redistributions of source code must retain the above copyright notice, this list of conditions
+;# and the following disclaimer.
+;#
+;# 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+;# conditions and the following disclaimer in the documentation and/or other materials provided with
+;# the distribution.
+;#
+;# 3. Neither the name of the copyright holder nor the names of its contributors may be used to
+;# endorse or promote products derived from this software without specific prior written permission.
+;#
+;# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+;# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+;# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+;# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+;# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+;# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+;# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+;# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+;
+; This script is the second script driven by `run_many.pro`.  It creates postage stamps for all the
+; galaxies in the proper format, and calculates their noise properties (variance).
+;
 PRO makestamps_many,label,per,varfile
 
-;; IDL script used by Rachel to make the postage stamps for the 
-;; galaxies from the catalog provided.  Also need when to create
-;; undesirable in the long term (how much padding is needed, etc.) but
-;; is good enough for a start.
-
-; define filenames etc.
+; Define filenames etc.
 catfile = './real_galaxy_catalog'+label+'.fits' ; input catalog from makecatalog.pro
-listfile = './imgs.23.5.in' ; list of files and their locations
+listfile = './imgs.23.5.in'                     ; list of files and their locations
 
-; 
 centroidval = 0
 
-; read in catalog file
+; Read in catalog file.
 cat = mrdfits(catfile,1)
 ncat = n_elements(cat)
 print,'Read in ',ncat,' from ',catfile
 
-; read in image list with locations of all files
+; Read in image list with locations of all files.
 readcol,listfile,imgfilename, imgpref,ident,format='A,A,L'
 nlist = n_elements(imgfilename)
 print,'Read in ',nlist,' from file ',listfile
 
-; Open to delete previous filename
+; Open to delete previous filename.
 openw,1,varfile
 close,1
 
-; loop over the number of objects in the catalog
+; Loop over the objects in the catalog.
 for i=0L,ncat-1 do begin
-; find filenames for each ident, since my list of image file locations
-; is not necessarily in the same order as the catalog
+   ; Find filenames for each ident, since my list of image file locations
+   ; is not necessarily in the same order as the catalog.
    wthis = where(ident eq cat[i].ident,c)
+   ; If we don't have a match in the catalog, then something is very wrong.
    if (c ne 1) then begin
       print,'Error: wrong number of matches made with ',cat[i].ident 
    endif else begin
       
-; read in image, PSF, seg
+      ; Read in image, PSF, segmentation map for this particular galaxy.
+      ; There are a bunch of things to try, because the files might be zipped or not.
       inimgfile = imgpref[wthis[0]]+'_processed.fits'
       inimgfile2 = imgpref[wthis[0]]+'_masknoise.fits.gz'
       inpsffile = imgpref[wthis[0]]+'.psf.fits'
@@ -69,8 +93,9 @@ for i=0L,ncat-1 do begin
       endelse
       print,'Read from file ',insegfile
 
-; trim the postage stamp based on the segmentation image
-                ;; first, find pixels belonging to central object
+      ; Trim the postage stamp based on the segmentation image.  We do not
+      ; need to save huge images, because GalSim will automatically pad
+      ; them for us to the proper size needed for accurate DFT rendering.
       imgsize = size(seg)
       ximgsize = imgsize[1]
       yimgsize = imgsize[2]
@@ -81,8 +106,8 @@ for i=0L,ncat-1 do begin
       var= sig*sig
       
 
-   ;; find that region in x, y, and expand its size by factor of
-   ;; 2.00 (unless that goes beyond the whole postage stamp)
+      ; We find the right region in x, y, and expand its size by factor of
+      ; 2.00 (unless that goes beyond the whole postage stamp)
       tmpsize = size(img)
       centroidval = 0.5*tmpsize[1]
       arrind = array_indices(seg, wimg)
@@ -92,14 +117,11 @@ for i=0L,ncat-1 do begin
       xplussize = maxx-centroidval
       xminussize = centroidval-minx
       xsize = max(xminussize, xplussize)
-      
-   
       minxc = round(centroidval - 2.00*xsize) > 0
       maxxc = round(centroidval + 2.00*xsize) < tmpsize[1]-1
    
-   ;; check for case when too few pixels are found.  Could be due
-   ;; to centroid being displaced.  just use midpoint of image
-   
+      ; We check for the case when too few pixels are found in the x direction.  This could
+      ; be due to centroiding issues.
       if( (maxxc-minxc) le 5L) then begin
          midx = (maxx+minx)/2
          xplussize = maxx-midx
@@ -123,9 +145,8 @@ for i=0L,ncat-1 do begin
       minyc = round(centroidval - 2.00*ysize) > 0
       maxyc = round(centroidval + 2.00*ysize) < tmpsize[1]-1
 
-   ;; check for case when too few pixels are found.  Could be due
-   ;; to centroid being displaced.  just use midpoint
-      
+      ; We check for the case when too few pixels are found in the y direction.  This could
+      ; be due to centroiding issues.
       if( (maxyc-minyc) le 5L) then begin
          midy = (maxy+miny)/2
          yplussize = maxy-midy
@@ -138,8 +159,9 @@ for i=0L,ncat-1 do begin
          maxy = maxyc
       endelse
 
-      ;; check if it's square.  If not, then make it square by
-      ;; adopting the size in the dimension that is larger.
+
+      ; Check if it's square.  If not, then make it square by
+      ; adopting the size in the dimension that is larger.
       ddy = maxy + 1 - miny
       ddx = maxx + 1 - minx
       if (ddy gt ddx) then begin
@@ -157,7 +179,7 @@ for i=0L,ncat-1 do begin
          maxy = maxy + delta_size_2 < tmpsize[1]-1
       endif
 
-   ; for PSF, cut it off where flux is <2000x peak
+      ; For the PSF, cut off the postage stamp where flux is <2000x peak.
       tmpsize = size(psf)
       centroidval = 0.5*tmpsize[1]
       wkeep = where(psf ge 0.0005*max(psf),nkeep)
@@ -177,7 +199,7 @@ for i=0L,ncat-1 do begin
       minyp = round(centroidval - ysize) > 0
       maxyp = round(centroidval + ysize) < tmpsize[1]-1
       
-      ;; write files
+      ; Write to output image files.
       nfile=i/per+1
       outgalfile = 'real_galaxy_images'+label+'_n'+string(nfile,format='(I0)')+'.fits'
       outpsffile = 'real_galaxy_PSF_images'+label+'_n'+string(nfile,format='(I0)')+'.fits'
@@ -187,6 +209,7 @@ for i=0L,ncat-1 do begin
       mwrfits,img[minx:maxx,miny:maxy],outgalfile
       mwrfits,psf[minxp:maxxp,minyp:maxyp],outpsffile
       
+      ; Save noise variance to text file.
       openw,1,varfile,/APPEND
       printf,1,mean,sig*sig
       close,1
