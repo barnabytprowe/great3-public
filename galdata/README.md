@@ -31,13 +31,8 @@ in the F814W<23.5 sample, in a format that can be used by SHERA.
 
 2. `run_many.pro` was used to drive the three scripts below, in sequence, to
 generate the postage stamps and a GalSim-style catalog representing the galaxy
-sample.  It was used with the following calling sequence in IDL:
-
-    run_many,'_23.5',0,56062,1000,10
-
-This calling sequence tells the script about the size of the galaxy sample, how
-many postage stamps to include in a given image file (1000), and a random seed
-to use when randomly reordering the sample (10).
+sample.  The calling sequence is described in comments at the top of the script
+itself.
 
 3. `makecatalog_many.pro` is the first script driven by `run_many.pro`.  It
 takes the SHERA catalog, and puts it into the format needed by GalSim.

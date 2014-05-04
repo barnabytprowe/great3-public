@@ -24,8 +24,14 @@
 ;# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;
 ; This script was used to run was used to drive several scripts, in sequence, to generate the
-; postage stamps and a GalSim-style catalog representing the galaxy sample.  For more information
-; and context, see README.md.
+; postage stamps and a GalSim-style catalog representing the galaxy sample.  It was used with the
+; following calling sequence in IDL:
+;
+;    run_many,'_23.5',0,56062,1000,10
+;
+; This calling sequence tells the script about the size of the galaxy sample, how many postage
+; stamps to include in a given image file (1000), and a random seed to use when randomly reordering
+; the sample (10).
 ;
 PRO run_many,label,start,n,per,seed
 
