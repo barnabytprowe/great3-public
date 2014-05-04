@@ -61,3 +61,19 @@ of the catalogs on their system).
 
 ## Files related to the additional selection criteria
 -----------------------------------------------------
+
+1. `shape_2comp.py` determines the effective shapes of the 2-component galaxy
+models.  For galaxies for which we use a single Sersic profile, the isophotes
+are elliptical and we can just use the fit parameters for that Sersic profile to
+determine the shape.  For 2-component galaxies we have to make the images and
+measure their shapes directly using adaptive moments.  The purpose is to get
+shapes we can use when defining the B-mode shape noise field.  While what we
+have here is not perfect (for two-component models the shape will depend on the
+radial weight) it should be good enough for these purposes.
+
+2. `check_failure.py` investigates the 3% of objects for which measurement in
+the previous step failed.  The goal is to determine if they are a particularly
+weird subset of the sample, or just random failures.  The answer seems to be
+that there are slight trends in Sersic n (preferentially low n failures) and
+radius, but nothing very strong.  Since it's only 3% of objects lost, we will
+just get rid of them.
