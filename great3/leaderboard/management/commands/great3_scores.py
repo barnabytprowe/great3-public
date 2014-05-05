@@ -77,8 +77,6 @@ class Command(BaseCommand):
 
             print "Processing entry %s" % entry.name.encode('utf-8')
             filename = entry.get_filename()
-            if entry.imported:
-                filename = filename[:-3] #strip off last three characters
             print "Computing score, loading entry filename "+str(filename)
             if entry.board.experiment not in EXPERIMENTS_DICT:
                 raise ValueError("Experiment not recognised.")

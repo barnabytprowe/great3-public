@@ -362,6 +362,8 @@ class Entry(models.Model):
 		method_name = slugify(self.method.name)
 		entry_name = slugify(self.name)
 		date_text = self.date.isoformat()
+		if self.imported:
+			entry_name = entry_name[:-3]
 		filename = '%s-%s-%s-%s.g3' % (team_name, method_name, entry_name, date_text)
 		return os.path.join(SUBMISSION_SAVE_PATH, filename)
 
