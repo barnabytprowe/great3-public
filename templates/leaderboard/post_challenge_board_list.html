@@ -33,7 +33,7 @@
 	<TBODY>
 	{% for board in boards %}
 	<TR>
-		<TD> <A href="{% url leaderboard.board_views.detail board.id %}"> {{ board.name }}   </A> </TD>
+		<TD> <A href="{% url leaderboard.board_views.post_challenge_detail board.id %}"> {{ board.name }}   </A> </TD>
 		<TD>{% if board.space %} Y {% else %} N {% endif %} </TD>
 		<TD>{% if board.varying %} Y {% else %} N {% endif %} </TD>
 		{% with board.winner as winner %}
