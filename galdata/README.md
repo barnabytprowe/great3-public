@@ -77,3 +77,39 @@ weird subset of the sample, or just random failures.  The answer seems to be
 that there are slight trends in Sersic n (preferentially low n failures) and
 radius, but nothing very strong.  Since it's only 3% of objects lost, we will
 just get rid of them.
+
+3. `training_galaxy_props.py` computes several quantities that are needed for
+selection of galaxies in the GREAT3 simulations.  It takes a target PSF as an
+argument, and for that target PSF, makes a simulation of each galaxy with that
+target PSF.  Then it uses the images to answer the following questions: (a) What
+noise variance should we add if we want to achieve S/N=20 using an optimal S/N
+estimator? (b) What is the resolution factor for that PSF and galaxy?  (c) What
+fraction of the galaxy flux is contained in our postage stamp size?  These
+outputs are saved to catalogs, to be used in GREAT3 galaxy selection.
+
+4. `run_props.py` takes some command-line arguments for the PSF and pixel scale,
+and runs `training_galaxy_props.py`.  See the docstring for this file for
+details as to how the script was run for GREAT3, i.e., which PSFs did we choose
+to simulate.  There were six PSFs and hence six runs of `run_props.py`.
+
+5. `combine_info.py` takes the outputs of `run_props.py` and combines them into
+a single file that is used by the GREAT3 simulation scripts to select galaxies.
+It applies cuts for basic measurement failures, after which we can use 54456 out
+of 56062 galaxies, or 97%.
+
+6. `training_galaxy_props_real.py` works like `training_galaxy_props.py`, and
+computes two additional quantities that were later found to be necessary for
+using the real galaxy sample (as opposed to the parametric fits).  These are:
+(a) the S/N within an elliptical Gaussian filter on the original image, and (b)
+the minimum noise variance after noise whitening to eliminate correlated noise
+in the simulated image.  If (a) is too low, that can indicate some issue with
+the galaxy image that makes it unusable.  If (b) is too high compared to the
+noise variance we want to add, then we cannot use a galaxy in our simulation
+with our desired S/N limit.  In practice, this script was also run by
+`run_props.py` using the same command-line arguments, and the information in
+those outputs was combined using `combine_image_info.py` (see below).
+
+7. `combine_image_info.py` takes the outputs of the previous script for 6
+different PSFs defined in `run_props.py`, and combines them into a single file
+that is used by the GREAT3 simulation scripts to select galaxies for which the
+use of real galaxy images is not problematic in some way.
