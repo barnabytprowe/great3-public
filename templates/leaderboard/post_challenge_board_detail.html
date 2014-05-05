@@ -51,9 +51,9 @@
 			<TD></TD>
 			{% else %}
 			<TD> {{ entry.m_plus|with_error:entry.delta_m_plus }} </TD>
-			<TD> {{ entry.m_minus|with_error:entry.delta_m_minus }} </TD>
+			<TD> {{ entry.m_cross|with_error:entry.delta_m_cross }} </TD>
 			<TD> {{ entry.c_plus|with_error:entry.delta_c_plus }} </TD>
-			<TD> {{ entry.c_minus|with_error:entry.delta_c_minus }} </TD>
+			<TD> {{ entry.c_cross|with_error:entry.delta_c_cross }} </TD>
 			{% endif %}
 			<TD> {{ entry.rank_text }} </TD>
 			<TD> {{ entry.points_text }} </TD>

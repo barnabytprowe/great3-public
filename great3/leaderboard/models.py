@@ -306,10 +306,14 @@ class Entry(models.Model):
 	date = models.DateTimeField(auto_now_add=True)
 	rank = models.IntegerField(default=PLACEHOLDER_RANK)
 	points_text = models.CharField(max_length=24)
-	m = models.FloatField(default=PLACEHOLDER_ERROR)
-	c = models.FloatField(default=PLACEHOLDER_ERROR)
-	delta_m = models.FloatField(default=PLACEHOLDER_ERROR)
-	delta_c = models.FloatField(default=PLACEHOLDER_ERROR)
+	m_plus = models.FloatField(default=PLACEHOLDER_ERROR)
+	c_plus = models.FloatField(default=PLACEHOLDER_ERROR)
+	delta_m_plus = models.FloatField(default=PLACEHOLDER_ERROR)
+	delta_c_plus = models.FloatField(default=PLACEHOLDER_ERROR)
+	m_cross = models.FloatField(default=PLACEHOLDER_ERROR)
+	c_cross = models.FloatField(default=PLACEHOLDER_ERROR)
+	delta_m_cross = models.FloatField(default=PLACEHOLDER_ERROR)
+	delta_c_cross = models.FloatField(default=PLACEHOLDER_ERROR)
 	blind = models.BooleanField(default=False)
 	
 	def __unicode__(self):
