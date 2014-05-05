@@ -315,6 +315,7 @@ class Entry(models.Model):
 	delta_m_cross = models.FloatField(default=PLACEHOLDER_ERROR)
 	delta_c_cross = models.FloatField(default=PLACEHOLDER_ERROR)
 	blind = models.BooleanField(default=False)
+	imported = models.BooleanField(default=False)
 	
 	def __unicode__(self):
 		return self.name
