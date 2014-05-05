@@ -94,6 +94,19 @@ def detail(request, board_id):
 	data = dict(board=board, entries=entries)
 	return render(request,'leaderboard/board_detail.html',data)
 
+def post_challenge_detail(request, board_id):
+	""" Detail view of a single leaderboard """
+	try:
+		board = Board.objects.get(id=board_id)
+	except Board.DoesNotExist:
+		raise Http404
+	if not board.enabled:
+		raise Http404
+	entries = board.entry_set.order_by('-score')
+	data = dict(board=board, entries=entries)
+	return render(request,'leaderboard/post_challenge_board_detail.html',data)
+
+
 def methods_for_teams(*teams):
 	methods = []
 	for team in teams:

@@ -5,6 +5,7 @@ import models
 
 urlpatterns = patterns('leaderboard.board_views',
     url(r'^board/(\d+)/?$', 'detail'),
+    url(r'^board/post_challenge/(\d+)/?$', 'post_challenge_detail'),
     url(r'^board/post_challenge/?$', 'post_challenge_index'),
     url(r'^board/?$', 'index'),
 	url(r'^board/(\d+)/submitted/?$', 'submitted'),
