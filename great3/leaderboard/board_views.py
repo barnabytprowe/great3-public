@@ -111,6 +111,8 @@ def submit(request, board_id):
 		raise Http404
 	if not board.enabled:
 		raise Http404
+	if board.frozen:
+		return render(request, 'leaderboard/contest_finished.html')
 	all_teams = request.user.get_profile().teams.all()
 
 	if not all_teams:
