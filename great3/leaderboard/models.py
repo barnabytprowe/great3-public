@@ -12,7 +12,7 @@ import re
 import itertools
 
 #Setting this to true will suspend all submissions!
-SUBMISSION_SUSPENDED = False
+SUBMISSION_SUSPENDED = True
 
 
 # This function taken from django and slightly modified
