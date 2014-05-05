@@ -94,12 +94,12 @@ class Team(models.Model):
 			return None
 
 	def calculate_tiebreak_score(self):
-		scores = [entry.get_points() for entry in self.entry_set.all()]
+		scores = [entry.get_points() for entry in self.entry_set.all() if entry.blind]
 		total_score = sum(scores)
 		return total_score
 
 	def calculate_score(self):
-		scores = [entry.get_points() for entry in self.entry_set.all()]
+		scores = [entry.get_points() for entry in self.entry_set.all() if entry.blind]
 		scores = sorted(scores)[::-1]
 		new_score = sum(scores[:MAX_BOARDS_FOR_SCORING])
 		self.score = new_score
@@ -328,12 +328,12 @@ class Entry(models.Model):
 			return "...Calculating..."
 		else:
 			score = "%.1f" % self.score
-			if self.team.tainted:
+			if self.team.tainted and self.board.blind:
 				score += ' *'
 			return score
 
 	def get_points(self):
-		if self.score<MIN_SCORE_FOR_POINTS or not self.board.blind:
+		if self.score<MIN_SCORE_FOR_POINTS:
 			return 0
 		return score_for_rank(self.rank)
 
@@ -346,7 +346,7 @@ class Entry(models.Model):
 			return
 		top_entries = self.team.top_entries_by_rank()
 		in_top = self in top_entries
-		if in_top:
+		if in_top or not self.board.blind:
 			self.points_text = str(p)
 		else:
 			self.points_text = str(p) + ' [*]'
