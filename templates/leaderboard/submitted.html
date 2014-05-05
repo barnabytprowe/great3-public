@@ -2,5 +2,9 @@
 {% block title %}Thank you for your submission{% endblock %}
 {% block content %}
 <P> Thank you for your submission.  It is being processed. Scores are calculated every 10 minutes. </P>
+{%if board.blind %}
 <P><A href="{% url leaderboard.board_views.detail board_id  %}">Return to leaderboard</A>
+{% else %}
+<P><A href="{% url leaderboard.board_views.post_challenge_detail board_id  %}">Return to leaderboard</A>
+{% endif %}
 {% endblock %}

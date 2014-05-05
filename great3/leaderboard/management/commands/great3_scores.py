@@ -77,6 +77,9 @@ class Command(BaseCommand):
 
             print "Processing entry %s" % entry.name.encode('utf-8')
             filename = entry.get_filename()
+            if not os.path.exists(filename):
+                print "Filename does not exist: ", filename
+                continue
             print "Computing score, loading entry filename "+str(filename)
             if entry.board.experiment not in EXPERIMENTS_DICT:
                 raise ValueError("Experiment not recognised.")
@@ -127,7 +130,7 @@ class Command(BaseCommand):
             datestamp = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
             outfile.write('%s\t%s\t%r\t%s\n' % (entry.name,filename,entry.score,datestamp))
             entry.save()
-            if board.frozen or board.blind:
+            if entry.board.frozen or entry.board.blind and False:
                 subject = MAIL_SUBJECT.format(entry=entry, board=entry.board, team=entry.team, 
                     score=entry.score)
                 message = MAIL_MESSAGE.format(entry=entry, board=entry.board, team=entry.team, 

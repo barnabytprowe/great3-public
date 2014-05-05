@@ -36,6 +36,7 @@ class Command(BaseCommand):
         for e in entries:
             #This entry was originally blind, so reflect that.
             #Actually this is probably true already
+            old_date = e.date
             e.blind = True
 
             #Add something to the name
@@ -53,4 +54,6 @@ class Command(BaseCommand):
 
             #Unset the primary key to save to a new object
             e.pk = None
+            e.save()
+            e.date = old_date
             e.save()

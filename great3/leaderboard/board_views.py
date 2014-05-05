@@ -173,6 +173,10 @@ def submit(request, board_id):
 		return render(request, 'leaderboard/submit.html', data)
 
 def submitted(request, board_id):
-	data = dict(board_id=board_id)
+	try:
+		board = Board.objects.get(id=board_id)
+	except Board.DoesNotExist:
+		raise Http404
+	data = dict(board_id=board_id, board=board)
 	return render(request, 'leaderboard/submitted.html', data)
 

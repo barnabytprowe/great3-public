@@ -8,7 +8,7 @@ register = template.Library()
 def with_error(value, arg):
 	if float(value)==PLACEHOLDER_ERROR:
 		return ""
-	return "%.3g ± %.3g" % (value, arg)
+	return "%.3g ± %.3g" % (100*value, 100*arg)
 
 @register.filter
 def split_lines(value):
