@@ -316,7 +316,7 @@ class Entry(models.Model):
 		return self.name
 
 	def rank_text(self):
-		if self.team.tainted:
+		if self.team.tainted and self.blind:
 			return '*'
 		r = self.rank
 		if r==PLACEHOLDER_RANK:
