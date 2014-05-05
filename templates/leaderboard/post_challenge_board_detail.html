@@ -1,5 +1,6 @@
 {% extends "leaderboard/table_page.html" %}
 {% block subtitle %} {{board.name}} {% endblock %}
+{% load g3_template_tags %}
 <H3> Leaderboard:  {{ board.name }} </H3>
 
 
@@ -41,12 +42,19 @@
 		<TR {% if entry.blind %} class="oddBlind" {% endif %} >
 			<TD> <A href="{% url leaderboard.entry_views.detail entry.id %}"> {{ entry.name }}</A> </TD>
 			<TD> <A href="{% url leaderboard.team_views.detail entry.team.id %}"> {{ entry.team }}</A> </TD>
-			<TD> {{ entry.method }} </TD>
+			<TD> {{ entry.method|truncatechars:15 }} </TD>
 			<TD> {{ entry.score_text }} </TD>
-			<TD> XXX </TD>
-			<TD> XXX </TD>
-			<TD> XXX </TD>
-			<TD> XXX </TD>
+			{% if entry.board.varying %}			
+			<TD></TD>
+			<TD></TD>
+			<TD></TD>
+			<TD></TD>
+			{% else %}
+			<TD> {{ entry.m_plus|with_error:entry.delta_m_plus }} </TD>
+			<TD> {{ entry.m_minus|with_error:entry.delta_m_minus }} </TD>
+			<TD> {{ entry.c_plus|with_error:entry.delta_c_plus }} </TD>
+			<TD> {{ entry.c_minus|with_error:entry.delta_c_minus }} </TD>
+			{% endif %}
 			<TD> {{ entry.rank_text }} </TD>
 			<TD> {{ entry.points_text }} </TD>
 			<TD> {{ entry.date }} </TD>
