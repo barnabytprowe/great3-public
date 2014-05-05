@@ -69,9 +69,17 @@ class SubmissionForm(forms.Form):
 
 def index(request):
 	""" List of all leaderboards """
-	boards = Board.objects.filter(enabled=True).order_by('name')
+	boards = Board.objects.filter(enabled=True, blind=True).order_by('name')
 	data = dict(boards=boards)
 	return render(request,'leaderboard/board_list.html',data)
+
+
+def post_challenge_index(request):
+	""" List of all leaderboards """
+	boards = Board.objects.filter(enabled=True, blind=False).order_by('name')
+	data = dict(boards=boards)
+	return render(request,'leaderboard/post_challenge_board_list.html',data)
+
 
 
 def detail(request, board_id):

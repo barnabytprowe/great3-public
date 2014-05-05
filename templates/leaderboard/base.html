@@ -20,6 +20,7 @@
 		<li><a href="{% url leaderboard.data_views.index %}">Get Data</a></li>
 		<li><a href="{% url leaderboard.team_views.index %}"> Overall Leaderboard</a></li>
 		<li><a href="{% url leaderboard.board_views.index %}">Branch Leaderboards</a></li>
+		<li><a href="{% url leaderboard.board_views.post_challenge_index %}">Post-challenge Leaderboards</a></li>
 		{% if user.is_authenticated %}
 		<li><a href="{% url leaderboard.team_views.setup %}">My Great3</a></li>
 		<li><a href="{% url django.contrib.auth.views.logout %}">Logout {{user}}</a></li>
