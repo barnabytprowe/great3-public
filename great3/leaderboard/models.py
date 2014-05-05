@@ -12,7 +12,7 @@ import re
 import itertools
 
 #Setting this to true will suspend all submissions!
-SUBMISSION_SUSPENDED = True
+SUBMISSION_SUSPENDED = False
 
 
 # This function taken from django and slightly modified
@@ -29,6 +29,7 @@ def slugify(value):
 # Create your models here.
 SUBMISSION_SAVE_PATH=os.path.join(os.path.split(__file__)[0], '..','..','results')
 PLACEHOLDER_SCORE = -1.0
+PLACEHOLDER_ERROR = 1.0
 PLACEHOLDER_RANK = 1000
 MAXIMUM_ENTRIES_PER_DAY = 4
 MAX_BOARDS_FOR_SCORING = 5
@@ -254,6 +255,8 @@ class Board(models.Model):
 	varying = models.BooleanField()
 	datafile = models.ForeignKey('PublicDataFile', null=True, blank=True)
 	enabled = models.BooleanField()
+	frozen = models.BooleanField()
+	blind =  models.BooleanField()
 
 	@transaction.commit_manually()
 	def assign_ranks(self):
@@ -303,7 +306,12 @@ class Entry(models.Model):
 	date = models.DateTimeField(auto_now_add=True)
 	rank = models.IntegerField(default=PLACEHOLDER_RANK)
 	points_text = models.CharField(max_length=24)
-
+	m = models.FloatField(default=PLACEHOLDER_ERROR)
+	c = models.FloatField(default=PLACEHOLDER_ERROR)
+	delta_m = models.FloatField(default=PLACEHOLDER_ERROR)
+	delta_c = models.FloatField(default=PLACEHOLDER_ERROR)
+	blind = models.BooleanField(default=False)
+	
 	def __unicode__(self):
 		return self.name
 
