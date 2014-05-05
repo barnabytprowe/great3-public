@@ -325,7 +325,7 @@ class Entry(models.Model):
 
 	def score_text(self):
 		if self.score == PLACEHOLDER_SCORE:
-			return "...Calculating..."
+			return "..."
 		else:
 			score = "%.1f" % self.score
 			if self.team.tainted and self.board.blind:
