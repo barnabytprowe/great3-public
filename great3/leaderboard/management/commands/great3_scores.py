@@ -103,17 +103,27 @@ class Command(BaseCommand):
                     poisson_weight=POISSON_WEIGHT, usebins=USEBINS)
             else:
                 shear_type = "constant"
-                entry.score = evaluate.q_constant(
+                (Q_c, c_plus, m_plus, c_cross, m_cross, sigc_plus, sigm_plus, sigc_cross, sigm_cross) = evaluate.q_constant(
                     filename, experiment, obs_type,  cfid=evaluate.CFID, mfid=evaluate.MFID,
                     normalization={
                         "ground": evaluate.NORMALIZATION_CONSTANT_GROUND,
                         "space": evaluate.NORMALIZATION_CONSTANT_SPACE}[obs_type],
-                    just_q=True, truth_dir=TRUTH_DIR,
+                    just_q=False, truth_dir=TRUTH_DIR,
                     sigma2_min={ # As above, explicitly set sigma2_min here, although this is also
                                  # the default...
                         "ground": evaluate.SIGMA2_MIN_CONSTANT_GROUND,
                         "space": evaluate.SIGMA2_MIN_CONSTANT_SPACE}[obs_type],
                     storage_dir=STORAGE_DIR, logger=logger, pretty_print=False)
+                entry.score = Q_c
+                entry.m_plus  = m_plus
+                entry.m_cross = m_cross
+                entry.c_plus  = c_plus
+                entry.c_cross = c_cross
+                entry.delta_m_plus  = sigm_plus
+                entry.delta_m_cross = sigm_cross
+                entry.delta_c_plus  = sigc_plus
+                entry.delta_c_cross = sigc_cross
+
             datestamp = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
             outfile.write('%s\t%s\t%r\t%s\n' % (entry.name,filename,entry.score,datestamp))
             entry.save()
