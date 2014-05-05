@@ -333,7 +333,7 @@ class Entry(models.Model):
 			return score
 
 	def get_points(self):
-		if self.score<MIN_SCORE_FOR_POINTS:
+		if self.score<MIN_SCORE_FOR_POINTS or not self.board.blind:
 			return 0
 		return score_for_rank(self.rank)
 
