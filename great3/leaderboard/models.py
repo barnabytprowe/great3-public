@@ -445,7 +445,7 @@ def create_data():
 
 def save_submission_file(submission, name, notes, method, user, team, board):
 	print "Sanity check the file size here"
-	entry = Entry(team=team, name=name, notes=notes, user=user, method=method, board=board)
+	entry = Entry(team=team, name=name, notes=notes, user=user, method=method, board=board, blind=board.blind)
 	entry.save()
 	try:
 		with open(entry.get_filename(), 'wb+') as destination:
