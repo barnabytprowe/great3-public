@@ -1,3 +1,8 @@
+"""@file plot_test_evaluate_metrics.py
+
+Plotting routines for outputs of the test_evaluate.py script (made by modifying module scope
+constants appropriately in that module).
+"""
 import os
 import sys
 import cPickle
