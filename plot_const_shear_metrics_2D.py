@@ -1,3 +1,8 @@
+"""@file plot_const_shear_metrics_2D.py
+
+Plot some constant shear results as nice 2D surfaces.
+"""
+
 import os
 import numpy as np
 import g3metrics

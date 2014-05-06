@@ -1,3 +1,9 @@
+"""@file plot_PS_normalization_results.py
+
+Plot output of the calculate_QG10_var_shear_normalization.py and 
+calculate_QG3S_var_shear_normalization.py simulation scripts.
+"""
+
 import os
 import cPickle
 import numpy as np
