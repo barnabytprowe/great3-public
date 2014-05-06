@@ -1,7 +1,6 @@
 """@file tabulate_variable_shear_metric_rev1.py
 
-Tabulate values of the new variable shear metrics (revision 1: Dec 13/Jan 14) for given biases, for
-inclusion in the GREAT3 Handbook.
+Tabulate values of the new variable shear metrics (revision 1: Feb 14) for given biases.
 """
 
 import sys
