@@ -17,4 +17,48 @@ measurement submissions that were used for validation.
 3. `count_objects.py` is a command line executable script for running SExtractor
 (Bertin & Arnouts 1998) on all FITS files in a given GREAT3 experiment using a
 sensible default config (chosen after some trial and error) to determine object
-counts for GREAT3 images.
+counts for GREAT3 images.  Makes output for plotting by the
+`plot_galaxy_badcounts.py` script (see below).
+
+4. `fits_verify.py` uses the fitsverify exectutable to check basic FITS
+properties for all the files in a GREAT3 release specified by the `constants.py`
+module (see above).
+
+5. `get_md5sums.py` calculates all the md5sums for all the branches in all the
+experiments specified by the `constants.py` module (see above).  Writes an
+output file listing all md5sums that can be read by `compare_md5sums.py` (see
+above).
+
+6. `get_plot_snr_stats.py` runs SExtractor on all files in a given experiment
+(set on input), but doing only the shear type and observation type specified in
+the `constants.py` module in this directory (see above).  Uses SExtractor output
+FLUX_AUTO and FLUXERR_AUTO to defined an "observed" SNR.  Makes some plots,
+saves some info about the 80%, 90%, 95% and 99% quantiles of SNR distributions.
+
+7. `image_check.py` checks for image sizes, pixel statistics and NaNs etc. in
+GREAT3 images, and makes plots.
+
+8. `plot_detect_galaxy_snr.py` is a quick and dirty command line tool for making
+plots of either a single FITS image file's SExtractor SNR distribution, or two
+distributions for two separate FITS files, overlaid.  This latter functionality
+was useful for validating that the multiepoch branch image SNRs were smaller
+than the control etc. SNRs by an appropriate factor.
+
+9. `plot_galaxy_badcounts.py` is a convenience script for finding and plotting
+the histogram of object SNRs for the GREAT3 galaxy image with an object number
+count furthest from the 10000 required.  Uses a "badcount" dict as output by
+`count_objects.py` (see above).
+
+10. `plot_variable_submission.py` is a handy command line executable script for
+plotting up a GREAT3 variable shear submission.
+
+11. `test_offsets.py` module containing some basic routines to check that the
+offsets assumed by the `presubmission.py` code match the offsets contained in
+the GREAT3 truth catalogues.
+
+12. `test_variable.py` has been used to perform various tests on the variable
+shear branch catalogs in GREAT.  These are mostly for consistency with
+expectations, and for the presence of B-mode leakage.  The code currently
+compares the `map_E` output of server/great3/evaluate.py versus that which
+comes from running `presubmisson.py`, plotting the results.  However, the module
+has tools which can be used for a number of related investigations.
