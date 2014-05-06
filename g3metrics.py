@@ -1,4 +1,11 @@
-"""Module containing GREAT3 metric calculation utilities.
+"""@file g3metrics.py
+Module containing GREAT3 metric simulations and calculation utilities.
+
+These are mostly functions used in the simulation of metrics for the purposes of improving metric
+design and understanding metric uncertainty.
+
+However, the function metricQZ1_const_shear() provides the metric calculation used in the evaluation
+of constant shear branch metrics in GREAT3.
 """
 import numpy as np
 import galsim
@@ -369,6 +376,8 @@ def _calculateSvalues(xarr, yarr, sigma2=1.):
 def run_corr2_ascii(x, y, e1, e2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='temp.cat',
                     params_file='corr2.params', m2_file_name='temp.m2', xy_units='degrees',
                     sep_units='degrees'):
+    """Run Mike Jarvis' corr2 correlation function code using ASCII files for the I/O.
+    """
     import os
     import subprocess
     import tempfile
@@ -395,6 +404,8 @@ def run_corr2_ascii(x, y, e1, e2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='t
 def run_corr2(x, y, g1, g2, min_sep=0.1, max_sep=10., nbins=8, temp_cat='temp.cat',
               params_file='corr2.params', m2_file_name='temp.m2', xy_units='degrees',
               sep_units='degrees', corr2_exec='corr2'):
+    """Run Mike Jarvis' corr2 correlation function code using FITS files for the I/O.
+    """
     import os
     import subprocess
     import tempfile
@@ -436,12 +447,10 @@ def fitline(xarr, yarr):
     """
     # Get the S values (use default sigma2, best fit a and b still valid for stationary data)
     S, Sx, Sy, Sxx, Sxy = _calculateSvalues(xarr, yarr)
-
     # Get the best fit a and b
     Del = S * Sxx - Sx * Sx
     a = (Sxx * Sy - Sx * Sxy) / Del
     b = (S * Sxy - Sx * Sy) / Del
-
     # Use these to estimate the sigma^2 by residuals from the best-fitting model
     ymodel = a + b * xarr
     sigma2 = np.mean((yarr - ymodel)**2)
@@ -472,6 +481,8 @@ def metricQ08_const_shear(g1est, g2est, g1true, g2true, nfields):
 
 def metricQZ1_const_shear(g1est, g2est, g1true, g2true, cfid=1.e-4, mfid=1.e-3, sigma2_min=0.):
     """Calculate a metric along the lines suggested by Joe Zuntz in Pittsburgh (option 1).
+
+    This is the GREAT3 constant metric as used by evaluate.q_constant().
 
     Modified in December 2013 to add the sigma2_min damping term, based on discussions on the email
     list thread [great3-ec 104].
@@ -579,7 +590,10 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtr
                              ngrid=100, dx_grid=0.1, nbins=8, cfid=1.e-4, mfid=1.e-3, min_sep=0.1,
                              max_sep=10., plot=False, select_by_B_leakage=0.,
                              correct_B_theory=True, use_errors=True):
-    """The nfields must be an integer divisor of len(mapEsub_list).
+    """Calculates a metric based on fitting a STEP-like m & c linear bias model to variable shear
+    results.
+
+    The nfields must be an integer divisor of len(mapEsub_list).
     """
     import scipy.optimize
     # First calculate what an input unit c1=c2=1 looks like
@@ -609,7 +623,6 @@ def metricMapCF_var_shear_mc(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtr
             use_for_fit = (np.abs(mapBtrue_mean) / np.abs(mapEtrue_mean) < select_by_B_leakage)
         else:
             use_for_fit = np.array([True,] * len(mapEsub_mean), dtype=bool)
-
         # Ready the terms to go to the fitter
         submission = mapEsub_mean[use_for_fit]
         if use_errors:
@@ -672,8 +685,6 @@ def calc_diffs_E(mapEsub_list, maperrsub_list, mapEtrue_list, mapBtrue_list, nfi
                  select_by_B_leakage=0.):
     """Calculate differences between all submitted and target E-mode aperture mass statistics,
     averaged over fields, optionally excluding large B leakage regions.
-
-    
     """
     # Calculate the number of images per field
     nsubfields = len(mapEsub_list) / nfields
