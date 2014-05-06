@@ -3,6 +3,12 @@
 Module containing functions for the evaluation of the constant and variable shear-type branches
 of the GREAT3 Challenge.
 
+For the functions used to directly evaluate the GREAT3 metrics, see q_constant() and q_variable().
+
+This code requires the full GREAT3 truth data to have been unpacked into the directory specified by
+the path in TRUTH_DIR, set below.  Please update TRUTH_DIR to match the location of the truth data
+on your system.
+
 Constant shear branches
 -----------------------
 Each submission file (one per branch) should take the format of a 3-column ASCII catalog, e.g.:
@@ -83,6 +89,8 @@ except ImportError:
                                                                # folder to path
     import g3metrics
 
+TRUTH_DIR = "/great3/beta/truth"  # Root folder in which the truth values are upacked
+
 NFIELDS = 10     # Total number of fields
 NSUBFIELDS = 200 # Total number of subfields, not necessarily equal to the number of subfields made
                  # in mass_produce as that script also generates the deep fields
@@ -111,9 +119,6 @@ STORAGE_DIR = "./metric_calculation_products" # Folder into which to store usefu
                                               # outputs of metric calculations (e.g. rotation files,
                                               # dicts, mapE tables) which need be calculated only
                                               # once
-TRUTH_DIR = "/great3/beta/truth"  # Root folder in which the truth values are upacked (admin)
-#TRUTH_DIR = "/Users/browe/great3/truth-alpha-release-1" 
-#TRUTH_DIR = "/projector/browe/great3/beta/truth"
 
 SUBFIELD_DICT_FILE_PREFIX = "subfield_dict_"
 GTRUTH_FILE_PREFIX = "gtruth_"
@@ -127,26 +132,6 @@ MAPEOBS_FILE_PREFIX = "mapEobs_"
 # 30 Jan 2014 to bring space and ground into agreement at high bias
 NORMALIZATION_CONSTANT_SPACE = 1.232
 NORMALIZATION_CONSTANT_GROUND = NORMALIZATION_CONSTANT_SPACE
-
-#NORMALIZATION_VARIABLE = 1.26856e-4 # Factor comes from tests with new geometry (good to \pm 0.6%) 
-#NORMALIZATION_VARIABLE = 1.0        # Set equal to unity for testing
-#NORMALIZATION_VARIABLE = 2.4502427759585598e-04 # Factor comes from tests with test_evaluate.py on
-                                                 # 600 runs, 15 Oct 2013
-#NORMALIZATION_VARIABLE_GROUND = 0.000794105283678 # Factor comes from tests with test_evaluate.py
-                                                   # on 600 runs and NOISE_SIGMA = 0.15, 13 Dec 2013
-#NORMALIZATION_VARIABLE_GROUND = 0.000237155945476 # Factor comes from tests with test_evaluate.py
-                                                   # on 600 runs and NOISE_SIGMA = 0.15, 17 Dec
-                                                   # 2013, with sigma2_min = 2.e-6
-
-#NORMALIZATION_VARIABLE_GROUND = 1. # Set equal to unity for testing
-#NORMALIZATION_VARIABLE_SPACE = 1.  # Set equal to unity for testing
-#NORMALIZATION_VARIABLE_SPACE = 0.000499406254775 # Factor comes from tests with test_evaluate.py on
-                                                  # 600 runs and NOISE_SIGMA = 0.10, 13 Dec 2013
-#NORMALIZATION_VARIABLE_SPACE = 0.000135102101297 # Factor comes from tests with test_evaluate.py on
-                                                  # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013
-#NORMALIZATION_VARIABLE_SPACE = 0.00014815720975 # Factor comes from tests with test_evaluate.py on
-                                                 # 600 runs and NOISE_SIGMA = 0.10, 17 Dec 2013,
-                                                 # with sigma2_min = 1.e-6
 
 NORMALIZATION_VARIABLE_SPACE = 0.0001837  # Factor comes from tests with
                                           # tabulate_variable_shear_metric_rev1.py on 1000 runs and
