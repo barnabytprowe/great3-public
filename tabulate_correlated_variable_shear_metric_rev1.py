@@ -1,7 +1,7 @@
 """@file tabulate_correlated_variable_shear_metric_rev1.py
 
-Tabulate values of the new constant shear metrics (revision 1: Dec 13/Jan 14) for given biases, for
-inclusion in the GREAT3 Handbook, including intra branch correlations.
+Tabulate values of the new constant shear metrics (revision 1: Feb 14) for given biases, including
+intra branch correlations.
 """
 
 import sys
