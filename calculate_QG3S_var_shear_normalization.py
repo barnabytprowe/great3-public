@@ -1,3 +1,9 @@
+"""@file calculate_QG3S_var_shear_normalization.py
+
+Script for calculating G3S (both quadratic and absolute normed) metric results for a range of biases
+(normalization comes from the ensemble mean value at fiducial bias).
+"""
+
 import sys
 import os
 import cPickle
@@ -5,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import galsim
 import g3metrics
+
 
 NIMS = 8
 NGRID = 500         # Each image contains a grid of NGRID x NGRID galaxies
