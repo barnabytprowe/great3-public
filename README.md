@@ -24,8 +24,9 @@ i.e. following the revision that took place in February 2014:
     tabulate_variable_shear_metric_rev1.py
 
 These use the GREAT3 truth data to run simulations of metric performance for
-submissions of varying (linear, m & c-style) bias.  These, and all the metric
-simulation scripts, make use of utility functions in the `g3metrics.py` module.
+submissions of varying (linear, m & c-style) bias.  These, and almost all the
+metric simulation scripts, make use of utility functions in the module
+`g3metrics.py`, also in this directory.
 
 The scripts above with "correlated" in the filename make use of outputs from the
 following scripts:
@@ -46,8 +47,12 @@ potential metrics during the preparation for GREAT3, in approximate
 chronological order:
 
     calculate_plot_const_shear_metrics.py
+    plot_const_shear_metrics_2D.py
     calculate_QG10_var_shear_normalization.py
     calculate_QG3S_var_shear_normalization.py
+    plot_PS_normalization_results.py
+    test_evaluate.py
+    plot_test_evaluate_metrics.py
 
 Please see the individual module docstrings for more information about these
 older simulations.
