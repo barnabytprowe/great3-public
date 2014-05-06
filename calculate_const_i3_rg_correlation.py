@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""@file calculate_const_i3_rg_correlation.py
+Script used to calculate the product moment correlation coeffient for constant shear submissions
+from im3shape and the great3_ec_regauss method.
+"""
 import os
 import sys
 import numpy as np
