@@ -1,3 +1,7 @@
+"""@file calculate_plot_const_shear_metrics.py
+
+Simulate constant shear metrics for a range of biases, and plot.
+"""
 import os
 import cPickle
 import numpy as np

@@ -1,3 +1,9 @@
+"""@file calculate_QG10_var_shear_normalization.py
+
+Script for calculating G10-style metric results for a range of biases (normalization comes from the
+ensemble mean value at fiducial bias).
+"""
+
 import sys
 import os
 import cPickle
