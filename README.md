@@ -14,9 +14,8 @@ and `q_variable()` functions of that module, and their docstrings.
 
 ## Metric simulations
 
-The following scripts were used to tabulate the response of the metrics that
-were used to tabulate the response of the final versions of the GREAT3 metrics,
-i.e. following the revision that took place in February 2014:
+The following scripts were used to tabulate the bias response of the final
+versions of the GREAT3 metrics, following the revision of February 2014:
 
     tabulate_const_shear_metric_rev1.py
     tabulate_correlated_const_shear_metric_rev1.py
