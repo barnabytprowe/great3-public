@@ -20,7 +20,7 @@ sensible default config (chosen after some trial and error) to determine object
 counts for GREAT3 images.  Makes output for plotting by the
 `plot_galaxy_badcounts.py` script (see below).
 
-4. `fits_verify.py` uses the fitsverify exectutable to check basic FITS
+4. `fits_verify.py` uses the fitsverify executable to check basic FITS
 properties for all the files in a GREAT3 release specified by the `constants.py`
 module (see above).
 
