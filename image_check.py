@@ -25,6 +25,20 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""@image_check.py
+
+Methods to check Great3 images for the correct dimensions and for reasonable pixel values.  It can 
+check "full" statistics (pixel histograms, mean/standard deviation etc of pixel values) by calling
+check_all() with full_stats=True (the default), or just check for image size, NaNs and zeroes by 
+calling with full_stats=False.  
+
+It assumes that the images to be checked can be found by a call to glob.glob(dir/image*.fits), with 
+the dir set by the Great3 branch parameters.  If a great3sims mapper is available, it uses that to
+create the directory structure; otherwise it assumes that there is a directory structure starting at
+root_dir that looks like the Great3 directory structure.  The expected sizes are hard-coded in
+based on the branch name (either 4800 by 4800 or 9600 by 9600).
+"""
+
 import os
 import sys
 import glob
