@@ -5,10 +5,17 @@ from leaderboard.models import PLACEHOLDER_ERROR
 register = template.Library()
 
 @register.filter
-def with_error(value, arg):
+def with_1e3_error(value, arg):
 	if float(value)==PLACEHOLDER_ERROR:
 		return ""
-	return "%.3g ± %.3g" % (100*value, 100*arg)
+	return "%.3g ± %.3g" % (1e3*value, 1e3*arg)
+
+@register.filter
+def with_1e4_error(value, arg):
+	if float(value)==PLACEHOLDER_ERROR:
+		return ""
+	return "%.3g ± %.3g" % (1e4*value, 1e4*arg)
+
 
 @register.filter
 def split_lines(value):

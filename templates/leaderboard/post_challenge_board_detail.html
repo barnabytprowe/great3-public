@@ -33,10 +33,10 @@
 		<TH> Method </TH>
 		<TH> Score </TH>
 		{% if not board.varying %}
-		<TH> 100 m+   </TH>
-		<TH> 100 mx </TH>
-		<TH> 100 c+ </TH>
-		<TH> 100 cx </TH>
+		<TH> 1e3 m+   </TH>
+		<TH> 1e3 mx </TH>
+		<TH> 1e4 c+ </TH>
+		<TH> 1e4 cx </TH>
 		{% endif %}
 		<TH> Rank </TH>
 		<TH> Date </TH>
@@ -49,10 +49,10 @@
 			<TD> {{ entry.method|truncatechars:15 }} </TD>
 			<TD> {{ entry.score_text }} </TD>
 			{% if not entry.board.varying %}			
-			<TD> {{ entry.m_plus|with_error:entry.delta_m_plus }} </TD>
-			<TD> {{ entry.m_cross|with_error:entry.delta_m_cross }} </TD>
-			<TD> {{ entry.c_plus|with_error:entry.delta_c_plus }} </TD>
-			<TD> {{ entry.c_cross|with_error:entry.delta_c_cross }} </TD>
+			<TD> {{ entry.m_plus|with_1e3_error:entry.delta_m_plus }} </TD>
+			<TD> {{ entry.m_cross|with_1e3_error:entry.delta_m_cross }} </TD>
+			<TD> {{ entry.c_plus|with_1e4_error:entry.delta_c_plus }} </TD>
+			<TD> {{ entry.c_cross|with_1e4_error:entry.delta_c_cross }} </TD>
 			{% endif %}
 			<TD> {{ entry.rank_text }} </TD>
 			<TD> {{ entry.date }} </TD>
