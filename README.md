@@ -2,7 +2,7 @@
 =====================
 
 The scripts in this directory were used to test out the GREAT3 simulation
-scripts in several ways that users may wish to try.
+scripts, and simultion design, in several ways that users may wish to try.
 
 The contents are as follows:
 
@@ -21,6 +21,10 @@ for simulation purposes, because of issues like blends or masking trouble.
 galaxy population of the cuts imposed on galaxies in GREAT3.  It allows for
 successive imposition of cuts, and plots histograms of properties like
 ellipticity, size, etc. after each cut is imposed.
+
+4. `test_bmode_noise.py` is a script that investigated the use of B-mode only
+galaxy intrinsic shape noise in the GREAT3 simulations, designed to improve the
+sensitivity of metrics based on the E-mode aperture mass dispersion signal.
 
 All of these are documented, and users should be able to run them if they have
 the galaxy data used for GREAT3 simulations.
