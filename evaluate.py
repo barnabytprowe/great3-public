@@ -990,7 +990,9 @@ def q_variable_by_mc(submission_file, experiment, obs_type, map_E_unitc, normali
                      truth_dir=TRUTH_DIR, storage_dir=STORAGE_DIR, logger=None, usebins=None,
                      corr2_exec="corr2", sigma2_min=None, cfid=CFID, mfid=MFID, just_q=False,
                      pretty_print=False):
-    """Calculate the Q_v for a variable shear branch submission.
+    """Calculate the Q_v for a variable shear branch submission, using a best-fitting m and c model
+    of submission biases to evaluate the score.  Experimental metric, not used in the GREAT3
+    challenge due to the difficulty of reliably modelling m & c in simulation tests.
 
     @param submission_file  File containing the user submission.
     @param experiment       Experiment for this branch, one of 'control', 'real_galaxy',
