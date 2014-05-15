@@ -2,7 +2,7 @@
 =====================
 
 The scripts in this directory were used to test out the GREAT3 simulation
-scripts, and simultion design, in several ways that users may wish to try.
+scripts, and simulation design, in several ways that users may wish to try.
 
 The contents are as follows:
 
