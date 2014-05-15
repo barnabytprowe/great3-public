@@ -34,7 +34,7 @@ specified by the path in TRUTH_DIR, set below.  Please update TRUTH_DIR to match
 truth data on your system.
 
 For information about getting this data, please see the following page on the great3-public wiki:
-https://github.com/barnabytprowe/great3-public/wiki/Using-the-GREAT3-metric-evaluation-scripts-and-catalogs
+https://github.com/barnabytprowe/great3-public/wiki/Metric-evaluation-scripts-and-truth-data
 
 Constant shear branches
 -----------------------
