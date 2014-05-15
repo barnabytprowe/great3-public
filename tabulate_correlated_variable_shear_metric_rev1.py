@@ -26,6 +26,8 @@
 
 Tabulate values of the new constant shear metrics (revision 1: Feb 14) for given biases, including
 intra branch correlations.
+
+See https://github.com/barnabytprowe/great3-public/wiki/The-revised-GREAT3-metrics,-February-2014
 """
 
 import sys

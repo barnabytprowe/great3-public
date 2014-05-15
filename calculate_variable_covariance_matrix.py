@@ -25,7 +25,8 @@
 """@file calculate_variable_submission_covariance_matrix.py
 
 For both ground and space, calculate the variance per bin of the aperture mass dispersion statistic
-around the truth values, and the inter-bin covariances.
+around the truth values, and the inter-bin covariances.  Used in 
+https://github.com/barnabytprowe/great3-public/wiki/The-revised-GREAT3-metrics,-February-2014
 """
 
 import sys

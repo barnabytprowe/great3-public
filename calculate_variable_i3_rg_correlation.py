@@ -27,6 +27,8 @@
 """@file calculate_variable_i3_rg_correlation.py
 Script used to calculate the product moment correlation coeffient for variable shear submissions
 from im3shape and the great3_ec_regauss method.
+
+See https://github.com/barnabytprowe/great3-public/wiki/The-revised-GREAT3-metrics,-February-2014
 """
 import os
 import sys

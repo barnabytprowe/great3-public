@@ -25,7 +25,8 @@
 """@file calculate_variable_cholesky.py
 
 For both ground and space, construct a large covariance matrix for NTEST submissions and then
-calculate and save (for future use) its Cholesky decomposition.
+calculate and save (for future use) its Cholesky decomposition.  Used in
+https://github.com/barnabytprowe/great3-public/wiki/The-revised-GREAT3-metrics,-February-2014
 """
 
 import sys

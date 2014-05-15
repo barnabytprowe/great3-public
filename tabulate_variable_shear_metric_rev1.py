@@ -25,6 +25,8 @@
 """@file tabulate_variable_shear_metric_rev1.py
 
 Tabulate values of the new variable shear metrics (revision 1: Feb 14) for given biases.
+
+See https://github.com/barnabytprowe/great3-public/wiki/The-revised-GREAT3-metrics,-February-2014
 """
 
 import sys
