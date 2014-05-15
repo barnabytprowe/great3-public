@@ -424,7 +424,7 @@ class SimBuilder(object):
             #
             # Finally, let's define a galsim.DistDeviate to use to draw random values of S/N for
             # each star.  The distribution of S/N values comes from a catalog of main sequence stars
-            # for galactic longitude=180 degrees, in the I band, from the LSST imSim.  Reading
+            # for galactic longitude=180 degrees, in the I band, from the LSST ImSim.  Reading
             # numbers off a plot from Chihway Chang and assuming that the S/N of an I=25 star is 25,
             # the function we get is
             # dN/d(S/N) ~ (mag - 18) / S/N

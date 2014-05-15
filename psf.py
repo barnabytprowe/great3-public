@@ -756,14 +756,14 @@ class VariablePSFBuilder(PSFBuilder):
 
     # For atmospheric PSF anisotropy, we have some basic numbers that we will use to make PSF
     # anisotropy fields.
-    # For A, take a range based on imSim for 20s exposures: 1e-4 to 8e-4 (could debate about what
+    # For A, take a range based on ImSim for 20s exposures: 1e-4 to 8e-4 (could debate about what
     # distribution to use, but for now, flat isn't too bad).  This has to be rescaled according to
     # the exposure time and diameter, the latter of which we fix now to 4m.
     min_A = 1.e-4 * (6.7/4.) # will eventually be x 20 / t_exp
     max_A = 8.e-4 * (6.7/4.)
     min_t_exp = 30. # s
     max_t_exp = 180. # s
-    # For theta_0, take a range based on imSim, from 0.1-2 degree (again, flat distribution).
+    # For theta_0, take a range based on ImSim, from 0.1-2 degree (again, flat distribution).
     min_theta_0 = 360. # arcsec
     max_theta_0 = 7200. # arcsec
     # Set up empty cache for optical PSF and atmospheric PSF information, to be used for the entire
