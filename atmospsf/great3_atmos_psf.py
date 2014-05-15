@@ -85,7 +85,7 @@ def atmosPSFParams(t_exp=20, diam=6.7, rng=None, N=1):
         rand_seeing = dd()
 
     # Now work on the PSF anisotropies:
-    # For A, take a range based on imSim for 20s exposures: 1e-4 to 8e-4 (could debate about what
+    # For A, take a range based on ImSim for 20s exposures: 1e-4 to 8e-4 (could debate about what
     # distribution to use, but for now, flat isn't too bad).  This has to be rescaled according to
     # the exposure time and diameter.
     min_A = 1.e-4
@@ -98,7 +98,7 @@ def atmosPSFParams(t_exp=20, diam=6.7, rng=None, N=1):
         rand_A = min_A + (max_A-min_A)*uniform_deviate()
     rand_A *= (20./t_exp)*(6.7/diam)
 
-    # For theta_0, take a range based on imSim, from 0.1-2 degree (again, flat distribution).
+    # For theta_0, take a range based on ImSim, from 0.1-2 degree (again, flat distribution).
     min_theta_0 = 0.1
     max_theta_0 = 2.0
     if N > 1:

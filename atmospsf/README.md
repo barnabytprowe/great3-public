@@ -2,16 +2,16 @@
 ==========================================
 
 This directory contains scripts and data files related to the atmospheric PSF
-anisotropy power spectra.  The key issue here is that the LSST imSim simulations
+anisotropy power spectra.  The key issue here is that the LSST ImSim simulations
 (and others) suggest a particular functional form for the atmospheric PSF
 anisotropy correlation function, but GalSim can only draw shears according to a
-power spectrum.  So here we explore the imSim-based PSF anisotropy correlation
+power spectrum.  So here we explore the ImSim-based PSF anisotropy correlation
 functions, tabulate power spectra corresponding to that correlation function for
 various sets of parameters, and test the use of GalSim to generate the PSF
 ellipticities to make sure that the output correlation functions are as
 expected.
 
-More specifically, the imSim-based xi_+ (defined for ellipticities corresponding
+More specifically, the ImSim-based xi_+ (defined for ellipticities corresponding
 to distortions) tends to have the form
 xi_+ = A / (1 + theta/theta_0)
 for some amplitude A and scale length theta_0.  xi_- tends to be zero,
