@@ -29,9 +29,12 @@ of the GREAT3 Challenge.
 
 For the functions used to directly evaluate the GREAT3 metrics, see q_constant() and q_variable().
 
-This code requires the full GREAT3 truth data to have been unpacked into the directory specified by
-the path in TRUTH_DIR, set below.  Please update TRUTH_DIR to match the location of the truth data
-on your system.
+This code requires the GREAT3 metric evaluation truth data to have been unpacked into the directory
+specified by the path in TRUTH_DIR, set below.  Please update TRUTH_DIR to match the location of the
+truth data on your system.
+
+For information about getting this data, please see the following page on the great3-public wiki:
+https://github.com/barnabytprowe/great3-public/wiki/Using-the-GREAT3-metric-evaluation-scripts-and-catalogs
 
 Constant shear branches
 -----------------------
