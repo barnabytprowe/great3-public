@@ -20,8 +20,9 @@ import pyfits
 import numpy as np
 import galsim
 
-SHAPECAT = os.path.join(
-    '/users', 'browe', 'Dropbox', 'great3_fit_data', 'real_galaxy_23.5_shapes.fits')
+# Please modify this filepath to point to the correct location for real_galaxy_23.5_shapes.fits if
+# necessary
+SHAPECAT = os.path.join("..", "inputs", "galdata", "real_galaxy_23.5_shapes.fits")
 RANDOM_SEED = 1335133
 NGRID = 500
 SIGMA_NOISE = 0.05
@@ -163,8 +164,7 @@ if __name__ == "__main__":
     # Trying sending this to corr2
     x, y = np.meshgrid(np.arange(NGRID) * 10. / float(NGRID), np.arange(NGRID) * 10. / float(NGRID))
     import sys
-    sys.path.append(
-        os.path.join("/Users", "browe", "great3", "great3-public", "presubmission_script"))
+    sys.path.append(os.path.join("..", "presubmission_script"))
     import presubmission
     for g1, g2, typestring in zip((g1t, g1s), (g2t, g2s), ("Pure", "Ranked")):
 
