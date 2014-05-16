@@ -1,0 +1,69 @@
+{% extends "leaderboard/table_page.html" %}
+{% block subtitle %} {{board.name}} {% endblock %}
+{% load g3_template_tags %}
+<H3> Leaderboard:  {{ board.name }} </H3>
+
+
+{% block header_script %}
+	<script>
+		$(document).ready(function() {$("#boardTable").tablesorter({
+			headers: {3: {sorter:'rank'}},
+			widgets:['zebra'],
+                textExtraction: function(node) { 
+                    // extract data from markup and return it
+                    var s = node.innerHTML.replace(/\ /g,''); 
+                    if (s.replace(' ','')=="*") {s="0";};
+                    console.log('--'+s+'--');
+                    return s;
+                } 
+		}); }); 
+	</script>
+{% endblock %}
+
+{% block content %}
+<H2> Entries to {{ board.name }} leaderboard</H2>
+<P>Entries submitted during the blind part of the challenge are <font color='green'>highlighted in green</font>.</P>
+
+
+<P>{{ board.notes }}</P>
+<table class="tablesorter" id="boardTable">
+	<THEAD>
+		<TH> Entry Name </TH>
+		<TH> Team </TH>
+		<TH> Method </TH>
+		<TH> Score </TH>
+		{% if not board.varying %}
+		<TH> 1e3 m+   </TH>
+		<TH> 1e3 mx </TH>
+		<TH> 1e4 c+ </TH>
+		<TH> 1e4 cx </TH>
+		{% endif %}
+		<TH> Rank </TH>
+		<TH> Date </TH>
+	</THEAD>
+	<TBODY>
+		{% for entry in entries %}
+		<TR {% if entry.blind %} class="oddBlind" {% endif %} >
+			<TD> <A href="{% url leaderboard.entry_views.detail entry.id %}"> {{ entry.name }}</A> </TD>
+			<TD> <A href="{% url leaderboard.team_views.detail entry.team.id %}"> {{ entry.team }}</A> </TD>
+			<TD> {{ entry.method|truncatechars:15 }} </TD>
+			<TD> {{ entry.score_text }} </TD>
+			{% if not entry.board.varying %}			
+			<TD> {{ entry.m_plus|with_1e3_error:entry.delta_m_plus }} </TD>
+			<TD> {{ entry.m_cross|with_1e3_error:entry.delta_m_cross }} </TD>
+			<TD> {{ entry.c_plus|with_1e4_error:entry.delta_c_plus }} </TD>
+			<TD> {{ entry.c_cross|with_1e4_error:entry.delta_c_cross }} </TD>
+			{% endif %}
+			<TD> {{ entry.rank_text }} </TD>
+			<TD> {{ entry.date }} </TD>
+		</TR>
+	{% endfor %}
+	</TBODY>
+</table>
+<P><A href="{% url leaderboard.board_views.submit board.id %}"> Submit to this leaderboard</A></P>
+{% if board.datafile.filename %}
+<A href="{% url leaderboard.data_views.public_file board.datafile.filename %}">Download leaderboard challenge data </A>.   {% if board.datafile.mirror1 %}  <A href={{board.datafile.mirror1}}>US Mirror</A>. {{board.datafile.info}}. {% endif %}
+{% else %}
+The data files for this board are not yet ready.
+{% endif %}
+{% endblock %}

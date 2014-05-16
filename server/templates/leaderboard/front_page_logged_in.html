@@ -1,0 +1,12 @@
+{% extends "leaderboard/front_page.html" %}
+{% block login_note %}
+<P>Check entries from your teams:
+	<UL>
+		{% for team in user.get_profile.teams.all %}
+			<LI><A href="{% url leaderboard.team_views.detail team.id %} ">  {{ team }} </A> </LI>
+		{% empty %}
+		<B>You are not in any team(s) yet.  <A href="{% url leaderboard.team_views.setup %}">Set up your team(s)</A></B>
+		{% endfor %}
+	</UL>
+
+{% endblock %}

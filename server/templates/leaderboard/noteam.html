@@ -1,0 +1,7 @@
+{% extends "leaderboard/base.html" %}
+{% block title  %}No Team{% endblock %}
+{% block content %}
+<H2>No Team</H2>
+<P> You are logged in as {{ user }}, but are not listed as a member of any teams.</P>
+<A href="{% url leaderboard.team_views.setup %}">Create or join a team</A>
+{% endblock %}

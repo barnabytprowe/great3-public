@@ -1,0 +1,36 @@
+<HTML>
+	<HEAD>
+		<TITLE> Great3 {% block subtitle %} {% endblock %}</TITLE>
+
+		
+		<link rel="stylesheet" href="{{ STATIC_URL }}css/nav.css" type="text/css" media="print, projection, screen" />
+		<style type="text/css">
+		body {border: 50px solid WHITE;}
+		</style>
+		<style type="text/css">
+		p {max-width:600px; text-align:justify;}
+		</style>
+		{% block header_includes %}
+		{% endblock %}
+	</HEAD>
+	<BODY>
+		<DIV align="left" ><A href="{% url leaderboard.views.front_page %}"><IMG src="{{ STATIC_URL }}img/Home.png"></DIV></A>
+		<ul id="nav">
+		<li><a href="{% url leaderboard.views.front_page %}">Home</a></li>
+		<li><a href="{% url leaderboard.data_views.index %}">Get Data</a></li>
+		<li><a href="{% url leaderboard.team_views.index %}"> Overall Leaderboard</a></li>
+		<li><a href="{% url leaderboard.board_views.index %}">Archived Challenge Leaderboards</a></li>
+		<li><a href="{% url leaderboard.board_views.post_challenge_index %}">Post-challenge Leaderboards</a></li>
+		{% if user.is_authenticated %}
+		<li><a href="{% url leaderboard.team_views.setup %}">My Great3</a></li>
+		<li><a href="{% url django.contrib.auth.views.logout %}">Logout {{user}}</a></li>
+		{% else %}
+		<li><A href="{% url django.contrib.auth.views.login %}">Login</A></li>
+		{% endif %}
+		</ul>
+<P><font size=3 color="red" >The Great-3 challenge is now complete and the winners decided.  You can continue to use the Great-3 site to characterize your methods by submitting entries to the post-challenge leader-boards instead.</font></P>
+
+		 {% block content %} 
+		 {% endblock %}
+	</BODY>
+</HTML>

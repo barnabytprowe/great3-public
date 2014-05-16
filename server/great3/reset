@@ -1,0 +1,7 @@
+#!/bin/bash
+
+rm  ../data/great3.sqlite3
+python manage.py syncdb --noinput
+python manage.py createsuperuser --username=jaz --email=jaz@example.com
+python manage.py runserver
+

@@ -1,0 +1,18 @@
+{% extends "leaderboard/base.html" %}
+{% block subtitle%} Entry {{entry.name}} {% endblock %}
+{% block content %}
+<H3> Entry</H3>
+<!-- Make this table better -->
+<table class="tablesorter">
+	<TR><TD>Name:</TD><TD> {{ entry.name }} </TD></TR>
+	<TR><TD>Team:</TD><TD> {{ entry.team }} </TD></TR>
+	<TR><TD>Method:</TD><TD> {{ entry.method }} </TD></TR>
+	<TR><TD>Score:</TD><TD> {{ entry.score_text }} </TD></TR>
+	<TR><TD>Leaderboard:</TD><TD> {{ entry.board.name }} </TD></TR>
+	<TR><TD>Rank:</TD><TD> {{ entry.rank_text }} </TD></TR>
+	<TR><TD>Submitter:</TD><TD> {{ entry.user }} </TD></TR>
+	<TR><TD>Date:</TD><TD> {{ entry.date }} UTC</TD></TR>
+	<TR><TD>Notes:</TD><TD> {{ entry.notes }} </TD></TR>
+
+</table>
+{% endblock %}

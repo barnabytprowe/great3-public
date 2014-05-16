@@ -1,0 +1,17 @@
+{% extends "leaderboard/base.html" %}
+
+{% block subtitle %}Create Team {% endblock %}
+
+{% block content %}
+
+	<form action="" 
+	      enctype="multipart/form-data"
+	      method="post">
+	    {% csrf_token %}
+		{{ form.as_p }}
+		<input type="submit" 
+		       value="Submit" />
+	</form>
+
+
+{% endblock %}

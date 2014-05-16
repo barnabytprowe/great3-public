@@ -1,0 +1,6 @@
+This email address was just used to register for the Great 3 weak lensing challenge.
+
+To complete your registration, go to the following link:
+http://{{site}}/accounts/activate/{{activation_key}}
+
+The link will expire in {{expiration_days}} days.

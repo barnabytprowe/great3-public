@@ -1,0 +1,9 @@
+{% extends "leaderboard/base.html" %}
+
+{% block subtitle %}Challenge Ended{% endblock %}
+
+{% block content %}
+
+<H3>The Great-3 challenge has ended so you cannot submit to the old leader-boards.  You can now submit to the <a href="{% url leaderboard.board_views.post_challenge_index %}">post-challenge leader-boards.</a></H3>
+
+{% endblock %}
