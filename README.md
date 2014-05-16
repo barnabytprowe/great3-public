@@ -7,7 +7,8 @@ the GREAT3 challenge, and to evaluate them for the GREAT3 Leaderboard web page.
 ## Metric evaluation
 
 The file `evaluate.py` contains the code used to calculate metrics for GREAT3.
-It requires the full set of GREAT3 truth data, available from #TODO ADD URL!!
+It requires the full set of GREAT3 truth data, available from
+http://great3.projects.phys.ucl.ac.uk/leaderboard/data/public/great3_metric_evaluation_truth.tar
 
 If you wish to calculate the metrics yourselves please see the `q_constant()`
 and `q_variable()` functions of that module, and their docstrings.
