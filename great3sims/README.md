@@ -67,18 +67,18 @@ generate simulated data for those branches:
   galaxy images from HST.  A tarball with all required files is available from
   the [GREAT3 download page](http://great3.projects.phys.ucl.ac.uk/leaderboard/data).
 - The variable shear branches require tabulated shear power spectra as
-  inputs.  The ones used for GREAT3 are in ../inputs/shear-ps/tables/, so if you have
-  cloned or downloaded the contents of the great3-public repository, you should
-  already have these.  You will just have to give the path to that directory to
-  the `ps_dir` keyword argument when you call `great3sims.run()`.
+  inputs.  The ones used for GREAT3 are in `../inputs/shear-ps/tables/`, so if
+  you have cloned or downloaded the contents of the great3-public repository,
+  you should already have these.  You will just have to give the path to that
+  directory to the `ps_dir` keyword argument when you call `great3sims.run()`.
 - The variable PSF, ground-based simulations require atmospheric PSF anisotropy
   power spectra, which are also tabulated in this repository, in
-  ../inputs/atmospsf/pk_math.  You should give the path to that directory to the
-  `atmos_ps_dir` keyword argument when you call `great3sims.run()`.
+  `../inputs/atmospsf/pk_math`.  You should give the path to that directory to
+  the `atmos_ps_dir` keyword argument when you call `great3sims.run()`.
 - The variable PSF simulations (ground and space) require optical PSF models.
-  The relevant files are in this repositry, in ../inputs/optical-psfs.  You should
-  give the path to that directory to the `optical_psf_dir` keyword argument when
-  you call `great3sims.run()`.
+  The relevant files are in this repositry, in ../inputs/optical-psfs.  You
+  should give the path to that directory to the `optical_psf_dir` keyword
+  argument when you call `great3sims.run()`.
 
 ## Getting help
 
@@ -95,12 +95,11 @@ out!)
 
 - Compatibility with the latest version of GalSim.
 - More convenient way to package the data than giant tarballs.
-- Make it possible to run the 'catalogs' step of processing on its
-  own.
+- Make it possible to run the 'catalogs' step of processing on its own.
 - Centralize the calculation of field positions, which currently lives in
-  galaxies.py, shear.py, and psf.py.
+  `galaxies.py`, `shear.py`, and `psf.py`.
 - Split up some of the large functions.
-- Make it possible to generate star test images in python builder.py rather than
-  just via config.
-- Propagate info from precomputation script into galaxies.py (e.g., pixel scales
-  and FWHM array) rather than hard-coding everything.
+- Make it possible to generate star test images in python `builder.py` rather
+  than just via config.
+- Propagate info from precomputation script into `galaxies.py` (e.g., pixel
+  scales and FWHM array) rather than hard-coding everything.
