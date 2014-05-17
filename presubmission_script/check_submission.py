@@ -146,7 +146,11 @@ def verify_constant_submission(data, filename, verbose=False, raise_exception_on
     nrows = data.shape[0]
     ncols = data.shape[1]
     # Check the number of rows first, as this *must* be NSUBFIELDS
-    if nrows == NSUBFIELDS:
+    if nrows in (NSUBFIELDS, NFIELDS):
+        if nrows == NFIELDS:
+            branch_is_variable_psf_or_full = True
+        else:
+            branch_is_variable_psf_or_full = False
         if ncols == 3:
             subfield_index = data[:, 0].astype(int)
             if verify_subfield_indices(subfield_index):
@@ -188,8 +192,12 @@ def verify_constant_submission(data, filename, verbose=False, raise_exception_on
             print err_msg
     elif constant:
         if verbose:
-            print "Submission ("+str(filename)+") looks like a valid constant shear branch "+\
-                "submission."
+            if branch_is_variable_psf_or_full:
+                print "Submission ("+str(filename)+") looks like a valid constant shear "+\
+                    "submission for one of the variable_psf or full branches"
+            else:
+                print "Submission ("+str(filename)+") looks like a valid constant shear "+\
+                    "submission for one of the control, multiepoch or real_galaxy branches"
     # Return 
     return constant
 
@@ -260,7 +268,7 @@ def verify_variable_submission(data, filename, verbose=False, raise_exception_on
     elif variable:
         if verbose:
             print "Submission ("+str(filename)+") looks like a valid variable shear branch "+\
-                "submission."
+                "submission"
     # Return 
     return variable
 
