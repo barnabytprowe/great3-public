@@ -30,8 +30,8 @@ The files that explore this model are as follows:
 functions (for various theta_0) with the appropriate Bessel function to get a
 shear power spectrum, and tabulates the results in a series of files.
 
-2. `pk_math/` is a directory containing the tabulated PSF anisotropy power spectra
-from `pk.math`.
+2. `pk_math/` is a directory containing the tabulated PSF anisotropy power
+spectra from `pk.math`.
 
 3. `plot_math_pk.py` is a script that was used to check the outputs of the
 Mathematica script.  More specifically, it takes the output power spectra, tells
@@ -40,9 +40,9 @@ the shear correlation function xi_+, and compares it to the original one given
 above to ensure that they are consistent.
 
 4. `great3_atmos_psf.py` is a script that randomly draws an atmospheric PSF
-anisotropy field using the outputs in `pk_math/`, and makes some whisker plots and
-other sanity checks.  Some of this code was later used in the GREAT3 simulation
-scripts.
+anisotropy field using the outputs in `pk_math/`, and makes some whisker plots
+and other sanity checks.  Some of this code was later used in the GREAT3
+simulation scripts.
 
-5. `corr2.params` is a file that was used to set parameters for corr2, the 2-point
-correlation function code used by `plot_math_pk.py`.
+5. `corr2.params` is a file that was used to set parameters for corr2, the
+2-point correlation function code used by `plot_math_pk.py`.
