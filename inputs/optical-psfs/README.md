@@ -16,8 +16,8 @@ space-based optical PSF model in the format we need for use by our scripts.
 3. Ground-based PSF model: the classes are defined in `ground_optical_psf.py`,
 and simple usage is demonstrated in `ground_optical_psf_example.py`.
 
-4. Space-based PSF model: the classes are defined in `space_optical_psf.py`,
-and simple usage is demonstrated in `space_optical_psf_example.py`.
+4. Space-based PSF model: the classes are defined in `space_optical_psf.py`, and
+simple usage is demonstrated in `space_optical_psf_example.py`.
 
 The docstrings in the scripts includes usage information.  Further examples of
-usage are in the great3sims package, psf.py.
+usage are in the great3sims package, `psf.py`.
