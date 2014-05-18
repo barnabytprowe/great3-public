@@ -1,5 +1,5 @@
-# GREAT3 metric simulation and evaluation scripts
-=================================================
+GREAT3 metric simulation and evaluation scripts
+===============================================
 
 The scripts in this directory were used to simulate the behaviour of metrics for
 the GREAT3 challenge, and to evaluate them for the GREAT3 Leaderboard web page.

@@ -1,5 +1,5 @@
-# GREAT3 validation scripts
-===========================
+GREAT3 validation scripts
+=========================
 
 The scripts in this directory were used to validate the GREAT3 simulation data
 for full public release.
