@@ -15,15 +15,20 @@ For more information about these and other scripts that were made public
 throughout the GREAT3 challenge, see the [public scripts wiki page](https://github.com/barnabytprowe/great3-public/wiki/Public-software-associated-with-the-challenge) 
 
 TABLE OF CONTENTS:
+
 1. Necessary files and programs
+
 2. Catalog format
+
 3. Running the script
+
 4. Analyzing old versions of the Great3 simulations
+
 5. Example script calls
 
 --------------------------------------------------------------------------------
 
-1. NECESSARY FILES AND PROGRAMS
+## NECESSARY FILES AND PROGRAMS
 
 To use the scripts in this directory, you will need:
     - An installation of Python; we have checked this code for version 2.6+.
@@ -47,7 +52,7 @@ great3-public repository (http://github.com/barnabytprowe/great3-public).
 
 --------------------------------------------------------------------------------
 
-2. CATALOG FORMATS
+## CATALOG FORMATS
 
 Catalogs may be either FITS files (if you have the Python modules pyfits or
 astropy) or whitespace-delimited ASCII/Unicode files.  If you cannot measure a
@@ -76,7 +81,7 @@ our desired parameterization is called g (Eq. 2.8).
 
 --------------------------------------------------------------------------------
 
-3. RUNNING THE SCRIPT
+## RUNNING THE SCRIPT
 
 In the simplest case, the script may be run by typing
     ./presubmission.py shear_catalog_filename(s)
@@ -130,7 +135,7 @@ in your default path.
 
 --------------------------------------------------------------------------------
 
-4. ANALYZING OLD VERSIONS OF THE GREAT3 SIMULATIONS
+## ANALYZING OLD VERSIONS OF THE GREAT3 SIMULATIONS
 
 This script is kept up-to-date such that it will analyze the most recent
 versions of the GREAT3 simulations.  The leaderboard also compares uploaded
@@ -164,7 +169,7 @@ fine and expected for the tagged versions.
 
 --------------------------------------------------------------------------------
 
-5. EXAMPLE SCRIPT CALLS
+## EXAMPLE SCRIPT CALLS
     
 Single shear catalog file catalog.dat with galaxy IDs in the sixth column:
     ./presubmission.py -i 5 catalog.dat
