@@ -5,7 +5,7 @@ The public repository for the Third Gravitational Lensing Accuracy Testing
 Challenge (GREAT3).  For a full description of the contents of great3-public,
 please go into each sub-directory and take a look at the `README.md` file.
 
-Highlights include:
+great3-public includes:
 
 * The code used to generate the GREAT3 challenge data (in `great3sims/`)
 
