@@ -104,7 +104,7 @@ try:
     import great3sims.mapper
 except ImportError:
     path, module = os.path.split(__file__)
-    sys.path.append(os.path.join(path, "..", "..")) # Appends the folder great3-private/ to sys.path
+    sys.path.append(os.path.join(path, "..")) # Appends the folder great3-public/ to sys.path
     import great3sims
     import great3sims.mapper
 
@@ -112,7 +112,7 @@ try:
     import g3metrics
 except ImportError:
     path, module = os.path.split(__file__)
-    sys.path.append(os.path.join(path, "..", "..", "metrics")) # Appends the great3-private/metrics
+    sys.path.append(os.path.join(path, "..", "metrics")) # Appends the great3-private/metrics
                                                                # folder to path
     import g3metrics
 
