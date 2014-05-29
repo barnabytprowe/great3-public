@@ -16,3 +16,11 @@ If you want to add your own analysis code to this repository, please make a Pull
 Request and we'll bring it in.
 
 Have fun!
+
+Notes on individual scripts
+===========================
+
+The `ellipse_videos.py` script generates little videos showing how the best
+mplus and mminus for the best scoring entry for each team changed with time.
+Needs lots of work.  Author: @joezuntz
+
