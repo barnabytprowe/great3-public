@@ -1,5 +1,5 @@
-# Simulation inputs
-===================
+Simulation inputs
+=================
 
 This directory contains a few subdirectories for various pieces of information
 that have to be input into the simulations:

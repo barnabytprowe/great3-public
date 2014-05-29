@@ -1,5 +1,5 @@
-# GREAT3 simulation scripts
-===========================
+GREAT3 simulation scripts
+=========================
 
 The scripts in this directory were used to generate the simulations for the
 GREAT3 challenge.
