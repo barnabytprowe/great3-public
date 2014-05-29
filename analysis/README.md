@@ -6,6 +6,8 @@ routines.  Good docstrings *always* welcomed!
 
 The file `export.csv` contains basic information about the GREAT3 submissions
 (info currently available on the webpage) in comma separated variable format.
+Many thanks to @joezuntz for putting this together from the Leaderboard Webpage
+database.
 
 Please see https://github.com/barnabytprowe/great3-public/issues/20 for more
 information.
