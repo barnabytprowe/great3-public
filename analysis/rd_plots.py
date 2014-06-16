@@ -53,7 +53,7 @@ for shear in shear_list:
   fig = plt.figure()
   fig.suptitle(shear+' shear')
   
-  data = np.ones_like(branch_list, dtype=float)
+  data = np.ones(len(branch_list), dtype=float)
   i_pl = 1
   for i_t, team in enumerate(team_list):
     if team_n_entries[i_t] > n_limit:
