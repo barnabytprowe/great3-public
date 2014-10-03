@@ -624,7 +624,7 @@ def EstimateAllShears(subfield, sim_dir, output_dir, output_prefix="output_catal
     catalog["id"] = gal_catalog['ID']
     g1 = numpy.zeros(n_gal).astype(numpy.float64) + 100.
     g2 = numpy.zeros(n_gal).astype(numpy.float64) + 100.
-    weight = numpy.zeros(n_gal).astype(numpy.float64) + 1.
+    weight = numpy.zeros(n_gal).astype(numpy.float64)
     index = 0
     use_index = 0
     for index in range(n_gal):
@@ -633,6 +633,8 @@ def EstimateAllShears(subfield, sim_dir, output_dir, output_prefix="output_catal
             g2[index] = calib_factor*shear_results[index].corrected_e2 / responsivity
             if sn_weight:
                 weight[index] = use_weight[use_index]
+            else:
+                weight[index] = 1.
             use_index += 1
     catalog["g1"] = g1
     catalog["g2"] = g2
