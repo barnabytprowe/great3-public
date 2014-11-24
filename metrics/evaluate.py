@@ -718,7 +718,7 @@ def get_generate_variable_truth(experiment, obs_type, storage_dir=STORAGE_DIR, t
 
 def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, truth_dir=TRUTH_DIR,
                logger=None, normalization=None, sigma2_min=None, just_q=False, cfid=CFID, mfid=MFID,
-               pretty_print=False, flip_g1=False, flip_g2=False, plot=False):
+               pretty_print=False, flip_g1=False, flip_g2=False, plot=False, ignore_fields=None):
     """Calculate the Q_c for a constant shear branch submission.
 
     @param submission_file  File containing the user submission.
@@ -740,6 +740,7 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
                             m+, cx, mx, etc.
     @param cfid             Fiducial, target c value
     @param mfid             Fiducial, target m value
+    @param ignore_fields    List or tuple of fields to ignore.  If None, use all fields.
     @return The metric Q_c, & optionally best fitting c+, m+, cx, mx, sigc+, sigcm+, sigcx, sigmx.
     """
     if not os.path.isfile(submission_file):
@@ -784,8 +785,14 @@ def q_constant(submission_file, experiment, obs_type, storage_dir=STORAGE_DIR, t
         # perform simple linear regression
         g1trot = g1truth * np.cos(-2. * rotations) - g2truth * np.sin(-2. * rotations)
         g2trot = g1truth * np.sin(-2. * rotations) + g2truth * np.cos(-2. * rotations)
+        # Decide which subfields to use / ignore
+        use = np.ones_like(g1srot, dtype=bool)
+        if ignore_fields is not None:
+            for field_index in ignore_fields:
+                use[field_index] = False
         Q_c, c1, m1, c2, m2, sigc1, sigm1, sigc2, sigm2 = g3metrics.metricQZ1_const_shear(
-            g1srot, g2srot, g1trot, g2trot, cfid=cfid, mfid=mfid, sigma2_min=sigma2_min)
+            g1srot[use], g2srot[use], g1trot[use], g2trot[use],
+            cfid=cfid, mfid=mfid, sigma2_min=sigma2_min)
         Q_c *= normalization
         if plot:
             import matplotlib.pyplot as plt
