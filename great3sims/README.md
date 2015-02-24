@@ -65,7 +65,9 @@ generate simulated data for those branches:
   criteria, and parametric fits to the galaxies in order to select which
   galaxies to use.  The 'real_galaxy' and 'full' experiments also require the
   galaxy images from HST.  A tarball with all required files is available from
-  the [GREAT3 download page](http://great3.projects.phys.ucl.ac.uk/leaderboard/data).
+  the [GREAT3 download page](http://great3.jb.man.ac.uk/leaderboard/data); you
+  need the files called COSMOS_23.5_training_sample.tar.gz and
+  great3_galaxy_selection_files.tar.gz.
 - The variable shear branches require tabulated shear power spectra as
   inputs.  The ones used for GREAT3 are in `../inputs/shear-ps/tables/`, so if
   you have cloned or downloaded the contents of the great3-public repository,
