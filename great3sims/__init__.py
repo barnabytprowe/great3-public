@@ -37,7 +37,8 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
         gal_dir='/Users/rmandelb/great3/data-23.5', ps_dir='../inputs/shear-ps/tables',
         opt_psf_dir = '../inputs/optical-psfs',
         atmos_ps_dir = '../inputs/atmospsf/pk_math',
-        public_dir='public', truth_dir='truth', preload=False, nproc=-1):
+        public_dir='public', truth_dir='truth', preload=False, nproc=-1,
+        gal_pairs=True):
     """Top-level driver for GREAT3 simulation code.
 
     This driver parses the input parameters to decide what work must be done.  Here are the
@@ -125,6 +126,9 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
                              galaxy branches, the catalog is never preloaded.
     @param[in] nproc         How many processes to use in the config file.  [default = -1, which
                              means that GalSim will automatically decide on a value to use]
+    @param[in] gal_pairs     For constant shear branches, should it use 90 degree rotated pairs to
+                             cancel out shape noise, or not?  This option is ignored for variable
+                             shear branches. [default: True]
     """
     import sys
 
@@ -163,7 +167,7 @@ def run(root, experiments=None, obs_type=None, shear_type=None, seed=10, steps=N
     branches = [ (experiment, obs_type, shear_type,
                   builders[experiment](root, obs_type, shear_type,
                                        gal_dir, ps_dir, opt_psf_dir, atmos_ps_dir, public_dir,
-                                       truth_dir, preload, nproc))
+                                       truth_dir, preload, nproc, gal_pairs))
                         for experiment in experiments
                         for obs_type in obs_types
                         for shear_type in shear_types ]

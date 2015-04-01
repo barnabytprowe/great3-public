@@ -31,7 +31,7 @@ import math
 
 from . import constants
 
-def makeBuilder(real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload):
+def makeBuilder(real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload, gal_pairs):
     """Return a GalaxyBuilder appropriate for the given options.
 
     @param[in] real_galaxy If True, we should use real galaxy images instead of analytic models.
@@ -42,12 +42,14 @@ def makeBuilder(real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload)
     @param[in] multiepoch  If True, this is a multiepoch simulation.
     @param[in] gal_dir     Directory with galaxy catalog information.
     @param[in] preload     Preload the RealGalaxyCatalog for realistic galaxy branches?
+    @param[in] gal_pairs   For constant shear branches, should it use 90 degree rotated pairs to
+                           cancel out shape noise, or not?
     """
     # The COSMOSGalaxyBuilder is the builder for both parametric and real galaxies based on an HST
     # training set, so we return one in either case.
     return COSMOSGalaxyBuilder(real_galaxy=real_galaxy, obs_type=obs_type,
                                shear_type=shear_type, multiepoch=multiepoch,
-                               gal_dir=gal_dir, preload=preload)
+                               gal_dir=gal_dir, preload=preload, gal_pairs=gal_pairs)
 
 class GalaxyBuilder(object):
     """A GalaxyBuilder is a class that can carry out the steps necessary to define a galaxy
@@ -194,7 +196,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
     kmin_factor = 1
     kmax_factor = 16
 
-    def __init__(self, real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload):
+    def __init__(self, real_galaxy, obs_type, shear_type, multiepoch, gal_dir, preload, gal_pairs):
         """Construct for this type of branch.
         """
         # Basic parameters used by GalaxyBuilder to make decisions about galaxy population
@@ -207,6 +209,7 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
             self.preload = preload
         else:
             self.preload = False
+        self.gal_pairs = gal_pairs
 
     def generateSubfieldParameters(self, rng, subfield_index):
         # At this point, we only want to generate schema.  Everything else happens when making the
@@ -431,12 +434,11 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         # by another 1%.
 
         # In the next bit, we choose a random selection of objects to use out of the above
-        # candidates.  Note that this part depends on constant vs. variable shear, since the number
-        # to draw depends on the method of b-mode shape noise.
-        if self.shear_type == "constant":
-            n_to_select = constants.nrows*constants.ncols/2
-        else:
-            n_to_select = constants.nrows*constants.ncols
+        # candidates.  Note that this part depends on constant vs. variable shear and on whether or
+        # not we're using 90 degree rotated pairs.
+        n_to_select = constants.nrows*constants.ncols
+        if self.shear_type == "constant" and self.gal_pairs:
+            n_to_select /= 2
 
         # Select an index out of these, at random, and with replacement; however, need to apply
         # size-dependent weight because of failure to make postage stamps preferentially for large
@@ -474,22 +476,28 @@ class COSMOSGalaxyBuilder(GalaxyBuilder):
         gmag = np.zeros_like(emag)
         gmag[emag<1.] = emag[emag<1.] / (1.0+np.sqrt(1.0 - emag[emag<1.]**2))
         if self.shear_type == "constant":
-            # Make an array containing all indices (each repeated twice) but with rotation angle of
-            # pi/2 for the second set.  Include a random rotation to get rid of any coherent shear
-            # in the COSMOS galaxies.
-            all_indices[0:n_to_select] = use_indices
-            all_indices[n_to_select:constants.nrows*constants.ncols] = use_indices
-            for ind in range(0,n_to_select):
-                rot_angle[ind] = rng() * np.pi
-            rot_angle[n_to_select:constants.nrows*constants.ncols] = np.pi/2. + \
-                rot_angle[0:n_to_select]
-            # But it would be kind of silly to include them in this order, so scramble them.  My
-            # favorite python routine for this is np.random.permutation, but we have to make sure to
-            # give it a seed (chosen from our own RNG) so that this process will be repeatable.
-            np.random.seed(int(rng() * 1000))
-            perm_array = np.random.permutation(constants.nrows*constants.ncols)
-            all_indices = all_indices[perm_array]
-            rot_angle = rot_angle[perm_array]
+            if self.gal_pairs:
+                # Make an array containing all indices (each repeated twice) but with rotation angle
+                # of pi/2 for the second set.  Include a random rotation to get rid of any coherent
+                # shear in the COSMOS galaxies.
+                all_indices[0:n_to_select] = use_indices
+                all_indices[n_to_select:constants.nrows*constants.ncols] = use_indices
+                for ind in range(0,n_to_select):
+                    rot_angle[ind] = rng() * np.pi
+                rot_angle[n_to_select:constants.nrows*constants.ncols] = np.pi/2. + \
+                    rot_angle[0:n_to_select]
+                # But it would be kind of silly to include them in this order, so scramble them.  My
+                # favorite python routine for this is np.random.permutation, but we have to make
+                # sure to give it a seed (chosen from our own RNG) so that this process will be
+                # repeatable.
+                np.random.seed(int(rng() * 1000))
+                perm_array = np.random.permutation(constants.nrows*constants.ncols)
+                all_indices = all_indices[perm_array]
+                rot_angle = rot_angle[perm_array]
+            else:
+                all_indices = use_indices
+                for ind in range(0,n_to_select):
+                    rot_angle[ind] = rng() * np.pi
         else:
             # For variable shear, it's more complicated: we need B-mode shape noise.  To generate
             # it, get the intrinsic shears from our precomputed tables.

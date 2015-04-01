@@ -64,7 +64,7 @@ class SimBuilder(object):
         return cls
 
     def __init__(self, root, obs_type, shear_type, gal_dir, ps_dir, opt_psf_dir, atmos_ps_dir,
-                 public_dir, truth_dir, preload=False, nproc=-1):
+                 public_dir, truth_dir, preload=False, nproc=-1, gal_pairs=True):
         """Initialize a builder for the given `obs_type` and `shear_type`.
 
         @param[in] root         Root directory for generated files.
@@ -81,6 +81,9 @@ class SimBuilder(object):
                                 numbers of real galaxies?  Note that for parametric galaxy branches,
                                 the catalog is never preloaded. [default = False]
         @param[in] nproc        How many processes to use in the config file.  [default = -1]
+        @param[in] gal_pairs    For constant shear branches, should it use 90 degree rotated pairs
+                                to cancel out shape noise, or not?  This option is ignored for
+                                variable shear branches. [default: True]
         """
         self.obs_type = obs_type
         self.shear_type = shear_type
@@ -103,7 +106,8 @@ class SimBuilder(object):
                                                               shear_type=shear_type,
                                                               multiepoch=self.multiepoch,
                                                               gal_dir=gal_dir,
-                                                              preload=preload)
+                                                              preload=preload,
+                                                              gal_pairs=gal_pairs)
         self.noise_builder = great3sims.noise.makeBuilder(obs_type=obs_type,
                                                           multiepoch=self.multiepoch,
                                                           variable_psf = self.variable_psf)
