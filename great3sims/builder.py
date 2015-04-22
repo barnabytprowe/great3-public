@@ -1406,8 +1406,9 @@ class SimBuilder(object):
         template, reader, writer = root_rel_mapper.mappings['star_test_images']
         infile = os.path.join(root_rel_mapper.full_dir, template % {}) + '.fits'
         outfile = os.path.join(sub_mapper.full_dir, template % {}) + '.fits'
-        shutil.copy2(infile, outfile)
-        tar.add(outfile)
+        if os.path.exists(infile):
+            shutil.copy2(infile, outfile)
+            tar.add(outfile)
 
         # Now do all the per-subfield stuff.
         for subfield_index in xrange(subfield_min, subfield_max+1):
