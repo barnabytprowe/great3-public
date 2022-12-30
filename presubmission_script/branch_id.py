@@ -1,6 +1,5 @@
 #    branch_id.py: a module used by presubmission.py to generate summary
 #    statistics for submission to the GREAT3 Challenge
-#    (http://great3challenge.info)
 #
 # Copyright (c) 2014, the GREAT3 executive committee (http://www.great3challenge.info/?q=contacts)
 # All rights reserved.

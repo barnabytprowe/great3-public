@@ -26,7 +26,6 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 presubmission.py: a script to generate summary statistics for submission to the GREAT3 challenge
-(http://great3challenge.info).
 
 General information for the use of this script can be found in the README, which should have been
 distributed with this file.  If you are missing the README, it can be downloaded from the
