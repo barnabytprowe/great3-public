@@ -85,8 +85,7 @@ generate simulated data for those branches:
 ## Getting help
 
 Questions can be posted to the [GREAT3 issue
-page](https://github.com/barnabytprowe/great3-public/issues?state=open) or
-e-mailed to the [GREAT3 leaders](http://www.great3challenge.info/?q=contacts).
+page](https://github.com/barnabytprowe/great3-public/issues?state=open).
 
 ## Future work
 
